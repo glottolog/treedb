@@ -7,16 +7,13 @@ import datetime
 import itertools
 import functools
 
-try:
-    import pathlib2 as pathlib
-except ImportError:
-    import pathlib
+from ._compat import pathlib
+from ._compat import iteritems
 
 import sqlalchemy as sa
 
 from . import files as _files
 from . import backend as _backend
-from . import _compat
 
 
 class Fields(object):
@@ -217,7 +214,7 @@ def to_files(bind=_backend.engine, verbose=False, is_lines=Fields.is_lines):
     def iterpairs(records):
         for p, r in records:
             path_tuple = pathlib.Path(p).parts
-            for section, s in _compat.iteritems(r):
+            for section, s in iteritems(r):
                 for option in s:
                     if is_lines(section, option):
                         s[option] = '\n'.join([''] + s[option])

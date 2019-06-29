@@ -42,22 +42,31 @@ $ python
 
 from . _compat import pathlib
 
-from .backend import engine, Session
-from .main import (iterlanguoids,
-                   Languoid,
-                   load,  check, export_db, write_csv,
+from . import backend as _backend
+from .backend import engine, Session, print_rows
+from .main import (iterlanguoids, Languoid, load, check,
                    get_query, iterdescendants)
 
 __all__ = [
     'ROOT',
-    'engine', 'Session',
-    'iterlanguoids',
-    'Languoid',
-    'load',  'check', 'export_db', 'write_csv',
-    'get_query',
-    'iterdescendants',
+    'engine', 'Session', 'print_rows'
+    'iterlanguoids', 'Languoid',
+    'load', 'check', 'get_query', 'iterdescendants',
+    'export_db', 'write_csv',
 ]
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
+
+
+def export_db():
+    """Dump .sqlite file to a ZIP file with one CSV per table, return filename."""
+    return _backend.export()
+
+
+def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
+    """Write get_query() example query (or given query) to CSV, return filename."""
+    if query is None:
+        query = get_query()
+    return _backend.write_csv(query, filename, encoding=encoding)
