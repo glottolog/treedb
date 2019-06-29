@@ -37,6 +37,8 @@ treedb.check()
 #treedb.files_roundtrip()
 
 #print(next(treedb.values.iterrecords()))
+#treedb.values.print_stats()
+#treedb.values.print_fields()
 #treedb.values.to_csv()
 #treedb.values.to_json()
 
