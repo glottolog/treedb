@@ -4,7 +4,7 @@
 
 $ python -m venv .venv  # PY3
 $ source .venv/bin/activate  # Windows: $ .venv/Scripts/activate.bat
-$ pip install -r treedb-requirements.txt
+$ pip install -r requirements.txt
 
 $ python
 >>> import treedb
