@@ -40,22 +40,24 @@ $ python
 >>> session.close()
 """
 
-from . import _compat
+from . _compat import pathlib
 
+from .backend import engine, Session
 from .main import (iterlanguoids,
-                   engine, Languoid,
+                   Languoid,
                    load,  check, export_db, write_csv,
                    get_query, iterdescendants)
 
 __all__ = [
     'ROOT',
+    'engine', 'Session',
     'iterlanguoids',
-    'engine',  'Languoid',
+    'Languoid',
     'load',  'check', 'export_db', 'write_csv',
     'get_query',
     'iterdescendants',
 ]
 
-_PACKAGE_DIR = _compat.pathlib.Path(__file__).parent
+_PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'

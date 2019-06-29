@@ -2,17 +2,17 @@
 
 from __future__ import unicode_literals
 
-import io
 import re
 import csv
-import sys
 import time
 import zipfile
 import platform
 import contextlib
 import subprocess
 
-from ._compat import PY2, pathlib
+from ._compat import pathlib
+
+from . import _compat
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -109,46 +109,22 @@ def export(metadata=Model.metadata, engine=engine, encoding='utf-8'):
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
             rows = table.select(bind=conn).execute()
-            with _csv_io() as f:
-                _csv_write(f, encoding, header=rows.keys(), rows=rows)
+            with _compat.make_csv_io() as f:
+                writer = csv.writer(f)
+                _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
                 data = f.getvalue()
-            if not PY2:
-                data = data.encode(encoding)
+            data = _compat.get_csv_io_bytes(data, encoding)
             z.writestr('%s.csv' % table.name, data)
     return filename
-
-
-def _csv_io():
-    if PY2:
-        return io.BytesIO()
-    return io.StringIO()
-
-
-def _csv_open(filename, mode, encoding):
-    if PY2:
-        if not mode.endswith('b'):
-            mode = mode + 'b'
-        return io.open(filename, mode)
-    return io.open(filename, mode, newline='', encoding=encoding)
-
-
-def _csv_write(f, encoding, header, rows):
-    writer = csv.writer(f)
-    if PY2:
-        writer.writerow([h.encode(encoding) for h in header])
-        for r in rows:
-            writer.writerow([unicode(col).encode(encoding) if col else col for col in r])
-    else:
-        writer.writerow(header)
-        writer.writerows(rows)
 
 
 def write_csv(query, filename, encoding='utf-8', engine=engine, verbose=False):
     if verbose:
         print(query)
     rows = engine.execute(query)
-    with _csv_open(filename, 'w', encoding) as f:
-        _csv_write(f, encoding, header=rows.keys(), rows=rows)
+    with _compat.csv_open(filename, 'w', encoding) as f:
+        writer = csv.writer(f)
+        _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
     return filename
 
 

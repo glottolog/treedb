@@ -3,18 +3,17 @@
 from __future__ import unicode_literals
 
 import re
-import inspect
 import datetime
 import operator
 import itertools
+
+from . import _compat
 
 import sqlalchemy as sa
 import sqlalchemy.orm
 
 from . import files as _files
 from . import backend as _backend
-from .backend import engine, Session
-from . import _compat
 
 
 __all__ = [
@@ -693,7 +692,7 @@ def _load(conn, root):
                 insert_irct(languoid_id=lid, code=c, ord=i)
 
 
-def iterdescendants(parent_level=None, child_level=None, bind=engine):
+def iterdescendants(parent_level=None, child_level=None, bind=_backend.engine):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
@@ -821,7 +820,7 @@ def check(func=None):
             check.registered = [func]
         return func
     for func in check.registered:
-        session = Session()
+        session = _backend.Session()
         ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
         check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
         check_inst = check_cls(session)
@@ -869,8 +868,7 @@ class Check(object):
 
 
 def docformat(func):
-    get_spec = inspect.getargspec if _backend.PY2 else inspect.getfullargspec
-    spec = get_spec(func)
+    spec = _compat.getfullargspec(func)
     defaults = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
     func.__doc__ = func.__doc__ % defaults
     return func
