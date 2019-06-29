@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import csv
 import json
 import datetime
 import itertools
@@ -10,10 +11,18 @@ import functools
 from ._compat import pathlib
 from ._compat import iteritems
 
+from . import _compat
+
 import sqlalchemy as sa
 
 from . import files as _files
 from . import backend as _backend
+
+__all__ = [
+    'load', 'iterrecords',
+    'to_csv', 'to_json', 'to_files',
+    'print_stats', 'print_fields',
+]
 
 
 class Fields(object):
@@ -196,8 +205,9 @@ def to_csv(filename='values.csv', bind=_backend.engine, encoding='utf-8'):
         ], bind=bind).select_from(sa.join(File, Value).join(Option))\
         .order_by(File.path, Option.section, Option.option, Value.line)
     rows = query.execute()
-    with _backend._csv_open(filename, 'w', encoding=encoding) as f:
-        _backend._csv_write(f, encoding, header=rows.keys(), rows=rows)
+    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
+        writer  = csv.writer(f)
+        _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
 
 
 def to_json(filename=None, bind=_backend.engine, encoding='utf-8'):
@@ -205,8 +215,9 @@ def to_json(filename=None, bind=_backend.engine, encoding='utf-8'):
     if filename is None:
         filename = '%s-json.csv' % pathlib.Path(bind.url.database).stem
     rows = ((path, json.dumps(data)) for path, data in iterrecords(bind=bind))
-    with _backend._csv_open(filename, 'w', encoding=encoding) as f:
-        _backend._csv_write(f, encoding, header=['path', 'json'], rows=rows)
+    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
+        writer = csv.writer(f)
+        _compat.csv_write(writer, encoding, header=['path', 'json'], rows=rows)
 
 
 def to_files(bind=_backend.engine, verbose=False, is_lines=Fields.is_lines):
@@ -298,16 +309,3 @@ def drop_duplicated_crefs():
             .where(other.option_id == Value.option_id)
             .where(other.value == Value.value)
             .where(other.line < Value.line))
-
-
-if __name__ == '__main__':
-    load()
-    print(next(iterrecords()))
-    #to_csv()
-    #to_json()
-    #to_files()
-    print_stats()
-    print_fields()
-    #drop_duplicate_sources()
-    #drop_duplicated_triggers()
-    #drop_duplicated_crefs()

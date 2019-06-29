@@ -46,6 +46,8 @@ from .languoids import iterlanguoids
 from .backend import engine, Session, print_rows
 from .models import Languoid, load, check, get_query, iterdescendants
 
+from . import values
+
 from . import files as _files
 from . import backend as _backend
 

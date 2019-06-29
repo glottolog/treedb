@@ -35,3 +35,12 @@ treedb.check()
 #treedb.write_csv()
 
 #treedb.files_roundtrip()
+
+#print(next(treedb.values.iterrecords()))
+#treedb.values.to_csv()
+#treedb.values.to_json()
+
+#treedb.values.drop_duplicate_sources()
+#treedb.values.drop_duplicated_triggers()
+#treedb.values.drop_duplicated_crefs()
+#treedb.values.to_files()

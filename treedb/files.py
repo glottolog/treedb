@@ -1,4 +1,4 @@
-# files.py - load/write languoids/tree/**/md.ini
+# files.py - load/write ../../languoids/tree/**/md.ini
 
 from __future__ import unicode_literals
 
