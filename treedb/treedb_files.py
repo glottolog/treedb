@@ -18,7 +18,7 @@ else:
 
 from treedb_backend import iteritems
 
-ROOT, BASENAME = pathlib.Path('../languoids/tree'), 'md.ini'
+ROOT, BASENAME = pathlib.Path('../../glottolog/languoids/tree'), 'md.ini'
 
 __all__ = ['ROOT', 'iterconfig', 'save']
 

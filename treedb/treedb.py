@@ -1,6 +1,6 @@
 # treedb.py - load languoids/tree/**/md.ini into sqlite3
 
-"""Example session
+"""Example session (glottolog cloned into the same directory as this repo)
 
 $ python -m venv .venv  # PY3
 $ source .venv/bin/activate  # Windows: $ .venv/Scripts/activate.bat
