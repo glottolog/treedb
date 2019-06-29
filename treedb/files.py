@@ -8,19 +8,26 @@ import configparser
 
 from ._compat import pathlib
 from ._compat import scandir
+from ._compat import iteritems
 
-from . import _compat
+__all__ = ['iterconfig', 'save']
 
-__all__ = ['ROOT', 'iterconfig', 'save']
-
-_DIR = pathlib.Path(__file__).parent
-
-ROOT, BASENAME = _DIR / '../../glottolog/languoids/tree', 'md.ini'
+BASENAME = 'md.ini'
 
 
-def iterfiles(top=ROOT, verbose=False):
+def _get_root_path(path=None):
+    if path is None:
+        from . import ROOT
+        path = ROOT
+    if not isinstance(path, pathlib.Path):
+        path = pathlib.Path(path)
+    return path
+
+
+def iterfiles(top=None, verbose=False):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
+    top = _get_root_path(top)
     if isinstance(top, pathlib.Path):
         top = str(top)
     stack = [top]
@@ -58,7 +65,7 @@ class ConfigParser(configparser.ConfigParser):
         return inst
 
     def __init__(self, defaults=None, **kwargs):
-        for k, v in _compat.iteritems(self._init_defaults):
+        for k, v in iteritems(self._init_defaults):
             kwargs.setdefault(k, v)
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
@@ -68,10 +75,9 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterconfig(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
+def iterconfig(root=None, assert_name=BASENAME, load=ConfigParser.from_file):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
-    if not isinstance(root, pathlib.Path):
-        root = pathlib.Path(root)
+    root = _get_root_path(root)
     path_slice = slice(len(root.parts), -1)
     for d in iterfiles(root):
         assert d.name == assert_name
@@ -79,9 +85,10 @@ def iterconfig(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
         yield path_tuple, d, load(d.path)
 
 
-def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
+def save(pairs, root=None, basename=BASENAME, assume_changed=False,
          verbose=False, load=ConfigParser.from_file):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
+    root = _get_root_path(root)
     for path_tuple, d in pairs:
         path = str(root.joinpath(*path_tuple) / basename)
         cfg = load(path)
@@ -90,7 +97,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
         changed = assume_changed or bool(drop_sections)
         for s in drop_sections:
             cfg.remove_section(s)
-        for section, s in _compat.iteritems(d):
+        for section, s in iteritems(d):
             if section != 'core':
                 drop_options = set(cfg.options(section))
                 if section == 'iso_retirement':
@@ -99,7 +106,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
                 changed = changed or bool(drop_options)
                 for o in drop_options:
                     cfg.remove_option(section, o)
-            for option, value in _compat.iteritems(s):
+            for option, value in iteritems(s):
                 if cfg.get(section, option) != value:
                     changed = True
                     cfg.set(section, option, value)

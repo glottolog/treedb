@@ -40,15 +40,22 @@ $ python
 >>> session.close()
 """
 
+from . import _compat
+
 from .main import (iterlanguoids,
                    engine, Languoid,
                    load,  check, export_db, write_csv,
                    get_query, iterdescendants)
 
 __all__ = [
+    'ROOT',
     'iterlanguoids',
     'engine',  'Languoid',
     'load',  'check', 'export_db', 'write_csv',
     'get_query',
     'iterdescendants',
 ]
+
+_PACKAGE_DIR = _compat.pathlib.Path(__file__).parent
+
+ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'

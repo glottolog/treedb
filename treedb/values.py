@@ -130,7 +130,7 @@ class Value(_backend.Model):
     value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"), nullable=False)
 
 
-def load(root=_files.ROOT, rebuild=False):
+def load(root=None, rebuild=False):
     _backend.load(make_loader(root=root), rebuild=rebuild)
 
 

@@ -86,7 +86,7 @@ EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
 
 
-def iterlanguoids(root=_files.ROOT):
+def iterlanguoids(root=None):
     """Yield dicts from languoids/tree/**/md.ini files."""
     def getlines(cfg, section, option):
         if not cfg.has_option(section, option):
@@ -591,7 +591,7 @@ class IsoRetirementChangeTo(_backend.Model):
     iso_retirement = sa.orm.relationship('IsoRetirement', innerjoin=True, back_populates='change_to')
 
 
-def load(root=_files.ROOT, with_values=True, rebuild=False):
+def load(root=None, with_values=True, rebuild=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename.""" 
     dbfile = _backend.load(make_loader(root, with_values), rebuild=rebuild)
     return str(dbfile)
