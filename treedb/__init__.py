@@ -42,22 +42,36 @@ $ python
 
 from . _compat import pathlib
 
-from . import backend as _backend
+from .languoids import iterlanguoids
 from .backend import engine, Session, print_rows
-from .main import (iterlanguoids, Languoid, load, check,
-                   get_query, iterdescendants)
+from .models import Languoid, load, check, get_query, iterdescendants
+
+from . import files as _files
+from . import backend as _backend
 
 __all__ = [
     'ROOT',
-    'engine', 'Session', 'print_rows'
-    'iterlanguoids', 'Languoid',
-    'load', 'check', 'get_query', 'iterdescendants',
+    'iterlanguoids',
+    'engine', 'Session', 'print_rows',
+    'Languoid', 'load', 'check', 'get_query', 'iterdescendants',
+    'files_roundtrip',
     'export_db', 'write_csv',
 ]
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
+
+
+def files_roundtrip(verbose=False):
+    """Do a load/save cycle with all config files."""
+    def _iterpairs(triples):
+        for path_tuple, _, cfg in triples:
+            d = {s: dict(cfg.items(s)) for s in cfg.sections()}
+            yield path_tuple, d
+
+    pairs = _iterpairs(_files.iterconfig())
+    _files.save(pairs, assume_changed=True, verbose=verbose)
 
 
 def export_db():

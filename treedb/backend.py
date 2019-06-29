@@ -20,8 +20,8 @@ import sqlalchemy.ext.declarative
 
 __all__ = [
     'engine', 'Session', 'Model',
-    'load',
-    'export', 'write_csv', 'print_rows',
+    'load', 'export',
+    'write_csv', 'print_rows',
 ]
 
 DBFILE = pathlib.Path('treedb.sqlite3')

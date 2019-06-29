@@ -116,15 +116,3 @@ def save(pairs, root=None, basename=BASENAME, assume_changed=False,
             if verbose:
                 print(path)
             cfg.to_file(path)
-
-
-def roundtrip(verbose=False):
-    """Do a load/save cycle with all config files."""
-    pairs = ((path_tuple, {s: dict(cfg.items(s)) for s in cfg.sections()})
-             for path_tuple, _, cfg in iterconfig())
-    save(pairs, assume_changed=True, verbose=verbose)
-
-
-if __name__ == '__main__':
-    print(next(iterconfig()))
-    #roundtrip()
