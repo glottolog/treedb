@@ -1,4 +1,4 @@
-# treedb_backend.py - sqlite3 database engine
+# backend.py - sqlite3 database engine
 
 from __future__ import unicode_literals
 
@@ -21,19 +21,19 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
-PY2 = (sys.version_info.major == 2)
-
-if PY2:
-    iteritems = lambda x: x.iteritems()
-else:
-    iteritems = lambda x: iter(x.items())
-
 __all__ = [
     'engine', 'Session', 'Model',
     'load', 'export',
     'print_rows',
     'iteritems',
 ]
+
+PY2 = (sys.version_info.major == 2)
+
+if PY2:
+    iteritems = lambda x: x.iteritems()
+else:
+    iteritems = lambda x: iter(x.items())
 
 DBFILE = pathlib.Path('treedb.sqlite3')
 

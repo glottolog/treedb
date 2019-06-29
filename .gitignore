@@ -20,7 +20,6 @@ Thumbs.db
 
 .ipynb_checkpoints/
 
-/treedb/.venv/
-/treedb/*.sqlite3
-/treedb/*.csv
-/treedb/*.zip
+/*.sqlite3
+/*.csv
+/*.zip

@@ -1,4 +1,4 @@
-# treedb_files.py - load/write languoids/tree/**/md.ini
+# files.py - load/write languoids/tree/**/md.ini
 
 from __future__ import unicode_literals
 
@@ -16,11 +16,13 @@ if sys.version_info.major == 2:
 else:
     from os import scandir
 
-from treedb_backend import iteritems
-
-ROOT, BASENAME = pathlib.Path('../../glottolog/languoids/tree'), 'md.ini'
+from .backend import iteritems
 
 __all__ = ['ROOT', 'iterconfig', 'save']
+
+_DIR = pathlib.Path(__file__).parent
+
+ROOT, BASENAME = _DIR / '../../glottolog/languoids/tree', 'md.ini'
 
 
 def iterfiles(top=ROOT, verbose=False):

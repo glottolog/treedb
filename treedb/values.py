@@ -1,4 +1,4 @@
-# treedb_values.py - ini content as (path, section, option, line, value) rows
+# values.py - ini content as (path, section, option, line, value) rows
 
 from __future__ import unicode_literals
 
@@ -12,12 +12,11 @@ try:
 except ImportError:
     import pathlib
 
-from treedb_backend import iteritems
-
 import sqlalchemy as sa
 
-import treedb_files as _files
-import treedb_backend as _backend
+from . import files as _files
+from . import backend as _backend
+from .backend import iteritems
 
 
 class Fields(object):

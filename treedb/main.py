@@ -1,44 +1,4 @@
-# treedb.py - load languoids/tree/**/md.ini into sqlite3
-
-"""Example session (glottolog cloned into the same directory as this repo)
-
-$ python -m venv .venv  # PY3
-$ source .venv/bin/activate  # Windows: $ .venv/Scripts/activate.bat
-$ pip install -r treedb-requirements.txt
-
-$ python
->>> import treedb
->>> next(treedb.iterlanguoids())
-{'id': 'abin1243', 'parent_id': None, 'level': 'language', ...
-
->>> treedb.load()
-...
-'treedb.sqlite3'
-
->>> treedb.check()
-...
-
->>> treedb.export_db()
-'treedb.zip'
-
->>> treedb.write_csv()
-'treedb.csv'
-
->>> treedb.load(rebuild=True)
-...
-'treedb.sqlite3'
-
->>> import sqlalchemy as sa
->>> treedb.write_csv(sa.select([treedb.Languoid]), filename='languoids.csv')
-
->>> sa.select([treedb.Languoid], bind=treedb.engine).execute().first()
-('abin1243', 'language', 'Abinomn', None, 'bsa', 'bsa', -2.92281, 138.891)
-
->>> session = treedb.Session()
->>> session.query(treedb.Languoid).first()
-<Languoid id='abin1243' level='language' name='Abinomn' hid='bsa' iso639_3='bsa'>
->>> session.close()
-"""
+# main.py - load languoids/tree/**/md.ini into sqlite3
 
 from __future__ import unicode_literals
 
@@ -48,13 +8,20 @@ import datetime
 import operator
 import itertools
 
-from treedb_backend import engine, Session, iteritems
-
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-import treedb_files as _files
-import treedb_backend as _backend
+from . import files as _files
+from . import backend as _backend
+from .backend import engine, Session, iteritems
+
+__all__ = [
+    'iterlanguoids',
+    'Languoid',
+    'load',  'check', 'export_db', 'write_csv',
+    'get_query',
+    'iterdescendants',
+]
 
 LEVEL = ('family', 'language', 'dialect')
 
@@ -630,11 +597,11 @@ def load(root=_files.ROOT, with_values=True, rebuild=False):
 
 def make_loader(root, with_values):
     if with_values:  # import here to register models for create_all()
-        import treedb_values
+        from . import values as _values
 
     def load_func(conn):
         if with_values:
-            treedb_values.make_loader(root=root)(conn)
+            _values.make_loader(root=root)(conn)
         _load(conn, root)
 
     return load_func
@@ -1014,34 +981,3 @@ def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
     if query is None:
         query = get_query()
     return _backend.write_csv(query, filename, encoding=encoding)
-
-
-if __name__ == '__main__':
-    # usage examples
-    print(next(iterlanguoids()))
-
-    load()
-
-    _backend.print_rows(sa.select([Languoid]).order_by(Languoid.id).limit(5))
-
-    tree = Languoid.tree(include_self=True, with_steps=True, with_terminal=True)
-    _backend.print_rows(tree.select().where(tree.c.child_id == 'book1242'))
-    _backend.print_rows(tree.select().where(tree.c.child_id == 'ramo1244'))
-
-    print(next(iterdescendants(parent_level='top', child_level='language')))
-
-    query = get_query()  # big example query containing 'everything'
-
-    try:
-        import pandas as pd
-    except ImportError:
-        pass
-    else:
-        df = pd.read_sql_query(query, engine, index_col='id')
-        df.info()
-
-    # run sanity checks
-    check()
-
-    #export_db()
-    #write_csv()
