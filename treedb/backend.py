@@ -12,10 +12,7 @@ import platform
 import contextlib
 import subprocess
 
-try:
-    import pathlib2 as pathlib
-except ImportError:
-    import pathlib
+from ._compat import PY2, pathlib
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -25,15 +22,7 @@ __all__ = [
     'engine', 'Session', 'Model',
     'load', 'export',
     'print_rows',
-    'iteritems',
 ]
-
-PY2 = (sys.version_info.major == 2)
-
-if PY2:
-    iteritems = lambda x: x.iteritems()
-else:
-    iteritems = lambda x: iter(x.items())
 
 DBFILE = pathlib.Path('treedb.sqlite3')
 

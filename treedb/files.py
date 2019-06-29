@@ -6,17 +6,10 @@ import io
 import sys
 import configparser
 
-try:
-    import pathlib2 as pathlib
-except ImportError:
-    import pathlib
+from ._compat import pathlib
+from ._compat import scandir
 
-if sys.version_info.major == 2:
-    from scandir import scandir
-else:
-    from os import scandir
-
-from .backend import iteritems
+from . import _compat
 
 __all__ = ['ROOT', 'iterconfig', 'save']
 
@@ -65,7 +58,7 @@ class ConfigParser(configparser.ConfigParser):
         return inst
 
     def __init__(self, defaults=None, **kwargs):
-        for k, v in iteritems(self._init_defaults):
+        for k, v in _compat.iteritems(self._init_defaults):
             kwargs.setdefault(k, v)
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
@@ -97,7 +90,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
         changed = assume_changed or bool(drop_sections)
         for s in drop_sections:
             cfg.remove_section(s)
-        for section, s in iteritems(d):
+        for section, s in _compat.iteritems(d):
             if section != 'core':
                 drop_options = set(cfg.options(section))
                 if section == 'iso_retirement':
@@ -106,7 +99,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
                 changed = changed or bool(drop_options)
                 for o in drop_options:
                     cfg.remove_option(section, o)
-            for option, value in iteritems(s):
+            for option, value in _compat.iteritems(s):
                 if cfg.get(section, option) != value:
                     changed = True
                     cfg.set(section, option, value)

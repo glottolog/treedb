@@ -13,12 +13,14 @@ import sqlalchemy.orm
 
 from . import files as _files
 from . import backend as _backend
-from .backend import engine, Session, iteritems
+from .backend import engine, Session
+from . import _compat
+
 
 __all__ = [
     'iterlanguoids',
     'Languoid',
-    'load',  'check', 'export_db', 'write_csv',
+    'load', 'check', 'export_db', 'write_csv',
     'get_query',
     'iterdescendants',
 ]
@@ -658,22 +660,22 @@ def _load(conn, root):
             for i, link in enumerate(links, 1):
                 insert_link(languoid_id=lid, ord=i, **link)
         if sources is not None:
-            for provider, data in iteritems(sources):
+            for provider, data in _compat.iteritems(sources):
                 for i, s in enumerate(data, 1):
                     insert_source(languoid_id=lid, provider=provider, ord=i, **s)
         if altnames is not None:
-            for provider, names in iteritems(altnames):
+            for provider, names in _compat.iteritems(altnames):
                 for i, n in enumerate(names, 1):
                     insert_altname(languoid_id=lid, provider=provider, ord=i, **n)
         if triggers is not None:
-            for field, triggers in iteritems(triggers):
+            for field, triggers in _compat.iteritems(triggers):
                 for i, t in enumerate(triggers, 1):
                     insert_trigger(languoid_id=lid, field=field, trigger=t, ord=i)
         if identifier is not None:
-            for site, i in iteritems(identifier):
+            for site, i in _compat.iteritems(identifier):
                 insert_ident(languoid_id=lid, site=site, identifier=i)
         if classification is not None:
-            for c, value in iteritems(classification):
+            for c, value in _compat.iteritems(classification):
                 isref, kind = CLASSIFICATION[c]
                 if isref:
                     for i, r in enumerate(value, 1):
