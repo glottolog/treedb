@@ -18,7 +18,9 @@ Example session (glottolog cloned into the same directory as this repo)
 
     $ python
 
+
 .. code:: python
+
     >>> import treedb
     >>> next(treedb.iterlanguoids())
     {'id': 'abin1243', 'parent_id': None, 'level': 'language', ...
