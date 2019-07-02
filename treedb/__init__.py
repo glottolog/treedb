@@ -4,7 +4,7 @@
 
 $ python -m venv .venv  # PY3
 $ source .venv/bin/activate  # Windows: $ .venv/Scripts/activate.bat
-$ pip install -r requirements.txt
+$ pip install -e .
 
 $ python
 >>> import treedb
@@ -59,6 +59,12 @@ __all__ = [
     'files_roundtrip',
     'export_db', 'write_csv',
 ]
+
+__title__ = 'treedb'
+__version__ = '0.1.dev0'
+__author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
+__license__ = 'Apache License, see LICENSE.txt'
+__copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 

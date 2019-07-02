@@ -1,0 +1,3 @@
+include README.rst LICENSE.txt
+include requirements.txt
+include try-treedb.py
