@@ -5,4 +5,4 @@ Glottolog ``treedb``
 Links
 -----
 
-- GitHub: https://github.com/glottolog/treedb``
+- GitHub: https://github.com/glottolog/treedb
