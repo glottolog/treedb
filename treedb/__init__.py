@@ -6,7 +6,9 @@ from . _compat import pathlib
 
 from .languoids import iterlanguoids
 from .backend import engine, Session, print_rows
-from .models import Languoid, load, check, get_query, iterdescendants
+from .models import Languoid, load
+from .checks import check
+from .queries import get_query, iterdescendants
 
 from . import values
 
@@ -17,7 +19,9 @@ __all__ = [
     'ROOT',
     'iterlanguoids',
     'engine', 'Session', 'print_rows',
-    'Languoid', 'load', 'check', 'get_query', 'iterdescendants',
+    'Languoid', 'load',
+    'check',
+    'get_query', 'iterdescendants',
     'files_roundtrip',
     'export_db', 'write_csv',
 ]
