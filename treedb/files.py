@@ -23,7 +23,7 @@ def _get_root_path(path=None):
     return path
 
 
-def iterfiles(top=None, verbose=False):
+def _iterfiles(top=None, verbose=False):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = _get_root_path(top)
@@ -78,7 +78,7 @@ def iterconfig(root=None, assert_name=BASENAME, load=ConfigParser.from_file):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     root = _get_root_path(root)
     path_slice = slice(len(root.parts), -1)
-    for d in iterfiles(root):
+    for d in _iterfiles(root):
         assert d.name == assert_name
         path_tuple = pathlib.Path(d.path).parts[path_slice]
         yield path_tuple, d, load(d.path)
