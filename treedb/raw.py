@@ -102,7 +102,7 @@ class File(_backend.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     glottocode = sa.Column(sa.String(8), sa.CheckConstraint('length(glottocode) = 8'), nullable=False, unique=True)
     path = sa.Column(sa.Text, sa.CheckConstraint('length(path) >= 8'), nullable=False, unique=True)
-    size = sa.Column(sa.Integer, nullable=False)
+    size = sa.Column(sa.Integer, sa.CheckConstraint('size > 0'), nullable=False)
     mtime = sa.Column(sa.DateTime, nullable=False)
 
     __table_args__ = (
