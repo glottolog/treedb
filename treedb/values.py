@@ -206,7 +206,7 @@ def to_csv(filename='values.csv', bind=_backend.engine, encoding='utf-8'):
         .order_by(File.path, Option.section, Option.option, Value.line)
     rows = query.execute()
     with _compat.csv_open(filename, 'w', encoding=encoding) as f:
-        writer  = csv.writer(f)
+        writer = csv.writer(f)
         _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
 
 

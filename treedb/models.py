@@ -232,7 +232,7 @@ class Link(_backend.Model):
     scheme = sa.Column(sa.Text, sa.Enum(*sorted(LINK_SCHEME)))
 
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='links')
-    
+
     def __repr__(self):
         return '<%s languoid_id=%r ord=%r url=%r title=%r scheme=%r>' % (
             self.__class__.__name__,
@@ -241,8 +241,8 @@ class Link(_backend.Model):
     @classmethod
     def printf(cls):
         return sa.case([
-            (sa.and_(cls.title != None),
-                 sa.func.printf('(%s)[%s]', cls.title,  cls.url)),
+            (cls.title != None,
+                sa.func.printf('(%s)[%s]', cls.title, cls.url)),
             ], else_=cls.url)
 
 

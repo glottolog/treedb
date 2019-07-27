@@ -9,10 +9,7 @@ from ._compat import pathlib
 from ._compat import scandir
 from ._compat import iteritems
 
-__all__ = [
-    'iterconfig',
-    'save', 'roundtrip',
-]
+__all__ = ['iterconfig', 'save']
 
 BASENAME = 'md.ini'
 

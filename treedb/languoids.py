@@ -38,13 +38,13 @@ def splitlink(markdown, _match=re.compile(
         title, url = ma.groups()
     else:
         title = None
-        url  =  markdown
+        url = markdown
     scheme, sep, _ = url.partition('://')
     if sep:
         scheme = scheme.lower()
     else:
         scheme = None
-    return  {'url': url, 'title': title, 'scheme': scheme}
+    return {'url': url, 'title': title, 'scheme': scheme}
 
 
 def splitsource(s, _match=re.compile(
@@ -72,7 +72,7 @@ def iterlanguoids(root=None):
             'level': cfg.get('core', 'level'),
             'name': cfg.get('core', 'name'),
             'hid': cfg.get('core', 'hid', fallback=None),
-            'iso639_3': cfg.get ('core', 'iso639-3', fallback=None),
+            'iso639_3': cfg.get('core', 'iso639-3', fallback=None),
             'latitude': cfg.getfloat('core', 'latitude', fallback=None),
             'longitude': cfg.getfloat('core', 'longitude', fallback=None),
             'macroareas': getlines(cfg, 'core', 'macroareas'),

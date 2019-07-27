@@ -9,7 +9,7 @@ PY2 = (sys.version_info.major == 2)
 
 if PY2:
     import pathlib2 as pathlib
-    
+
     from scandir import scandir
 
     from inspect import getargspec as getfullargspec
