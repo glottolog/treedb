@@ -6,6 +6,7 @@ import re
 import csv
 import time
 import zipfile
+import datetime
 import platform
 import contextlib
 import subprocess
@@ -107,7 +108,7 @@ def load(load_func, rebuild=False, engine=engine):
         conn.execute('PRAGMA application_id  = %d' % application_id)
         sa.insert(Dataset, bind=conn).execute(infos)
         load_func(conn.execution_options(compiled_cache={}))
-    print(time.time() - start)
+    print(datetime.timedelta(seconds=time.time() - start))
     return dbfile
 
 
