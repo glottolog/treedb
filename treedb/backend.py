@@ -12,6 +12,8 @@ import subprocess
 
 from ._compat import pathlib
 
+from . import ROOT
+
 from . import _compat
 
 import sqlalchemy as sa
@@ -75,14 +77,14 @@ def load(load_func, rebuild=False, engine=engine):
         else:
             return dbfile
 
-    def get_output(args, encoding='ascii'):
+    def get_output(args, encoding='ascii', cwd=str(ROOT)):
         if platform.system() == 'Windows':
             STARTUPINFO = subprocess.STARTUPINFO()
             STARTUPINFO.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             STARTUPINFO.wShowWindow = subprocess.SW_HIDE
         else:
             STARTUPINFO = None
-        stdout = subprocess.check_output(args, startupinfo=STARTUPINFO)
+        stdout = subprocess.check_output(args, cwd=cwd, startupinfo=STARTUPINFO)
         return stdout.decode(encoding).strip()
 
     start = time.time()

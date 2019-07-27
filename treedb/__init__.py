@@ -4,6 +4,10 @@
 
 from . _compat import pathlib
 
+_PACKAGE_DIR = pathlib.Path(__file__).parent
+
+ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
+
 from .languoids import iterlanguoids
 from .backend import engine, Session, print_rows
 from .models import Languoid, load
@@ -31,10 +35,6 @@ __version__ = '0.1.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
-
-_PACKAGE_DIR = pathlib.Path(__file__).parent
-
-ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
 
 
 def files_roundtrip(verbose=False):
