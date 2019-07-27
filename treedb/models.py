@@ -231,6 +231,10 @@ class Link(_backend.Model):
     title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"))
     scheme = sa.Column(sa.Text, sa.Enum(*sorted(LINK_SCHEME)))
 
+    __table_args__ = (
+        sa.CheckConstraint("substr(url, 1, length(scheme) + 3) = scheme || '://'"),
+    )
+
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='links')
 
     def __repr__(self):
