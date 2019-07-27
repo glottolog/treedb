@@ -469,19 +469,20 @@ class IsoRetirementChangeTo(_backend.Model):
     iso_retirement = sa.orm.relationship('IsoRetirement', innerjoin=True, back_populates='change_to')
 
 
-def load(root=None, with_values=True, rebuild=False):
-    """Load languoids/tree/**/md.ini into SQLite3 db, return filename.""" 
-    dbfile = _backend.load(make_loader(root, with_values), rebuild=rebuild)
+def load(root=None, with_raw=True, rebuild=False):
+    """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
+    loader = make_loader(root, with_raw=with_raw)
+    dbfile = _backend.load(loader, rebuild=rebuild)
     return str(dbfile)
 
 
-def make_loader(root, with_values):
-    if with_values:  # import here to register models for create_all()
-        from . import values as _values
+def make_loader(root, with_raw=True):
+    if with_raw:  # import here to register models for create_all()
+        from . import raw as _raw
 
     def load_func(conn):
-        if with_values:
-            _values.make_loader(root=root)(conn)
+        if with_raw:
+            _raw.make_loader(root=root)(conn)
         _load(conn, root)
 
     return load_func

@@ -1,4 +1,4 @@
-# values.py - ini content as (path, section, option, line, value) rows
+# raw.py - ini content as (path, section, option, line, value) rows
 
 from __future__ import unicode_literals
 
@@ -19,6 +19,7 @@ from . import files as _files
 from . import backend as _backend
 
 __all__ = [
+    'File', 'Option', 'Value',
     'load', 'iterrecords',
     'to_csv', 'to_json', 'to_files',
     'print_stats', 'print_fields',
@@ -198,7 +199,7 @@ def iterrecords(bind=_backend.engine, _groupby=itertools.groupby):
         yield p, record
 
 
-def to_csv(filename='values.csv', bind=_backend.engine, encoding='utf-8'):
+def to_csv(filename='raw.csv', bind=_backend.engine, encoding='utf-8'):
     """Write (path, section, option, line, value) rows to <filename>.csv."""
     query = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
