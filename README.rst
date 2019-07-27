@@ -32,6 +32,7 @@ Links
 -----
 
 - GitHub: https://github.com/glottolog/treedb
+- Example: https://nbviewer.jupyter.org/github/glottolog/treedb/blob/master/Stats.ipynb
 
 
 Quickstart
