@@ -8,8 +8,9 @@ _PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
 
+from .files import iterconfig as iterfiles
 from .languoids import iterlanguoids
-from .backend import engine, Session, print_rows
+from .backend import engine, Session, Dataset, print_rows
 from .models import Languoid, load
 from .checks import check
 from .queries import get_query, iterdescendants
@@ -21,6 +22,7 @@ from . import backend as _backend
 
 __all__ = [
     'ROOT',
+    'iterfiles',
     'iterlanguoids',
     'engine', 'Session', 'print_rows',
     'Languoid', 'load',
