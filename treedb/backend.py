@@ -22,6 +22,7 @@ import sqlalchemy.ext.declarative
 
 __all__ = [
     'engine', 'Session', 'Model',
+    'Dataset',
     'load', 'export',
     'write_csv', 'print_rows',
 ]
@@ -55,10 +56,11 @@ Model = sa.ext.declarative.declarative_base()
 class Dataset(Model):
     """Git commit loaded into the database."""
 
-    __tablename__ = 'dataset'
+    __tablename__ = '__dataset__'
 
     id = sa.Column(sa.Boolean, sa.CheckConstraint('id'),
                    primary_key=True, server_default=sa.true())
+    title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"), nullable=False)
     git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
     git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
     clean = sa.Column(sa.Boolean, nullable=False)
@@ -91,14 +93,18 @@ def load(load_func, rebuild=False, engine=engine):
     with engine.begin() as conn:
         create_tables(conn)
     infos = {
+        'title': 'Glottolog treedb',
         'git_commit': get_output(['git', 'rev-parse', 'HEAD']),
         'git_describe': get_output(['git', 'describe', '--tags', '--always']),
         # neither changes in index nor untracked files
         'clean': not get_output(['git', 'status', '--porcelain']),
     }
+    application_id = sum(ord(c) for c in Dataset.__tablename__)
+    assert application_id == 1122 == 0x462
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
+        conn.execute('PRAGMA application_id  = %d' % application_id)
         sa.insert(Dataset, bind=conn).execute(infos)
         load_func(conn.execution_options(compiled_cache={}))
     print(time.time() - start)

@@ -24,7 +24,7 @@ __all__ = [
     'ROOT',
     'iterfiles',
     'iterlanguoids',
-    'engine', 'Session', 'print_rows',
+    'engine', 'Session', 'Dataset', 'print_rows',
     'Languoid', 'load',
     'check',
     'get_query', 'iterdescendants',
