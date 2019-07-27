@@ -232,6 +232,7 @@ class Link(_backend.Model):
     scheme = sa.Column(sa.Text, sa.Enum(*sorted(LINK_SCHEME)))
 
     __table_args__ = (
+        sa.UniqueConstraint(languoid_id, url),
         sa.CheckConstraint("substr(url, 1, length(scheme) + 3) = scheme || '://'"),
     )
 
