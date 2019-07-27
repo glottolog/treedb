@@ -2,8 +2,10 @@
 
 from __future__ import unicode_literals
 
+import io
 import csv
 import json
+import hashlib
 import datetime
 import itertools
 import functools
@@ -103,7 +105,7 @@ class File(_backend.Model):
     glottocode = sa.Column(sa.String(8), sa.CheckConstraint('length(glottocode) = 8'), nullable=False, unique=True)
     path = sa.Column(sa.Text, sa.CheckConstraint('length(path) >= 8'), nullable=False, unique=True)
     size = sa.Column(sa.Integer, sa.CheckConstraint('size > 0'), nullable=False)
-    mtime = sa.Column(sa.DateTime, nullable=False)
+    sha256 = sa.Column(sa.String(64), sa.CheckConstraint('length(sha256) = 64'), unique=True, nullable=False)
 
     __table_args__ = (
         sa.CheckConstraint('substr(path, -length(glottocode)) = glottocode'),
@@ -145,6 +147,15 @@ def make_loader(root):
     return functools.partial(_load, root=root)
 
 
+def sha256sum(file, chunksize=2**16):  # 64 kB
+    result = hashlib.sha256()
+    with io.open(file, 'rb') as f:
+        read = functools.partial(f.read, chunksize)
+        for chunk in iter(read, b''):
+            result.update(chunk)
+    return result
+
+
 def _load(conn, root, is_lines=Fields.is_lines):
 
     insert_file = sa.insert(File, bind=conn).execute
@@ -166,9 +177,9 @@ def _load(conn, root, is_lines=Fields.is_lines):
 
     for path_tuple, dentry, cfg in _files.iterconfig(root):
         d_stat = dentry.stat()
-        mtime = datetime.datetime.fromtimestamp(d_stat.st_mtime)
+        sha256 = sha256sum(dentry).hexdigest()
         file_id, = insert_file(glottocode=path_tuple[-1], path='/'.join(path_tuple),
-                               size=d_stat.st_size, mtime=mtime).inserted_primary_key
+                               size=d_stat.st_size, sha256=sha256).inserted_primary_key
         for section, sec in cfg.items():
             for option, value in sec.items():
                 option_id, lines = options[(section, option)]
