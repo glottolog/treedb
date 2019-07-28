@@ -27,7 +27,7 @@ def make_lines(value):
 def make_date(value, format_='%Y-%m-%d'):
     return datetime.datetime.strptime(value, format_).date()
 
-    
+
 def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
     return datetime.datetime.strptime(value, format_)
 
@@ -44,8 +44,10 @@ def splitlink(markdown, _match=re.compile(
     else:
         title = None
         url = markdown
-    scheme, sep, _ = url.partition('://')
+
+    scheme, sep, rest = url.partition('://')
     if sep:
+        assert rest
         scheme = scheme.lower()
     else:
         scheme = None
@@ -85,18 +87,23 @@ def iterlanguoids(root=None):
             'countries': [splitcountry(c) for c in make_lines(core.get('countries'))],
             'links': [splitlink(c) for c in make_lines(core.get('links'))],
         }
+
         if 'sources' in cfg:
             item['sources'] = {provider: [splitsource(p) for p in make_lines(sources)]
                                for provider, sources in cfg['sources'].items()}
+
         if 'altnames' in cfg:
             item['altnames'] = {provider: [splitaltname(a) for a in make_lines(altnames)]
                                 for provider, altnames in cfg['altnames'].items()}
+
         if 'triggers' in cfg:
             item['triggers'] = {field: make_lines(triggers)
                                 for field, triggers in cfg['triggers'].items()}
+
         if 'identifier' in cfg:
             # FIXME: semicolon-separated (wals)?
             item['identifier'] = dict(cfg['identifier'])
+
         if 'classification' in cfg:
             item['classification'] = {
                 c: list(map(splitsource, make_lines(classifications)))
@@ -104,6 +111,7 @@ def iterlanguoids(root=None):
                    classifications
                 for c, classifications in cfg['classification'].items()}
             assert item['classification']
+
         if 'endangerment' in cfg:
             sct = cfg['endangerment']
             item['endangerment'] = {
@@ -112,6 +120,7 @@ def iterlanguoids(root=None):
                 'date': make_datetime(sct['date']),
                 'comment': sct['comment'],
             }
+
         if 'hh_ethnologue_comment' in cfg:
             sct = cfg['hh_ethnologue_comment']
             item['hh_ethnologue_comment'] = {
@@ -120,6 +129,7 @@ def iterlanguoids(root=None):
                 'ethnologue_versions': sct['ethnologue_versions'],
                 'comment': sct['comment'],
             }
+
         if 'iso_retirement' in cfg:
             sct = cfg['iso_retirement']
             item['iso_retirement'] = {
@@ -132,4 +142,5 @@ def iterlanguoids(root=None):
                 'remedy': sct.get('remedy'),
                 'comment': sct.get('comment'),
             }
+
         yield item
