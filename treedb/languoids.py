@@ -24,6 +24,12 @@ def make_lines(value):
     return value.strip().splitlines()
 
 
+def make_lines_raw(value):
+    if value is None:
+        return []
+    return value
+
+
 def skip_empty(mapping):
     return {k: v for k, v in mapping.items() if  v}
 
@@ -74,9 +80,17 @@ def splitaltname(s, _match=re.compile(
     return ma.groupdict('')
 
 
-def iterlanguoids(root=None):
+def iterlanguoids(root=None, from_raw=False):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
-    for path_tuple, _, cfg in _files.iterconfig(root):
+    if from_raw:
+        from . import raw
+        iterfiles = ((p.split('/'), r) for p, r in raw.iterrecords())
+        _make_lines = make_lines_raw
+    else:
+        iterfiles = ((pt, cfg) for pt, _, cfg in _files.iterconfig(root))
+        _make_lines = make_lines
+
+    for path_tuple, cfg in iterfiles:
         core = cfg['core']
         item = {
             'id': path_tuple[-1],
@@ -87,9 +101,9 @@ def iterlanguoids(root=None):
             'iso639_3': core.get('iso639-3'),
             'latitude': get_type(core, 'latitude', float),
             'longitude': get_type(core, 'longitude', float),
-            'macroareas': make_lines(core.get('macroareas')),
-            'countries': [splitcountry(c) for c in make_lines(core.get('countries'))],
-            'links': [splitlink(c) for c in make_lines(core.get('links'))],
+            'macroareas': _make_lines(core.get('macroareas')),
+            'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
+            'links': [splitlink(c) for c in _make_lines(core.get('links'))],
         }
 
         if 'sources' in cfg:
@@ -101,12 +115,16 @@ def iterlanguoids(root=None):
                 item['sources'] = sources
 
         if 'altnames' in cfg:
-            item['altnames'] = {provider: [splitaltname(a) for a in make_lines(altnames)]
-                                for provider, altnames in cfg['altnames'].items()}
+            item['altnames'] = {
+                provider: [splitaltname(a) for a in _make_lines(altnames)]
+                for provider, altnames in cfg['altnames'].items()
+            }
 
         if 'triggers' in cfg:
-            item['triggers'] = {field: make_lines(triggers)
-                                for field, triggers in cfg['triggers'].items()}
+            item['triggers'] = {
+                field: _make_lines(triggers)
+                for field, triggers in cfg['triggers'].items()
+            }
 
         if 'identifier' in cfg:
             # FIXME: semicolon-separated (wals)?
@@ -114,7 +132,7 @@ def iterlanguoids(root=None):
 
         if 'classification' in cfg:
             classification = skip_empty({
-                c: list(map(splitsource, make_lines(classifications)))
+                c: list(map(splitsource, _make_lines(classifications)))
                    if c.endswith('refs') else
                    classifications
                 for c, classifications in cfg['classification'].items()
@@ -148,7 +166,7 @@ def iterlanguoids(root=None):
                 'change_request': sct.get('change_request'),
                 'effective': make_date(sct['effective']),
                 'reason': sct['reason'],
-                'change_to': make_lines(sct.get('change_to')),
+                'change_to': _make_lines(sct.get('change_to')),
                 'remedy': sct.get('remedy'),
                 'comment': sct.get('comment'),
             }
