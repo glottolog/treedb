@@ -29,6 +29,8 @@ __all__ = [
 
 ENCODING = 'utf-8'
 
+WINDOWSIZE = 500
+
 
 class Fields(object):
     """Define known (section, option) pairs and if they are lists of lines."""
@@ -185,22 +187,50 @@ def _load(root, conn, is_lines=Fields.is_lines):
                                 line=0, value=value)
 
 
-def iterrecords(bind=_backend.ENGINE, _groupby=itertools.groupby):
+def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.groupby):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
-    select_paths = sa.select([File.path], bind=bind).order_by(File.path)
+    files_select_queries = windowed_selects(
+        sa.select([File.id, File.path], bind=bind).order_by(File.id),
+        key_column=File.id, size=windowsize, bind=bind)
+
     select_values = sa.select([
             Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
-        .select_from(sa.join(File, Value).join(Option))\
-        .where(File.path == sa.bindparam('path'))\
+        .select_from(sa.join(Value, Option))\
+        .where(Value.file_id == sa.bindparam('file_id'))\
         .order_by(Option.section, Option.option, Value.line)
-    for p, in select_paths.execute():
-        values = select_values.execute(path=p)
-        record = {
-            s: {o: [l.value for l in lines] if islines else next(lines).value
-               for (o, islines), lines in _groupby(sections, lambda r: (r.option, r.lines))}
-            for s, sections in _groupby(values, lambda r: r.section)}
-        yield p, record
+
+    for select_files in files_select_queries:
+        files = select_files.execute().fetchall()
+        for id_, p in files:
+            values = select_values.execute(file_id=id_).fetchall()
+            record = {
+                s: {o: [l.value for l in lines] if islines else next(lines).value
+                   for (o, islines), lines in _groupby(sections, lambda r: (r.option, r.lines))}
+                for s, sections in _groupby(values, lambda r: r.section)}
+            yield p, record
+
+
+def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
+    row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
+    select_keys = sa.select([key_column.label('key'), row_num]).alias()
+    select_keys = sa.select([select_keys.c.key], bind=bind)\
+        .where(select_keys.c.row_num % size == 0)
+
+    keys = [k for k, in select_keys.execute()]  # materialize
+
+    keys = iter(keys)
+    try:
+        end = next(keys)
+    except StopIteration:
+        yield select
+        return
+    yield select.where(key_column <= end)
+    last = end
+    for end in keys:
+        yield select.where(key_column > last).where(key_column <= end)
+        last = end
+    yield select.where(key_column > end)
 
 
 def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding=ENCODING):
