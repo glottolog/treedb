@@ -23,10 +23,9 @@ def _get_root_path(path=None):
     return path
 
 
-def _iterfiles(top=None, verbose=False):
+def _iterfiles(top, verbose=False):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
-    top = _get_root_path(top)
     if isinstance(top, pathlib.Path):
         top = str(top)
     stack = [top]
