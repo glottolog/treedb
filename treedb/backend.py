@@ -122,7 +122,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False, with_raw=True):
     sa.insert(Dataset, bind=engine).execute(dataset)
 
     print(datetime.timedelta(seconds=time.time() - start))
-    return str(dbfile)
+    return dbfile
 
 
 def _check_output(args, cwd=None, encoding='ascii'):
