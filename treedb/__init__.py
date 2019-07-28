@@ -2,7 +2,7 @@
 
 """Load glottolog lanuoid tree ini files into SQLite3 database."""
 
-from . _compat import pathlib
+from . _compat import zip_longest, pathlib
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 
@@ -60,3 +60,11 @@ def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
     if query is None:
         query = get_query()
     return _backend.write_csv(query, filename, encoding=encoding)
+
+
+def compare_with_raw(root=ROOT):
+    l_files = iterlanguoids(root)
+    l_raw = iterlanguoids(from_raw=True)
+    for f, r in zip_longest(l_files, l_raw):
+        if f != r:
+            print('', f, r, '', sep='\n')
