@@ -22,16 +22,15 @@ import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 __all__ = [
-    'engine', 'Session', 'Model',
+    'ENGINE', 'Session', 'Model',
     'Dataset',
     'load', 'export',
     'write_csv', 'print_rows',
 ]
 
-DBFILE = pathlib.Path('treedb.sqlite3')
+_DBFILE = pathlib.Path('treedb.sqlite3')
 
-
-engine = sa.create_engine('sqlite:///%s' % DBFILE, echo=False)
+ENGINE = sa.create_engine('sqlite:///%s' % _DBFILE, echo=False)
 
 
 @sa.event.listens_for(sa.engine.Engine, 'connect')
@@ -48,7 +47,7 @@ def _regexp(pattern, value):
     return re.search(pattern, value) is not None
 
 
-Session = sa.orm.sessionmaker(bind=engine)
+Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 Model = sa.ext.declarative.declarative_base()
@@ -67,11 +66,11 @@ class Dataset(Model):
     clean = sa.Column(sa.Boolean, nullable=False)
 
 
-def create_tables(bind=engine):
+def create_tables(bind=ENGINE):
     Model.metadata.create_all(bind)
 
 
-def load(load_func, rebuild=False, engine=engine):
+def load(load_func, rebuild=False, engine=ENGINE):
     assert engine.url.drivername == 'sqlite'
     dbfile = pathlib.Path(engine.url.database)
     if dbfile.exists():
@@ -112,7 +111,7 @@ def load(load_func, rebuild=False, engine=engine):
     return dbfile
 
 
-def export(metadata=Model.metadata, engine=engine, encoding='utf-8'):
+def export(metadata=Model.metadata, engine=ENGINE, encoding='utf-8'):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     filename = '%s.zip' % pathlib.Path(engine.url.database).stem
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -127,7 +126,7 @@ def export(metadata=Model.metadata, engine=engine, encoding='utf-8'):
     return filename
 
 
-def write_csv(query, filename, encoding='utf-8', engine=engine, verbose=False):
+def write_csv(query, filename, encoding='utf-8', engine=ENGINE, verbose=False):
     if verbose:
         print(query)
     rows = engine.execute(query)
@@ -137,7 +136,7 @@ def write_csv(query, filename, encoding='utf-8', engine=engine, verbose=False):
     return filename
 
 
-def print_rows(query, format_=None, engine=engine, verbose=False):
+def print_rows(query, format_=None, engine=ENGINE, verbose=False):
     if verbose:
         print(query)
     rows = engine.execute(query)

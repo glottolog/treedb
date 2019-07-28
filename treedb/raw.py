@@ -192,7 +192,7 @@ def _load(conn, root, is_lines=Fields.is_lines):
                                 line=0, value=value)
 
 
-def iterrecords(bind=_backend.engine, _groupby=itertools.groupby):
+def iterrecords(bind=_backend.ENGINE, _groupby=itertools.groupby):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
     select_paths = sa.select([File.path], bind=bind).order_by(File.path)
     select_values = sa.select([
@@ -210,7 +210,7 @@ def iterrecords(bind=_backend.engine, _groupby=itertools.groupby):
         yield p, record
 
 
-def to_csv(filename='raw.csv', bind=_backend.engine, encoding='utf-8'):
+def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding='utf-8'):
     """Write (path, section, option, line, value) rows to <filename>.csv."""
     query = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
@@ -222,7 +222,7 @@ def to_csv(filename='raw.csv', bind=_backend.engine, encoding='utf-8'):
         _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
 
 
-def to_json(filename=None, bind=_backend.engine, encoding='utf-8'):
+def to_json(filename=None, bind=_backend.ENGINE, encoding='utf-8'):
     """Write (path, json) rows to <databasename>-json.csv."""
     if filename is None:
         filename = '%s-json.csv' % pathlib.Path(bind.url.database).stem
@@ -232,7 +232,7 @@ def to_json(filename=None, bind=_backend.engine, encoding='utf-8'):
         _compat.csv_write(writer, encoding, header=['path', 'json'], rows=rows)
 
 
-def to_files(bind=_backend.engine, verbose=False, is_lines=Fields.is_lines):
+def to_files(bind=_backend.ENGINE, verbose=False, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
     def iterpairs(records):
         for p, r in records:
@@ -246,7 +246,7 @@ def to_files(bind=_backend.engine, verbose=False, is_lines=Fields.is_lines):
     _files.save(iterpairs(iterrecords(bind=bind)), verbose=verbose)
 
 
-def print_fields(bind=_backend.engine):
+def print_fields(bind=_backend.ENGINE):
     has_scalar = (sa.func.min(Value.line) == 0).label('scalar')
     has_lines = (sa.func.max(Value.line) != 0).label('lines')
     query = sa.select([
@@ -260,7 +260,7 @@ def print_fields(bind=_backend.engine):
     print('}')
 
 
-def print_stats(bind=_backend.engine, execute=False):
+def print_stats(bind=_backend.ENGINE, execute=False):
     query = sa.select([
             Option.section, Option.option, sa.func.count().label('n'),
         ], bind=bind)\
@@ -270,7 +270,7 @@ def print_stats(bind=_backend.engine, execute=False):
     _backend.print_rows(query, '{section:<22} {option:<22} {n:,}')
 
 
-def dropfunc(func, bind=_backend.engine, save=True, verbose=True):
+def dropfunc(func, bind=_backend.ENGINE, save=True, verbose=True):
     def wrapper(bind=bind, save=save, verbose=verbose):
         delete_query = func()
         rows_deleted = bind.execute(delete_query).rowcount
