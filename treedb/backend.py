@@ -71,7 +71,8 @@ def create_tables(bind=ENGINE):
     Model.metadata.create_all(bind)
 
 
-def load(root=ROOT, engine=ENGINE, rebuild=False, with_raw=True):
+def load(root=ROOT, engine=ENGINE, rebuild=False,
+         with_raw=True, from_raw=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
     assert engine.url.drivername == 'sqlite'
 
@@ -116,7 +117,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False, with_raw=True):
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
-        models._load(languoids.iterlanguoids(root),
+        models._load(languoids.iterlanguoids(root, from_raw=from_raw),
                      conn.execution_options(compiled_cache={}))
 
     sa.insert(Dataset, bind=engine).execute(dataset)

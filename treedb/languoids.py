@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 import re
 import datetime
-import functools
 
 from . import files as _files
 
