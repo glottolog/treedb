@@ -10,8 +10,8 @@ ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
 
 from .files import iterconfig as iterfiles
 from .languoids import iterlanguoids
-from .backend import ENGINE as engine,Session, Dataset, print_rows
-from .models import Languoid, load
+from .backend import ENGINE as engine, Session, Dataset, load, print_rows
+from .models import Languoid
 from .checks import check
 from .queries import get_query, iterdescendants
 
@@ -24,8 +24,8 @@ __all__ = [
     'ROOT',
     'iterfiles',
     'iterlanguoids',
-    'engine', 'Session', 'Dataset', 'print_rows',
-    'Languoid', 'load',
+    'engine', 'Session', 'Dataset', 'load', 'print_rows',
+    'Languoid',
     'check',
     'get_query', 'iterdescendants',
     'files_roundtrip',

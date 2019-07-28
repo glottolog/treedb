@@ -7,10 +7,9 @@ from ._compat import iteritems
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import languoids as _languoids
 from . import backend as _backend
 
-__all__ = ['Languoid', 'load']
+__all__ = ['Languoid']
 
 LEVEL = ('family', 'language', 'dialect')
 
@@ -474,26 +473,7 @@ class IsoRetirementChangeTo(_backend.Model):
     iso_retirement = sa.orm.relationship('IsoRetirement', innerjoin=True, back_populates='change_to')
 
 
-def load(root=None, with_raw=True, rebuild=False):
-    """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
-    loader = make_loader(root, with_raw=with_raw)
-    dbfile = _backend.load(loader, rebuild=rebuild)
-    return str(dbfile)
-
-
-def make_loader(root, with_raw=True):
-    if with_raw:  # import here to register models for create_all()
-        from . import raw as _raw
-
-    def load_func(conn):
-        if with_raw:
-            _raw.make_loader(root=root)(conn)
-        _load(conn, root)
-
-    return load_func
-
-
-def _load(conn, root):
+def _load(languoids, conn):
     insert_lang = sa.insert(Languoid, bind=conn).execute
 
     sa.insert(Macroarea, bind=conn).execute([{'name': n} for n in sorted(MACROAREA)])
@@ -517,7 +497,7 @@ def _load(conn, root):
     insert_ir = sa.insert(IsoRetirement, bind=conn).execute
     insert_irct = sa.insert(IsoRetirementChangeTo, bind=conn).execute
 
-    for l in _languoids.iterlanguoids(root):
+    for l in languoids:
         lid = l['id']
 
         macroareas = l.pop('macroareas')

@@ -6,9 +6,9 @@ import io
 import csv
 import json
 import hashlib
-import datetime
 import itertools
 import functools
+import contextlib
 
 from ._compat import pathlib
 from ._compat import iteritems
@@ -22,10 +22,12 @@ from . import backend as _backend
 
 __all__ = [
     'File', 'Option', 'Value',
-    'load', 'iterrecords',
+    'iterrecords',
     'to_csv', 'to_json', 'to_files',
     'print_stats', 'print_fields',
 ]
+
+ENCODING = 'utf-8'
 
 
 class Fields(object):
@@ -139,14 +141,6 @@ class Value(_backend.Model):
     value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"), nullable=False)
 
 
-def load(root=None, rebuild=False):
-    _backend.load(make_loader(root=root), rebuild=rebuild)
-
-
-def make_loader(root):
-    return functools.partial(_load, root=root)
-
-
 def sha256sum(file, chunksize=2**16):  # 64 kB
     result = hashlib.sha256()
     with io.open(file, 'rb') as f:
@@ -156,8 +150,7 @@ def sha256sum(file, chunksize=2**16):  # 64 kB
     return result
 
 
-def _load(conn, root, is_lines=Fields.is_lines):
-
+def _load(root, conn, is_lines=Fields.is_lines):
     insert_file = sa.insert(File, bind=conn).execute
     insert_value = sa.insert(Value, bind=conn).execute
 
@@ -210,7 +203,7 @@ def iterrecords(bind=_backend.ENGINE, _groupby=itertools.groupby):
         yield p, record
 
 
-def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding='utf-8'):
+def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding=ENCODING):
     """Write (path, section, option, line, value) rows to <filename>.csv."""
     query = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
@@ -222,7 +215,7 @@ def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding='utf-8'):
         _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
 
 
-def to_json(filename=None, bind=_backend.ENGINE, encoding='utf-8'):
+def to_json(filename=None, bind=_backend.ENGINE, encoding=ENCODING):
     """Write (path, json) rows to <databasename>-json.csv."""
     if filename is None:
         filename = '%s-json.csv' % pathlib.Path(bind.url.database).stem

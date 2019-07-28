@@ -8,6 +8,7 @@ import time
 import zipfile
 import datetime
 import platform
+import functools
 import contextlib
 import subprocess
 
@@ -70,8 +71,10 @@ def create_tables(bind=ENGINE):
     Model.metadata.create_all(bind)
 
 
-def load(load_func, rebuild=False, engine=ENGINE):
+def load(root=ROOT, engine=ENGINE, rebuild=False, with_raw=True):
+    """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
     assert engine.url.drivername == 'sqlite'
+
     dbfile = pathlib.Path(engine.url.database)
     if dbfile.exists():
         if rebuild:
@@ -79,36 +82,59 @@ def load(load_func, rebuild=False, engine=ENGINE):
         else:
             return dbfile
 
-    def get_output(args, encoding='ascii', cwd=str(ROOT)):
-        if platform.system() == 'Windows':
-            STARTUPINFO = subprocess.STARTUPINFO()
-            STARTUPINFO.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            STARTUPINFO.wShowWindow = subprocess.SW_HIDE
-        else:
-            STARTUPINFO = None
-        stdout = subprocess.check_output(args, cwd=cwd, startupinfo=STARTUPINFO)
-        return stdout.decode(encoding).strip()
+    application_id = sum(ord(c) for c in Dataset.__tablename__)
+    assert application_id == 1122 == 0x462
+
+    # import here to register models for create_all()
+    if with_raw:
+        from . import raw
+    from . import models
 
     start = time.time()
     with engine.begin() as conn:
+        conn.execute('PRAGMA application_id  = %d' % application_id)
         create_tables(conn)
-    infos = {
+
+    get_stdout = functools.partial(_check_output, cwd=str(root))
+    dataset = {
         'title': 'Glottolog treedb',
-        'git_commit': get_output(['git', 'rev-parse', 'HEAD']),
-        'git_describe': get_output(['git', 'describe', '--tags', '--always']),
+        'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
+        'git_describe': get_stdout(['git', 'describe', '--tags', '--always']),
         # neither changes in index nor untracked files
-        'clean': not get_output(['git', 'status', '--porcelain']),
+        'clean': not get_stdout(['git', 'status', '--porcelain']),
     }
-    application_id = sum(ord(c) for c in Dataset.__tablename__)
-    assert application_id == 1122 == 0x462
+
+    if with_raw:
+        with engine.begin() as conn:
+            conn.execute('PRAGMA synchronous = OFF')
+            conn.execute('PRAGMA journal_mode = MEMORY')
+            raw._load(root,
+                      conn.execution_options(compiled_cache={}))
+
+    from . import languoids
+
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
-        conn.execute('PRAGMA application_id  = %d' % application_id)
-        sa.insert(Dataset, bind=conn).execute(infos)
-        load_func(conn.execution_options(compiled_cache={}))
+        models._load(languoids.iterlanguoids(root),
+                     conn.execution_options(compiled_cache={}))
+
+    sa.insert(Dataset, bind=engine).execute(dataset)
+
     print(datetime.timedelta(seconds=time.time() - start))
-    return dbfile
+    return str(dbfile)
+
+
+def _check_output(args, cwd=None, encoding='ascii'):
+    if platform.system() == 'Windows':
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+    else:
+        startupinfo = None
+
+    out = subprocess.check_output(args, cwd=cwd, startupinfo=startupinfo)
+    return out.decode(encoding).strip()
 
 
 def export(metadata=Model.metadata, engine=ENGINE, encoding='utf-8'):
