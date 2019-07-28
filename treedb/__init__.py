@@ -2,6 +2,8 @@
 
 """Load glottolog lanuoid tree ini files into SQLite3 database."""
 
+from __future__ import print_function
+
 from . _compat import zip_longest, pathlib
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent

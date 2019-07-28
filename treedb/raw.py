@@ -8,7 +8,6 @@ import json
 import hashlib
 import itertools
 import functools
-import contextlib
 
 from ._compat import pathlib
 from ._compat import iteritems
@@ -189,9 +188,9 @@ def _load(root, conn, is_lines=Fields.is_lines):
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.groupby):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
-    files_select_queries = windowed_selects(
+    files_select_queries = list(windowed_selects(
         sa.select([File.id, File.path], bind=bind).order_by(File.id),
-        key_column=File.id, size=windowsize, bind=bind)
+        key_column=File.id, size=windowsize, bind=bind))
 
     select_values = sa.select([
             Option.section, Option.option, Option.lines, Value.line, Value.value,
@@ -217,8 +216,7 @@ def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     select_keys = sa.select([select_keys.c.key], bind=bind)\
         .where(select_keys.c.row_num % size == 0)
 
-    keys = [k for k, in select_keys.execute()]  # materialize
-
+    keys = [k for k, in select_keys.execute()]
     keys = iter(keys)
     try:
         end = next(keys)
