@@ -534,30 +534,38 @@ def _load(conn, root):
         iso_retirement = l.pop('iso_retirement', None)
 
         insert_lang(l)
+
         for ma in macroareas:
             lang_ma(languoid_id=lid, macroarea_name=ma)
+
         for name, cc in countries:
             if not has_country(id=cc):
                 insert_country(id=cc, name=name)
             lang_country(languoid_id=lid, country_id=cc)
+
         if links is not None:
             for i, link in enumerate(links, 1):
                 insert_link(languoid_id=lid, ord=i, **link)
+
         if sources is not None:
             for provider, data in iteritems(sources):
                 for i, s in enumerate(data, 1):
                     insert_source(languoid_id=lid, provider=provider, ord=i, **s)
+
         if altnames is not None:
             for provider, names in iteritems(altnames):
                 for i, n in enumerate(names, 1):
                     insert_altname(languoid_id=lid, provider=provider, ord=i, **n)
+
         if triggers is not None:
             for field, triggers in iteritems(triggers):
                 for i, t in enumerate(triggers, 1):
                     insert_trigger(languoid_id=lid, field=field, trigger=t, ord=i)
+
         if identifier is not None:
             for site, i in iteritems(identifier):
                 insert_ident(languoid_id=lid, site=site, identifier=i)
+
         if classification is not None:
             for c, value in iteritems(classification):
                 isref, kind = CLASSIFICATION[c]
@@ -566,10 +574,13 @@ def _load(conn, root):
                         insert_ref(languoid_id=lid, kind=kind, ord=i, **r)
                 else:
                     insert_comment(languoid_id=lid, kind=kind, comment=value)
+
         if endangerment is not None:
             insert_enda(languoid_id=lid, **endangerment)
+
         if hh_ethnologue_comment is not None:
             insert_el(languoid_id=lid, **hh_ethnologue_comment)
+
         if iso_retirement is not None:
             change_to = iso_retirement.pop('change_to')
             insert_ir(languoid_id=lid, **iso_retirement)

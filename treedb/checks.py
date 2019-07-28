@@ -10,6 +10,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 
 from . import backend as _backend
+
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname)
@@ -25,11 +26,13 @@ def check(func=None):
         except AttributeError:
             check.registered = [func]
         return func
+
     for func in check.registered:
         session = _backend.Session()
         ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
         check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
         check_inst = check_cls(session)
+
         try:
             check_inst.validate()
         finally:
@@ -50,6 +53,7 @@ class Check(object):
     def validate(self):
         self.invalid_count = self.query.count()
         print(self)
+
         if self.invalid_count:
             if self.detail:
                 self.invalid = self.query.all()
