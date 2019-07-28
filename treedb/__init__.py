@@ -65,6 +65,9 @@ def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
 def compare_with_raw(root=ROOT):
     l_files = iterlanguoids(root)
     l_raw = iterlanguoids(from_raw=True)
+    same = True
     for f, r in zip_longest(l_files, l_raw):
         if f != r:
+            same = False
             print('', f, r, '', sep='\n')
+    return same

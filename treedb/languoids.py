@@ -24,6 +24,10 @@ def make_lines(value):
     return value.strip().splitlines()
 
 
+def skip_empty(mapping):
+    return {k: v for k, v in mapping.items() if  v}
+
+
 def make_date(value, format_='%Y-%m-%d'):
     return datetime.datetime.strptime(value, format_).date()
 
@@ -89,8 +93,12 @@ def iterlanguoids(root=None):
         }
 
         if 'sources' in cfg:
-            item['sources'] = {provider: [splitsource(p) for p in make_lines(sources)]
-                               for provider, sources in cfg['sources'].items()}
+            sources = skip_empty({
+                provider: [splitsource(p) for p in _make_lines(sources)]
+                for provider, sources in cfg['sources'].items()
+            })
+            if sources:
+                item['sources'] = sources
 
         if 'altnames' in cfg:
             item['altnames'] = {provider: [splitaltname(a) for a in make_lines(altnames)]
@@ -105,12 +113,14 @@ def iterlanguoids(root=None):
             item['identifier'] = dict(cfg['identifier'])
 
         if 'classification' in cfg:
-            item['classification'] = {
+            classification = skip_empty({
                 c: list(map(splitsource, make_lines(classifications)))
                    if c.endswith('refs') else
                    classifications
-                for c, classifications in cfg['classification'].items()}
-            assert item['classification']
+                for c, classifications in cfg['classification'].items()
+            })
+            if classification:
+                item['classification'] = classification
 
         if 'endangerment' in cfg:
             sct = cfg['endangerment']
