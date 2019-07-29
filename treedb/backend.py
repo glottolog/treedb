@@ -21,7 +21,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
-from . import ROOT, ENCODING
+from . import FILE, ROOT, ENCODING
 
 __all__ = [
     'ENGINE', 'Model', 'Session',
@@ -31,9 +31,7 @@ __all__ = [
     'write_csv', 'print_rows',
 ]
 
-_DBFILE = pathlib.Path('treedb.sqlite3')
-
-ENGINE = sa.create_engine('sqlite:///%s' % _DBFILE, echo=False)
+ENGINE = sa.create_engine('sqlite:///%s' % FILE, echo=False)
 
 
 @sa.event.listens_for(sa.engine.Engine, 'connect')
