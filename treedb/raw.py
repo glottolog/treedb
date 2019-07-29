@@ -170,10 +170,10 @@ def _load(root, conn, is_lines=Fields.is_lines):
     options = Options()
 
     for path_tuple, dentry, cfg in _files.iterconfig(root):
-        d_stat = dentry.stat()
-        sha256 = sha256sum(dentry).hexdigest()
-        file_id, = insert_file(glottocode=path_tuple[-1], path='/'.join(path_tuple),
-                               size=d_stat.st_size, sha256=sha256).inserted_primary_key
+        file_id, = insert_file(glottocode=path_tuple[-1],
+                               path='/'.join(path_tuple),
+                               size=dentry.stat().st_size,
+                               sha256=sha256sum(dentry.path).hexdigest()).inserted_primary_key
         for section, sec in iteritems(cfg):
             for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
