@@ -9,18 +9,11 @@ from ._compat import pathlib
 from ._compat import scandir
 from ._compat import iteritems
 
+from . import ROOT, ENCODING
+
 __all__ = ['iterconfig', 'save']
 
 BASENAME = 'md.ini'
-
-
-def _get_root_path(path=None):
-    if path is None:
-        from . import ROOT
-        path = ROOT
-    if not isinstance(path, pathlib.Path):
-        path = pathlib.Path(path)
-    return path
 
 
 def _iterfiles(top, verbose=False):
@@ -47,7 +40,7 @@ class ConfigParser(configparser.ConfigParser):
     """Conservative ConfigParser with encoding header."""
 
     _header = '# -*- coding: %s -*-\n'
-    _encoding = 'utf-8'
+    _encoding = ENCODING
     _newline = '\r\n'
     _init_defaults = {
         'delimiters': ('=',),
@@ -73,9 +66,10 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterconfig(root=None, assert_name=BASENAME, load=ConfigParser.from_file):
+def iterconfig(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
-    root = _get_root_path(root)
+    if not isinstance(root, pathlib.Path):
+        root = pathlib.Path(root)
     path_slice = slice(len(root.parts), -1)
     for d in _iterfiles(root):
         assert d.name == assert_name
@@ -83,10 +77,11 @@ def iterconfig(root=None, assert_name=BASENAME, load=ConfigParser.from_file):
         yield path_tuple, d, load(d.path)
 
 
-def save(pairs, root=None, basename=BASENAME, assume_changed=False,
+def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
          verbose=False, load=ConfigParser.from_file):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
-    root = _get_root_path(root)
+    if not isinstance(root, pathlib.Path):
+        root = pathlib.Path(root)
     for path_tuple, d in pairs:
         path = str(root.joinpath(*path_tuple) / basename)
         cfg = load(path)

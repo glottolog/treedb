@@ -12,20 +12,21 @@ import functools
 import contextlib
 import subprocess
 
-from ._compat import pathlib
-
-from . import ROOT
-
 from . import _compat
+
+from ._compat import pathlib
 
 import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
+from . import ROOT, ENCODING
+
 __all__ = [
-    'ENGINE', 'Session', 'Model',
+    'ENGINE', 'Model', 'Session',
     'Dataset',
-    'load', 'export',
+    'load',
+    'export',
     'write_csv', 'print_rows',
 ]
 
@@ -48,9 +49,6 @@ def _regexp(pattern, value):
     return re.search(pattern, value) is not None
 
 
-Session = sa.orm.sessionmaker(bind=ENGINE)
-
-
 Model = sa.ext.declarative.declarative_base()
 
 
@@ -69,6 +67,9 @@ class Dataset(Model):
 
 def create_tables(bind=ENGINE):
     Model.metadata.create_all(bind)
+
+
+Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 def load(root=ROOT, engine=ENGINE, rebuild=False,
@@ -93,7 +94,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     start = time.time()
     with engine.begin() as conn:
-        conn.execute('PRAGMA application_id  = %d' % application_id)
+        conn.execute('PRAGMA application_id = %d' % application_id)
         create_tables(conn)
 
     get_stdout = functools.partial(_check_output, cwd=str(root))
@@ -126,7 +127,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     return dbfile
 
 
-def _check_output(args, cwd=None, encoding='ascii'):
+def _check_output(args, cwd=None, encoding=ENCODING):
     if platform.system() == 'Windows':
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -138,7 +139,7 @@ def _check_output(args, cwd=None, encoding='ascii'):
     return out.decode(encoding).strip()
 
 
-def export(metadata=Model.metadata, engine=ENGINE, encoding='utf-8'):
+def export(metadata=Model.metadata, engine=ENGINE, encoding=ENCODING):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     filename = '%s.zip' % pathlib.Path(engine.url.database).stem
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -153,7 +154,7 @@ def export(metadata=Model.metadata, engine=ENGINE, encoding='utf-8'):
     return filename
 
 
-def write_csv(query, filename, encoding='utf-8', engine=ENGINE, verbose=False):
+def write_csv(query, filename, encoding=ENCODING, engine=ENGINE, verbose=False):
     if verbose:
         print(query)
     rows = engine.execute(query)

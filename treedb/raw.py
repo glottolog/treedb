@@ -16,6 +16,8 @@ from . import _compat
 
 import sqlalchemy as sa
 
+from . import ENCODING
+
 from . import files as _files
 from . import backend as _backend
 
@@ -25,8 +27,6 @@ __all__ = [
     'to_csv', 'to_json', 'to_files',
     'print_stats', 'print_fields',
 ]
-
-ENCODING = 'utf-8'
 
 WINDOWSIZE = 500
 
@@ -174,8 +174,8 @@ def _load(root, conn, is_lines=Fields.is_lines):
         sha256 = sha256sum(dentry).hexdigest()
         file_id, = insert_file(glottocode=path_tuple[-1], path='/'.join(path_tuple),
                                size=d_stat.st_size, sha256=sha256).inserted_primary_key
-        for section, sec in cfg.items():
-            for option, value in sec.items():
+        for section, sec in iteritems(cfg):
+            for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
                 if lines:
                     for i, v in enumerate(value.strip().splitlines(), 1):

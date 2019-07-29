@@ -4,11 +4,14 @@
 
 from __future__ import print_function
 
-from . _compat import zip_longest, pathlib
+from . _compat import iteritems, zip_longest
+from . _compat import pathlib
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR / '../../glottolog/languoids/tree'
+
+ENCODING = 'utf-8'
 
 from .files import iterconfig as iterfiles
 from .languoids import iterlanguoids
@@ -32,6 +35,7 @@ __all__ = [
     'get_query', 'iterdescendants',
     'files_roundtrip',
     'export_db', 'write_csv',
+    'compare_with_raw',
 ]
 
 __title__ = 'treedb'
@@ -45,8 +49,8 @@ def files_roundtrip(verbose=False):
     """Do a load/save cycle with all config files."""
     def _iterpairs(triples):
         for path_tuple, _, cfg in triples:
-            d = {s: dict(cfg.items(s)) for s in cfg.sections()}
-            yield path_tuple, d
+            d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
+            yield path_tuple, d 
 
     pairs = _iterpairs(_files.iterconfig())
     _files.save(pairs, assume_changed=True, verbose=verbose)
@@ -57,7 +61,7 @@ def export_db():
     return _backend.export()
 
 
-def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
+def write_csv(query=None, filename='treedb.csv', encoding=ENCODING):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
         query = get_query()
@@ -65,11 +69,9 @@ def write_csv(query=None, filename='treedb.csv', encoding='utf-8'):
 
 
 def compare_with_raw(root=ROOT):
-    l_files = iterlanguoids(root)
-    l_raw = iterlanguoids(from_raw=True)
     same = True
-    for f, r in zip_longest(l_files, l_raw):
+    for f, r in zip_longest(iterlanguoids(root), iterlanguoids(from_raw=True)):
         if f != r:
             same = False
-            print('', f, r, '', sep='\n')
+            print('', '', f, '', r, '', '', sep='\n')
     return same
