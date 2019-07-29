@@ -195,6 +195,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             continue
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
+        # join by file_id order
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
