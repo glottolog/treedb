@@ -6,6 +6,7 @@ import io
 import csv
 import json
 import hashlib
+import operator
 import itertools
 import functools
 
@@ -200,21 +201,24 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
                                      sa.bindparam('last')))\
         .order_by(Value.file_id, Option.section, Option.option, Value.line)
 
+    _get_file_id, _get_section = map(operator.attrgetter, ('file_id', 'section'))
+    _get_option = operator.attrgetter('option', 'lines')
     for select_files in files_select_queries:
         files = select_files.execute().fetchall()
         if not files:
             continue
-        first, last = (f[0] for f in (files[0], files[-1]))
+        first, last = (f.id for f in (files[0], files[-1]))
         values = select_values.execute(first=first, last=last).fetchall()
-        for (_, p), (_, v) in zip(files, _groupby(values, lambda r: r.file_id)):
+        for (_, p), (_, v) in zip(files, _groupby(values, _get_file_id)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
-                   for (o, islines), lines in _groupby(sections, lambda r: (r.option, r.lines))}
-                for s, sections in _groupby(v, lambda r: r.section)}
+                   for (o, islines), lines in _groupby(sections, _get_option)}
+                for s, sections in _groupby(v, _get_section)}
             yield p, record
 
 
 def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
+    """Yield select copies in key_column.between() windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
     select_keys = sa.select([select_keys.c.key], bind=bind)\
@@ -226,6 +230,7 @@ def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     except StopIteration:
         yield select
         return
+    # right-inclusive indexes for windows of given size for continuous keys
     yield select.where(key_column <= end)
     last = end
     for end in keys:
