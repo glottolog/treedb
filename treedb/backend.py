@@ -130,7 +130,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
-        models._load(languoids.iterlanguoids(root, from_raw=from_raw),
+        models._load(languoids.iterlanguoids(root=None if from_raw else root),
                      conn.execution_options(compiled_cache={}))
 
     sa.insert(Dataset, bind=engine).execute(dataset)

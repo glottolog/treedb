@@ -81,9 +81,9 @@ def splitaltname(s, _match=re.compile(
     return ma.groupdict('')
 
 
-def iterlanguoids(root=ROOT, from_raw=False):
+def iterlanguoids(root=ROOT):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
-    if from_raw:
+    if root is None:
         from . import raw
 
         iterfiles = ((p.split('/'), r) for p, r in raw.iterrecords())
