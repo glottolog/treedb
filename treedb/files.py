@@ -6,34 +6,16 @@ import io
 import configparser
 
 from ._compat import pathlib
-from ._compat import scandir
+
 from ._compat import iteritems
+
+from . import tools as _tools
 
 from . import ROOT, ENCODING
 
 __all__ = ['iterconfig', 'save']
 
 BASENAME = 'md.ini'
-
-
-def _iterfiles(top, verbose=False):
-    """Yield DirEntry objects for all files under top."""
-    # NOTE: os.walk() ignores errors and this can be more efficient
-    if isinstance(top, pathlib.Path):
-        top = str(top)
-    stack = [top]
-    while stack:
-        root = stack.pop()
-        if verbose:
-            print(root)
-        direntries = scandir(root)
-        dirs = []
-        for d in direntries:
-            if d.is_dir():
-                dirs.append(d.path)
-            else:
-                yield d
-        stack.extend(dirs[::-1])
 
 
 class ConfigParser(configparser.ConfigParser):
@@ -71,7 +53,7 @@ def iterconfig(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
     path_slice = slice(len(root.parts), -1)
-    for d in _iterfiles(root):
+    for d in _tools.iterfiles(root):
         assert d.name == assert_name
         path_tuple = pathlib.Path(d.path).parts[path_slice]
         yield path_tuple, d, load(d.path)

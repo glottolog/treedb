@@ -32,7 +32,7 @@ def make_lines_raw(value):
 
 
 def skip_empty(mapping):
-    return {k: v for k, v in iteritems(mapping) if  v}
+    return {k: v for k, v in iteritems(mapping) if v}
 
 
 def make_date(value, format_='%Y-%m-%d'):

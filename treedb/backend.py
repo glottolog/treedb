@@ -7,11 +7,9 @@ import csv
 import time
 import zipfile
 import datetime
-import platform
 import warnings
 import functools
 import contextlib
-import subprocess
 
 from . import _compat
 
@@ -20,6 +18,8 @@ from ._compat import pathlib
 import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
+
+from . import tools as _tools
 
 from . import FILE, ROOT, ENCODING
 
@@ -86,7 +86,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         except Exception as e:
             warnings.warn('error reading __dataset__: %r' % e)
             if force_delete:
-                recuild = True
+                rebuild = True
             else:
                 raise
 
@@ -108,7 +108,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         conn.execute('PRAGMA application_id = %d' % application_id)
         create_tables(conn)
 
-    get_stdout = functools.partial(_check_output, cwd=str(root))
+    get_stdout = functools.partial(_tools.check_output, cwd=str(root))
     dataset = {
         'title': 'Glottolog treedb',
         'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
@@ -137,18 +137,6 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     print(datetime.timedelta(seconds=time.time() - start))
     return dbfile
-
-
-def _check_output(args, cwd=None, encoding=ENCODING):
-    if platform.system() == 'Windows':
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-    else:
-        startupinfo = None
-
-    out = subprocess.check_output(args, cwd=cwd, startupinfo=startupinfo)
-    return out.decode(encoding).strip()
 
 
 def export(metadata=Model.metadata, engine=ENGINE, encoding=ENCODING):

@@ -5,10 +5,7 @@ from __future__ import unicode_literals
 import io
 import csv
 import json
-import hashlib
-import operator
 import itertools
-import functools
 
 from ._compat import pathlib
 from ._compat import zip, iteritems
@@ -21,6 +18,7 @@ from . import ENCODING
 
 from . import files as _files
 from . import backend as _backend
+from . import tools as _tools
 
 __all__ = [
     'File', 'Option', 'Value',
@@ -143,15 +141,6 @@ class Value(_backend.Model):
     value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"), nullable=False)
 
 
-def sha256sum(file, chunksize=2**16):  # 64 kB
-    result = hashlib.sha256()
-    with io.open(file, 'rb') as f:
-        read = functools.partial(f.read, chunksize)
-        for chunk in iter(read, b''):
-            result.update(chunk)
-    return result
-
-
 def _load(root, conn, is_lines=Fields.is_lines):
     insert_file = sa.insert(File, bind=conn).execute
     insert_value = sa.insert(Value, bind=conn).execute
@@ -174,7 +163,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
         file_id, = insert_file(glottocode=path_tuple[-1],
                                path='/'.join(path_tuple),
                                size=dentry.stat().st_size,
-                               sha256=sha256sum(dentry.path).hexdigest()).inserted_primary_key
+                               sha256=_tools.sha256sum(dentry.path).hexdigest()).inserted_primary_key
         for section, sec in iteritems(cfg):
             for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
@@ -198,10 +187,10 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
         .select_from(sa.join(Value, Option))\
         .order_by(Value.file_id, Option.section, Option.option, Value.line)
 
-    groupby = lambda x: functools.partial(itertools.groupby,
-                                          key=operator.attrgetter(*x))
-    groupby = map(groupby, (('file_id',), ('section',), ('option', 'lines')))
+    groupby = (('file_id',), ('section',), ('option', 'lines'))
+    groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
+
     for f in filter_funcs:
         files = f(select_files, File.id).execute().fetchall()
         if not files:

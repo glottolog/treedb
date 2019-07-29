@@ -50,7 +50,7 @@ def files_roundtrip(verbose=False):
     def _iterpairs(triples):
         for path_tuple, _, cfg in triples:
             d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
-            yield path_tuple, d 
+            yield path_tuple, d
 
     pairs = _iterpairs(_files.iterconfig())
     _files.save(pairs, assume_changed=True, verbose=verbose)
