@@ -73,8 +73,10 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 def load(root=ROOT, engine=ENGINE, rebuild=False,
-         with_raw=True, from_raw=False):
+         exclude_raw=False, from_raw=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
+    if exclude_raw and from_raw:
+        raise RuntimeError('exclude_raw and from_raw cannot both be True')
     assert engine.url.drivername == 'sqlite'
 
     dbfile = pathlib.Path(engine.url.database)
@@ -88,7 +90,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     assert application_id == 1122 == 0x462
 
     # import here to register models for create_all()
-    if with_raw:
+    if not exclude_raw:
         from . import raw
     from . import models
 
@@ -106,7 +108,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         'clean': not get_stdout(['git', 'status', '--porcelain']),
     }
 
-    if with_raw:
+    if not exclude_raw:
         with engine.begin() as conn:
             conn.execute('PRAGMA synchronous = OFF')
             conn.execute('PRAGMA journal_mode = MEMORY')

@@ -10,7 +10,7 @@ from treedb import engine, Languoid
 
 print(next(treedb.iterlanguoids()))
 
-treedb.load()
+treedb.load(exclude_raw=False)
 
 treedb.print_rows(sa.select([Languoid]).order_by(Languoid.id).limit(5))
 
@@ -38,13 +38,15 @@ treedb.check()
 
 #treedb.files_roundtrip()
 
-#print(next(treedb.values.iterrecords()))
-#treedb.values.print_stats()
-#treedb.values.print_fields()
-#treedb.values.to_csv()
-#treedb.values.to_json()
+#from treedb import raw
 
-#treedb.values.drop_duplicate_sources()
-#treedb.values.drop_duplicated_triggers()
-#treedb.values.drop_duplicated_crefs()
-#treedb.values.to_files()
+#print(next(raw.iterrecords()))
+#raw.print_stats()
+#raw.print_fields()
+#raw.to_csv()
+#raw.to_json()
+
+#raw.drop_duplicate_sources()
+#raw.drop_duplicated_triggers()
+#raw.drop_duplicated_crefs()
+#raw.to_files()
