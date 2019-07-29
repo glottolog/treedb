@@ -217,7 +217,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
 
 
 def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
-    """Yield select copies in key_column.between() windows of size."""
+    """Yield lambda s, c: s.where(c.between()) for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
     select_keys = sa.select([select_keys.c.key], bind=bind)\
