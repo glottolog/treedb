@@ -203,7 +203,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
     for select_files in files_select_queries:
         files = select_files.execute().fetchall()
         if not files:
-            return
+            continue
         first, last = (f[0] for f in (files[0], files[-1]))
         values = select_values.execute(first=first, last=last).fetchall()
         for (_, p), (_, v) in zip(files, _groupby(values, lambda r: r.file_id)):
