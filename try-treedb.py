@@ -38,6 +38,7 @@ treedb.check()
 
 #treedb.files_roundtrip()
 
+#treedb.load(reload=True, exclude_raw=False)
 #from treedb import raw
 
 #print(next(raw.iterrecords()))

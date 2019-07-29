@@ -8,6 +8,7 @@ import time
 import zipfile
 import datetime
 import platform
+import warnings
 import functools
 import contextlib
 import subprocess
@@ -63,6 +64,7 @@ class Dataset(Model):
     git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
     git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
     clean = sa.Column(sa.Boolean, nullable=False)
+    exclude_raw = sa.Column(sa.Boolean, nullable=False)
 
 
 def create_tables(bind=ENGINE):
@@ -73,7 +75,7 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 def load(root=ROOT, engine=ENGINE, rebuild=False,
-         exclude_raw=False, from_raw=False):
+         exclude_raw=False, from_raw=False, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
     if exclude_raw and from_raw:
         raise RuntimeError('exclude_raw and from_raw cannot both be True')
@@ -81,7 +83,16 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     dbfile = pathlib.Path(engine.url.database)
     if dbfile.exists():
-        if rebuild:
+        try:
+            found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
+        except Exception as e:
+            warnings.warn('error reading __dataset__: %r' % e)
+            if force_delete:
+                recuild = True
+            else:
+                raise
+
+        if rebuild or found != exclude_raw:
             dbfile.unlink()
         else:
             return dbfile
@@ -106,6 +117,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         'git_describe': get_stdout(['git', 'describe', '--tags', '--always']),
         # neither changes in index nor untracked files
         'clean': not get_stdout(['git', 'status', '--porcelain']),
+        'exclude_raw': exclude_raw,
     }
 
     if not exclude_raw:
