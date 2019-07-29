@@ -178,8 +178,6 @@ def _load(root, conn, is_lines=Fields.is_lines):
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
-    wheres = list(windowed_filters(File.id, size=windowsize, bind=bind))
-
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     select_values = sa.select([
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
@@ -191,12 +189,12 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
-    for w in wheres:
-        files = select_files.where(w(File.id)).execute().fetchall()
+    for in_slice in list(window_slices(File.id, size=windowsize, bind=bind)):
+        files = select_files.where(in_slice(File.id)).execute().fetchall()
         if not files:
             continue
         # single thread: no isolation level concerns
-        values = select_values.where(w(Value.file_id)).execute().fetchall()
+        values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
@@ -205,7 +203,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             yield path, record
 
 
-def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
+def window_slices(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     """Yield where clause making function for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
