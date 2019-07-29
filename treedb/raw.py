@@ -178,7 +178,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
-    filter_funcs = list(windowed_filters(File.id, size=windowsize, bind=bind))
+    wheres = list(windowed_filters(File.id, size=windowsize, bind=bind))
 
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     select_values = sa.select([
@@ -191,12 +191,12 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
-    for f in filter_funcs:
-        files = f(select_files, File.id).execute().fetchall()
+    for w in wheres:
+        files = select_files.where(w(File.id)).execute().fetchall()
         if not files:
             continue
         # single thread: no isolation level concerns
-        values = f(select_values, Value.file_id).execute().fetchall()
+        values = select_values.where(w(Value.file_id)).execute().fetchall()
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
@@ -206,7 +206,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
 
 
 def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
-    """Yield lambda s, c: s.where(c.between()) for key_column windows of size."""
+    """Yield where clause making function for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
     select_keys = sa.select([select_keys.c.key], bind=bind)\
@@ -216,15 +216,15 @@ def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     try:
         end = next(keys)
     except StopIteration:
-        yield lambda s, c: s
+        yield lambda c: sa.and_()
         return
     # right-inclusive indexes for windows of given size for continuous keys
-    yield lambda s, c, end=end: s.where(c <= end)
+    yield lambda c, end=end: (c <= end)
     last = end
     for end in keys:
-        yield lambda s, c, last=last, end=end: s.where(c > last).where(c <= end)
+        yield lambda c, last=last, end=end: sa.and_(c > last, c <= end)
         last = end
-    yield lambda s, c, end=end: s.where(c > end)
+    yield lambda c, end=end: (c > end)
 
 
 def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding=ENCODING):
