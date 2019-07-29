@@ -10,7 +10,7 @@ import itertools
 import functools
 
 from ._compat import pathlib
-from ._compat import iteritems
+from ._compat import zip, iteritems
 
 from . import _compat
 
@@ -193,20 +193,24 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
         key_column=File.id, size=windowsize, bind=bind))
 
     select_values = sa.select([
-            Option.section, Option.option, Option.lines, Value.line, Value.value,
+            Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
-        .where(Value.file_id == sa.bindparam('file_id'))\
-        .order_by(Option.section, Option.option, Value.line)
+        .where(Value.file_id.between(sa.bindparam('first'),
+                                     sa.bindparam('last')))\
+        .order_by(Value.file_id, Option.section, Option.option, Value.line)
 
     for select_files in files_select_queries:
         files = select_files.execute().fetchall()
-        for id_, p in files:
-            values = select_values.execute(file_id=id_).fetchall()
+        if not files:
+            return
+        first, last = (f[0] for f in (files[0], files[-1]))
+        values = select_values.execute(first=first, last=last).fetchall()
+        for (_, p), (_, v) in zip(files, _groupby(values, lambda r: r.file_id)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
                    for (o, islines), lines in _groupby(sections, lambda r: (r.option, r.lines))}
-                for s, sections in _groupby(values, lambda r: r.section)}
+                for s, sections in _groupby(v, lambda r: r.section)}
             yield p, record
 
 
@@ -216,8 +220,7 @@ def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     select_keys = sa.select([select_keys.c.key], bind=bind)\
         .where(select_keys.c.row_num % size == 0)
 
-    keys = [k for k, in select_keys.execute()]
-    keys = iter(keys)
+    keys = (k for k, in select_keys.execute())
     try:
         end = next(keys)
     except StopIteration:

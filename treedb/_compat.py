@@ -8,7 +8,7 @@ PY2 = (sys.version_info.major == 2)
 
 
 if PY2:
-    from itertools import izip_longest as zip_longest
+    from itertools import izip as zip, izip_longest as zip_longest
 
     import pathlib2 as pathlib
 
@@ -36,6 +36,7 @@ if PY2:
 
 
 else:
+    zip = zip
     from itertools import zip_longest
 
     import pathlib
