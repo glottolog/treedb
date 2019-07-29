@@ -179,6 +179,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
+    # depend on no empty value files (safe sa.outerjoin(File, Value))
     select_values = sa.select([
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
@@ -195,7 +196,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             continue
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
-        # join by file_id order
+        # join by file_id order index
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
