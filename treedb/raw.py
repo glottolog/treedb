@@ -189,26 +189,23 @@ def _load(root, conn, is_lines=Fields.is_lines):
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.groupby):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
-    files_select_queries = list(windowed_selects(
-        sa.select([File.id, File.path], bind=bind).order_by(File.id),
-        key_column=File.id, size=windowsize, bind=bind))
+    filter_funcs = list(windowed_filters(File.id, size=windowsize, bind=bind))
 
+    select_files = sa.select([File.id, File.path], bind=bind).order_by(File.id)
     select_values = sa.select([
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
-        .where(Value.file_id.between(sa.bindparam('first'),
-                                     sa.bindparam('last')))\
         .order_by(Value.file_id, Option.section, Option.option, Value.line)
 
     _get_file_id, _get_section = map(operator.attrgetter, ('file_id', 'section'))
     _get_option = operator.attrgetter('option', 'lines')
-    for select_files in files_select_queries:
-        files = select_files.execute().fetchall()
+    for f in filter_funcs:
+        files = f(select_files, File.id).execute().fetchall()
         if not files:
             continue
-        first, last = (f.id for f in (files[0], files[-1]))
-        values = select_values.execute(first=first, last=last).fetchall()
+        # single thread: no isolation level concerns
+        values = f(select_values, Value.file_id).execute().fetchall()
         for (_, p), (_, v) in zip(files, _groupby(values, _get_file_id)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
@@ -217,7 +214,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
             yield p, record
 
 
-def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
+def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     """Yield select copies in key_column.between() windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
@@ -228,15 +225,15 @@ def windowed_selects(select, key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     try:
         end = next(keys)
     except StopIteration:
-        yield select
+        yield lambda s, c: s
         return
     # right-inclusive indexes for windows of given size for continuous keys
-    yield select.where(key_column <= end)
+    yield lambda s, c, end=end: s.where(c <= end)
     last = end
     for end in keys:
-        yield select.where(key_column > last).where(key_column <= end)
+        yield lambda s, c, last=last, end=end: s.where(c > last).where(c <= end)
         last = end
-    yield select.where(key_column > end)
+    yield lambda s, c, end=end: s.where(c > end)
 
 
 def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding=ENCODING):
