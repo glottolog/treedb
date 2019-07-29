@@ -187,7 +187,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
                                 line=0, value=value)
 
 
-def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.groupby):
+def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
     filter_funcs = list(windowed_filters(File.id, size=windowsize, bind=bind))
 
@@ -198,20 +198,22 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
         .select_from(sa.join(Value, Option))\
         .order_by(Value.file_id, Option.section, Option.option, Value.line)
 
-    _get_file_id, _get_section = map(operator.attrgetter, ('file_id', 'section'))
-    _get_option = operator.attrgetter('option', 'lines')
+    groupby = lambda x: functools.partial(itertools.groupby,
+                                          key=operator.attrgetter(*x))
+    groupby = map(groupby, (('file_id',), ('section',), ('option', 'lines')))
+    groupby_file, groupby_section, groupby_option = groupby
     for f in filter_funcs:
         files = f(select_files, File.id).execute().fetchall()
         if not files:
             continue
         # single thread: no isolation level concerns
         values = f(select_values, Value.file_id).execute().fetchall()
-        for (p,), (_, v) in zip(files, _groupby(values, _get_file_id)):
+        for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
-                   for (o, islines), lines in _groupby(sections, _get_option)}
-                for s, sections in _groupby(v, _get_section)}
-            yield p, record
+                   for (o, islines), lines in groupby_option(sections)}
+                for s, sections in groupby_section(values)}
+            yield path, record
 
 
 def windowed_filters(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
