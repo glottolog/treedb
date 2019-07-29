@@ -191,7 +191,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
     filter_funcs = list(windowed_filters(File.id, size=windowsize, bind=bind))
 
-    select_files = sa.select([File.id, File.path], bind=bind).order_by(File.id)
+    select_files = sa.select([File.path], bind=bind).order_by(File.id)
     select_values = sa.select([
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
@@ -206,7 +206,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, _groupby=itertools.
             continue
         # single thread: no isolation level concerns
         values = f(select_values, Value.file_id).execute().fetchall()
-        for (_, p), (_, v) in zip(files, _groupby(values, _get_file_id)):
+        for (p,), (_, v) in zip(files, _groupby(values, _get_file_id)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
                    for (o, islines), lines in _groupby(sections, _get_option)}
