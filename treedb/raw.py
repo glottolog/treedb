@@ -178,10 +178,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
-    all_files_values = sa.select([~sa.exists().select_from(File).where(
-        ~sa.exists().where(Value.file_id == File.id))], bind=bind)
-    # save sa.outerjoin(File, Value) below
-    assert all_files_values.scalar(), 'depend on no empty value files'
+    # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\

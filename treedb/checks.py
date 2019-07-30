@@ -179,3 +179,14 @@ def bookkeeping_no_children(session):
     return session.query(Languoid).order_by('id')\
         .filter(Languoid.parent.has(name=BOOKKEEPING))\
         .filter(Languoid.children.any())
+
+
+@check
+def no_empty_files(session):
+    exclude_raw = session.query(_backend.Dataset.exclude_raw).scalar()
+    if exclude_raw:
+        return session.query(sa.true()).filter(sa.false())
+
+    from .raw import File, Value
+    return session.query(File)\
+           .filter(~sa.exists().where(Value.file_id == File.id))
