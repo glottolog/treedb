@@ -24,8 +24,7 @@ from . import tools as _tools
 from . import FILE, ROOT, ENCODING
 
 __all__ = [
-    'ENGINE', 'Model', 'Session',
-    'Dataset',
+    'ENGINE', 'Model', 'Dataset', 'Session',
     'load',
     'export',
     'write_csv', 'print_rows',
@@ -65,10 +64,6 @@ class Dataset(Model):
     exclude_raw = sa.Column(sa.Boolean, nullable=False)
 
 
-def create_tables(bind=ENGINE):
-    Model.metadata.create_all(bind)
-
-
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
@@ -106,7 +101,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     start = time.time()
     with engine.begin() as conn:
         conn.execute('PRAGMA application_id = %d' % application_id)
-        create_tables(conn)
+        Model.metadata.create_all(bind=conn)
 
     get_stdout = functools.partial(_tools.check_output, cwd=str(root))
     dataset = {

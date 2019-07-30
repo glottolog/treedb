@@ -2,7 +2,6 @@
 
 from __future__ import unicode_literals
 
-import io
 import csv
 import json
 import itertools

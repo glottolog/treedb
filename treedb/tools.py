@@ -16,7 +16,8 @@ from . import ENCODING
 __all__ = [
     'groupby_attrgetter',
     'iterfiles',
-    'sha256sum'
+    'sha256sum',
+    'check_output',
 ]
 
 
