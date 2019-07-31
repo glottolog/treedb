@@ -502,8 +502,8 @@ def _load(languoids, conn):
 
         macroareas = l.pop('macroareas')
         countries = l.pop('countries')
+        links = l.pop('links')
 
-        links = l.pop('links', None)
         sources = l.pop('sources', None)
         altnames = l.pop('altnames', None)
         triggers = l.pop('triggers', None)
