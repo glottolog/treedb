@@ -479,8 +479,6 @@ def _load(languoids, conn):
     sa.insert(Macroarea, bind=conn).execute([{'name': n} for n in sorted(MACROAREA)])
     lang_ma = languoid_macroarea.insert(bind=conn).execute
 
-    has_country = sa.select([sa.exists()
-        .where(Country.id == sa.bindparam('id'))], bind=conn).scalar
     insert_country = sa.insert(Country, bind=conn).execute
     lang_country = languoid_country.insert(bind=conn).execute
 
@@ -496,6 +494,14 @@ def _load(languoids, conn):
 
     insert_ir = sa.insert(IsoRetirement, bind=conn).execute
     insert_irct = sa.insert(IsoRetirementChangeTo, bind=conn).execute
+
+    def unseen_countries(name_cc_pairs, _seen={}):
+        for name, cc in name_cc_pairs:
+            try:
+                assert _seen[cc] == name
+            except KeyError:
+                _seen[cc] = name
+                yield name, cc
 
     for l in languoids:
         lid = l['id']
@@ -515,43 +521,47 @@ def _load(languoids, conn):
 
         insert_lang(l)
 
-        for ma in macroareas:
-            lang_ma(languoid_id=lid, macroarea_name=ma)
+        if macroareas:
+            lang_ma([{'languoid_id': lid, 'macroarea_name': ma}
+                     for ma in macroareas])
 
-        for name, cc in countries:
-            if not has_country(id=cc):
-                insert_country(id=cc, name=name)
-            lang_country(languoid_id=lid, country_id=cc)
+        if countries:
+            new_countries = [dict(id=cc, name=name)
+                            for name, cc in unseen_countries(countries)]
+            if new_countries:
+                insert_country(new_countries)
+            lang_country([dict(languoid_id=lid, country_id=cc)
+                          for _, cc in countries])
 
-        if links is not None:
-            for i, link in enumerate(links, 1):
-                insert_link(languoid_id=lid, ord=i, **link)
+        if links:
+            insert_link([dict(languoid_id=lid, ord=i, **link)
+                         for i, link in enumerate(links, 1)])
 
         if sources is not None:
-            for provider, data in iteritems(sources):
-                for i, s in enumerate(data, 1):
-                    insert_source(languoid_id=lid, provider=provider, ord=i, **s)
+            insert_source([dict(languoid_id=lid, provider=provider, ord=i, **s)
+                           for provider, data in iteritems(sources)
+                           for i, s in enumerate(data, 1)])
 
         if altnames is not None:
-            for provider, names in iteritems(altnames):
-                for i, n in enumerate(names, 1):
-                    insert_altname(languoid_id=lid, provider=provider, ord=i, **n)
+            insert_altname([dict(languoid_id=lid, provider=provider, ord=i, **n)
+                            for provider, names in iteritems(altnames)
+                            for i, n in enumerate(names, 1)])
 
         if triggers is not None:
-            for field, triggers in iteritems(triggers):
-                for i, t in enumerate(triggers, 1):
-                    insert_trigger(languoid_id=lid, field=field, trigger=t, ord=i)
+            insert_trigger([dict(languoid_id=lid, field=field, trigger=t, ord=i)
+                            for field, triggers in iteritems(triggers)
+                            for i, t in enumerate(triggers, 1)])
 
         if identifier is not None:
-            for site, i in iteritems(identifier):
-                insert_ident(languoid_id=lid, site=site, identifier=i)
+            insert_ident([dict(languoid_id=lid, site=site, identifier=i)
+                          for site, i in iteritems(identifier)])
 
         if classification is not None:
             for c, value in iteritems(classification):
                 isref, kind = CLASSIFICATION[c]
                 if isref:
-                    for i, r in enumerate(value, 1):
-                        insert_ref(languoid_id=lid, kind=kind, ord=i, **r)
+                    insert_ref([dict(languoid_id=lid, kind=kind, ord=i, **r)
+                                for i, r in enumerate(value, 1)])
                 else:
                     insert_comment(languoid_id=lid, kind=kind, comment=value)
 
@@ -564,5 +574,6 @@ def _load(languoids, conn):
         if iso_retirement is not None:
             change_to = iso_retirement.pop('change_to')
             insert_ir(languoid_id=lid, **iso_retirement)
-            for i, c in enumerate(change_to, 1):
-                insert_irct(languoid_id=lid, code=c, ord=i)
+            if change_to:
+                insert_irct([dict(languoid_id=lid, code=c, ord=i)
+                             for i, c in enumerate(change_to, 1)])
