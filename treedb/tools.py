@@ -14,11 +14,18 @@ from ._compat import scandir
 from . import ENCODING
 
 __all__ = [
+    'iterslices',
     'groupby_attrgetter',
     'iterfiles',
     'sha256sum',
     'check_output',
 ]
+
+
+def iterslices(iterable, size):
+    iterable = iter(iterable)
+    next_slice = functools.partial(itertools.islice, iterable, size)
+    return iter(lambda: list(next_slice()), [])
 
 
 def groupby_attrgetter(*attrnames):
