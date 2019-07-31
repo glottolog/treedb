@@ -68,12 +68,14 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 def load(root=ROOT, engine=ENGINE, rebuild=False,
-         exclude_raw=False, from_raw=False, force_delete=False):
+         exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
     if exclude_raw and from_raw:
         raise RuntimeError('exclude_raw and from_raw cannot both be True')
-    assert engine.url.drivername == 'sqlite'
+    elif from_raw is None:
+        from_raw = not exclude_raw
 
+    assert engine.url.drivername == 'sqlite'
     dbfile = pathlib.Path(engine.url.database)
     if dbfile.exists():
         try:
@@ -125,7 +127,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
-        models._load(languoids.iterlanguoids(root=None if from_raw else root),
+        models._load(languoids.iterlanguoids(root=conn if from_raw else root),
                      conn.execution_options(compiled_cache={}))
 
     sa.insert(Dataset, bind=engine).execute(dataset)

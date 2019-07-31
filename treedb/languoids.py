@@ -83,15 +83,15 @@ def splitaltname(s, _match=re.compile(
 
 def iterlanguoids(root=ROOT):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
-    if root is None:
+    if hasattr(root, 'execute'):
         from . import raw
 
-        iterfiles = ((p.split('/'), r) for p, r in raw.iterrecords())
+        iterfiles = ((p.split('/'), r) for p, r in raw.iterrecords(bind=root))
         _make_lines = make_lines_raw
     else:
         from . import files
 
-        iterfiles = ((pt, cfg) for pt, _, cfg in files.iterconfig(root))
+        iterfiles = ((pt, cfg) for pt, _, cfg in files.iterconfig(root=root))
         _make_lines = make_lines
 
     for path_tuple, cfg in iterfiles:

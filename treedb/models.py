@@ -526,7 +526,7 @@ def _load(languoids, conn):
                      for ma in macroareas])
 
         if countries:
-            new_countries = [{'id': , 'name': name}
+            new_countries = [{'id': cc, 'name': name}
                             for name, cc in unseen_countries(countries)]
             if new_countries:
                 insert_country(new_countries)
