@@ -156,23 +156,28 @@ def _load(root, conn, is_lines=Fields.is_lines):
             self[key] = result = (id_, lines)
             return result
 
-    options = Options()
-
-    for path_tuple, dentry, cfg in _files.iterconfig(root):
-        file_id, = insert_file(glottocode=path_tuple[-1],
-                               path='/'.join(path_tuple),
-                               size=dentry.stat().st_size,
-                               sha256=_tools.sha256sum(dentry.path).hexdigest()).inserted_primary_key
+    def itervalues(cfg, file_id, options=Options()):
         for section, sec in iteritems(cfg):
             for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
                 if lines:
                     for i, v in enumerate(value.strip().splitlines(), 1):
-                        insert_value(file_id=file_id, option_id=option_id,
-                                    line=i, value=v)
+                        yield {'file_id': file_id, 'option_id': option_id,
+                               'line': i, 'value': v}
                 else:
-                    insert_value(file_id=file_id, option_id=option_id,
-                                line=0, value=value)
+                    yield {'file_id': file_id, 'option_id': option_id,
+                           'line': 0, 'value': value}
+
+    for path_tuple, dentry, cfg in _files.iterconfig(root):
+        file_params = {
+            'glottocode': path_tuple[-1],
+            'path': '/'.join(path_tuple),
+            'size': dentry.stat().st_size,
+            'sha256': _tools.sha256sum(dentry.path).hexdigest(),
+        }
+        file_id, = insert_file(file_params).inserted_primary_key
+        value_params = list(itervalues(cfg, file_id))
+        insert_value(value_params)
 
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
@@ -195,7 +200,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             continue
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
-        # join by file_id order index
+        # join by file_id total order index
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
                 s: {o: [l.value for l in lines] if islines else next(lines).value
