@@ -526,11 +526,11 @@ def _load(languoids, conn):
                      for ma in macroareas])
 
         if countries:
-            new_countries = [dict(id=cc, name=name)
+            new_countries = [{'id': , 'name': name}
                             for name, cc in unseen_countries(countries)]
             if new_countries:
                 insert_country(new_countries)
-            lang_country([dict(languoid_id=lid, country_id=cc)
+            lang_country([{'languoid_id': lid, 'country_id': cc}
                           for _, cc in countries])
 
         if links:
@@ -548,7 +548,8 @@ def _load(languoids, conn):
                             for i, n in enumerate(names, 1)])
 
         if triggers is not None:
-            insert_trigger([dict(languoid_id=lid, field=field, trigger=t, ord=i)
+            insert_trigger([{'languoid_id': lid, 'field': field,
+                             'trigger': t, 'ord': i}
                             for field, triggers in iteritems(triggers)
                             for i, t in enumerate(triggers, 1)])
 
@@ -575,5 +576,5 @@ def _load(languoids, conn):
             change_to = iso_retirement.pop('change_to')
             insert_ir(languoid_id=lid, **iso_retirement)
             if change_to:
-                insert_irct([dict(languoid_id=lid, code=c, ord=i)
+                insert_irct([{'languoid_id': lid, 'code': c, 'ord': i}
                              for i, c in enumerate(change_to, 1)])
