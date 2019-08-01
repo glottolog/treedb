@@ -8,9 +8,9 @@ from . _compat import pathlib
 
 _PACKAGE_DIR = pathlib.Path(__file__).parent
 
-FILE = pathlib.Path.cwd() / 'treedb.sqlite3'
-
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
+
+FILE = pathlib.Path.cwd() / 'treedb.sqlite3'
 
 ENCODING = 'utf-8'
 
