@@ -185,7 +185,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
-            Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
+            Value.file_id, Option.section, Option.option, Option.lines, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
         .order_by(Value.file_id, Option.section, Option.id, Value.line)
