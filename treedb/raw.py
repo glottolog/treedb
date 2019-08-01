@@ -201,10 +201,8 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
-    for in_slice in list(window_slices(File.id, size=windowsize, bind=bind)):
+    for in_slice in window_slices(File.id, size=windowsize, bind=bind):
         files = select_files.where(in_slice(File.id)).execute().fetchall()
-        if not files:
-            continue
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
         # join by file_id total order index
