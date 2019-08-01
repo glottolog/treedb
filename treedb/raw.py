@@ -194,7 +194,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
         insert_value(value_params)
 
 
-def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
+def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
@@ -203,6 +203,8 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
         .order_by(Value.file_id, Option.section, Value.line, Option.option)
+    if skip_unknown:
+        select_values.append_whereclause(Option.lines != None)
 
     groupby = (('file_id',), ('section',), ('option', 'lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
