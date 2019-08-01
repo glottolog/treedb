@@ -62,14 +62,17 @@ def iterfiles(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
 
 
 def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
-         verbose=False, load=ConfigParser.from_file):
+         verbose=True, load=ConfigParser.from_file):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
 
+    files_written = 0
     for path_tuple, d in pairs:
-        path = str(root.joinpath(*path_tuple) / basename)
-        cfg = load(path)
+        path = root.joinpath(*path_tuple) / basename
+        path_str = str(path)
+
+        cfg = load(path_str)
 
         # FIXME: missing sections and options
         drop_sections = set(cfg.sections()).difference(set(d) | {'core', 'sources'})
@@ -83,9 +86,11 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
                 if section == 'iso_retirement':
                     drop_options.discard('change_to')
                 drop_options.difference_update(set(s))
+
                 changed = changed or bool(drop_options)
                 for o in drop_options:
                     cfg.remove_option(section, o)
+
             for option, value in iteritems(s):
                 if cfg.get(section, option) != value:
                     changed = True
@@ -93,8 +98,11 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
 
         if changed:
             if verbose:
-                print(path)
-            cfg.to_file(path)
+                print('write %r' % path)
+            cfg.to_file(path_str)
+            files_written += 1
+
+    return files_written
 
 
 def roundtrip(root=ROOT, verbose=True):
@@ -106,4 +114,4 @@ def roundtrip(root=ROOT, verbose=True):
             d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
             yield path_tuple, d
 
-    save(_iterpairs(triples), root, assume_changed=True, verbose=verbose)
+    return save(_iterpairs(triples), root, assume_changed=True, verbose=verbose)
