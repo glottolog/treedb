@@ -3,15 +3,12 @@
 from __future__ import unicode_literals
 
 import re
-import csv
 import time
 import zipfile
 import datetime
 import warnings
 import functools
 import contextlib
-
-from . import _compat
 
 from ._compat import pathlib
 
@@ -25,9 +22,7 @@ from . import FILE, ROOT, ENCODING
 
 __all__ = [
     'ENGINE', 'Model', 'Dataset', 'Session',
-    'load',
-    'export',
-    'write_csv', 'print_rows',
+    'load', 'export',
 ]
 
 ENGINE = sa.create_engine('sqlite:///%s' % FILE, echo=False)
@@ -57,10 +52,13 @@ class Dataset(Model):
 
     id = sa.Column(sa.Boolean, sa.CheckConstraint('id'),
                    primary_key=True, server_default=sa.true())
+
     title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"), nullable=False)
+
     git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
     git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
     clean = sa.Column(sa.Boolean, nullable=False)
+
     exclude_raw = sa.Column(sa.Boolean, nullable=False)
 
 
@@ -127,7 +125,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     with engine.begin() as conn:
         conn.execute('PRAGMA synchronous = OFF')
         conn.execute('PRAGMA journal_mode = MEMORY')
-        models._load(languoids.iterlanguoids(root=conn if from_raw else root),
+        models._load(languoids.iterlanguoids(conn if from_raw else root),
                      conn.execution_options(compiled_cache={}))
 
     sa.insert(Dataset, bind=engine).execute(dataset)
@@ -136,38 +134,16 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     return dbfile
 
 
-def export(metadata=Model.metadata, engine=ENGINE, encoding=ENCODING):
+def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
-    filename = '%s.zip' % pathlib.Path(engine.url.database).stem
+    if filename is None:
+        filename = '%s.zip' % pathlib.Path(engine.url.database).stem
+
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
             rows = table.select(bind=conn).execute()
-            with _compat.make_csv_io() as f:
-                writer = csv.writer(f)
-                _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
-                data = f.getvalue()
-            data = _compat.get_csv_io_bytes(data, encoding)
+            header = rows.keys()
+            data = _tools.write_csv(None, rows, header, encoding)
             z.writestr('%s.csv' % table.name, data)
+
     return filename
-
-
-def write_csv(query, filename, encoding=ENCODING, engine=ENGINE, verbose=False):
-    if verbose:
-        print(query)
-    rows = engine.execute(query)
-    with _compat.csv_open(filename, 'w', encoding) as f:
-        writer = csv.writer(f)
-        _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
-    return filename
-
-
-def print_rows(query, format_=None, engine=ENGINE, verbose=False):
-    if verbose:
-        print(query)
-    rows = engine.execute(query)
-    if format_ is None:
-        for r in rows:
-            print(r)
-    else:
-        for r in rows:
-            print(format_.format(**r))

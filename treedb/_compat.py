@@ -8,15 +8,17 @@ PY2 = (sys.version_info.major == 2)
 
 
 if PY2:
-    from itertools import izip as zip, izip_longest as zip_longest
+    iteritems = operator.methodcaller('iteritems')
+
+    from itertools import (imap as map,
+                           izip as zip,
+                           izip_longest as zip_longest)
 
     import pathlib2 as pathlib
 
     from scandir import scandir
 
     from inspect import getargspec as getfullargspec
-
-    iteritems = operator.methodcaller('iteritems')
 
     make_csv_io = io.BytesIO
 
@@ -29,13 +31,18 @@ if PY2:
         return io.open(filename, mode)
 
     def csv_write(writer, encoding, header, rows):
-        writer.writerow([h.encode(encoding) for h in header])
+        if header is not None:
+            writer.writerow([h.encode(encoding) for h in header])
         for r in rows:
             writer.writerow([unicode(col).encode(encoding) if col else col
                              for col in r])
 
 
 else:
+    def iteritems(d):
+        return iter(d.items())
+
+    map = map
     zip = zip
     from itertools import zip_longest
 
@@ -44,9 +51,6 @@ else:
     from os import scandir
 
     from inspect import getfullargspec
-
-    def iteritems(d):
-        return iter(d.items())
 
     make_csv_io = io.StringIO
 
@@ -57,5 +61,6 @@ else:
         return io.open(filename, mode, newline='', encoding=encoding)
 
     def csv_write(writer, encoding, header, rows):
-        writer.writerow(header)
+        if header is not None:
+            writer.writerow(header)
         writer.writerows(rows)

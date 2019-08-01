@@ -9,11 +9,9 @@ import sqlalchemy.orm
 
 from . import backend as _backend
 
-__all__ = ['Languoid']
+__all__ = ['LEVEL', 'Languoid']
 
-LEVEL = ('family', 'language', 'dialect')
-
-FAMILY, LANGUAGE, DIALECT = LEVEL
+FAMILY, LANGUAGE, DIALECT = LEVEL = ('family', 'language', 'dialect')
 
 BOOKKEEPING = 'Bookkeeping'
 
@@ -77,8 +75,10 @@ class Languoid(_backend.Model):
     __tablename__ = 'languoid'
 
     id = sa.Column(sa.String(8), sa.CheckConstraint('length(id) = 8'), primary_key=True)
+
     level = sa.Column(sa.Enum(*LEVEL), nullable=False)
     name = sa.Column(sa.String, sa.CheckConstraint("name != ''"), nullable=False, unique=True)
+
     parent_id = sa.Column(sa.ForeignKey('languoid.id'), index=True)
     hid = sa.Column(sa.Text, sa.CheckConstraint('length(hid) >= 3'), unique=True)
     iso639_3 = sa.Column(sa.String(3), sa.CheckConstraint('length(iso639_3) = 3'), unique=True)
@@ -123,35 +123,42 @@ class Languoid(_backend.Model):
 
     @classmethod
     def tree(cls, include_self=False, with_steps=False, with_terminal=False):
-        child, parent = (sa.orm.aliased(cls, name=n) for n in ('child', 'parent'))
-        tree_1 = sa.select([child.id.label('child_id')])
+        Child, Parent = (sa.orm.aliased(cls, name=n) for n in ('child', 'parent'))
+
+        tree_1 = sa.select([Child.id.label('child_id')])
         if include_self:
-            parent_id = child.id
+            parent_id = Child.id
         else:
-            parent_id = child.parent_id
+            parent_id = Child.parent_id
             tree_1.append_whereclause(parent_id != None)
         tree_1.append_column(parent_id.label('parent_id'))
+
         if with_steps:
             steps = 0 if include_self else 1
             tree_1.append_column(sa.literal(steps).label('steps'))
+
         if with_terminal:
             if include_self:
-                terminal = sa.type_coerce(child.parent_id == None, sa.Boolean)
+                terminal = sa.type_coerce(Child.parent_id == None, sa.Boolean)
             else:
                 terminal = sa.literal(False)
             tree_1.append_column(terminal.label('terminal'))
+
         tree_1 = tree_1.cte('tree', recursive=True)
 
-        tree_2 = sa.select([tree_1.c.child_id, parent.parent_id])\
-            .select_from(tree_1.join(parent, parent.id == tree_1.c.parent_id))\
-            .where(parent.parent_id != None)
+        tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])\
+            .select_from(tree_1.join(Parent, Parent.id == tree_1.c.parent_id))\
+            .where(Parent.parent_id != None)
+
         if with_steps:
             tree_2.append_column((tree_1.c.steps + 1).label('steps'))
+
         if with_terminal:
-            gparent = sa.orm.aliased(Languoid, name='grandparent')
-            tree_2.append_column((gparent.parent_id == None).label('terminal'))
+            Granny = sa.orm.aliased(Languoid, name='grandparent')
+            tree_2.append_column((Granny.parent_id == None).label('terminal'))
             tree_2 = tree_2.select_from(tree_2.froms[-1]
-                .outerjoin(gparent, gparent.id == parent.parent_id))
+                .outerjoin(Granny, Granny.id == Parent.parent_id))
+
         return tree_1.union_all(tree_2)
 
     @classmethod
@@ -159,9 +166,11 @@ class Languoid(_backend.Model):
         tree = _tree
         if tree is None:
             tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
+
         squery = sa.select([tree.c.parent_id.label('path_part')])\
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
+
         path = sa.func.group_concat(squery.c.path_part, delimiter)
         return sa.select([path]).label(label)
 
@@ -169,17 +178,21 @@ class Languoid(_backend.Model):
     def path_family_language(cls, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
+
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
+
         family = sa.select([tree.c.parent_id])\
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .where(tree.c.steps > 0).where(tree.c.terminal == True)
-        ancestor = sa.orm.aliased(Languoid)
+
+        Ancestor = sa.orm.aliased(Languoid, name='ancestor')
         language = sa.select([tree.c.parent_id])\
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .where(cls.level == DIALECT)\
             .where(sa.exists()
-                .where(ancestor.id == tree.c.parent_id)
-                .where(ancestor.level == LANGUAGE))
+                .where(Ancestor.id == tree.c.parent_id)
+                .where(Ancestor.level == LANGUAGE))
+
         return path, family.label(family_label), language.label(language_label)
 
 
@@ -206,6 +219,7 @@ class Country(_backend.Model):
     __tablename__ = 'country'
 
     id = sa.Column(sa.String(2), sa.CheckConstraint('length(id) = 2'), primary_key=True)
+
     name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), nullable=False, unique=True)
 
     def __repr__(self):
@@ -226,7 +240,9 @@ class Link(_backend.Model):
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), primary_key=True)
+
     url = sa.Column(sa.Text, sa.CheckConstraint("url != ''"), nullable=False)
+
     title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"))
     scheme = sa.Column(sa.Text, sa.Enum(*sorted(LINK_SCHEME)))
 
@@ -258,7 +274,9 @@ class Source(_backend.Model):
     provider = sa.Column(sa.Text, sa.Enum(*sorted(SOURCE_PROVIDER)), primary_key=True)
     bibfile = sa.Column(sa.Text, sa.CheckConstraint("bibfile != ''"), primary_key=True)
     bibkey = sa.Column(sa.Text, sa.CheckConstraint("bibkey != ''"), primary_key=True)
+
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+
     pages = sa.Column(sa.Text, sa.CheckConstraint("pages != ''"))
     trigger = sa.Column(sa.Text, sa.CheckConstraint("trigger != ''"))
 
@@ -292,6 +310,7 @@ class Altname(_backend.Model):
     provider = sa.Column(sa.Text, sa.Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
     lang = sa.Column(sa.String(3), sa.CheckConstraint("length(lang) IN (0, 2, 3) OR lang = '!'"), primary_key=True)
     name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), primary_key=True)
+
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
@@ -321,6 +340,7 @@ class Trigger(_backend.Model):
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
     field = sa.Column(sa.Enum(*sorted(TRIGGER_FIELD)), primary_key=True)
     trigger = sa.Column(sa.Text, sa.CheckConstraint("trigger != ''"), primary_key=True)
+
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
@@ -340,6 +360,7 @@ class Identifier(_backend.Model):
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
     site = sa.Column(sa.Enum(*sorted(IDENTIFIER_SITE)), primary_key=True)
+
     identifier = sa.Column(sa.Text, sa.CheckConstraint("identifier != ''"), nullable=False)
 
     def __repr__(self):
@@ -355,6 +376,7 @@ class ClassificationComment(_backend.Model):
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
     kind = sa.Column(sa.Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
+
     comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
@@ -371,7 +393,9 @@ class ClassificationRef(_backend.Model):
     kind = sa.Column(sa.Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
     bibfile = sa.Column(sa.Text, sa.CheckConstraint("bibfile != ''"), primary_key=True)
     bibkey = sa.Column(sa.Text, sa.CheckConstraint("bibkey != ''"), primary_key=True)
+
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+
     pages = sa.Column(sa.Text, sa.CheckConstraint("pages != ''"))
 
     __table_args__ = (
@@ -395,6 +419,7 @@ class Endangerment(_backend.Model):
     __tablename__ = 'endangerment'
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+
     status = sa.Column(sa.Enum(*ENDANGERMENT_STATUS), nullable=False)
     source = sa.Column(sa.Enum(*sorted(ENDANGERMENT_SOURCE)), nullable=False)
     date = sa.Column(sa.DateTime, nullable=False)
@@ -412,6 +437,7 @@ class EthnologueComment(_backend.Model):
     __tablename__ = 'ethnologuecomment'
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+
     isohid = sa.Column(sa.Text, sa.CheckConstraint('length(isohid) >= 3'), nullable=False)
     comment_type = sa.Column(sa.Enum(*sorted(EL_COMMENT_TYPE)), nullable=False)
     ethnologue_versions = sa.Column(sa.Text, sa.CheckConstraint('length(ethnologue_versions) >= 3'), nullable=False)
@@ -429,11 +455,15 @@ class IsoRetirement(_backend.Model):
     __tablename__ = 'isoretirement'
 
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+
     code = sa.Column(sa.String(3), sa.CheckConstraint('length(code) = 3'), nullable=False)
     name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), nullable=False)
+
     change_request = sa.Column(sa.String(8), sa.CheckConstraint("change_request LIKE '____-___' "))
+
     effective = sa.Column(sa.Date, nullable=False)
     reason = sa.Column(sa.Enum(*sorted(ISORETIREMENT_REASON)), nullable=False)
+
     remedy = sa.Column(sa.Text, sa.CheckConstraint("remedy != ''"))
     comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"))
 
@@ -460,6 +490,7 @@ class IsoRetirementChangeTo(_backend.Model):
 
     languoid_id = sa.Column(sa.ForeignKey('isoretirement.languoid_id'), primary_key=True)
     code = sa.Column(sa.String(3), sa.CheckConstraint('length(code) = 3'), primary_key=True)
+
     ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
@@ -503,7 +534,7 @@ def _load(languoids, conn):
                 _seen[cc] = name
                 yield name, cc
 
-    for l in languoids:
+    for _, l in languoids:
         lid = l['id']
 
         macroareas = l.pop('macroareas')

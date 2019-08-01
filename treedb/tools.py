@@ -1,7 +1,11 @@
 # tools.py - generic re-useable self-contained helpers
 
+from __future__ import print_function
+
 import io
+import csv
 import hashlib
+import datetime
 import platform
 import operator
 import itertools
@@ -11,21 +15,35 @@ import subprocess
 from ._compat import pathlib
 from ._compat import scandir
 
+from . import _compat
+
 from . import ENCODING
 
 __all__ = [
+    'next_count',
     'iterslices',
-    'groupby_attrgetter',
+    'groupby_itemgetter', 'groupby_attrgetter',
     'iterfiles',
     'sha256sum',
     'check_output',
+    'write_csv',
 ]
+
+
+def next_count(start=0, step=1):
+    count = itertools.count(start, step)
+    return functools.partial(next, count)
 
 
 def iterslices(iterable, size):
     iterable = iter(iterable)
     next_slice = functools.partial(itertools.islice, iterable, size)
     return iter(lambda: list(next_slice()), [])
+
+
+def groupby_itemgetter(*items):
+    key = operator.itemgetter(*items)
+    return functools.partial(itertools.groupby, key=key)
 
 
 def groupby_attrgetter(*attrnames):
@@ -72,3 +90,18 @@ def check_output(args, cwd=None, encoding=ENCODING):
 
     out = subprocess.check_output(args, cwd=cwd, startupinfo=startupinfo)
     return out.decode(encoding).strip()
+
+
+def write_csv(filename, rows, header=None, encoding=ENCODING, dialect='excel'):
+    if filename is None:
+        with _compat.make_csv_io() as f:
+            writer = csv.writer(f, dialect=dialect)
+            _compat.csv_write(writer, encoding, header, rows)
+            data = f.getvalue()
+        return _compat.get_csv_io_bytes(data, encoding)
+
+    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
+        writer = csv.writer(f, dialect=dialect)
+        _compat.csv_write(writer, encoding, header, rows)
+
+    return filename

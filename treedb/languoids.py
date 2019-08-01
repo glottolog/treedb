@@ -1,15 +1,21 @@
 # languoids.py - load ../../languoids/tree/**/md.ini into dicts
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import re
+import json
 import datetime
+import operator
+import functools
 
-from ._compat import iteritems
+from ._compat import iteritems, map, zip_longest
 
-from . import ROOT
+from . import tools as _tools
 
-__all__ = ['iterlanguoids']
+from . import ROOT, ENCODING
+
+
+__all__ = ['iterlanguoids', 'to_json_csv', 'compare_with_raw']
 
 
 def get_type(mapping, key, type_):
@@ -81,17 +87,21 @@ def splitaltname(s, _match=re.compile(
     return ma.groupdict('')
 
 
-def iterlanguoids(root=ROOT):
+def iterlanguoids(root_or_bind=ROOT):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
-    if hasattr(root, 'execute'):
+    if hasattr(root_or_bind, 'execute'):
+        bind = root_or_bind
+
         from . import raw
 
-        iterfiles = ((p.split('/'), r) for p, r in raw.iterrecords(bind=root))
+        iterfiles = raw.iterrecords(bind)
         _make_lines = make_lines_raw
     else:
+        root = root_or_bind
+
         from . import files
 
-        iterfiles = ((pt, cfg) for pt, _, cfg in files.iterconfig(root=root))
+        iterfiles = ((pt, cfg) for pt, _, cfg in files.iterfiles(root))
         _make_lines = make_lines
 
     for path_tuple, cfg in iterfiles:
@@ -175,4 +185,27 @@ def iterlanguoids(root=ROOT):
                 'comment': sct.get('comment'),
             }
 
-        yield item
+        yield path_tuple, item
+
+
+def to_json_csv(root_or_bind=ROOT, filename='treedb-languoids-json.csv', encoding=ENCODING):
+    """Write (path, json) rows for each languoid to filename."""
+    json_dumps = functools.partial(json.dumps,
+                                   default=operator.methodcaller('isoformat'))
+    rows = (('/'.join(path_tuple), json_dumps(l))
+            for path_tuple, l in iterlanguoids(root_or_bind))
+    _tools.write_csv(filename, rows, header=('path', 'json'), encoding=encoding)
+
+
+def compare_with_raw(root=ROOT):
+    from .backend import ENGINE as engine
+
+    files, raw = map(iterlanguoids, (root, engine))
+
+    same = True
+    for f, r in zip_longest(files, raw):
+        if f != r:
+            same = False
+            print('', '', f, '', r, '', '', sep='\n')
+
+    return same

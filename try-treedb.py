@@ -5,12 +5,11 @@ import sqlalchemy as sa
 
 import treedb
 
-from treedb import engine, Languoid
-
+from treedb import Languoid
 
 print(next(treedb.iterlanguoids()))
 
-treedb.load(exclude_raw=False)
+treedb.load()
 
 treedb.print_rows(sa.select([Languoid]).order_by(Languoid.id).limit(5))
 
@@ -27,25 +26,26 @@ try:
 except ImportError:
     pass
 else:
-    df = pd.read_sql_query(query, engine, index_col='id')
+    df = pd.read_sql_query(query, treedb.engine, index_col='id')
     df.info()
 
 # run sanity checks
 treedb.check()
 
-#treedb.export_db()
+#treedb.export()
 #treedb.write_csv()
 
-#treedb.files_roundtrip()
+#treedb.files.roundtrip()
 
-#treedb.load(reload=True, exclude_raw=False)
 #from treedb import raw
 
 #print(next(raw.iterrecords()))
+#print(next(treedb.iterlanguoids(treedb.engine)))
 #raw.print_stats()
-#raw.print_fields()
-#raw.to_csv()
-#raw.to_json()
+#raw.to_raw_csv()
+
+#treedb.languoids.compare_with_raw()
+#treedb.languoids.to_json_csv(treedb.engine)
 
 #raw.drop_duplicate_sources()
 #raw.drop_duplicated_triggers()

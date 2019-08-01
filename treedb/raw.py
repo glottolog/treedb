@@ -2,28 +2,23 @@
 
 from __future__ import unicode_literals
 
-import csv
-import json
 import itertools
-import functools
 
-from ._compat import pathlib
 from ._compat import zip, iteritems
-
-from . import _compat
 
 import sqlalchemy as sa
 
-from . import ENCODING
+from . import ROOT, ENCODING
 
 from . import files as _files
 from . import backend as _backend
+from . import queries as _queries
 from . import tools as _tools
 
 __all__ = [
     'File', 'Option', 'Value',
     'iterrecords',
-    'to_csv', 'to_json', 'to_files',
+    'to_raw_csv', 'to_files',
     'print_stats',
 ]
 
@@ -104,8 +99,11 @@ class File(_backend.Model):
     __tablename__ = '_file'
 
     id = sa.Column(sa.Integer, primary_key=True)
+
     glottocode = sa.Column(sa.String(8), sa.CheckConstraint('length(glottocode) = 8'), nullable=False, unique=True)
+
     path = sa.Column(sa.Text, sa.CheckConstraint('length(path) >= 8'), nullable=False, unique=True)
+
     size = sa.Column(sa.Integer, sa.CheckConstraint('size > 0'), nullable=False)
     sha256 = sa.Column(sa.String(64), sa.CheckConstraint('length(sha256) = 64'), unique=True, nullable=False)
 
@@ -120,8 +118,10 @@ class Option(_backend.Model):
     __tablename__ = '_option'
 
     id = sa.Column(sa.Integer, primary_key=True)
+
     section = sa.Column(sa.Text, sa.CheckConstraint("section != ''"), nullable=False)
     option = sa.Column(sa.Text, sa.CheckConstraint("option != ''"), nullable=False)
+
     lines = sa.Column(sa.Boolean, nullable=False)
 
     __table_args__ = (
@@ -137,6 +137,7 @@ class Value(_backend.Model):
     file_id = sa.Column(sa.ForeignKey('_file.id'), primary_key=True)
     line = sa.Column(sa.Integer, sa.CheckConstraint('line >= 0'), primary_key=True)
     option_id = sa.Column(sa.ForeignKey('_option.id'), primary_key=True)
+
     # TODO: consider adding version for selective updates
     value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"), nullable=False)
 
@@ -161,8 +162,8 @@ def _load(root, conn, is_lines=Fields.is_lines):
             self[key] = result = (id_, lines)
             return result
 
-    def itervalues(cfg, file_id, options=Options()):
-        get_line = functools.partial(next, itertools.count())
+    def _itervalues(cfg, file_id, options=Options()):
+        get_line = _tools.next_count()
         for section, sec in iteritems(cfg):
             for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
@@ -174,7 +175,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
                     yield {'file_id': file_id, 'option_id': option_id,
                            'line': get_line(), 'value': value}
 
-    for path_tuple, dentry, cfg in _files.iterconfig(root):
+    for path_tuple, dentry, cfg in _files.iterfiles(root):
         file_params = {
             'glottocode': path_tuple[-1],
             'path': '/'.join(path_tuple),
@@ -182,12 +183,12 @@ def _load(root, conn, is_lines=Fields.is_lines):
             'sha256': _tools.sha256sum(dentry.path).hexdigest(),
         }
         file_id, = insert_file(file_params).inserted_primary_key
-        value_params = list(itervalues(cfg, file_id))
+        value_params = list(_itervalues(cfg, file_id))
         insert_value(value_params)
 
 
 def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
-    """Yield (path, <dict of <dicts of strings/string_lists>>) pairs."""
+    """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
@@ -212,7 +213,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
                 s: {o: [l.value for l in lines] if islines else next(lines).value
                    for (o, islines), lines in groupby_option(sections)}
                 for s, sections in groupby_section(values)}
-            yield path, record
+            yield tuple(path.split('/')), record
 
 
 def window_slices(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
@@ -237,54 +238,44 @@ def window_slices(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     yield lambda c, end=end: (c > end)
 
 
-def to_csv(filename='raw.csv', bind=_backend.ENGINE, encoding=ENCODING):
-    """Write (path, section, option, line, value) rows to <filename>.csv."""
-    query = sa.select([
+def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=_backend.ENGINE):
+    """Write (path, section, option, line, value) rows to filename."""
+    select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
-        ], bind=bind).select_from(sa.join(File, Value).join(Option))\
+        ]).select_from(sa.join(File, Value).join(Option))\
         .order_by(File.path, Option.section, Option.option, Value.line)
-    rows = query.execute()
-    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
-        writer = csv.writer(f)
-        _compat.csv_write(writer, encoding, header=rows.keys(), rows=rows)
+
+    return _queries.write_csv(select_values, filename, encoding, bind=bind)
 
 
-def to_json(filename=None, bind=_backend.ENGINE, encoding=ENCODING):
-    """Write (path, json) rows to <databasename>-json.csv."""
-    if filename is None:
-        filename = '%s-json.csv' % pathlib.Path(bind.url.database).stem
-    rows = ((path, json.dumps(data)) for path, data in iterrecords(bind=bind))
-    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
-        writer = csv.writer(f)
-        _compat.csv_write(writer, encoding, header=['path', 'json'], rows=rows)
-
-
-def to_files(bind=_backend.ENGINE, verbose=False, is_lines=Fields.is_lines):
+def to_files(bind=_backend.ENGINE, root=ROOT, verbose=True, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
+    records = iterrecords(bind)
+
     def iterpairs(records):
         for p, r in records:
-            path_tuple = pathlib.Path(p).parts
             for section, s in iteritems(r):
                 for option in s:
                     if is_lines(section, option):
                         s[option] = '\n'.join([''] + s[option])
-            yield path_tuple, r
+            yield p, r
 
-    _files.save(iterpairs(iterrecords(bind=bind)), verbose=verbose)
+    _files.save(iterpairs(records), verbose=verbose)
 
 
-def print_stats(bind=_backend.ENGINE, execute=False):
-    query = sa.select([
+def print_stats(bind=_backend.ENGINE):
+    select_nvalues = sa.select([
             Option.section, Option.option, sa.func.count().label('n'),
         ], bind=bind)\
         .select_from(sa.join(Option, Value))\
         .group_by(Option.section, Option.option)\
         .order_by(Option.section, sa.desc('n'))
-    _backend.print_rows(query, '{section:<22} {option:<22} {n:,}')
+
+    _queries.print_rows(select_nvalues, '{section:<22} {option:<22} {n:,}')
 
 
-def dropfunc(func, bind=_backend.ENGINE, save=True, verbose=True):
-    def wrapper(bind=bind, save=save, verbose=verbose):
+def dropfunc(func, save=True, verbose=True, bind=_backend.ENGINE):
+    def wrapper(save=save, verbose=verbose, bind=bind):
         delete_query = func()
         rows_deleted = bind.execute(delete_query).rowcount
         if rows_deleted and save:

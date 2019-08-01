@@ -13,7 +13,7 @@ from . import tools as _tools
 
 from . import ROOT, ENCODING
 
-__all__ = ['iterconfig', 'save']
+__all__ = ['iterfiles', 'save', 'roundtrip']
 
 BASENAME = 'md.ini'
 
@@ -22,8 +22,9 @@ class ConfigParser(configparser.ConfigParser):
     """Conservative ConfigParser with encoding header."""
 
     _header = '# -*- coding: %s -*-\n'
-    _encoding = ENCODING
+
     _newline = '\r\n'
+
     _init_defaults = {
         'delimiters': ('=',),
         'comment_prefixes': ('#',),
@@ -31,7 +32,7 @@ class ConfigParser(configparser.ConfigParser):
     }
 
     @classmethod
-    def from_file(cls, filename, encoding=_encoding, **kwargs):
+    def from_file(cls, filename, encoding=ENCODING, **kwargs):
         inst = cls(**kwargs)
         with io.open(filename, encoding=encoding) as f:
             inst.read_file(f)
@@ -42,21 +43,22 @@ class ConfigParser(configparser.ConfigParser):
             kwargs.setdefault(k, v)
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
-    def to_file(self, filename, encoding=_encoding):
+    def to_file(self, filename, encoding=ENCODING):
         with io.open(filename, 'w', encoding=encoding, newline=self._newline) as f:
             f.write(self._header % encoding)
             self.write(f)
 
 
-def iterconfig(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
+def iterfiles(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
+
     path_slice = slice(len(root.parts), -1)
     for d in _tools.iterfiles(root):
         assert d.name == assert_name
-        path_tuple = pathlib.Path(d.path).parts[path_slice]
-        yield path_tuple, d, load(d.path)
+        path = pathlib.Path(d.path)
+        yield path.parts[path_slice], d, load(d.path)
 
 
 def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
@@ -64,14 +66,17 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
+
     for path_tuple, d in pairs:
         path = str(root.joinpath(*path_tuple) / basename)
         cfg = load(path)
+
         # FIXME: missing sections and options
         drop_sections = set(cfg.sections()).difference(set(d) | {'core', 'sources'})
         changed = assume_changed or bool(drop_sections)
         for s in drop_sections:
             cfg.remove_section(s)
+
         for section, s in iteritems(d):
             if section != 'core':
                 drop_options = set(cfg.options(section))
@@ -85,7 +90,20 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
                 if cfg.get(section, option) != value:
                     changed = True
                     cfg.set(section, option, value)
+
         if changed:
             if verbose:
                 print(path)
             cfg.to_file(path)
+
+
+def roundtrip(root=ROOT, verbose=True):
+    """Do a load/save cycle with all config files."""
+    triples = iterfiles(root)
+
+    def _iterpairs(triples):
+        for path_tuple, _, cfg in triples:
+            d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
+            yield path_tuple, d
+
+    save(_iterpairs(triples), assume_changed=True, verbose=verbose)
