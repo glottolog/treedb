@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import warnings
 import itertools
 
 from ._compat import zip, iteritems
@@ -84,12 +85,18 @@ class Fields(object):
         return (section, None) in cls._fields or (section, option) in cls._fields
 
     @classmethod
-    def is_lines(cls, section, option):
+    def is_lines(cls, section, option, unknown_as_scalar=True):
         """Return whether the section option is treated as list of lines."""
         result = cls._fields.get((section, None))
         if result is None:
-            # use .get() instead to permit unknown fields as scalar
-            return cls._fields[(section, option)]
+            try:
+                return cls._fields[(section, option)]
+            except KeyError:
+                msg = 'section %r unknown option %r' % (section, option),
+                warnings.warn(msg)
+                if unknown_as_scalar:
+                    return None
+                raise
         return result
 
 
@@ -122,7 +129,7 @@ class Option(_backend.Model):
     section = sa.Column(sa.Text, sa.CheckConstraint("section != ''"), nullable=False)
     option = sa.Column(sa.Text, sa.CheckConstraint("option != ''"), nullable=False)
 
-    lines = sa.Column(sa.Boolean, nullable=False)
+    lines = sa.Column(sa.Boolean)
 
     __table_args__ = (
         sa.UniqueConstraint(section, option),
