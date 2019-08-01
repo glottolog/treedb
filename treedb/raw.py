@@ -188,7 +188,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             Value.file_id, Option.section, Option.option, Option.lines, Value.line, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
-        .order_by(Value.file_id, Option.section, Option.option, Value.line)
+        .order_by(Value.file_id, Option.section, Option.id, Value.line)
 
     groupby = (('file_id',), ('section',), ('option', 'lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
