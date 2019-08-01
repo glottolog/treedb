@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import csv
 import json
 import itertools
+import functools
 
 from ._compat import pathlib
 from ._compat import zip, iteritems
@@ -23,7 +24,7 @@ __all__ = [
     'File', 'Option', 'Value',
     'iterrecords',
     'to_csv', 'to_json', 'to_files',
-    'print_stats', 'print_fields',
+    'print_stats',
 ]
 
 WINDOWSIZE = 500
@@ -134,10 +135,14 @@ class Value(_backend.Model):
     __tablename__ = '_value'
 
     file_id = sa.Column(sa.ForeignKey('_file.id'), primary_key=True)
-    option_id = sa.Column(sa.ForeignKey('_option.id'), primary_key=True)
     line = sa.Column(sa.Integer, sa.CheckConstraint('line >= 0'), primary_key=True)
+    option_id = sa.Column(sa.ForeignKey('_option.id'), primary_key=True)
     # TODO: consider adding version for selective updates
     value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"), nullable=False)
+
+    __table_args__ = (
+        sa.UniqueConstraint(file_id, line),
+    )
 
 
 def _load(root, conn, is_lines=Fields.is_lines):
@@ -157,16 +162,17 @@ def _load(root, conn, is_lines=Fields.is_lines):
             return result
 
     def itervalues(cfg, file_id, options=Options()):
+        get_line = functools.partial(next, itertools.count())
         for section, sec in iteritems(cfg):
             for option, value in iteritems(sec):
                 option_id, lines = options[(section, option)]
                 if lines:
-                    for i, v in enumerate(value.strip().splitlines(), 1):
+                    for v in value.strip().splitlines():
                         yield {'file_id': file_id, 'option_id': option_id,
-                               'line': i, 'value': v}
+                               'line': get_line(), 'value': v}
                 else:
                     yield {'file_id': file_id, 'option_id': option_id,
-                           'line': 0, 'value': value}
+                           'line': get_line(), 'value': value}
 
     for path_tuple, dentry, cfg in _files.iterconfig(root):
         file_params = {
@@ -188,7 +194,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE):
             Value.file_id, Option.section, Option.option, Option.lines, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
-        .order_by(Value.file_id, Option.section, Option.id, Value.line)
+        .order_by(Value.file_id, Option.section, Value.line, Option.option)
 
     groupby = (('file_id',), ('section',), ('option', 'lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
@@ -265,20 +271,6 @@ def to_files(bind=_backend.ENGINE, verbose=False, is_lines=Fields.is_lines):
             yield path_tuple, r
 
     _files.save(iterpairs(iterrecords(bind=bind)), verbose=verbose)
-
-
-def print_fields(bind=_backend.ENGINE):
-    has_scalar = (sa.func.min(Value.line) == 0).label('scalar')
-    has_lines = (sa.func.max(Value.line) != 0).label('lines')
-    query = sa.select([
-            Option.section, Option.option, has_scalar, has_lines,
-        ], bind=bind)\
-        .select_from(sa.join(Option, Value))\
-        .group_by(Option.section, Option.option)\
-        .order_by(Option.section, Option.option)
-    print('FIELDS_LIST = {')
-    _backend.print_rows(query, '    ({section!r}, {option!r}): {lines},  # 0x{scalar:d}{lines:d}')
-    print('}')
 
 
 def print_stats(bind=_backend.ENGINE, execute=False):
