@@ -10,8 +10,6 @@ _PACKAGE_DIR = pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
 
-FILE = pathlib.Path.cwd() / 'treedb.sqlite3'
-
 ENCODING = 'utf-8'
 
 from .files import iterfiles
@@ -20,6 +18,8 @@ from .backend import ENGINE as engine, Session, Dataset, load, export
 from .models import LEVEL, Languoid
 from .checks import check
 from .queries import print_rows, write_csv, get_query, iterdescendants
+
+FILE = pathlib.Path.cwd() / 'treedb.sqlite3'
 
 __all__ = [
     'ROOT',
@@ -36,3 +36,5 @@ __version__ = '0.1.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
+
+engine.create(FILE)
