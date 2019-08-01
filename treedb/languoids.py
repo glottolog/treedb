@@ -49,12 +49,13 @@ def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
     return datetime.datetime.strptime(value, format_)
 
 
-def splitcountry(name, _match=re.compile(r'(.+) \(([^)]+)\)$').match):
+def splitcountry(name, _match=re.compile(
+        r'(?P<name>.+) \((?P<cc>[^)]+)\)$').match):
     return _match(name).groups()
 
 
 def splitlink(markdown, _match=re.compile(
-    r'\[(?P<title>[^]]+)\]\((?P<url>[^)]+)\)$').match):
+        r'\[(?P<title>[^]]+)\]\((?P<url>[^)]+)\)$').match):
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -72,15 +73,15 @@ def splitlink(markdown, _match=re.compile(
 
 
 def splitsource(s, _match=re.compile(
-    r"\*\*(?P<bibfile>[a-z0-9\-_]+):(?P<bibkey>[a-zA-Z.?\-;*'/()\[\]!_:0-9\u2014]+?)\*\*"
-    r"(:(?P<pages>[0-9\-f]+))?"
-    r'(?:<trigger "(?P<trigger>[^\"]+)">)?').match):
+        r"\*\*(?P<bibfile>[a-z0-9\-_]+):(?P<bibkey>[a-zA-Z.?\-;*'/()\[\]!_:0-9\u2014]+?)\*\*"
+        r"(:(?P<pages>[0-9\-f]+))?"
+        r'(?:<trigger "(?P<trigger>[^\"]+)">)?').match):
     return _match(s).groupdict()
 
 
-def splitaltname(s, _match=re.compile(
-    r'(?P<name>[^[]+)'
-    r'(?: \[(?P<lang>[a-z]{2,3})\])?$').match, parse_fail='!'):
+def splitaltname(s, parse_fail='!', _match=re.compile(
+        r'(?P<name>[^[]+)'
+        r'(?: \[(?P<lang>[a-z]{2,3})\])?$').match):
     ma = _match(s)
     if ma is None:
         return {'name': s, 'lang': parse_fail}
@@ -190,22 +191,23 @@ def iterlanguoids(root_or_bind=ROOT):
 
 def to_json_csv(root_or_bind=ROOT, filename='treedb-languoids-json.csv', encoding=ENCODING):
     """Write (path, json) rows for each languoid to filename."""
-    json_dumps = functools.partial(json.dumps,
-                                   default=operator.methodcaller('isoformat'))
+    default_func = operator.methodcaller('isoformat')
+    json_dumps = functools.partial(json.dumps, default=default_func)
+
     rows = (('/'.join(path_tuple), json_dumps(l))
             for path_tuple, l in iterlanguoids(root_or_bind))
-    _tools.write_csv(filename, rows, header=('path', 'json'), encoding=encoding)
+
+    return _tools.write_csv(filename, rows, header=('path', 'json'),
+                            encoding=encoding)
 
 
 def compare_with_raw(root=ROOT):
     from .backend import ENGINE as engine
 
-    files, raw = map(iterlanguoids, (root, engine))
-
     same = True
-    for f, r in zip_longest(files, raw):
-        if f != r:
+    for files, raw in zip_longest(*map(iterlanguoids, (root, engine))):
+        if files != raw:
             same = False
-            print('', '', f, '', r, '', '', sep='\n')
+            print('', '', files, '', raw, '', '', sep='\n')
 
     return same
