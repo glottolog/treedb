@@ -258,7 +258,7 @@ def to_files(root=ROOT, bind=_backend.ENGINE, verbose=True, is_lines=Fields.is_l
                         s[option] = '\n'.join([''] + s[option])
             yield p, r
 
-    _files.save(iterpairs(records), verbose=verbose)
+    _files.save(iterpairs(records), root, verbose=verbose)
 
 
 def print_stats(bind=_backend.ENGINE):
