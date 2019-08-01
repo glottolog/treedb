@@ -4,9 +4,9 @@
 
 from __future__ import print_function
 
-from . _compat import pathlib
+from . _compat import pathlib as _pathlib
 
-_PACKAGE_DIR = pathlib.Path(__file__).parent
+_PACKAGE_DIR = _pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
 
@@ -18,8 +18,9 @@ from .backend import ENGINE as engine, Session, Dataset, load, export
 from .models import LEVEL, Languoid
 from .checks import check
 from .queries import print_rows, write_csv, get_query, iterdescendants
+from .helpers import text, select, count, read_sql
 
-FILE = pathlib.Path.cwd() / 'treedb.sqlite3'
+FILE = _pathlib.Path.cwd() / 'treedb.sqlite3'
 
 __all__ = [
     'ROOT',
@@ -29,6 +30,7 @@ __all__ = [
     'LEVEL', 'Languoid',
     'check',
     'print_rows', 'write_csv', 'get_query', 'iterdescendants',
+    'text', 'select', 'count', 'read_sql',
 ]
 
 __title__ = 'treedb'

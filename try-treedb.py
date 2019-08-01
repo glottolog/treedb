@@ -1,17 +1,15 @@
 #!/usr/env/bin python
 # try-treedb.py - usage examples
 
-import sqlalchemy as sa
-
 import treedb
 
-from treedb import Languoid
+from treedb import Languoid, select
 
 print(next(treedb.iterlanguoids()))
 
 treedb.load()
 
-treedb.print_rows(sa.select([Languoid]).order_by(Languoid.id).limit(5))
+treedb.print_rows(select([Languoid]).order_by(Languoid.id).limit(5))
 
 tree = Languoid.tree(include_self=True, with_steps=True, with_terminal=True)
 treedb.print_rows(tree.select().where(tree.c.child_id == 'book1242'))
@@ -26,7 +24,7 @@ try:
 except ImportError:
     pass
 else:
-    df = pd.read_sql_query(query, treedb.engine, index_col='id')
+    df = treedb.read_sql(query, index_col='id')
     df.info()
 
 # run sanity checks
