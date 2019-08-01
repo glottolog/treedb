@@ -44,17 +44,17 @@ class EngineProxy(sa.engine.Engine):
             assert engine.url.drivername == 'sqlite'
         self._engine = engine
 
-    def create_from_url(self, url, **kwargs):
+    def set_url(self, url, **kwargs):
         if url is None:
             url = 'sqlite://'
         self.engine = sa.create_engine(url, **kwargs)
 
-    def create(self, filename, **kwargs):
+    def set_file(self, filename, **kwargs):
         if filename is None:
             url = None
         else:
             url = 'sqlite:///%s' % filename
-        self.create_from_url(url, **kwargs)
+        self.set_url(url, **kwargs)
 
     def __repr__(self):
         tmpl = '<%s.%s at %#x>'

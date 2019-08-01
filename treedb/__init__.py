@@ -14,7 +14,7 @@ ENCODING = 'utf-8'
 
 from .files import iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
-from .backend import ENGINE as engine, Session, Dataset, load, export
+from .backend import ENGINE, Session, Dataset, load, export
 from .models import LEVEL, Languoid
 from .checks import check
 from .queries import print_rows, write_csv, get_query, iterdescendants
@@ -22,15 +22,18 @@ from .helpers import text, select, count, read_sql
 
 FILE = _pathlib.Path.cwd() / 'treedb.sqlite3'
 
+ENGINE.set_file(FILE)
+
 __all__ = [
     'ROOT',
     'iterfiles',
     'iterlanguoids', 'to_json_csv', 'compare_with_raw',
-    'engine', 'Session', 'Dataset', 'load', 'export',
+    'Session', 'Dataset', 'load', 'export',
     'LEVEL', 'Languoid',
     'check',
     'print_rows', 'write_csv', 'get_query', 'iterdescendants',
     'text', 'select', 'count', 'read_sql',
+    'FILE', 'engine'
 ]
 
 __title__ = 'treedb'
@@ -39,4 +42,4 @@ __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
-engine.create(FILE)
+engine = ENGINE
