@@ -98,8 +98,15 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         from . import raw
     from . import models
 
+    @contextlib.contextmanager
+    def transaction(bind=engine):
+        with bind.begin() as conn:
+            conn.execute('PRAGMA synchronous = OFF')
+            conn.execute('PRAGMA journal_mode = MEMORY')
+            yield conn
+
     start = time.time()
-    with engine.begin() as conn:
+    with transaction() as conn:
         conn.execute('PRAGMA application_id = %d' % application_id)
         Model.metadata.create_all(bind=conn)
 
@@ -114,21 +121,17 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     }
 
     if not exclude_raw:
-        with engine.begin() as conn:
-            conn.execute('PRAGMA synchronous = OFF')
-            conn.execute('PRAGMA journal_mode = MEMORY')
-            raw._load(root,
-                      conn.execution_options(compiled_cache={}))
+        with transaction() as conn:
+            raw._load(root, conn.execution_options(compiled_cache={}))
 
     from . import languoids
 
-    with engine.begin() as conn:
-        conn.execute('PRAGMA synchronous = OFF')
-        conn.execute('PRAGMA journal_mode = MEMORY')
-        models._load(languoids.iterlanguoids(conn if from_raw else root),
-                     conn.execution_options(compiled_cache={}))
+    with transaction() as conn:
+        pairs = languoids.iterlanguoids(conn if from_raw else root)
+        models._load(pairs, conn.execution_options(compiled_cache={}))
 
-    sa.insert(Dataset, bind=engine).execute(dataset)
+    with transaction() as conn:
+        sa.insert(Dataset, bind=conn).execute(dataset)
 
     print(datetime.timedelta(seconds=time.time() - start))
     return dbfile

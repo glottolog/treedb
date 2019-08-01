@@ -269,7 +269,8 @@ def print_stats(bind=_backend.ENGINE):
         .group_by(Option.section, Option.option)\
         .order_by(Option.section, sa.desc('n'))
 
-    _queries.print_rows(select_nvalues, '{section:<22} {option:<22} {n:,}')
+    _queries.print_rows(select_nvalues,
+                        format_='{section:<22} {option:<22} {n:,}', bind=bind)
 
 
 def dropfunc(func, save=True, verbose=True, bind=_backend.ENGINE):

@@ -106,4 +106,4 @@ def roundtrip(root=ROOT, verbose=True):
             d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
             yield path_tuple, d
 
-    save(_iterpairs(triples), assume_changed=True, verbose=verbose)
+    save(_iterpairs(triples), root, assume_changed=True, verbose=verbose)
