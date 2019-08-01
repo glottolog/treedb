@@ -246,7 +246,7 @@ def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=_backend.ENGIN
     return _queries.write_csv(select_values, filename, encoding, bind=bind)
 
 
-def to_files(bind=_backend.ENGINE, root=ROOT, verbose=True, is_lines=Fields.is_lines):
+def to_files(root=ROOT, bind=_backend.ENGINE, verbose=True, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
     records = iterrecords(bind)
 
