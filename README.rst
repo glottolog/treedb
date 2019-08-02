@@ -155,7 +155,7 @@ Get one row from the ``languoid`` table via `sqlalchemy` core:
 
 .. code:: python
 
-    >>> sa.select([treedb.Languoid], bind=treedb.engine).execute().first()
+    >>> treedb.select([treedb.Languoid]).execute().first()
     ('abin1243', 'language', 'Abinomn', None, 'bsa', 'bsa', -2.92281, 138.891)
 
 Get one ``Languoid`` model instance via ``sqlalchemy`` orm:
