@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 else:
-    df = treedb.read_sql(query, index_col='id')
+    df = pd.read_sql_query(query, con=treedb.engine, index_col='id')
     df.info()
 
 # run sanity checks
