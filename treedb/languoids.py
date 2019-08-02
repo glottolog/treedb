@@ -8,11 +8,11 @@ import datetime
 import operator
 import functools
 
-from ._compat import iteritems, map, zip_longest
+from ._compat import ENCODING, iteritems, map, zip_longest
 
 from . import tools as _tools
 
-from . import ROOT, ENCODING
+from . import ROOT
 
 __all__ = ['iterlanguoids', 'to_json_csv', 'compare_with_raw']
 
@@ -188,8 +188,17 @@ def iterlanguoids(root_or_bind=ROOT):
         yield path_tuple, item
 
 
-def to_json_csv(root_or_bind=ROOT, filename='treedb-languoids-json.csv', encoding=ENCODING):
+def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
     """Write (path, json) rows for each languoid to filename."""
+    if filename is None:
+        suffix = '.languoids-json.csv'
+        try:
+            path = root_or_bind.file.with_suffix(suffix)
+        except AttributeError:
+            path = _tools.path_from_filename(root_or_path)
+            path = path.with_suffix(suffix)
+        filename = path.parts[-1]
+
     default_func = operator.methodcaller('isoformat')
     json_dumps = functools.partial(json.dumps, default=default_func)
 

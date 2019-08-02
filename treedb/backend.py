@@ -12,13 +12,15 @@ import contextlib
 
 from ._compat import pathlib
 
+from ._compat import ENCODING
+
 import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 from . import tools as _tools
 
-from . import ENGINE, ROOT, ENCODING
+from . import ENGINE, ROOT
 
 __all__ = [
     'Model', 'Dataset',
@@ -73,8 +75,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         from_raw = not exclude_raw
 
     assert engine.url.drivername == 'sqlite'
-    dbfile = pathlib.Path(engine.url.database)
-    if dbfile.exists():
+    if engine.file.exists():
         try:
             found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
         except Exception as e:
@@ -85,9 +86,11 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
                 raise
 
         if rebuild or found != exclude_raw:
-            dbfile.unlink()
+            warnings.warn('deleting present file: %r' % engine.file)
+            engine.dispose()
+            engine.file.unlink()
         else:
-            return dbfile
+            return engine.file
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
@@ -133,13 +136,13 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         sa.insert(Dataset, bind=conn).execute(dataset)
 
     print(datetime.timedelta(seconds=time.time() - start))
-    return dbfile
+    return engine
 
 
 def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     if filename is None:
-        filename = '%s.zip' % pathlib.Path(engine.url.database).stem
+        filename = engine.file.with_suffix('.zip').parts[-1] 
 
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:

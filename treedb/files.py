@@ -7,11 +7,11 @@ import configparser
 
 from ._compat import pathlib
 
-from ._compat import iteritems
+from ._compat import ENCODING, iteritems
 
 from . import tools as _tools
 
-from . import ROOT, ENCODING
+from . import ROOT
 
 __all__ = ['iterfiles', 'save', 'roundtrip']
 

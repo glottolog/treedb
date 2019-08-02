@@ -3,7 +3,7 @@
 
 import treedb
 
-from treedb import Languoid, select
+from treedb import Languoid, select, engine
 
 print(next(treedb.iterlanguoids()))
 

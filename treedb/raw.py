@@ -5,11 +5,11 @@ from __future__ import unicode_literals
 import warnings
 import itertools
 
-from ._compat import zip, iteritems
+from ._compat import ENCODING, zip, iteritems
 
 import sqlalchemy as sa
 
-from . import ENGINE, ROOT, ENCODING
+from . import ENGINE, ROOT
 
 from . import files as _files
 from . import queries as _queries
@@ -247,8 +247,11 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     yield lambda c, end=end: (c > end)
 
 
-def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=ENGINE):
+def to_raw_csv(filename=None, encoding=ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
+    if filename is None:
+        filename = bind.file.with_suffix('.raw.csv').parts[-1]
+
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
         ]).select_from(sa.join(File, Value).join(Option))\

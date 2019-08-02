@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 
 from . import _compat
 
+from ._compat import ENCODING
+
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import ENGINE, ENCODING
+from . import ENGINE
 
 from . import tools as _tools
 
@@ -40,11 +42,14 @@ def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
         print(r)
 
 
-def write_csv(query=None, filename='treedb.csv', encoding=ENCODING,
+def write_csv(query=None, filename=None, encoding=ENCODING,
               verbose=False, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
         query = get_query()
+
+    if filename is None:
+        filename = bind.file.with_suffix('.csv').parts[-1]
 
     if verbose:
         print(query)

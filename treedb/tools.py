@@ -17,13 +17,14 @@ from ._compat import scandir
 
 from . import _compat
 
-from . import ENCODING
+from ._compat import ENCODING
 
 __all__ = [
     'next_count',
     'iterslices',
     'groupby_itemgetter', 'groupby_attrgetter',
     'iterfiles',
+    'path_from_filename',
     'sha256sum',
     'check_output',
     'write_csv',
@@ -71,9 +72,19 @@ def iterfiles(top, verbose=False):
         stack.extend(dirs[::-1])
 
 
+def path_from_filename(filename, *args):
+    if isinstance(filename, pathlib.Path):
+        assert not args
+        del args
+    else:
+        filename = pathlib.Path(filename, *args)
+    return filename
+
+
 def sha256sum(file, chunksize=2**16):  # 64 kB
     result = hashlib.sha256()
-    with io.open(file, 'rb') as f:
+    file = path_from_filename(file)
+    with file.open('rb') as f:
         read = functools.partial(f.read, chunksize)
         for chunk in iter(read, b''):
             result.update(chunk)
@@ -96,12 +107,12 @@ def write_csv(filename, rows, header=None, encoding=ENCODING, dialect='excel'):
     if filename is None:
         with _compat.make_csv_io() as f:
             writer = csv.writer(f, dialect=dialect)
-            _compat.csv_write(writer, encoding, header, rows)
+            _compat.csv_write(writer, rows, header=header, encoding=encoding)
             data = f.getvalue()
         return _compat.get_csv_io_bytes(data, encoding)
 
     with _compat.csv_open(filename, 'w', encoding=encoding) as f:
         writer = csv.writer(f, dialect=dialect)
-        _compat.csv_write(writer, encoding, header, rows)
+        _compat.csv_write(writer, rows, header=header, encoding=encoding)
 
     return filename

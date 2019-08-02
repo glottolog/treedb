@@ -6,13 +6,11 @@ from . _compat import pathlib as _pathlib
 
 from . import proxies as _proxies
 
-ENGINE = _proxies.EngineProxy()
+ENGINE = _proxies.SqliteEngineProxy()
 
 _PACKAGE_DIR = _pathlib.Path(__file__).parent
 
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
-
-ENCODING = 'utf-8'
 
 from .files import iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
@@ -22,9 +20,6 @@ from .checks import check
 from .queries import print_rows, write_csv, get_query, iterdescendants
 from .sa_helpers import text, select, count
 
-FILE = _pathlib.Path.cwd() / 'treedb.sqlite3'
-
-ENGINE.set_file(FILE)
 
 __all__ = [
     'ENGINE', 'ROOT',
@@ -35,7 +30,7 @@ __all__ = [
     'check',
     'print_rows', 'write_csv', 'get_query', 'iterdescendants',
     'text', 'select', 'count',
-    'FILE', 'engine'
+    'set_engine_file', 'engine',
 ]
 
 __title__ = 'treedb'
@@ -44,4 +39,14 @@ __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
-engine = ENGINE
+
+def set_engine_file(filename, require=False, resolve=True):
+    if require and not filename.exists():
+        raise RuntimeError('engine file does not exist: %r' % filename)
+
+    ENGINE.__class__.file.fset(ENGINE, filename, resolve=resolve)
+
+    return ENGINE
+
+
+engine = set_engine_file((_pathlib.Path.cwd() / __title__).with_suffix('.sqlite3'))
