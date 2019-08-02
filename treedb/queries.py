@@ -7,9 +7,8 @@ from . import _compat
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import ENCODING
+from . import ENGINE, ENCODING
 
-from . import backend as _backend
 from . import tools as _tools
 
 from .models import (LEVEL,
@@ -25,7 +24,7 @@ from .models import (LEVEL,
 __all__ = ['print_rows', 'write_csv', 'get_query', 'iterdescendants']
 
 
-def print_rows(query=None, format_=None, verbose=False, bind=_backend.ENGINE):
+def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -42,7 +41,7 @@ def print_rows(query=None, format_=None, verbose=False, bind=_backend.ENGINE):
 
 
 def write_csv(query=None, filename='treedb.csv', encoding=ENCODING,
-              verbose=False, bind=_backend.ENGINE):
+              verbose=False, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
         query = get_query()
@@ -55,7 +54,7 @@ def write_csv(query=None, filename='treedb.csv', encoding=ENCODING,
     return _tools.write_csv(filename, rows, header, encoding)
 
 
-def get_query(bind=_backend.ENGINE):
+def get_query(bind=ENGINE):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     def get_cols(model, label='%s', ignore='id'):
         cols = model.__table__.columns
@@ -153,7 +152,7 @@ def get_query(bind=_backend.ENGINE):
     return select_languoid
 
 
-def iterdescendants(parent_level=None, child_level=None, bind=_backend.ENGINE):
+def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165

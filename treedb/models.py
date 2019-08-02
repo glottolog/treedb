@@ -7,7 +7,7 @@ from ._compat import iteritems
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import backend as _backend
+from .backend import Model
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -70,7 +70,7 @@ EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
 
 
-class Languoid(_backend.Model):
+class Languoid(Model):
 
     __tablename__ = 'languoid'
 
@@ -196,7 +196,7 @@ class Languoid(_backend.Model):
         return path, family.label(family_label), language.label(language_label)
 
 
-class Macroarea(_backend.Model):
+class Macroarea(Model):
 
     __tablename__ = 'macroarea'
 
@@ -209,12 +209,12 @@ class Macroarea(_backend.Model):
                                     back_populates='macroareas')
 
 
-languoid_macroarea = sa.Table('languoid_macroarea', _backend.Model.metadata,
+languoid_macroarea = sa.Table('languoid_macroarea', Model.metadata,
     sa.Column('languoid_id', sa.ForeignKey('languoid.id'), primary_key=True),
     sa.Column('macroarea_name', sa.ForeignKey('macroarea.name'), primary_key=True))
 
 
-class Country(_backend.Model):
+class Country(Model):
 
     __tablename__ = 'country'
 
@@ -229,12 +229,12 @@ class Country(_backend.Model):
                                     back_populates='countries')
 
 
-languoid_country = sa.Table('languoid_country', _backend.Model.metadata,
+languoid_country = sa.Table('languoid_country', Model.metadata,
     sa.Column('languoid_id', sa.ForeignKey('languoid.id'), primary_key=True),
     sa.Column('country_id', sa.ForeignKey('country.id'), primary_key=True))
 
 
-class Link(_backend.Model):
+class Link(Model):
 
     __tablename__ = 'link'
 
@@ -266,7 +266,7 @@ class Link(_backend.Model):
             ], else_=cls.url)
 
 
-class Source(_backend.Model):
+class Source(Model):
 
     __tablename__ = 'source'
 
@@ -302,7 +302,7 @@ class Source(_backend.Model):
             ], else_=sa.func.printf('**%s:%s**', cls.bibfile, cls.bibkey))
 
 
-class Altname(_backend.Model):
+class Altname(Model):
 
     __tablename__ = 'altname'
 
@@ -333,7 +333,7 @@ class Altname(_backend.Model):
             ], else_=cls.name)
 
 
-class Trigger(_backend.Model):
+class Trigger(Model):
 
     __tablename__ = 'trigger'
 
@@ -354,7 +354,7 @@ class Trigger(_backend.Model):
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='triggers')
 
 
-class Identifier(_backend.Model):
+class Identifier(Model):
 
     __tablename__ = 'identifier'
 
@@ -370,7 +370,7 @@ class Identifier(_backend.Model):
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='identifiers')
 
 
-class ClassificationComment(_backend.Model):
+class ClassificationComment(Model):
 
     __tablename__ = 'classificationcomment'
 
@@ -386,7 +386,7 @@ class ClassificationComment(_backend.Model):
     languoid = sa.orm.relationship('Languoid', innerjoin=True)
 
 
-class ClassificationRef(_backend.Model):
+class ClassificationRef(Model):
 
     __tablename__ = 'classificationref'
     languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
@@ -414,7 +414,7 @@ class ClassificationRef(_backend.Model):
         return sa.func.printf(format_, cls.bibfile, cls.bibkey, cls.pages)
 
 
-class Endangerment(_backend.Model):
+class Endangerment(Model):
 
     __tablename__ = 'endangerment'
 
@@ -432,7 +432,7 @@ class Endangerment(_backend.Model):
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='endangerment')
 
 
-class EthnologueComment(_backend.Model):
+class EthnologueComment(Model):
 
     __tablename__ = 'ethnologuecomment'
 
@@ -450,7 +450,7 @@ class EthnologueComment(_backend.Model):
     languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='ethnologue_comment')
 
 
-class IsoRetirement(_backend.Model):
+class IsoRetirement(Model):
 
     __tablename__ = 'isoretirement'
 
@@ -484,7 +484,7 @@ class IsoRetirement(_backend.Model):
                                     back_populates='iso_retirement')
 
 
-class IsoRetirementChangeTo(_backend.Model):
+class IsoRetirementChangeTo(Model):
 
     __tablename__ = 'isoretirement_changeto'
 

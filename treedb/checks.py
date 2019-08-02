@@ -9,7 +9,7 @@ from ._compat import getfullargspec
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import backend as _backend
+from .backend import Session, Dataset
 
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
@@ -28,7 +28,7 @@ def check(func=None):
         return func
 
     for func in check.registered:
-        session = _backend.Session()
+        session = Session()
         ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
         check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
         check_inst = check_cls(session)
@@ -183,7 +183,7 @@ def bookkeeping_no_children(session):
 
 @check
 def no_empty_files(session):
-    exclude_raw = session.query(_backend.Dataset.exclude_raw).scalar()
+    exclude_raw = session.query(Dataset.exclude_raw).scalar()
     if exclude_raw:
         return session.query(sa.true()).filter(sa.false())
 

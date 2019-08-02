@@ -21,7 +21,8 @@ from . import tools as _tools
 from . import ENGINE, ROOT, ENCODING
 
 __all__ = [
-    'ENGINE', 'Model', 'Dataset', 'Session',
+    'Model', 'Dataset',
+    'Session', 
     'load', 'export',
 ]
 

@@ -9,12 +9,14 @@ from ._compat import zip, iteritems
 
 import sqlalchemy as sa
 
-from . import ROOT, ENCODING
+from . import ENGINE, ROOT, ENCODING
 
 from . import files as _files
-from . import backend as _backend
 from . import queries as _queries
 from . import tools as _tools
+
+from .backend import Model
+
 
 __all__ = [
     'File', 'Option', 'Value',
@@ -100,7 +102,7 @@ class Fields(object):
         return result
 
 
-class File(_backend.Model):
+class File(Model):
     """Forward-slash-joined ids from the root to each item."""
 
     __tablename__ = '_file'
@@ -119,7 +121,7 @@ class File(_backend.Model):
     )
 
 
-class Option(_backend.Model):
+class Option(Model):
     """Unique (section, option) key of the values with lines config."""
 
     __tablename__ = '_option'
@@ -136,7 +138,7 @@ class Option(_backend.Model):
     )
 
 
-class Value(_backend.Model):
+class Value(Model):
     """Item value as (path, section, option, line, value) combination."""
 
     __tablename__ = '_value'
@@ -194,7 +196,7 @@ def _load(root, conn, is_lines=Fields.is_lines):
         insert_value(value_params)
 
 
-def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
+def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
@@ -223,7 +225,7 @@ def iterrecords(bind=_backend.ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
             yield tuple(path.split('/')), record
 
 
-def window_slices(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
+def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     """Yield where clause making function for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
@@ -245,7 +247,7 @@ def window_slices(key_column, size=WINDOWSIZE, bind=_backend.ENGINE):
     yield lambda c, end=end: (c > end)
 
 
-def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=_backend.ENGINE):
+def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
@@ -255,7 +257,7 @@ def to_raw_csv(filename='treedb-raw.csv', encoding=ENCODING, bind=_backend.ENGIN
     return _queries.write_csv(select_values, filename, encoding, bind=bind)
 
 
-def to_files(root=ROOT, bind=_backend.ENGINE, verbose=True, is_lines=Fields.is_lines):
+def to_files(root=ROOT, bind=ENGINE, verbose=True, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
     records = iterrecords(bind)
 
@@ -270,7 +272,7 @@ def to_files(root=ROOT, bind=_backend.ENGINE, verbose=True, is_lines=Fields.is_l
     return _files.save(iterpairs(records), root, verbose=verbose)
 
 
-def print_stats(bind=_backend.ENGINE):
+def print_stats(bind=ENGINE):
     select_nvalues = sa.select([
             Option.section, Option.option, sa.func.count().label('n'),
         ], bind=bind)\
@@ -282,7 +284,7 @@ def print_stats(bind=_backend.ENGINE):
                         format_='{section:<22} {option:<22} {n:,}', bind=bind)
 
 
-def dropfunc(func, save=True, verbose=True, bind=_backend.ENGINE):
+def dropfunc(func, save=True, verbose=True, bind=ENGINE):
     def wrapper(save=save, verbose=verbose, bind=bind):
         delete_query = func()
         rows_deleted = bind.execute(delete_query).rowcount
