@@ -27,6 +27,7 @@ def check(func=None):
             check.registered = [func]
         return func
 
+    passed = True
     for func in check.registered:
         session = Session()
         ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
@@ -34,9 +35,14 @@ def check(func=None):
         check_inst = check_cls(session)
 
         try:
-            check_inst.validate()
+            check_passed = check_inst.validate()
         finally:
             session.close()
+
+        if not check_passed:
+            passed = False
+
+    return passed
 
 
 class Check(object):

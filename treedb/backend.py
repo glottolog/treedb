@@ -90,7 +90,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
             engine.dispose()
             engine.file.unlink()
         else:
-            return engine.file
+            return engine
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
@@ -151,4 +151,4 @@ def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metad
             data = _tools.write_csv(None, rows, header, encoding)
             z.writestr('%s.csv' % table.name, data)
 
-    return filename
+    return _tools.path_from_filename(filename)

@@ -115,4 +115,4 @@ def write_csv(filename, rows, header=None, encoding=ENCODING, dialect='excel'):
         writer = csv.writer(f, dialect=dialect)
         _compat.csv_write(writer, rows, header=header, encoding=encoding)
 
-    return filename
+    return path_from_filename(filename)

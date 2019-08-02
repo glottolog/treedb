@@ -97,14 +97,14 @@ Import the package:
 
     >>> import treedb
 
-Use ``treedb.iterlanguoids()`` to iterate over languoids as simple ``dict``:
+Use ``treedb.iterlanguoids()`` to iterate over languoids as (<path>, ``dict``) pairs:
 
 .. code:: python
 
     >>> next(treedb.iterlanguoids())
-    {'id': 'abin1243', 'parent_id': None, 'level': 'language', ...
+    (('abin1243',), {'id': 'abin1243', 'parent_id': None, 'level': 'language', ...
 
-Note: This is the low-level interface, which does not require loading.
+Note: This is a low-level interface, which does not require loading.
 
 Load the database:
 
@@ -112,7 +112,7 @@ Load the database:
 
     >>> treedb.load()
     ...
-    'treedb.sqlite3'
+    <treedb.proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
 
 Run consistency checks:
 
@@ -120,20 +120,21 @@ Run consistency checks:
 
     >>> treedb.check()
     ...
+    True
 
 Export into a ZIP file containing one CSV file per database table:
 
 .. code:: python
 
-    >>> treedb.export_db()
-    'treedb.zip'
+    >>> treedb.export()
+    ...Path('treedb.zip')
 
 Execute the example query and write it into a CSV file with one row per languoid:
 
 .. code:: python
 
     >>> treedb.write_csv()
-    'treedb.csv'
+    ...Path('treedb.csv')
 
 Rebuild the database (e.g. after an update):
 
@@ -141,14 +142,14 @@ Rebuild the database (e.g. after an update):
 
     >>> treedb.load(rebuild=True)
     ...
-    'treedb.sqlite3'
+    <treedb.proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
 
 Execute a simple query with ``sqlalchemy`` core and write it to a CSV file:
 
 .. code:: python
 
-    >>> import sqlalchemy as sa
-    >>> treedb.write_csv(sa.select([treedb.Languoid]), filename='languoids.csv')
+    >>> treedb.write_csv(treedb.select([treedb.Languoid]), filename='languoids.csv')
+    ...Path('languoids.csv')
 
 Get one row from the ``languoid`` table via `sqlalchemy` core:
 
