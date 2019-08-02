@@ -3,11 +3,11 @@
 
 import treedb
 
-from treedb import Languoid, select, engine
+from treedb import Languoid, select
 
 print(next(treedb.iterlanguoids()))
 
-treedb.load()
+engine = treedb.load()
 
 treedb.print_rows(select([Languoid]).order_by(Languoid.id).limit(5))
 
@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 else:
-    df = pd.read_sql_query(query, con=treedb.engine, index_col='id')
+    df = pd.read_sql_query(query, con=engine, index_col='id')
     df.info()
 
 # run sanity checks
@@ -38,12 +38,12 @@ treedb.check()
 #from treedb import raw
 
 #print(next(raw.iterrecords()))
-#print(next(treedb.iterlanguoids(treedb.engine)))
+#print(next(treedb.iterlanguoids(engine)))
 #raw.print_stats()
 #raw.to_raw_csv()
 
 #treedb.languoids.compare_with_raw()
-#treedb.languoids.to_json_csv(treedb.engine)
+#treedb.languoids.to_json_csv(engine)
 
 #raw.drop_duplicate_sources()
 #raw.drop_duplicated_triggers()
