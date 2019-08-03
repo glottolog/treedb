@@ -53,9 +53,11 @@ def groupby_attrgetter(*attrnames):
 def iterfiles(top, verbose=False):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
-    if isinstance(top, pathlib.Path):
-        top = str(top)
-    stack = [top]
+    top = path_from_filename(top)
+    if not top.is_absolute():
+        top = pathlib.Path.cwd().join(top).resolve()
+
+    stack = [str(top)]
     while stack:
         root = stack.pop()
         if verbose:
