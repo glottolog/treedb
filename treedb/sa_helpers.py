@@ -4,7 +4,7 @@ import functools
 
 import sqlalchemy as sa
 
-from .backend import ENGINE
+from . import ENGINE
 
 __all__ = ['text', 'select', 'count']
 

@@ -210,10 +210,10 @@ def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
 
 
 def compare_with_raw(root=ROOT):
-    from .backend import ENGINE as engine
+    from . import ENGINE
 
     same = True
-    for files, raw in zip_longest(*map(iterlanguoids, (root, engine))):
+    for files, raw in zip_longest(*map(iterlanguoids, (root, ENGINE))):
         if files != raw:
             same = False
             print('', '', files, '', raw, '', '', sep='\n')
