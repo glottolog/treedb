@@ -50,4 +50,4 @@ def set_engine_file(filename, require=False, resolve=False):
     return ENGINE
 
 
-engine = set_engine_file(None)
+set_engine_file(None)
