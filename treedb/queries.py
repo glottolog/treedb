@@ -5,7 +5,7 @@ from __future__ import print_function
 
 from . import _compat
 
-from ._compat import ENCODING
+from ._compat import DIALECT, ENCODING
 
 import hashlib
 
@@ -49,7 +49,7 @@ def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
         print(r)
 
 
-def write_csv(query=None, filename=None, encoding=ENCODING,
+def write_csv(query=None, filename=None, dialect=DIALECT, encoding=ENCODING,
               verbose=False, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
@@ -63,10 +63,12 @@ def write_csv(query=None, filename=None, encoding=ENCODING,
 
     rows = bind.execute(query)
     header = rows.keys()
-    return _tools.write_csv(filename, rows, header, encoding)
+    return _tools.write_csv(filename, rows, header=header,
+                            dialect=dialect, encoding=encoding)
 
 
-def hash_csv(query=None, raw=False, name=None, encoding=ENCODING, bind=ENGINE):
+def hash_csv(query=None, raw=False, name=None,
+             dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -75,7 +77,8 @@ def hash_csv(query=None, raw=False, name=None, encoding=ENCODING, bind=ENGINE):
 
     result = hashlib.new(name if name is not None else 'sha256')
     assert hasattr(result, 'hexdigest')
-    _tools.write_csv(result, rows, header, encoding)
+    _tools.write_csv(result, rows, header=header,
+                     dialect=dialect, encoding=encoding)
 
     if not raw:
         result = result.hexdigest()

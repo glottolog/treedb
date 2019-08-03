@@ -6,6 +6,8 @@ import operator
 
 ENCODING = 'utf-8'
 
+DIALECT = 'excel'
+
 PY2 = (sys.version_info.major == 2)
 
 

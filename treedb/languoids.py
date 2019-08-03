@@ -9,7 +9,7 @@ import datetime
 import operator
 import functools
 
-from ._compat import ENCODING, iteritems, map, zip_longest
+from ._compat import DIALECT, ENCODING, iteritems, map, zip_longest
 
 from . import tools as _tools
 
@@ -189,7 +189,7 @@ def iterlanguoids(root_or_bind=ROOT):
         yield path_tuple, item
 
 
-def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
+def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv'
@@ -206,7 +206,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
             for path_tuple, l in iterlanguoids(root_or_bind))
 
     return _tools.write_csv(filename, rows, header=('path', 'json'),
-                            encoding=encoding)
+                            dialect=dialect, encoding=encoding)
 
 
 def compare_with_raw(root=ROOT):

@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from .._compat import ENCODING, iteritems
+from .._compat import DIALECT, ENCODING, iteritems
 
 import sqlalchemy as sa
 
@@ -30,7 +30,8 @@ def print_stats(bind=ENGINE):
     _queries.print_rows(select_nvalues, format_=template, bind=bind)
 
 
-def checksum(weak=False, name=None, encoding=ENCODING, bind=ENGINE):
+def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
+             bind=ENGINE):
     if weak:
         select_rows = sa.select([
                 File.path, Option.section, Option.option, Value.value,
@@ -43,13 +44,13 @@ def checksum(weak=False, name=None, encoding=ENCODING, bind=ENGINE):
             ], bind=bind).order_by('path')
 
     hash_  = _queries.hash_csv(select_rows, raw=True, name=name,
-                               encoding=encoding, bind=bind)
+                               dialect=dialect, encoding=encoding, bind=bind)
 
     return '%s:%s:%s' % ('weak' if weak else 'strong',
                          hash_.name, hash_.hexdigest())
 
 
-def to_raw_csv(filename=None, encoding=ENCODING, bind=ENGINE):
+def to_raw_csv(filename=None, dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
@@ -59,7 +60,8 @@ def to_raw_csv(filename=None, encoding=ENCODING, bind=ENGINE):
         ]).select_from(sa.join(File, Value).join(Option))\
         .order_by(File.path, Option.section, Option.option, Value.line)
 
-    return _queries.write_csv(select_values, filename, encoding, bind=bind)
+    return _queries.write_csv(select_values, filename,
+                              dialect=dialect, encoding=encoding, bind=bind)
 
 
 def to_files(root=ROOT, bind=ENGINE, verbose=True, is_lines=Fields.is_lines):
