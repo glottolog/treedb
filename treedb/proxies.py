@@ -61,7 +61,7 @@ class SqliteEngineProxy(EngineProxy):
         return _tools.path_from_filename(file)
 
     @file.setter
-    def file(self, filename, resolve=True, memory_filename=UNSPECIFIED):
+    def file(self, filename, resolve=False, memory_filename=UNSPECIFIED):
         if filename is None:
             url = None
             if memory_filename is not UNSPECIFIED:

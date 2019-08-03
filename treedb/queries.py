@@ -50,7 +50,7 @@ def write_csv(query=None, filename=None, encoding=ENCODING,
         query = get_query()
 
     if filename is None:
-        filename = bind.file_with_suffix('.csv').parts[-1]
+        filename = bind.file_with_suffix('.csv').name
 
     if verbose:
         print(query)

@@ -19,7 +19,7 @@ each database table, or written into a single denormalized CSV file with one
 row per languoid (via a provided `SQL query`_).
 
 As sqlite_ is the `most widely used`_ database, the database file itself
-(``treedb.sqlite3``) can be queried directly from most programming
+(e.g. ``treedb.sqlite3``) can be queried directly from most programming
 environments. It can also be examined using graphical interfaces such as
 DBeaver_, or via the `sqlite3 cli`_.
 

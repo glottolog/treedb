@@ -197,7 +197,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
             path = root_or_bind.file_with_suffix(suffix)
         except AttributeError:
             path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
-        filename = path.parts[-1]
+        filename = path.name
 
     default_func = operator.methodcaller('isoformat')
     json_dumps = functools.partial(json.dumps, default=default_func)

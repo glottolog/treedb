@@ -28,7 +28,7 @@ __all__ = [
     'check',
     'print_rows', 'write_csv', 'get_query', 'iterdescendants',
     'text', 'select', 'count',
-    'set_engine_file', 'engine',
+    'set_engine_file',
 ]
 
 __title__ = 'treedb'
