@@ -1,6 +1,7 @@
 # languoids.py - load ../../languoids/tree/**/md.ini into dicts
 
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
+from __future__ import print_function
 
 import re
 import json
@@ -193,10 +194,9 @@ def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
     if filename is None:
         suffix = '.languoids-json.csv'
         try:
-            path = root_or_bind.file.with_suffix(suffix)
+            path = root_or_bind.file_with_suffix(suffix)
         except AttributeError:
-            path = _tools.path_from_filename(root_or_bind)
-            path = path.with_suffix(suffix)
+            path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.parts[-1]
 
     default_func = operator.methodcaller('isoformat')

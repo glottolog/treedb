@@ -250,7 +250,7 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
 def to_raw_csv(filename=None, encoding=ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
-        filename = bind.file.with_suffix('.raw.csv').parts[-1]
+        filename = bind.file_with_suffix('.raw.csv').parts[-1]
 
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,

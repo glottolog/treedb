@@ -6,6 +6,8 @@ from . import tools as _tools
 
 __all__ = ['SqliteEngineProxy']
 
+UNSPECIFIED = object()
+
 
 class EngineProxy(sa.engine.Engine):
 
@@ -47,23 +49,27 @@ class EngineProxy(sa.engine.Engine):
 
 class SqliteEngineProxy(EngineProxy):
 
+    _memory_path = None
+
     @property
     def file(self):
         if self.engine is None:
             return None
         file = self.engine.url.database
-        if file is not None:
-            file = _tools.path_from_filename(file)
-        return file
+        if file is None:
+            return None
+        return _tools.path_from_filename(file)
 
     @file.setter
-    def file(self, filename, resolve=True):
+    def file(self, filename, resolve=True, memory_filename=UNSPECIFIED):
         if filename is None:
             url = None
+            if memory_filename is not UNSPECIFIED:
+                self._memory_path = _tools.path_from_filename(memory_filename)
         else:
             path = _tools.path_from_filename(filename)
             if resolve:
-                path = path.resolve().absolute()
+                path = path.resolve(strict=False)
             url = 'sqlite:///%s' % path
 
         self.set_url(url)
@@ -84,3 +90,10 @@ class SqliteEngineProxy(EngineProxy):
         return ('<%s.%s filename=%r' '%s'
                 ' size=%r>' % (self.__module__, self.__class__.__name__,
                                name, parent, size))
+
+    def file_with_suffix(self, suffix):
+        path = self.file if self.file is not None else self._memory_path
+        return path.with_suffix(suffix)
+
+    def file_exists(self):
+        return self.file is not None and self.file.exists()

@@ -2,8 +2,6 @@
 
 """Load glottolog lanuoid tree ini files into SQLite3 database."""
 
-from . _compat import pathlib as _pathlib
-
 from . import proxies as _proxies
 from . import tools as _tools
 
@@ -40,15 +38,16 @@ __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
 
-def set_engine_file(filename, require=False, resolve=True):
+def set_engine_file(filename, require=False, resolve=False):
     if require and filename is not None:
         path = _tools.path_from_filename(filename)
         if not path.exists():
             raise RuntimeError('engine file does not exist: %r' % path)
 
-    ENGINE.__class__.file.fset(ENGINE, filename, resolve=resolve)
+    ENGINE.__class__.file.fset(ENGINE, filename, resolve=resolve,
+                               memory_filename='%s-memory.memory' % __title__)
 
     return ENGINE
 
 
-engine = set_engine_file((_pathlib.Path.cwd() / __title__).with_suffix('.sqlite3'))
+engine = set_engine_file(None)

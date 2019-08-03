@@ -1,6 +1,7 @@
 # backend.py - sqlite3 database engine
 
 from __future__ import unicode_literals
+from __future__ import print_function
 
 import re
 import time
@@ -73,7 +74,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         from_raw = not exclude_raw
 
     assert engine.url.drivername == 'sqlite'
-    if engine.file.exists():
+    if engine.file is not None and engine.file.exists():
         try:
             found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
         except Exception as e:
@@ -90,23 +91,23 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         else:
             return engine
 
-    application_id = sum(ord(c) for c in Dataset.__tablename__)
-    assert application_id == 1122 == 0x462
+    @contextlib.contextmanager
+    def begin(bind=engine):
+        with bind.begin() as conn:
+            conn.execute('PRAGMA synchronous = OFF')
+            conn.execute('PRAGMA journal_mode = MEMORY')
+            yield conn.execution_options(compiled_cache={})
 
     # import here to register models for create_all()
     if not exclude_raw:
         from . import raw
     from . import models
 
-    @contextlib.contextmanager
-    def transaction(bind=engine):
-        with bind.begin() as conn:
-            conn.execute('PRAGMA synchronous = OFF')
-            conn.execute('PRAGMA journal_mode = MEMORY')
-            yield conn.execution_options(compiled_cache={})
+    application_id = sum(ord(c) for c in Dataset.__tablename__)
+    assert application_id == 1122 == 0x462
 
     start = time.time()
-    with transaction() as conn:
+    with begin() as conn:
         conn.execute('PRAGMA application_id = %d' % application_id)
         Model.metadata.create_all(bind=conn)
 
@@ -121,16 +122,16 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     }
 
     if not exclude_raw:
-        with transaction() as conn:
+        with begin() as conn:
             raw._load(root, conn)
 
     from . import languoids
 
-    with transaction() as conn:
+    with begin() as conn:
         pairs = languoids.iterlanguoids(conn if from_raw else root)
         models._load(pairs, conn)
 
-    with transaction() as conn:
+    with begin() as conn:
         sa.insert(Dataset, bind=conn).execute(dataset)
 
     print(datetime.timedelta(seconds=time.time() - start))
@@ -140,7 +141,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     if filename is None:
-        filename = engine.file.with_suffix('.zip').parts[-1]
+        filename = engine.file_with_suffix('.zip').parts[-1]
 
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:

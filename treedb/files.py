@@ -1,6 +1,7 @@
 # files.py - load/write ../../languoids/tree/**/md.ini
 
 from __future__ import unicode_literals
+from __future__ import print_function
 
 import io
 import configparser
@@ -33,7 +34,7 @@ class ConfigParser(configparser.ConfigParser):
 
     @classmethod
     def from_filename(cls, filename, encoding=ENCODING, **kwargs):
-        return cls.from_path(pathlib.Path(filename))
+        return cls.from_path(pathlib.Path(filename), encoding=encoding, **kwargs)
 
     @classmethod
     def from_path(cls, path, encoding=ENCODING, **kwargs):
@@ -47,8 +48,11 @@ class ConfigParser(configparser.ConfigParser):
             kwargs.setdefault(k, v)
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
-    def to_file(self, filename, encoding=ENCODING):
-        with io.open(filename, 'w', encoding=encoding, newline=self._newline) as f:
+    def to_filename(self, filename, encoding=ENCODING):
+        self.to_path(pathlib.Path(filename), encoding=encoding)
+
+    def to_path(self, path, encoding=ENCODING):
+        with path.open('w', encoding=encoding, newline=self._newline) as f:
             f.write(self._header % encoding)
             self.write(f)
 
@@ -101,7 +105,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
         if changed:
             if verbose:
                 print('write %r' % path)
-            cfg.to_file(path_str)
+            cfg.to_path(path)
             files_written += 1
 
     return files_written

@@ -65,21 +65,12 @@ install):
 
     $ pip install -e .
 
-Load ``../glottolog/languoids/tree/**/md.ini`` into ``treedb.sqlite3``.
+Load ``../glottolog/languoids/tree/**/md.ini`` into an in-memory ``sqlite3`` database.
 Write the denormalized example query into ``treedb.csv``:
 
 .. code:: bash
 
     $ python -c "import treedb; treedb.load(); treedb.write_csv()"
-
-To update (e.g. after pulling in new changes into your ``glottolog`` clone),
-delete ``treedb.sqlite3`` and re-run.
-
-Alternatively, you can use the ``rebuild=True`` option when loading:
-
-.. code:: bash
-
-    $ python -c "import treedb; treedb.load(rebuild=True); treedb.write_csv()"
 
 
 Usage from Python
@@ -105,6 +96,13 @@ Use ``treedb.iterlanguoids()`` to iterate over languoids as (<path>, ``dict``) p
     (('abin1243',), {'id': 'abin1243', 'parent_id': None, 'level': 'language', ...
 
 Note: This is a low-level interface, which does not require loading.
+
+Set the filename for the database:
+
+.. code:: python
+
+    >>> treedb.set_engine_filename('treedb.sqlite3')
+    <treedb.proxies.SqliteEngineProxy fileame='treedb.sqlite3' size=None>
 
 Load the database:
 

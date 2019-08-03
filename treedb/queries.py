@@ -1,6 +1,7 @@
 # queries.py - sqlalchemy queries for sqlite3 db
 
 from __future__ import unicode_literals
+from __future__ import print_function
 
 from . import _compat
 
@@ -49,7 +50,7 @@ def write_csv(query=None, filename=None, encoding=ENCODING,
         query = get_query()
 
     if filename is None:
-        filename = bind.file.with_suffix('.csv').parts[-1]
+        filename = bind.file_with_suffix('.csv').parts[-1]
 
     if verbose:
         print(query)
