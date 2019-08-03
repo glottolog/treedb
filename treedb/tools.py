@@ -123,7 +123,7 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
             write = functools.partial(_compat.csv_write, writer, encoding=encoding)
             get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
             write([], header=header)
-            for rows in iterslices(rows, 500):
+            for rows in iterslices(rows, 100):
                 write(rows)
                 data = get_bytes(f.getvalue())
                 hash_.update(data)
