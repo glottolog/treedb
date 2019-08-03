@@ -120,7 +120,9 @@ def write_csv(filename, rows, header=None, encoding=ENCODING, dialect='excel'):
                 write(rows)
                 data = get_bytes(f.getvalue())
                 hash_.update(data)
+                # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
+                f.truncate()
         return None
     elif filename is None:
         with _compat.make_csv_io() as f:
