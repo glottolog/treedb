@@ -101,7 +101,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     # import here to register models for create_all()
     if not exclude_raw:
         from . import raw
-    from . import models
+    from . import models_load
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
@@ -123,13 +123,13 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     if not exclude_raw:
         with begin() as conn:
-            raw._load(root, conn)
+            raw.load(root, conn)
 
     from . import languoids
 
     with begin() as conn:
         pairs = languoids.iterlanguoids(conn if from_raw else root)
-        models._load(pairs, conn)
+        models_load.load(pairs, conn)
 
     with begin() as conn:
         sa.insert(Dataset, bind=conn).execute(dataset)

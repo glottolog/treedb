@@ -7,6 +7,8 @@ from treedb import Languoid, select
 
 print(next(treedb.iterlanguoids()))
 
+#treedb.set_engine_file('treedb.sqlite3')
+
 engine = treedb.load()
 
 treedb.print_rows(select([Languoid]).order_by(Languoid.id).limit(5))

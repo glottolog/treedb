@@ -8,19 +8,19 @@ from . import _compat
 from ._compat import ENCODING
 
 import sqlalchemy as sa
-import sqlalchemy.orm
+from sqlalchemy import select
+from sqlalchemy.orm import aliased
 
 from . import ENGINE
 
 from . import tools as _tools
 
-from .models import (LEVEL,
-                     ALTNAME_PROVIDER, IDENTIFIER_SITE,
+from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      Languoid,
-                     languoid_macroarea, languoid_country,
-                     Altname, Identifier, Trigger,
+                     languoid_macroarea,
+                     languoid_country, Country,
+                     Link, Source, Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
-                     Country, Link, Source,
                      Endangerment, EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
@@ -69,58 +69,60 @@ def get_query(bind=ENGINE):
             cols = [c for c in cols if c.name != ignore and not c.name.endswith(ignore_suffix)]
         return [c.label(label % c.name) for c in cols]
 
-    altnames = [(p, sa.orm.aliased(Altname)) for p in sorted(ALTNAME_PROVIDER)]
+    altnames = [(p, aliased(Altname)) for p in sorted(ALTNAME_PROVIDER)]
 
-    idents = [(s, sa.orm.aliased(Identifier)) for s in sorted(IDENTIFIER_SITE)]
+    idents = [(s, aliased(Identifier)) for s in sorted(IDENTIFIER_SITE)]
 
     froms = Languoid.__table__
     for s, i in idents:
         froms = froms.outerjoin(i, sa.and_(i.languoid_id == Languoid.id, i.site == s))
 
-    ltrig, itrig = (sa.orm.aliased(Trigger) for _ in range(2))
+    ltrig, itrig = (aliased(Trigger) for _ in range(2))
 
-    subc, famc = (sa.orm.aliased(ClassificationComment) for _ in range(2))
+    subc, famc = (aliased(ClassificationComment) for _ in range(2))
 
-    subr, famr = (sa.orm.aliased(ClassificationRef) for _ in range(2))
+    subr, famr = (aliased(ClassificationRef) for _ in range(2))
 
     path, family, language = Languoid.path_family_language()
 
-    select_languoid = sa.select([
+    group_concat = sa.func.group_concat
+
+    select_languoid = select([
             path.label('path'),
             family.label('family_id'),
             language.label('dialect_language_id'),
             Languoid,
-            sa.select([sa.func.group_concat(languoid_macroarea.c.macroarea_name, ', ')])
+            select([group_concat(languoid_macroarea.c.macroarea_name, ', ')])
                 .where(languoid_macroarea.c.languoid_id == Languoid.id)
                 .order_by(languoid_macroarea)
                 .label('macroareas'),
-            sa.select([sa.func.group_concat(Country.id, ', ')])
+            select([group_concat(Country.id, ', ')])
                 .select_from(languoid_country.join(Country))
                 .where(languoid_country.c.languoid_id == Languoid.id)
                 .order_by(Country.id)
                 .label('countries'),
-            sa.select([sa.func.group_concat(Link.printf(), ', ')])
+            select([group_concat(Link.printf(), ', ')])
                 .where(Link.languoid_id == Languoid.id)
                 .order_by(Link.ord)
                 .label('links'),
-            sa.select([sa.func.group_concat(Source.printf(), ', ')])
+            select([group_concat(Source.printf(), ', ')])
                 .where(Source.languoid_id == Languoid.id)
                 .where(Source.provider == 'glottolog')
                 .order_by(Source.ord)
                 .label('sources_glottolog'),
-            ] + [sa.select([sa.func.group_concat(a.printf(), ', ')])
+            ] + [select([group_concat(a.printf(), ', ')])
                     .where(a.languoid_id == Languoid.id)
                     .where(a.provider == p)
                     .order_by(a.ord)
                     .label('altnames_%s' % p)
                  for p, a in altnames]
             + [
-            sa.select([sa.func.group_concat(ltrig.trigger, ', ')])
+            select([group_concat(ltrig.trigger, ', ')])
                 .where(ltrig.languoid_id == Languoid.id)
                 .where(ltrig.field == 'lgcode')
                 .order_by(ltrig.ord)
                 .label('triggers_lgcode'),
-            sa.select([sa.func.group_concat(itrig.trigger, ', ')])
+            select([group_concat(itrig.trigger, ', ')])
                 .where(itrig.languoid_id == Languoid.id)
                 .where(itrig.field == 'inlg')
                 .order_by(itrig.ord)
@@ -128,13 +130,13 @@ def get_query(bind=ENGINE):
             ] + [i.identifier.label('identifier_%s' % s) for s, i in idents]
             + [
             subc.comment.label('classification_sub'),
-            sa.select([sa.func.group_concat(subr.printf(), ', ')])
+            select([group_concat(subr.printf(), ', ')])
             .where(subr.languoid_id == Languoid.id)
                 .where(subr.kind == 'sub')
                 .order_by(subr.ord)
                 .label('classification_subrefs'),
             famc.comment.label('classification_family'),
-            sa.select([sa.func.group_concat(famr.printf(), ', ')])
+            select([group_concat(famr.printf(), ', ')])
                 .where(famr.languoid_id == Languoid.id)
                 .where(famr.kind == 'family')
                 .order_by(famr.ord)
@@ -143,7 +145,7 @@ def get_query(bind=ENGINE):
             + get_cols(EthnologueComment, label='elcomment_%s')
             + get_cols(IsoRetirement, label='iso_retirement_%s')
             + [
-            sa.select([sa.func.group_concat(IsoRetirementChangeTo.code, ', ')])
+            select([group_concat(IsoRetirementChangeTo.code, ', ')])
             .where(IsoRetirementChangeTo.languoid_id == Languoid.id)
             .order_by(IsoRetirementChangeTo.ord)
             .label('iso_retirement_change_to'),
@@ -162,10 +164,10 @@ def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    Parent, Child = (sa.orm.aliased(Languoid, name=n) for n in ('parent', 'child'))
+    Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
     tree = Languoid.tree()
 
-    select_pairs = sa.select([
+    select_pairs = select([
             Parent.id.label('parent_id'), Child.id.label('child_id'),
         ], bind=bind).select_from(
             sa.outerjoin(Parent, tree, tree.c.parent_id == Parent.id)
@@ -174,7 +176,7 @@ def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
 
     if parent_level is not None:
         if parent_level == 'top':
-            cond = (Parent.parent_id == sa.null())
+            cond = (Parent.parent_id == None)
         elif parent_level in LEVEL:
             cond = (Parent.level == parent_level)
         else:

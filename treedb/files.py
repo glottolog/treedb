@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-import io
 import configparser
 
 from ._compat import pathlib
@@ -34,7 +33,8 @@ class ConfigParser(configparser.ConfigParser):
 
     @classmethod
     def from_filename(cls, filename, encoding=ENCODING, **kwargs):
-        return cls.from_path(pathlib.Path(filename), encoding=encoding, **kwargs)
+        path = pathlib.Path(filename)
+        return cls.from_path(path, encoding=encoding, **kwargs)
 
     @classmethod
     def from_path(cls, path, encoding=ENCODING, **kwargs):
@@ -49,7 +49,8 @@ class ConfigParser(configparser.ConfigParser):
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
     def to_filename(self, filename, encoding=ENCODING):
-        self.to_path(pathlib.Path(filename), encoding=encoding)
+        path = pathlib.Path(filename)
+        self.to_path(path, encoding=encoding)
 
     def to_path(self, path, encoding=ENCODING):
         with path.open('w', encoding=encoding, newline=self._newline) as f:

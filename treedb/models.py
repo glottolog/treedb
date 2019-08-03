@@ -2,10 +2,13 @@
 
 from __future__ import unicode_literals
 
-from ._compat import iteritems
-
 import sqlalchemy as sa
-import sqlalchemy.orm
+
+from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
+                        Integer, Float, String, Text, Enum, DateTime, Date,
+                        UniqueConstraint, Index)
+
+from sqlalchemy.orm import relationship, aliased
 
 from .backend import Model
 
@@ -74,19 +77,19 @@ class Languoid(Model):
 
     __tablename__ = 'languoid'
 
-    id = sa.Column(sa.String(8), sa.CheckConstraint('length(id) = 8'), primary_key=True)
+    id = Column(String(8), CheckConstraint('length(id) = 8'), primary_key=True)
 
-    level = sa.Column(sa.Enum(*LEVEL), nullable=False)
-    name = sa.Column(sa.String, sa.CheckConstraint("name != ''"), nullable=False, unique=True)
+    level = Column(Enum(*LEVEL), nullable=False)
+    name = Column(String, CheckConstraint("name != ''"), nullable=False, unique=True)
 
-    parent_id = sa.Column(sa.ForeignKey('languoid.id'), index=True)
-    hid = sa.Column(sa.Text, sa.CheckConstraint('length(hid) >= 3'), unique=True)
-    iso639_3 = sa.Column(sa.String(3), sa.CheckConstraint('length(iso639_3) = 3'), unique=True)
-    latitude = sa.Column(sa.Float, sa.CheckConstraint('latitude BETWEEN -90 AND 90'))
-    longitude = sa.Column(sa.Float, sa.CheckConstraint('longitude BETWEEN -180 AND 180'))
+    parent_id = Column(ForeignKey('languoid.id'), index=True)
+    hid = Column(Text, CheckConstraint('length(hid) >= 3'), unique=True)
+    iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'), unique=True)
+    latitude = Column(Float, CheckConstraint('latitude BETWEEN -90 AND 90'))
+    longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
     __table_args__ = (
-        sa.CheckConstraint('(latitude IS NULL) = (longitude IS NULL)'),
+        CheckConstraint('(latitude IS NULL) = (longitude IS NULL)'),
     )
 
     def __repr__(self):
@@ -94,36 +97,67 @@ class Languoid(Model):
         return '<%s id=%r level=%r name=%r%s>' % (self.__class__.__name__,
             self.id, self.level, self.name, ' ' + ' '.join(hid_iso) if hid_iso else '')
 
-    parent = sa.orm.relationship('Languoid', remote_side=[id])
-    children = sa.orm.relationship('Languoid', remote_side=[parent_id], order_by=id)
+    parent = relationship('Languoid', remote_side=[id])
 
-    macroareas = sa.orm.relationship('Macroarea', secondary='languoid_macroarea', order_by='Macroarea.name',
-                                      back_populates='languoids')
-    countries = sa.orm.relationship('Country', secondary='languoid_country', order_by='Country.id',
-                                    back_populates='languoids')
+    children = relationship('Languoid', remote_side=[parent_id], order_by=id)
 
-    links = sa.orm.relationship('Link', back_populates='languoid', order_by='Source.ord')
-    sources = sa.orm.relationship('Source', back_populates='languoid', order_by='[Source.provider, Source.ord]')
-    altnames = sa.orm.relationship('Altname', back_populates='languoid', order_by='[Altname.provider, Altname.ord]')
-    triggers = sa.orm.relationship('Trigger', back_populates='languoid', order_by='[Trigger.field, Trigger.ord]')
-    identifiers = sa.orm.relationship('Identifier', back_populates='languoid', order_by='Identifier.site')
+    macroareas = relationship('Macroarea',
+                              secondary='languoid_macroarea',
+                              order_by='Macroarea.name',
+                              back_populates='languoids')
 
-    subclassificationcomment = sa.orm.relationship('ClassificationComment', uselist=False,
+    countries = relationship('Country',
+                             secondary='languoid_country',
+                             order_by='Country.id',
+                             back_populates='languoids')
+
+    links = relationship('Link',
+                         order_by='Link.ord',
+                         back_populates='languoid')
+
+    sources = relationship('Source',
+                           order_by='[Source.provider, Source.ord]',
+                           back_populates='languoid')
+
+    altnames = relationship('Altname',
+                            order_by='[Altname.provider, Altname.ord]',
+                            back_populates='languoid')
+
+    triggers = relationship('Trigger',
+                            order_by='[Trigger.field, Trigger.ord]',
+                            back_populates='languoid')
+
+    identifiers = relationship('Identifier',
+                               order_by='Identifier.site',
+                               back_populates='languoid')
+
+    subclassificationcomment = relationship('ClassificationComment', uselist=False,
         primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id, ClassificationComment.kind == 'sub')")
-    subclassificationrefs = sa.orm.relationship('ClassificationRef', order_by='ClassificationRef.ord',
+
+    subclassificationrefs = relationship('ClassificationRef', order_by='ClassificationRef.ord',
         primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id, ClassificationRef.kind == 'sub')")
-    familyclassificationcomment = sa.orm.relationship('ClassificationComment', uselist=False,
+
+    familyclassificationcomment = relationship('ClassificationComment', uselist=False,
         primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id, ClassificationComment.kind == 'family')")
-    familyclassificationrefs = sa.orm.relationship('ClassificationRef', order_by='ClassificationRef.ord',
+
+    familyclassificationrefs = relationship('ClassificationRef', order_by='ClassificationRef.ord',
         primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id, ClassificationRef.kind == 'family')")
 
-    endangerment = sa.orm.relationship('Endangerment', uselist=False, back_populates='languoid')
-    ethnologue_comment = sa.orm.relationship('EthnologueComment', uselist=False, back_populates='languoid')
-    iso_retirement = sa.orm.relationship('IsoRetirement', uselist=False, back_populates='languoid')
+    endangerment = relationship('Endangerment',
+                                uselist=False,
+                                back_populates='languoid')
+
+    ethnologue_comment = relationship('EthnologueComment',
+                                      uselist=False,
+                                      back_populates='languoid')
+
+    iso_retirement = relationship('IsoRetirement',
+                                  uselist=False,
+                                  back_populates='languoid')
 
     @classmethod
     def tree(cls, include_self=False, with_steps=False, with_terminal=False):
-        Child, Parent = (sa.orm.aliased(cls, name=n) for n in ('child', 'parent'))
+        Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
 
         tree_1 = sa.select([Child.id.label('child_id')])
         if include_self:
@@ -154,7 +188,7 @@ class Languoid(Model):
             tree_2.append_column((tree_1.c.steps + 1).label('steps'))
 
         if with_terminal:
-            Granny = sa.orm.aliased(Languoid, name='grandparent')
+            Granny = aliased(Languoid, name='grandparent')
             tree_2.append_column((Granny.parent_id == None).label('terminal'))
             tree_2 = tree_2.select_from(tree_2.froms[-1]
                 .outerjoin(Granny, Granny.id == Parent.parent_id))
@@ -185,7 +219,7 @@ class Languoid(Model):
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .where(tree.c.steps > 0).where(tree.c.terminal == True)
 
-        Ancestor = sa.orm.aliased(Languoid, name='ancestor')
+        Ancestor = aliased(Languoid, name='ancestor')
         language = sa.select([tree.c.parent_id])\
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .where(cls.level == DIALECT)\
@@ -200,58 +234,64 @@ class Macroarea(Model):
 
     __tablename__ = 'macroarea'
 
-    name = sa.Column(sa.Enum(*sorted(MACROAREA)), primary_key=True)
+    name = Column(Enum(*sorted(MACROAREA)), primary_key=True)
 
     def __repr__(self):
         return '<%s %r>' % (self.__class__.__name__, self.name)
 
-    languoids = sa.orm.relationship('Languoid', secondary='languoid_macroarea', order_by='Languoid.id',
-                                    back_populates='macroareas')
+    languoids = relationship('Languoid',
+                             secondary='languoid_macroarea',
+                             order_by='Languoid.id',
+                             back_populates='macroareas')
 
 
-languoid_macroarea = sa.Table('languoid_macroarea', Model.metadata,
-    sa.Column('languoid_id', sa.ForeignKey('languoid.id'), primary_key=True),
-    sa.Column('macroarea_name', sa.ForeignKey('macroarea.name'), primary_key=True))
+languoid_macroarea = Table('languoid_macroarea', Model.metadata,
+    Column('languoid_id', ForeignKey('languoid.id'), primary_key=True),
+    Column('macroarea_name', ForeignKey('macroarea.name'), primary_key=True))
 
 
 class Country(Model):
 
     __tablename__ = 'country'
 
-    id = sa.Column(sa.String(2), sa.CheckConstraint('length(id) = 2'), primary_key=True)
+    id = Column(String(2), CheckConstraint('length(id) = 2'), primary_key=True)
 
-    name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), nullable=False, unique=True)
+    name = Column(Text, CheckConstraint("name != ''"), nullable=False, unique=True)
 
     def __repr__(self):
         return '<%s id=%r name=%r>' % (self.__class__.__name__, self.id, self.name)
 
-    languoids = sa.orm.relationship('Languoid', secondary='languoid_country', order_by='Languoid.id',
-                                    back_populates='countries')
+    languoids = relationship('Languoid',
+                             secondary='languoid_country',
+                             order_by='Languoid.id',
+                             back_populates='countries')
 
 
-languoid_country = sa.Table('languoid_country', Model.metadata,
-    sa.Column('languoid_id', sa.ForeignKey('languoid.id'), primary_key=True),
-    sa.Column('country_id', sa.ForeignKey('country.id'), primary_key=True))
+languoid_country = Table('languoid_country', Model.metadata,
+    Column('languoid_id', ForeignKey('languoid.id'), primary_key=True),
+    Column('country_id', ForeignKey('country.id'), primary_key=True))
 
 
 class Link(Model):
 
     __tablename__ = 'link'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    ord = Column(Integer, CheckConstraint('ord >= 1'), primary_key=True)
 
-    url = sa.Column(sa.Text, sa.CheckConstraint("url != ''"), nullable=False)
+    url = Column(Text, CheckConstraint("url != ''"), nullable=False)
 
-    title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"))
-    scheme = sa.Column(sa.Text, sa.Enum(*sorted(LINK_SCHEME)))
+    title = Column(Text, CheckConstraint("title != ''"))
+    scheme = Column(Text, Enum(*sorted(LINK_SCHEME)))
 
     __table_args__ = (
-        sa.UniqueConstraint(languoid_id, url),
-        sa.CheckConstraint("substr(url, 1, length(scheme) + 3) = scheme || '://'"),
+        UniqueConstraint(languoid_id, url),
+        CheckConstraint("substr(url, 1, length(scheme) + 3) = scheme || '://'"),
     )
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='links')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='links')
 
     def __repr__(self):
         return '<%s languoid_id=%r ord=%r url=%r title=%r scheme=%r>' % (
@@ -270,25 +310,27 @@ class Source(Model):
 
     __tablename__ = 'source'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    provider = sa.Column(sa.Text, sa.Enum(*sorted(SOURCE_PROVIDER)), primary_key=True)
-    bibfile = sa.Column(sa.Text, sa.CheckConstraint("bibfile != ''"), primary_key=True)
-    bibkey = sa.Column(sa.Text, sa.CheckConstraint("bibkey != ''"), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    provider = Column(Text, Enum(*sorted(SOURCE_PROVIDER)), primary_key=True)
+    bibfile = Column(Text, CheckConstraint("bibfile != ''"), primary_key=True)
+    bibkey = Column(Text, CheckConstraint("bibkey != ''"), primary_key=True)
 
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    pages = sa.Column(sa.Text, sa.CheckConstraint("pages != ''"))
-    trigger = sa.Column(sa.Text, sa.CheckConstraint("trigger != ''"))
+    pages = Column(Text, CheckConstraint("pages != ''"))
+    trigger = Column(Text, CheckConstraint("trigger != ''"))
 
     __table_args__ = (
-        sa.UniqueConstraint(languoid_id, provider, ord),
+        UniqueConstraint(languoid_id, provider, ord),
     )
 
     def __repr__(self):
         return '<%s languoid_id=%r povider=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
             self.languoid_id, self.provider, self.bibfile, self.bibkey)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='sources')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='sources')
 
     @classmethod
     def printf(cls):
@@ -306,22 +348,23 @@ class Altname(Model):
 
     __tablename__ = 'altname'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    provider = sa.Column(sa.Text, sa.Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
-    lang = sa.Column(sa.String(3), sa.CheckConstraint("length(lang) IN (0, 2, 3) OR lang = '!'"), primary_key=True)
-    name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    provider = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
+    lang = Column(String(3), CheckConstraint("length(lang) IN (0, 2, 3) OR lang = '!'"), primary_key=True)
+    name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
 
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
-        sa.UniqueConstraint(languoid_id, provider, ord),
+        UniqueConstraint(languoid_id, provider, ord),
     )
 
     def __repr__(self):
         return '<%s languoid_id=%r povider=%r lang=%r name=%r>' % (self.__class__.__name__,
             self.languoid_id, self.provider, self.lang, self.name)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='altnames')
+    languoid = relationship('Languoid', innerjoin=True,
+                            back_populates='altnames')
 
     @classmethod
     def printf(cls):
@@ -337,76 +380,80 @@ class Trigger(Model):
 
     __tablename__ = 'trigger'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    field = sa.Column(sa.Enum(*sorted(TRIGGER_FIELD)), primary_key=True)
-    trigger = sa.Column(sa.Text, sa.CheckConstraint("trigger != ''"), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    field = Column(Enum(*sorted(TRIGGER_FIELD)), primary_key=True)
+    trigger = Column(Text, CheckConstraint("trigger != ''"), primary_key=True)
 
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
-        sa.UniqueConstraint(languoid_id, field, ord),
+        UniqueConstraint(languoid_id, field, ord),
     )
 
     def __repr__(self):
         return '<%s languoid_id=%r field=%r trigger=%r>' % (self.__class__.__name__,
             self.languoid_id, self.field, self.trigger)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='triggers')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='triggers')
 
 
 class Identifier(Model):
 
     __tablename__ = 'identifier'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    site = sa.Column(sa.Enum(*sorted(IDENTIFIER_SITE)), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    site = Column(Enum(*sorted(IDENTIFIER_SITE)), primary_key=True)
 
-    identifier = sa.Column(sa.Text, sa.CheckConstraint("identifier != ''"), nullable=False)
+    identifier = Column(Text, CheckConstraint("identifier != ''"), nullable=False)
 
     def __repr__(self):
         return '<%s languoid_id=%r site=%r identifier=%r>' % (self.__class__.__name__,
             self.languoid_id, self.site, self.identifier)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='identifiers')
+    languoid = relationship('Languoid', innerjoin=True,
+                             back_populates='identifiers')
 
 
 class ClassificationComment(Model):
 
     __tablename__ = 'classificationcomment'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    kind = sa.Column(sa.Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
 
-    comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"), nullable=False)
+    comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
         return '<%s languoid_id=%r kind=%r comment=%r>' % (self.__class__.__name__,
             self.languoid_id, self.kind, self.comment)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True)
+    languoid = relationship('Languoid', innerjoin=True)
 
 
 class ClassificationRef(Model):
 
     __tablename__ = 'classificationref'
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
-    kind = sa.Column(sa.Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
-    bibfile = sa.Column(sa.Text, sa.CheckConstraint("bibfile != ''"), primary_key=True)
-    bibkey = sa.Column(sa.Text, sa.CheckConstraint("bibkey != ''"), primary_key=True)
 
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+    kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
+    bibfile = Column(Text, CheckConstraint("bibfile != ''"), primary_key=True)
+    bibkey = Column(Text, CheckConstraint("bibkey != ''"), primary_key=True)
 
-    pages = sa.Column(sa.Text, sa.CheckConstraint("pages != ''"))
+    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
+
+    pages = Column(Text, CheckConstraint("pages != ''"))
 
     __table_args__ = (
-        sa.UniqueConstraint(languoid_id, kind, ord),
+        UniqueConstraint(languoid_id, kind, ord),
     )
 
     def __repr__(self):
         return '<%s languoid_id=%r kind=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
             self.languoid_id, self.kind, self.bibfile, self.bibkey)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True)
+    languoid = relationship('Languoid', innerjoin=True)
 
     @classmethod
     def printf(cls):
@@ -418,59 +465,63 @@ class Endangerment(Model):
 
     __tablename__ = 'endangerment'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    status = sa.Column(sa.Enum(*ENDANGERMENT_STATUS), nullable=False)
-    source = sa.Column(sa.Enum(*sorted(ENDANGERMENT_SOURCE)), nullable=False)
-    date = sa.Column(sa.DateTime, nullable=False)
-    comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"), nullable=False)
+    status = Column(Enum(*ENDANGERMENT_STATUS), nullable=False)
+    source = Column(Enum(*sorted(ENDANGERMENT_SOURCE)), nullable=False)
+    date = Column(DateTime, nullable=False)
+    comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
         return '<%s languoid_id=%r status=%r source=%r date=%r>' % (self.__class__.__name__,
             self.languoid_id, self.status, self.source, self.date)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='endangerment')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='endangerment')
 
 
 class EthnologueComment(Model):
 
     __tablename__ = 'ethnologuecomment'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    isohid = sa.Column(sa.Text, sa.CheckConstraint('length(isohid) >= 3'), nullable=False)
-    comment_type = sa.Column(sa.Enum(*sorted(EL_COMMENT_TYPE)), nullable=False)
-    ethnologue_versions = sa.Column(sa.Text, sa.CheckConstraint('length(ethnologue_versions) >= 3'), nullable=False)
-    comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"), nullable=False)
+    isohid = Column(Text, CheckConstraint('length(isohid) >= 3'), nullable=False)
+    comment_type = Column(Enum(*sorted(EL_COMMENT_TYPE)), nullable=False)
+    ethnologue_versions = Column(Text, CheckConstraint('length(ethnologue_versions) >= 3'), nullable=False)
+    comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
         return '<%s languoid_id=%r isohid=%r comment_type=%r ethnologue_versions=%r>' % (self.__class__.__name__,
             self.languoid_id, self.isohid, self.comment_type, self.ethnologue_versions)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='ethnologue_comment')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='ethnologue_comment')
 
 
 class IsoRetirement(Model):
 
     __tablename__ = 'isoretirement'
 
-    languoid_id = sa.Column(sa.ForeignKey('languoid.id'), primary_key=True)
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    code = sa.Column(sa.String(3), sa.CheckConstraint('length(code) = 3'), nullable=False)
-    name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"), nullable=False)
+    code = Column(String(3), CheckConstraint('length(code) = 3'), nullable=False)
+    name = Column(Text, CheckConstraint("name != ''"), nullable=False)
 
-    change_request = sa.Column(sa.String(8), sa.CheckConstraint("change_request LIKE '____-___' "))
+    change_request = Column(String(8), CheckConstraint("change_request LIKE '____-___' "))
 
-    effective = sa.Column(sa.Date, nullable=False)
-    reason = sa.Column(sa.Enum(*sorted(ISORETIREMENT_REASON)), nullable=False)
+    effective = Column(Date, nullable=False)
+    reason = Column(Enum(*sorted(ISORETIREMENT_REASON)), nullable=False)
 
-    remedy = sa.Column(sa.Text, sa.CheckConstraint("remedy != ''"))
-    comment = sa.Column(sa.Text, sa.CheckConstraint("comment != ''"))
+    remedy = Column(Text, CheckConstraint("remedy != ''"))
+    comment = Column(Text, CheckConstraint("comment != ''"))
 
     __table_args__ = (
         # TODO: fix disagreement
-        sa.Index('change_request_key', sa.func.coalesce(change_request, effective)),
-        sa.CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
+        Index('change_request_key', sa.func.coalesce(change_request, effective)),
+        CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
     )
 
     def __repr__(self):
@@ -478,134 +529,32 @@ class IsoRetirement(Model):
             self.__class__.__name__, self.languoid_id, self.code, self.name, self.change_request,
             self.effective, self.reason, self.remedy)
 
-    languoid = sa.orm.relationship('Languoid', innerjoin=True, back_populates='iso_retirement')
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='iso_retirement')
 
-    change_to = sa.orm.relationship('IsoRetirementChangeTo', order_by='IsoRetirementChangeTo.ord',
-                                    back_populates='iso_retirement')
+    change_to = relationship('IsoRetirementChangeTo',
+                             order_by='IsoRetirementChangeTo.ord',
+                             back_populates='iso_retirement')
 
 
 class IsoRetirementChangeTo(Model):
 
     __tablename__ = 'isoretirement_changeto'
 
-    languoid_id = sa.Column(sa.ForeignKey('isoretirement.languoid_id'), primary_key=True)
-    code = sa.Column(sa.String(3), sa.CheckConstraint('length(code) = 3'), primary_key=True)
+    languoid_id = Column(ForeignKey('isoretirement.languoid_id'), primary_key=True)
+    code = Column(String(3), CheckConstraint('length(code) = 3'), primary_key=True)
 
-    ord = sa.Column(sa.Integer, sa.CheckConstraint('ord >= 1'), nullable=False)
+    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
     __table_args__ = (
-        sa.UniqueConstraint('languoid_id', 'ord'),
+        UniqueConstraint('languoid_id', 'ord'),
     )
 
     def __repr__(self):
         return '<%s languoid_id=%r code=%r>' % (self.__class__.__name__,
             self.languoid_id, self.code)
 
-    iso_retirement = sa.orm.relationship('IsoRetirement', innerjoin=True, back_populates='change_to')
-
-
-def _load(languoids, conn):
-    insert_lang = sa.insert(Languoid, bind=conn).execute
-
-    sa.insert(Macroarea, bind=conn).execute([{'name': n} for n in sorted(MACROAREA)])
-    lang_ma = languoid_macroarea.insert(bind=conn).execute
-
-    insert_country = sa.insert(Country, bind=conn).execute
-    lang_country = languoid_country.insert(bind=conn).execute
-
-    insert_link = sa.insert(Link, bind=conn).execute
-    insert_source = sa.insert(Source, bind=conn).execute
-    insert_altname = sa.insert(Altname, bind=conn).execute
-    insert_trigger = sa.insert(Trigger, bind=conn).execute
-    insert_ident = sa.insert(Identifier, bind=conn).execute
-    insert_comment = sa.insert(ClassificationComment, bind=conn).execute
-    insert_ref = sa.insert(ClassificationRef, bind=conn).execute
-    insert_enda = sa.insert(Endangerment, bind=conn).execute
-    insert_el = sa.insert(EthnologueComment, bind=conn).execute
-
-    insert_ir = sa.insert(IsoRetirement, bind=conn).execute
-    insert_irct = sa.insert(IsoRetirementChangeTo, bind=conn).execute
-
-    def unseen_countries(name_cc_pairs, _seen={}):
-        for name, cc in name_cc_pairs:
-            try:
-                assert _seen[cc] == name
-            except KeyError:
-                _seen[cc] = name
-                yield name, cc
-
-    for _, l in languoids:
-        lid = l['id']
-
-        macroareas = l.pop('macroareas')
-        countries = l.pop('countries')
-        links = l.pop('links')
-
-        sources = l.pop('sources', None)
-        altnames = l.pop('altnames', None)
-        triggers = l.pop('triggers', None)
-        identifier = l.pop('identifier', None)
-        classification = l.pop('classification', None)
-        endangerment = l.pop('endangerment', None)
-        hh_ethnologue_comment = l.pop('hh_ethnologue_comment', None)
-        iso_retirement = l.pop('iso_retirement', None)
-
-        insert_lang(l)
-
-        if macroareas:
-            lang_ma([{'languoid_id': lid, 'macroarea_name': ma}
-                     for ma in macroareas])
-
-        if countries:
-            new_countries = [{'id': cc, 'name': name}
-                            for name, cc in unseen_countries(countries)]
-            if new_countries:
-                insert_country(new_countries)
-            lang_country([{'languoid_id': lid, 'country_id': cc}
-                          for _, cc in countries])
-
-        if links:
-            insert_link([dict(languoid_id=lid, ord=i, **link)
-                         for i, link in enumerate(links, 1)])
-
-        if sources is not None:
-            insert_source([dict(languoid_id=lid, provider=provider, ord=i, **s)
-                           for provider, data in iteritems(sources)
-                           for i, s in enumerate(data, 1)])
-
-        if altnames is not None:
-            insert_altname([dict(languoid_id=lid, provider=provider, ord=i, **n)
-                            for provider, names in iteritems(altnames)
-                            for i, n in enumerate(names, 1)])
-
-        if triggers is not None:
-            insert_trigger([{'languoid_id': lid, 'field': field,
-                             'trigger': t, 'ord': i}
-                            for field, triggers in iteritems(triggers)
-                            for i, t in enumerate(triggers, 1)])
-
-        if identifier is not None:
-            insert_ident([dict(languoid_id=lid, site=site, identifier=i)
-                          for site, i in iteritems(identifier)])
-
-        if classification is not None:
-            for c, value in iteritems(classification):
-                isref, kind = CLASSIFICATION[c]
-                if isref:
-                    insert_ref([dict(languoid_id=lid, kind=kind, ord=i, **r)
-                                for i, r in enumerate(value, 1)])
-                else:
-                    insert_comment(languoid_id=lid, kind=kind, comment=value)
-
-        if endangerment is not None:
-            insert_enda(languoid_id=lid, **endangerment)
-
-        if hh_ethnologue_comment is not None:
-            insert_el(languoid_id=lid, **hh_ethnologue_comment)
-
-        if iso_retirement is not None:
-            change_to = iso_retirement.pop('change_to')
-            insert_ir(languoid_id=lid, **iso_retirement)
-            if change_to:
-                insert_irct([{'languoid_id': lid, 'code': c, 'ord': i}
-                             for i, c in enumerate(change_to, 1)])
+    iso_retirement = relationship('IsoRetirement',
+                                  innerjoin=True,
+                                  back_populates='change_to')
