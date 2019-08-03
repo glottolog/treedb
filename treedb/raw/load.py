@@ -24,7 +24,8 @@ class Options(dict):
     def __missing__(self, key):
         section, option = key
         is_lines = Fields.is_lines(section, option)
-        id_, = self.insert(section=section, option=option, lines=is_lines).inserted_primary_key
+        id_, = self.insert(section=section, option=option,
+                           is_lines=is_lines).inserted_primary_key
         self[key] = result = (id_, is_lines)
         return result
 

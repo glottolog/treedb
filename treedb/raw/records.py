@@ -22,14 +22,15 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
-            Value.file_id, Option.section, Option.option, Option.lines, Value.value,
+            Value.file_id, Option.section, Option.option,
+            Option.is_lines, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
         .order_by(Value.file_id, Option.section, Value.line, Option.option)
     if skip_unknown:
-        select_values.append_whereclause(Option.lines != None)
+        select_values.append_whereclause(Option.is_lines != None)
 
-    groupby = (('file_id',), ('section',), ('option', 'lines'))
+    groupby = (('file_id',), ('section',), ('option', 'is_lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
@@ -40,8 +41,8 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
         # join by file_id total order index
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
-                s: {o: [l.value for l in lines] if islines else next(lines).value
-                   for (o, islines), lines in groupby_option(sections)}
+                s: {o: [l.value for l in lines] if is_lines else next(lines).value
+                   for (o, is_lines), lines in groupby_option(sections)}
                 for s, sections in groupby_section(values)}
             yield tuple(path.split('/')), record
 

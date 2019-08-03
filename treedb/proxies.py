@@ -78,9 +78,6 @@ class SqliteEngineProxy(EngineProxy):
         if self.engine is None or self.file is None:
             return super(SqliteEngineProxy, self).__repr__()
 
-        size = None
-        if self.file.exists():
-            size = self.file.stat().st_size
         parent = ''
         name = self.file.as_posix()
         if self.file.is_absolute():
@@ -89,7 +86,7 @@ class SqliteEngineProxy(EngineProxy):
 
         return ('<%s.%s filename=%r' '%s'
                 ' size=%r>' % (self.__module__, self.__class__.__name__,
-                               name, parent, size))
+                               name, parent, self.file_size()))
 
     def file_with_suffix(self, suffix):
         path = self.file if self.file is not None else self._memory_path
@@ -97,3 +94,9 @@ class SqliteEngineProxy(EngineProxy):
 
     def file_exists(self):
         return self.file is not None and self.file.exists()
+
+    def file_size(self):
+        return self.file.stat().st_size if self.file_exists() else None
+
+    def file_sha256(self):
+        return _tools.sha256sum(self.file) if self.file_exists() else None
