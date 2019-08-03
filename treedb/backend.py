@@ -10,8 +10,6 @@ import warnings
 import functools
 import contextlib
 
-from ._compat import pathlib
-
 from ._compat import ENCODING
 
 import sqlalchemy as sa
@@ -24,7 +22,7 @@ from . import ENGINE, ROOT
 
 __all__ = [
     'Model', 'Dataset',
-    'Session', 
+    'Session',
     'load', 'export',
 ]
 
@@ -142,7 +140,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     if filename is None:
-        filename = engine.file.with_suffix('.zip').parts[-1] 
+        filename = engine.file.with_suffix('.zip').parts[-1]
 
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:

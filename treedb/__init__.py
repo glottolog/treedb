@@ -22,7 +22,6 @@ from .checks import check
 from .queries import print_rows, write_csv, get_query, iterdescendants
 from .sa_helpers import text, select, count
 
-
 __all__ = [
     'ENGINE', 'ROOT',
     'iterfiles',
@@ -45,7 +44,7 @@ __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 def set_engine_file(filename, require=False, resolve=True):
     if require and filename is not None:
         path = _tools.path_from_filename(filename)
-        if  not path.exists():
+        if not path.exists():
             raise RuntimeError('engine file does not exist: %r' % path)
 
     ENGINE.__class__.file.fset(ENGINE, filename, resolve=resolve)

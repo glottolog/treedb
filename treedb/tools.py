@@ -2,10 +2,8 @@
 
 from __future__ import print_function
 
-import io
 import csv
 import hashlib
-import datetime
 import platform
 import operator
 import itertools

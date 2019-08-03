@@ -195,7 +195,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None, encoding=ENCODING):
         try:
             path = root_or_bind.file.with_suffix(suffix)
         except AttributeError:
-            path = _tools.path_from_filename(root_or_path)
+            path = _tools.path_from_filename(root_or_bind)
             path = path.with_suffix(suffix)
         filename = path.parts[-1]
 

@@ -2,8 +2,6 @@
 
 import sqlalchemy as sa
 
-from ._compat import pathlib as _pathlib
-
 from . import tools as _tools
 
 __all__ = ['SqliteEngineProxy']
@@ -48,7 +46,7 @@ class EngineProxy(sa.engine.Engine):
 
 
 class SqliteEngineProxy(EngineProxy):
-    
+
     @property
     def file(self):
         if self.engine is None:
