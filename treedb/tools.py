@@ -79,13 +79,16 @@ def path_from_filename(filename, *args):
     return filename
 
 
-def sha256sum(file, chunksize=2**16):  # 64 kB
+def sha256sum(file, raw=False, chunksize=2**16):  # 64 kB
     result = hashlib.sha256()
     file = path_from_filename(file)
     with file.open('rb') as f:
         read = functools.partial(f.read, chunksize)
         for chunk in iter(read, b''):
             result.update(chunk)
+
+    if not raw:
+        result = result.hexdigest()
     return result
 
 

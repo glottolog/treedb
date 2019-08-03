@@ -54,7 +54,7 @@ def load(root, conn):
             'glottocode': path_tuple[-1],
             'path': '/'.join(path_tuple),
             'size': dentry.stat().st_size,
-            'sha256': _tools.sha256sum(dentry.path).hexdigest(),
+            'sha256': _tools.sha256sum(dentry.path, raw=True).hexdigest(),
         }
         file_id, = insert_file(file_params).inserted_primary_key
         value_params = list(itervalues(cfg, file_id, options))
