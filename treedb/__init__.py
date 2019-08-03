@@ -16,7 +16,7 @@ from .languoids import iterlanguoids, to_json_csv, compare_with_raw
 from .backend import Session, Dataset, load, export
 from .models import LEVEL, Languoid
 from .checks import check
-from .queries import print_rows, write_csv, get_query, iterdescendants
+from .queries import print_rows, write_csv, hash_csv, get_query, iterdescendants
 from .sa_helpers import text, select, count
 
 __all__ = [
@@ -26,7 +26,7 @@ __all__ = [
     'Session', 'Dataset', 'load', 'export',
     'LEVEL', 'Languoid',
     'check',
-    'print_rows', 'write_csv', 'get_query', 'iterdescendants',
+    'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',
     'text', 'select', 'count',
     'set_engine_file',
 ]

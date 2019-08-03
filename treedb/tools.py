@@ -81,16 +81,19 @@ def path_from_filename(filename, *args):
     return filename
 
 
-def sha256sum(file, raw=False, chunksize=2**16):  # 64 kB
+def sha256sum(file, raw=False):
     result = hashlib.sha256()
-    with path_from_filename(file).open('rb') as f:
-        read = functools.partial(f.read, chunksize)
-        for chunk in iter(read, b''):
-            result.update(chunk)
-
+    update_hash(result, file)
     if not raw:
         result = result.hexdigest()
     return result
+
+
+def update_hash(hash_, file, chunksize=2**16):  # 64 kB
+    with path_from_filename(file).open('rb') as f:
+        read = functools.partial(f.read, chunksize)
+        for chunk in iter(read, b''):
+            hash_.update(chunk)
 
 
 def check_output(args, cwd=None, encoding=ENCODING):
@@ -106,7 +109,20 @@ def check_output(args, cwd=None, encoding=ENCODING):
 
 
 def write_csv(filename, rows, header=None, encoding=ENCODING, dialect='excel'):
-    if filename is None:
+    if hasattr(filename, 'hexdigest'):
+        hash_ = filename
+        with _compat.make_csv_io() as f:
+            writer = csv.writer(f, dialect=dialect)
+            write = functools.partial(_compat.csv_write, writer, encoding=encoding)
+            get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
+            write([], header=header)
+            for rows in iterslices(rows, 500):
+                write(rows)
+                data = get_bytes(f.getvalue())
+                hash_.update(data)
+                f.seek(0)
+        return None
+    elif filename is None:
         with _compat.make_csv_io() as f:
             writer = csv.writer(f, dialect=dialect)
             _compat.csv_write(writer, rows, header=header, encoding=encoding)

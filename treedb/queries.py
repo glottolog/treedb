@@ -7,6 +7,8 @@ from . import _compat
 
 from ._compat import ENCODING
 
+import hashlib
+
 import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
@@ -24,7 +26,11 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      Endangerment, EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
-__all__ = ['print_rows', 'write_csv', 'get_query', 'iterdescendants']
+__all__ = [
+    'print_rows', 'write_csv', 'hash_csv',
+    'get_query',
+    'iterdescendants',
+]
 
 
 def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
@@ -58,6 +64,22 @@ def write_csv(query=None, filename=None, encoding=ENCODING,
     rows = bind.execute(query)
     header = rows.keys()
     return _tools.write_csv(filename, rows, header, encoding)
+
+
+def hash_csv(query=None, raw=False, name=None, encoding=ENCODING, bind=ENGINE):
+    if query is None:
+        query = get_query()
+
+    rows = bind.execute(query)
+    header = rows.keys()
+
+    result = hashlib.new(name if name is not None else 'sha256')
+    assert hasattr(result, 'hexdigest')
+    _tools.write_csv(result, rows, header, encoding)
+
+    if not raw:
+        result = result.hexdigest()
+    return result
 
 
 def get_query(bind=ENGINE):

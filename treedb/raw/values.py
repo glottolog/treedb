@@ -1,5 +1,7 @@
 # values.py
 
+from __future__ import unicode_literals
+
 from .._compat import ENCODING, iteritems
 
 import sqlalchemy as sa
@@ -13,7 +15,7 @@ from . import records as _records
 
 from .models import File, Option, Value, Fields
 
-__all__ = ['print_stats', 'to_raw_csv', 'to_files']
+__all__ = ['print_stats', 'checksum', 'to_raw_csv', 'to_files']
 
 
 def print_stats(bind=ENGINE):
@@ -22,10 +24,29 @@ def print_stats(bind=ENGINE):
         ], bind=bind)\
         .select_from(sa.join(Option, Value))\
         .group_by(Option.section, Option.option)\
-        .order_by(Option.section, sa.desc('n'))
+        .order_by('section', sa.desc('n'))
 
     template = '{section:<22} {option:<22} {n:,}'
     _queries.print_rows(select_nvalues, format_=template, bind=bind)
+
+
+def checksum(weak=False, name=None, encoding=ENCODING, bind=ENGINE):
+    if weak:
+        select_rows = sa.select([
+                File.path, Option.section, Option.option, Value.value,
+            ], bind=bind)\
+            .select_from(sa.join(File, Value).join(Option))\
+            .order_by('path', 'section', 'option', Value.line)
+    else:
+        select_rows = sa.select([
+                File.path, File.sha256
+            ], bind=bind).order_by('path')
+
+    hash_  = _queries.hash_csv(select_rows, raw=True, name=name,
+                               encoding=encoding, bind=bind)
+
+    return '%s:%s:%s' % ('weak' if weak else 'strong',
+                         hash_.name, hash_.hexdigest())
 
 
 def to_raw_csv(filename=None, encoding=ENCODING, bind=ENGINE):

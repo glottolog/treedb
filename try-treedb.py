@@ -42,6 +42,8 @@ treedb.check()
 #print(next(raw.iterrecords()))
 #print(next(treedb.iterlanguoids(engine)))
 #raw.print_stats()
+#raw.checksum()
+#raw.checksum(weak=True)
 #raw.to_raw_csv()
 
 #treedb.languoids.compare_with_raw()
