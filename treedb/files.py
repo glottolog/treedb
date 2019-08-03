@@ -32,9 +32,13 @@ class ConfigParser(configparser.ConfigParser):
     }
 
     @classmethod
-    def from_file(cls, filename, encoding=ENCODING, **kwargs):
+    def from_filename(cls, filename, encoding=ENCODING, **kwargs):
+        return cls.from_path(pathlib.Path(filename))
+
+    @classmethod
+    def from_path(cls, path, encoding=ENCODING, **kwargs):
         inst = cls(**kwargs)
-        with io.open(filename, encoding=encoding) as f:
+        with path.open(encoding=encoding) as f:
             inst.read_file(f)
         return inst
 
@@ -49,7 +53,7 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterfiles(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
+def iterfiles(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_path):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
@@ -58,11 +62,11 @@ def iterfiles(root=ROOT, assert_name=BASENAME, load=ConfigParser.from_file):
     for d in _tools.iterfiles(root):
         assert d.name == assert_name
         path = pathlib.Path(d.path)
-        yield path.parts[path_slice], d, load(d.path)
+        yield path.parts[path_slice], d, load(path)
 
 
 def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
-         verbose=True, load=ConfigParser.from_file):
+         verbose=True, load=ConfigParser.from_path):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     if not isinstance(root, pathlib.Path):
         root = pathlib.Path(root)
@@ -70,9 +74,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
     files_written = 0
     for path_tuple, d in pairs:
         path = root.joinpath(*path_tuple) / basename
-        path_str = str(path)
-
-        cfg = load(path_str)
+        cfg = load(path)
 
         # FIXME: missing sections and options
         drop_sections = set(cfg.sections()).difference(set(d) | {'core', 'sources'})

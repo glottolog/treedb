@@ -5,14 +5,13 @@
 from . _compat import pathlib as _pathlib
 
 from . import proxies as _proxies
+from . import tools as _tools
 
 ENGINE = _proxies.SqliteEngineProxy()
 
-_PACKAGE_DIR = _pathlib.Path(__file__).parent
+_PACKAGE_DIR = _tools.path_from_filename(__file__).parent
 
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
-
-from . import tools as _tools
 
 from .files import iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
