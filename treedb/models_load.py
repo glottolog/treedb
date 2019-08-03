@@ -1,5 +1,7 @@
 # models_load.py
 
+import logging
+
 from ._compat import iteritems
 
 from sqlalchemy import insert
@@ -16,10 +18,15 @@ from .models import (MACROAREA, CLASSIFICATION,
 __all__ = ['load']
 
 
+log = logging.getLogger(__name__)
+
+
 def load(languoids, conn):
     insert_lang = insert(Languoid, bind=conn).execute
 
-    insert(Macroarea, bind=conn).execute([{'name': n} for n in sorted(MACROAREA)])
+    macroareas = sorted(MACROAREA)
+    log.debug('insert macroareas: %r', macroareas )
+    insert(Macroarea, bind=conn).execute([{'name': n} for n in macroareas])
     lang_ma = languoid_macroarea.insert(bind=conn).execute
 
     insert_country = insert(Country, bind=conn).execute
@@ -72,6 +79,8 @@ def load(languoids, conn):
             new_countries = [{'id': cc, 'name': name}
                             for name, cc in unseen_countries(countries)]
             if new_countries:
+                ids = [n['id'] for n in new_countries]
+                log.debug('insert new countries: %r', ids)
                 insert_country(new_countries)
             lang_country([{'languoid_id': lid, 'country_id': cc}
                           for _, cc in countries])

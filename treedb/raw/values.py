@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 from .._compat import DIALECT, ENCODING, iteritems
 
+import logging
+
 import sqlalchemy as sa
 
 from .. import ENGINE, ROOT
@@ -16,6 +18,9 @@ from . import records as _records
 from .models import File, Option, Value, Fields
 
 __all__ = ['print_stats', 'checksum', 'to_raw_csv', 'to_files']
+
+
+log = logging.getLogger(__name__)
 
 
 def print_stats(bind=ENGINE):
@@ -32,6 +37,8 @@ def print_stats(bind=ENGINE):
 
 def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
              bind=ENGINE):
+    kind = 'weak' if weak else 'strong'
+    log.info('calculate %r raw checksum', kind)
     if weak:
         select_rows = sa.select([
                 File.path, Option.section, Option.option, Value.value,
@@ -46,8 +53,8 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
     hash_  = _queries.hash_csv(select_rows, raw=True, name=name,
                                dialect=dialect, encoding=encoding, bind=bind)
 
-    return '%s:%s:%s' % ('weak' if weak else 'strong',
-                         hash_.name, hash_.hexdigest())
+    logging.debug('%s: %r', hash_.name, hash_.hexdigest())
+    return '%s:%s:%s' % (kind, hash_.name, hash_.hexdigest())
 
 
 def to_raw_csv(filename=None, dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
@@ -66,6 +73,7 @@ def to_raw_csv(filename=None, dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
 
 def to_files(root=ROOT, bind=ENGINE, verbose=True, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
+    log.info('write raw records to tree')
     records = _records.iterrecords(bind)
 
     def _iterpairs(records):

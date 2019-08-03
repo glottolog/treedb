@@ -11,6 +11,8 @@ _PACKAGE_DIR = _tools.path_from_filename(__file__).parent
 
 ROOT = _PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree')
 
+import logging as _logging
+
 from .files import iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
 from .backend import Session, Dataset, load, export
@@ -38,10 +40,16 @@ __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
 
+_log = _logging.getLogger(__name__)
+
+
 def set_engine_file(filename, require=False, resolve=False):
+    _log.info('set engine file')
+    _log.debug('filename: %r', filename)
     if require and filename is not None:
         path = _tools.path_from_filename(filename)
         if not path.exists():
+            _log.error('required engine file not found: %r', path)
             raise RuntimeError('engine file does not exist: %r' % path)
 
     ENGINE.__class__.file.fset(ENGINE, filename, resolve=resolve,

@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import re
 import json
+import logging
 import datetime
 import operator
 import functools
@@ -16,6 +17,9 @@ from . import tools as _tools
 from . import ROOT
 
 __all__ = ['iterlanguoids', 'to_json_csv', 'compare_with_raw']
+
+
+log = logging.getLogger(__name__)
 
 
 def get_type(mapping, key, type_):
@@ -198,14 +202,17 @@ def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCO
         except AttributeError:
             path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.name
+    log.info('write json csv: %r', filename)
 
     default_func = operator.methodcaller('isoformat')
     json_dumps = functools.partial(json.dumps, default=default_func)
 
     rows = (('/'.join(path_tuple), json_dumps(l))
             for path_tuple, l in iterlanguoids(root_or_bind))
+    header = ('path', 'json')
+    log.debug('header: %r', header)
 
-    return _tools.write_csv(filename, rows, header=('path', 'json'),
+    return _tools.write_csv(filename, rows, header=header,
                             dialect=dialect, encoding=encoding)
 
 

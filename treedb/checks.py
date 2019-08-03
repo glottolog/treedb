@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import logging
 import itertools
 
 from ._compat import getfullargspec
@@ -17,6 +18,9 @@ from .models import (FAMILY, LANGUAGE, DIALECT,
                      Languoid, Altname)
 
 __all__ = ['check']
+
+
+log = logging.getLogger(__name__)
 
 
 def check(func=None):
@@ -36,6 +40,7 @@ def check(func=None):
         check_inst = check_cls(session)
 
         try:
+            log.debug('validate %r', func.__name__)
             check_passed = check_inst.validate()
         finally:
             session.close()
@@ -59,6 +64,7 @@ class Check(object):
 
     def validate(self):
         self.invalid_count = self.query.count()
+        log.debug('invalid count: %r' % self.invalid_count)
         print(self)
 
         if self.invalid_count:

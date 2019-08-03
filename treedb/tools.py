@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import csv
+import logging
 import hashlib
 import platform
 import operator
@@ -27,6 +28,9 @@ __all__ = [
     'check_output',
     'write_csv',
 ]
+
+
+log = logging.getLogger(__name__)
 
 
 def next_count(start=0, step=1):
@@ -97,6 +101,7 @@ def update_hash(hash_, file, chunksize=2**16):  # 64 kB
 
 
 def check_output(args, cwd=None, encoding=ENCODING):
+    log.debug('get stdout of %r', args)
     if platform.system() == 'Windows':
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW

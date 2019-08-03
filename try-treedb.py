@@ -1,9 +1,14 @@
 #!/usr/env/bin python
 # try-treedb.py - usage examples
 
+import logging
+
 import treedb
 
 from treedb import Languoid, select
+
+logging.basicConfig(format='[%(levelname)s@%(name)s] %(message)s')
+logging.getLogger('treedb').setLevel(logging.INFO)
 
 print(next(treedb.iterlanguoids()))
 

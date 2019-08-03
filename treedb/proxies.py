@@ -1,5 +1,7 @@
 # proxies.py - proxies for global default variables that can be updated
 
+import logging
+
 import sqlalchemy as sa
 
 from . import tools as _tools
@@ -7,6 +9,9 @@ from . import tools as _tools
 __all__ = ['SqliteEngineProxy']
 
 UNSPECIFIED = object()
+
+
+log = logging.getLogger(__name__)
 
 
 class EngineProxy(sa.engine.Engine):
@@ -30,6 +35,7 @@ class EngineProxy(sa.engine.Engine):
             assert engine.url.drivername == 'sqlite'
 
         if getattr(self, '_engine', None) is not None:
+            log.debug('dispose engine %r', self._engine)
             self._engine.dispose()
 
         self._engine = engine

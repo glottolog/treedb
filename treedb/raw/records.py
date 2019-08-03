@@ -1,5 +1,6 @@
 # records.py
 
+import logging
 import itertools
 
 from .._compat import zip
@@ -17,8 +18,13 @@ __all__ = ['iterrecords']
 WINDOWSIZE = 500
 
 
+log =  logging.getLogger(__name__)
+
+
 def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
+    log.info('read raw records')
+    log.debug('bind: %r', bind)
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
@@ -35,6 +41,9 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     groupby_file, groupby_section, groupby_option = groupby
 
     for in_slice in window_slices(File.id, size=windowsize, bind=bind):
+        if log.level <= logging.DEBUG:
+            where = in_slice(File.id).compile(compile_kwargs={'literal_binds': True}).string
+            log.debug('fetch rows %r', where)
         files = select_files.where(in_slice(File.id)).execute().fetchall()
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()

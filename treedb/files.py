@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import logging
 import configparser
 
 from ._compat import pathlib
@@ -16,6 +17,9 @@ from . import ROOT
 __all__ = ['iterfiles', 'save', 'roundtrip']
 
 BASENAME = 'md.ini'
+
+
+log = logging.getLogger(__name__)
 
 
 class ConfigParser(configparser.ConfigParser):
@@ -64,6 +68,7 @@ class ConfigParser(configparser.ConfigParser):
 def iterfiles(root=ROOT, load=ConfigParser.from_path):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     root = _tools.path_from_filename(root)
+    log.info('read directory tree %r', root)
     path_slice = slice(len(root.parts), -1)
     for d in _tools.iterfiles(root):
         path = pathlib.Path(d.path)
@@ -74,6 +79,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
          verbose=True, load=ConfigParser.from_path):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
+    log.info('write directory tree %r', root)
     files_written = 0
     for path_tuple, d in pairs:
         path = root.joinpath(*path_tuple) / basename
@@ -107,6 +113,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
             cfg.to_path(path)
             files_written += 1
 
+    log.debug('%d files written', files_written)
     return files_written
 
 

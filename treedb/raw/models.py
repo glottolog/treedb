@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import warnings
 
 from sqlalchemy import (Column, Integer, String, Text, Boolean,
@@ -13,6 +14,9 @@ __all__ = [
     'File', 'Option', 'Value',
     'Fields',
 ]
+
+
+log = logging.getLogger(__name__)
 
 
 class File(Model):
@@ -134,9 +138,11 @@ class Fields(object):
             try:
                 return cls._fields[section, option]
             except KeyError:
-                msg = 'section %r unknown option %r' % (section, option)
-                warnings.warn(msg)
+                msg = 'section %r unknown option %r'
+                log.warn(msg, section, option)
                 if unknown_as_scalar:
+                    warnings.warn(msg % (section, option))
                     return None
+                log.exception('unknown option')
                 raise
         return result

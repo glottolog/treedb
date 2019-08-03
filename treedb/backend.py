@@ -5,13 +5,14 @@ from __future__ import print_function
 
 import re
 import time
+import logging
 import zipfile
 import datetime
 import warnings
 import functools
 import contextlib
 
-from ._compat import ENCODING
+from ._compat import DIALECT, ENCODING
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -28,9 +29,13 @@ __all__ = [
 ]
 
 
+log = logging.getLogger(__name__)
+
+
 @sa.event.listens_for(sa.engine.Engine, 'connect')
 def sqlite_engine_connect(dbapi_conn, connection_record):
     """Activate sqlite3 forein key checks, enable REGEXP operator."""
+    log.debug('enable foreign key checks and regexp operator')
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
         cursor.execute('PRAGMA foreign_keys = ON')
     dbapi_conn.create_function('regexp', 2, _regexp)
@@ -68,50 +73,83 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 def load(root=ROOT, engine=ENGINE, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
+    log.info('load database')
     if exclude_raw and from_raw:
+        log.error('incompatible exclude_raw=%r'
+                  ' and from_raw=%r', exclude_raw, from_raw)
         raise RuntimeError('exclude_raw and from_raw cannot both be True')
     elif from_raw is None:
         from_raw = not exclude_raw
 
     assert engine.url.drivername == 'sqlite'
     if engine.file is not None and engine.file.exists():
+        log.debug('read __dataset__ from %r', engine.file)
         try:
             found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
         except Exception as e:
-            warnings.warn('error reading __dataset__: %r' % e)
+            msg = 'error reading __dataset__'
+            log.exception(msg)
+            warnings.warn(msg)
             if force_delete:
+                msg = 'force_delete %r'
+                log.warning(msg, engine.file)
+                warnings.warn(msg % engine.file)
                 rebuild = True
             else:
                 raise
 
+        if found != exclude_raw:
+            log.info('rebuild needed from exclude_raw mismatch')
         if rebuild or found != exclude_raw:
-            warnings.warn('deleting present file: %r' % engine.file)
+            log.info('rebuild database')
+            log.debug('dispose engine %r', engine)
             engine.dispose()
+
+            msg = 'delete present file: %r'
+            log.warn(msg, engine.file)
+            warnings.warn(msg % engine.file)
             engine.file.unlink()
         else:
             return engine
 
+    if not (exclude_raw or from_raw):
+        msg = '2 root reads required (use compare_with_raw() to verify)'
+        log.warn(msg)
+        warnings.warn(msg)
+
     @contextlib.contextmanager
     def begin(bind=engine):
+        log.debug('begin transaction on %r', bind)
         with bind.begin() as conn:
             conn.execute('PRAGMA synchronous = OFF')
             conn.execute('PRAGMA journal_mode = MEMORY')
-            yield conn.execution_options(compiled_cache={})
+            conn = conn.execution_options(compiled_cache={})
+            log.debug('conn: %r', conn)
+            yield conn
+        log.debug('end transaction on %r', bind)
 
     # import here to register models for create_all()
     if not exclude_raw:
+        log.debug('import module raw')
         from . import raw
+    log.debug('import module models_load')
     from . import models_load
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
 
+    log.debug('start load timer')
     start = time.time()
+    log.info('create tables')
     with begin() as conn:
+        log.debug('set application_id = %r', application_id)
         conn.execute('PRAGMA application_id = %d' % application_id)
+        log.debug('run create_all')
         Model.metadata.create_all(bind=conn)
 
     get_stdout = functools.partial(_tools.check_output, cwd=str(root))
+    log.info('record git commit')
+    log.debug('cwd: %r', root)
     dataset = {
         'title': 'Glottolog treedb',
         'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
@@ -122,32 +160,51 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     }
 
     if not exclude_raw:
+        log.info('load raw')
         with begin() as conn:
+            log.debug('root: %r', root)
             raw.load(root, conn)
 
+    log.debug('import module languoids')
     from . import languoids
 
+    log.info('load languoids')
+    if not (from_raw or exclude_raw):
+        log.warn('must read tree 2 times (verify with compare_with_raw)')
     with begin() as conn:
-        pairs = languoids.iterlanguoids(conn if from_raw else root)
+        root_or_bind = conn if from_raw else root
+        log.debug('root_or_bind: %r', root_or_bind)
+        pairs = languoids.iterlanguoids(root_or_bind)
         models_load.load(pairs, conn)
 
+    log.info('write __dataset__')
     with begin() as conn:
+        log.debug('dataset: %r', dataset)
         sa.insert(Dataset, bind=conn).execute(dataset)
 
     print(datetime.timedelta(seconds=time.time() - start))
+    log.debug('load timer stopped')
+    log.info('database loaded')
     return engine
 
 
-def export(engine=ENGINE, filename=None, encoding=ENCODING, metadata=Model.metadata):
+def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,
+           metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
+    log.info('export database')
+    log.debug('engine: %r', engine)
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 
+    log.debug('write %r', filename)
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
+            log.debug('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
-            data = _tools.write_csv(None, rows, header, encoding)
+            data = _tools.write_csv(None, rows, header=header,
+                                    dialect=dialect, encoding=encoding)
             z.writestr('%s.csv' % table.name, data)
 
+    log.info('database exported')
     return _tools.path_from_filename(filename)

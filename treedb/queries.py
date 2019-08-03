@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import logging
+
 from . import _compat
 
 from ._compat import DIALECT, ENCODING
@@ -33,6 +35,9 @@ __all__ = [
 ]
 
 
+log = logging.getLogger(__name__)
+
+
 def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
     if query is None:
         query = get_query()
@@ -58,11 +63,13 @@ def write_csv(query=None, filename=None, dialect=DIALECT, encoding=ENCODING,
     if filename is None:
         filename = bind.file_with_suffix('.csv').name
 
+    log.info('write csv: %r', filename)
     if verbose:
         print(query)
 
     rows = bind.execute(query)
     header = rows.keys()
+    log.debug('header: %r', header)
     return _tools.write_csv(filename, rows, header=header,
                             dialect=dialect, encoding=encoding)
 
@@ -77,6 +84,8 @@ def hash_csv(query=None, raw=False, name=None,
 
     result = hashlib.new(name if name is not None else 'sha256')
     assert hasattr(result, 'hexdigest')
+    log.info('hash csv: %r', result.name)
+    log.debug('header: %r', header)
     _tools.write_csv(result, rows, header=header,
                      dialect=dialect, encoding=encoding)
 

@@ -2,6 +2,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from sqlalchemy import delete, exists
 from sqlalchemy.orm import aliased
 
@@ -16,12 +18,17 @@ __all__ = [
 ]
 
 
+log = logging.getLogger(__name__)
+
+
 def dropfunc(func, bind=ENGINE):
     def wrapper(bind=bind):
+        log.info('execute %r', func.__name__)
         delete_rows = func()
 
         rows_deleted = bind.execute(delete_rows).rowcount
 
+        log.debug('%d rows deleted', rows_deleted)
         return rows_deleted
 
     return wrapper

@@ -2,6 +2,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from .._compat import iteritems
 
 from sqlalchemy import insert
@@ -14,6 +16,9 @@ from .models import File, Option, Value, Fields
 __all__ = ['load']
 
 
+log = logging.getLogger(__name__)
+
+
 class Options(dict):
     """Insert optons on demand and cache id and lines config."""
 
@@ -24,6 +29,7 @@ class Options(dict):
     def __missing__(self, key):
         section, option = key
         is_lines = Fields.is_lines(section, option)
+        log.debug('insert option %r', key)
         id_, = self.insert(section=section, option=option,
                            is_lines=is_lines).inserted_primary_key
         self[key] = result = (id_, is_lines)
