@@ -79,10 +79,12 @@ class Languoid(Model):
 
     id = Column(String(8), CheckConstraint('length(id) = 8'), primary_key=True)
 
-    level = Column(Enum(*LEVEL), nullable=False)
     name = Column(String, CheckConstraint("name != ''"), nullable=False, unique=True)
 
+    level = Column(Enum(*LEVEL), nullable=False)
+
     parent_id = Column(ForeignKey('languoid.id'), index=True)
+
     hid = Column(Text, CheckConstraint('length(hid) >= 3'), unique=True)
     iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'), unique=True)
     latitude = Column(Float, CheckConstraint('latitude BETWEEN -90 AND 90'))

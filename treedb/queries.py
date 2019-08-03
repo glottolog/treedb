@@ -110,10 +110,17 @@ def get_query(bind=ENGINE):
     group_concat = sa.func.group_concat
 
     select_languoid = select([
+            Languoid.id,
+            Languoid.name,
+            Languoid.level,
+            Languoid.parent_id,
             path.label('path'),
             family.label('family_id'),
             language.label('dialect_language_id'),
-            Languoid,
+            Languoid.hid,
+            Languoid.iso639_3,
+            Languoid.latitude,
+            Languoid.longitude,
             select([group_concat(languoid_macroarea.c.macroarea_name, ', ')])
                 .where(languoid_macroarea.c.languoid_id == Languoid.id)
                 .order_by(languoid_macroarea)
