@@ -210,7 +210,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCO
     rows = (('/'.join(path_tuple), json_dumps(l))
             for path_tuple, l in iterlanguoids(root_or_bind))
     header = ('path', 'json')
-    log.debug('header: %r', header)
+    log.info('header: %r', header)
 
     return _tools.write_csv(filename, rows, header=header,
                             dialect=dialect, encoding=encoding)

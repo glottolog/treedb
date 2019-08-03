@@ -110,6 +110,10 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
             warnings.warn(msg % engine.file)
             engine.file.unlink()
         else:
+            log.info('use present %r', engine.file)
+            if log.level <= logging.INFO:
+                git_describe = sa.select([Dataset.git_describe], bind=engine).scalar()
+                log.info('git describe %r' % git_describe)
             return engine
 
     if not (exclude_raw or from_raw):
@@ -182,9 +186,11 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         log.debug('dataset: %r', dataset)
         sa.insert(Dataset, bind=conn).execute(dataset)
 
-    print(datetime.timedelta(seconds=time.time() - start))
+    walltime = datetime.timedelta(seconds=time.time() - start)
     log.debug('load timer stopped')
     log.info('database loaded')
+    log.info('git describe %r', dataset['git_describe'])
+    print(walltime)
     return engine
 
 
@@ -196,10 +202,10 @@ def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 
-    log.debug('write %r', filename)
+    log.info('write %r', filename)
     with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
-            log.debug('export table %r', table.name)
+            log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
             data = _tools.write_csv(None, rows, header=header,
