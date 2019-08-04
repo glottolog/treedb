@@ -75,7 +75,7 @@ def to_raw_csv(filename=None, dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
         ]).select_from(sa.join(File, Value).join(Option))\
-        .order_by(File.path, Option.section, Option.option, Value.line)
+        .order_by('path', 'section', 'option', 'line')
 
     return _queries.write_csv(select_values, filename,
                               dialect=dialect, encoding=encoding, bind=bind)

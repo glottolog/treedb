@@ -39,7 +39,7 @@ def _iterrecords(bind, windowsize, skip_unknown):
             Option.is_lines, Value.value,
         ], bind=bind)\
         .select_from(sa.join(Value, Option))\
-        .order_by(Value.file_id, Option.section, Value.line, Option.option)
+        .order_by('file_id', 'section', Value.line, 'option')
     if skip_unknown:
         select_values.append_whereclause(Option.is_lines != None)
 
