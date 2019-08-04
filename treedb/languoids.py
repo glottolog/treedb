@@ -109,7 +109,8 @@ def iterlanguoids(root_or_bind=ROOT):
         iterfiles = ((pt, cfg) for pt, _, cfg in files.iterfiles(root))
         _make_lines = make_lines
 
-    for path_tuple, cfg in iterfiles:
+    log.info('extract languoids')
+    for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
         core = cfg['core']
         item = {
             'id': path_tuple[-1],
@@ -191,6 +192,7 @@ def iterlanguoids(root_or_bind=ROOT):
             }
 
         yield path_tuple, item
+    log.info('%d languoids extracted', n)
 
 
 def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCODING):

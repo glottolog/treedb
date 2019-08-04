@@ -29,7 +29,7 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
 
 
 def _iterrecords(bind, windowsize, skip_unknown):
-    log.info('read raw records')
+    log.info('enter raw records')
     log.debug('bind: %r', bind)
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
@@ -60,6 +60,8 @@ def _iterrecords(bind, windowsize, skip_unknown):
                    for (o, is_lines), lines in groupby_option(sections)}
                 for s, sections in groupby_section(values)}
             yield tuple(path.split('/')), record
+
+    log.info('exit raw records')
 
 
 def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
