@@ -37,7 +37,7 @@ def print_stats(bind=ENGINE):
 
 def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
              bind=ENGINE):
-    kind = 'weak' if weak else 'strong'
+    kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
 
     if weak:
@@ -45,7 +45,14 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
                 File.path, Option.section, Option.option, Value.value,
             ], bind=bind)\
             .select_from(sa.join(File, Value).join(Option))\
-            .order_by('path', 'section', 'option', Value.line)
+
+        order = ['path', 'section', 'option']
+        if weak == 'unordered':
+            order.append(Value.value)
+        else:
+            order.append(Value.line)
+        select_rows.append_order_by(*order)
+        
     else:
         select_rows = sa.select([
                 File.path, File.sha256
