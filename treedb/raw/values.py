@@ -24,6 +24,8 @@ log = logging.getLogger(__name__)
 
 
 def print_stats(bind=ENGINE):
+    log.info('fetch statistics')
+
     select_nvalues = sa.select([
             Option.section, Option.option, sa.func.count().label('n'),
         ], bind=bind)\
