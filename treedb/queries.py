@@ -225,12 +225,12 @@ def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
             cond = (Parent.level == parent_level)
         else:
             raise ValueError('invalid parent_level: %r' % parent_level)
-        select_pairs = select_pairs.where(cond)
+        select_pairs.append_whereclause(cond)
 
     if child_level is not None:
         if child_level not in LEVEL:
             raise ValueError('invalid child_level: %r' % child_level)
-        select_pairs = select_pairs.where(Child.level == child_level)
+        select_pairs.append_whereclause(Child.level == child_level)
 
     rows = select_pairs.execute()
 
