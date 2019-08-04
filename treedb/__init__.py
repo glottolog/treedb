@@ -15,7 +15,7 @@ import logging as _logging
 
 from .files import iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
-from .backend import Session, Dataset, load, export
+from .backend import Session, Dataset, load, print_schema, dump_sql, export
 from .models import LEVEL, Languoid
 from .checks import check
 from .queries import print_rows, write_csv, hash_csv, get_query, iterdescendants
@@ -25,7 +25,7 @@ __all__ = [
     'ENGINE', 'ROOT',
     'iterfiles',
     'iterlanguoids', 'to_json_csv', 'compare_with_raw',
-    'Session', 'Dataset', 'load', 'export',
+    'Session', 'Dataset', 'load', 'print_schema', 'dump_sql', 'export',
     'LEVEL', 'Languoid',
     'check',
     'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',

@@ -23,9 +23,10 @@ from . import tools as _tools
 from . import ENGINE, ROOT
 
 __all__ = [
-    'Model', 'Dataset',
+    'Model', 'print_schema',
+    'Dataset',
     'Session',
-    'load', 'export',
+    'load', 'dump_sql', 'export',
 ]
 
 
@@ -50,6 +51,16 @@ def _regexp(pattern, value):
 
 
 Model = sa.ext.declarative.declarative_base()
+
+
+def print_schema(metadata=Model.metadata, engine=ENGINE):
+    def print_sql(sql):
+        print(sql.compile(dialect=engine.dialect))
+
+    mock_engine = sa.create_engine(engine.url, strategy='mock',
+                                   executor=print_sql)
+
+    metadata.create_all(mock_engine, checkfirst=False)
 
 
 class Dataset(Model):
@@ -208,6 +219,19 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     log.info('git describe %r', dataset['git_describe'])
     print(walltime)
     return engine
+
+
+def dump_sql(engine=ENGINE, filename=None, encoding=ENCODING):
+    if filename is None:
+        filename = engine.file_with_suffix('.sql').name
+    path = _tools.path_from_filename(filename)
+
+    with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
+         path.open('w', encoding=ENCODING) as f:
+        for line in dbapi_conn.iterdump():
+            print(line, file=f)
+
+    return path
 
 
 def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,

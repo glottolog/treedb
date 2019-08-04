@@ -74,7 +74,7 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     select_keys = sa.select([select_keys.c.key], bind=bind)\
         .where(select_keys.c.row_num % size == 0)
 
-    log.info('fetch %s slices in window of %d', key_column.expression, size)
+    log.info('fetch %r slices for window of %d', str(key_column.expression), size)
     keys = (k for k, in select_keys.execute())
 
     try:
