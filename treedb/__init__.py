@@ -5,7 +5,7 @@
 from . import proxies as _proxies
 from . import tools as _tools
 
-ENGINE = _proxies.SqliteEngineProxy()
+ENGINE = _proxies.SQLiteEngineProxy()
 
 _PACKAGE_DIR = _tools.path_from_filename(__file__).parent
 

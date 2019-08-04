@@ -121,6 +121,9 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
                 log.info('git describe %r' % git_describe)
             return engine
 
+    if engine.file is None:
+        log.warn('connected to a transient in-memory database')
+
     if not (exclude_raw or from_raw):
         msg = '2 root reads required (use compare_with_raw() to verify)'
         log.warn(msg)

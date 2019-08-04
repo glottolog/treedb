@@ -52,7 +52,7 @@ class EngineProxy(sa.engine.Engine):
         return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__, url)
 
 
-class SqliteEngineProxy(EngineProxy):
+class SQLiteEngineProxy(EngineProxy):
 
     _memory_path = None
 
@@ -81,7 +81,7 @@ class SqliteEngineProxy(EngineProxy):
 
     def __repr__(self):
         if self.engine is None or self.file is None:
-            return super(SqliteEngineProxy, self).__repr__()
+            return super(SQLiteEngineProxy, self).__repr__()
 
         parent = ''
         name = self.file.as_posix()
