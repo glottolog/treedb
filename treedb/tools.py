@@ -59,7 +59,7 @@ def iterfiles(top, verbose=False):
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = path_from_filename(top)
     if not top.is_absolute():
-        top = pathlib.Path.cwd().join(top).resolve()
+        top = pathlib.Path.cwd().joinpath(top).resolve()
 
     stack = [str(top)]
     while stack:

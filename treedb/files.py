@@ -83,7 +83,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
     log.info('write directory tree %r', root)
     files_written = 0
     for path_tuple, d in pairs:
-        path = root.joinpath(*path_tuple) / basename
+        path = root.joinpath(*path_tuple + (basename,))
         cfg = load(path)
 
         # FIXME: missing sections and options
