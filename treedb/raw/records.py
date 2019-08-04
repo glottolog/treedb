@@ -35,8 +35,7 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     select_values = sa.select([
             Value.file_id, Option.section, Option.option,
             Option.is_lines, Value.value,
-        ])\
-        .select_from(sa.join(Value, Option))\
+        ]).select_from(sa.join(Value, Option))\
         .order_by('file_id', 'section', Value.line, 'option')
     if skip_unknown:
         select_values.append_whereclause(Option.is_lines != None)
