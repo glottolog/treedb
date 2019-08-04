@@ -34,9 +34,11 @@ def check(func=None):
 
     passed = True
     for func in check.registered:
-        session = Session()
         ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
         check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
+
+        session = Session()
+
         check_inst = check_cls(session)
 
         try:

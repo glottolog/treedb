@@ -73,6 +73,7 @@ def splitlink(markdown, _match=re.compile(
         scheme = scheme.lower()
     else:
         scheme = None
+
     return {'url': url, 'title': title, 'scheme': scheme}
 
 
@@ -94,6 +95,8 @@ def splitaltname(s, parse_fail='!', _match=re.compile(
 
 def iterlanguoids(root_or_bind=ROOT):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
+    log.info('extract languoids')
+
     if hasattr(root_or_bind, 'execute'):
         bind = root_or_bind
 
@@ -109,7 +112,6 @@ def iterlanguoids(root_or_bind=ROOT):
         iterfiles = ((pt, cfg) for pt, _, cfg in files.iterfiles(root))
         _make_lines = make_lines
 
-    log.info('extract languoids')
     for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
         core = cfg['core']
         item = {
@@ -192,6 +194,7 @@ def iterlanguoids(root_or_bind=ROOT):
             }
 
         yield path_tuple, item
+
     log.info('%d languoids extracted', n)
 
 
@@ -204,6 +207,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCO
         except AttributeError:
             path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.name
+
     log.info('write json csv: %r', filename)
 
     default_func = operator.methodcaller('isoformat')

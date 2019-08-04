@@ -39,6 +39,7 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
              bind=ENGINE):
     kind = 'weak' if weak else 'strong'
     log.info('calculate %r raw checksum', kind)
+
     if weak:
         select_rows = sa.select([
                 File.path, Option.section, Option.option, Value.value,

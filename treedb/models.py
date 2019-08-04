@@ -162,6 +162,7 @@ class Languoid(Model):
         Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
 
         tree_1 = sa.select([Child.id.label('child_id')])
+
         if include_self:
             parent_id = Child.id
         else:
@@ -191,6 +192,7 @@ class Languoid(Model):
 
         if with_terminal:
             Granny = aliased(Languoid, name='grandparent')
+
             tree_2.append_column((Granny.parent_id == None).label('terminal'))
             tree_2 = tree_2.select_from(tree_2.froms[-1]
                 .outerjoin(Granny, Granny.id == Parent.parent_id))
@@ -222,6 +224,7 @@ class Languoid(Model):
             .where(tree.c.steps > 0).where(tree.c.terminal == True)
 
         Ancestor = aliased(Languoid, name='ancestor')
+
         language = sa.select([tree.c.parent_id])\
             .where(tree.c.child_id == cls.id).correlate(cls)\
             .where(cls.level == DIALECT)\

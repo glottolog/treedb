@@ -27,6 +27,7 @@ def load(languoids, conn):
     macroareas = sorted(MACROAREA)
     log.debug('insert macroareas: %r', macroareas)
     insert(Macroarea, bind=conn).execute([{'name': n} for n in macroareas])
+
     lang_ma = languoid_macroarea.insert(bind=conn).execute
 
     insert_country = insert(Country, bind=conn).execute
@@ -81,7 +82,9 @@ def load(languoids, conn):
             if new_countries:
                 ids = [n['id'] for n in new_countries]
                 log.debug('insert new countries: %r', ids)
+
                 insert_country(new_countries)
+
             lang_country([{'languoid_id': lid, 'country_id': cc}
                           for _, cc in countries])
 
@@ -127,6 +130,7 @@ def load(languoids, conn):
         if iso_retirement is not None:
             change_to = iso_retirement.pop('change_to')
             insert_ir(languoid_id=lid, **iso_retirement)
+
             if change_to:
                 insert_irct([{'languoid_id': lid, 'code': c, 'ord': i}
                              for i, c in enumerate(change_to, 1)])

@@ -36,8 +36,10 @@ log = logging.getLogger(__name__)
 def sqlite_engine_connect(dbapi_conn, connection_record):
     """Activate sqlite3 forein key checks, enable REGEXP operator."""
     log.debug('enable foreign key checks and regexp operator')
+
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
         cursor.execute('PRAGMA foreign_keys = ON')
+
     dbapi_conn.create_function('regexp', 2, _regexp)
 
 
@@ -74,6 +76,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
     log.info('load database')
+
     if exclude_raw and from_raw:
         log.error('incompatible exclude_raw=%r'
                   ' and from_raw=%r', exclude_raw, from_raw)
@@ -84,6 +87,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     assert engine.url.drivername == 'sqlite'
     if engine.file is not None and engine.file.exists():
         log.debug('read %r from %r', Dataset.__tablename__, engine.file)
+
         try:
             found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
         except Exception:
@@ -100,6 +104,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
         if found != exclude_raw:
             log.info('rebuild needed from exclude_raw mismatch')
+
         if rebuild or found != exclude_raw:
             log.info('rebuild database')
             log.debug('dispose engine %r', engine)
@@ -128,6 +133,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
             conn.execute('PRAGMA synchronous = OFF')
             conn.execute('PRAGMA journal_mode = MEMORY')
             conn = conn.execution_options(compiled_cache={})
+
             log.debug('conn: %r', conn)
             yield conn
         log.debug('end transaction on %r', bind)
@@ -136,6 +142,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     if not exclude_raw:
         log.debug('import module raw')
         from . import raw
+
     log.debug('import module models_load')
     from . import models_load
 
@@ -144,16 +151,19 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     log.debug('start load timer')
     start = time.time()
+
     log.info('create tables')
     with begin() as conn:
         log.debug('set application_id = %r', application_id)
         conn.execute('PRAGMA application_id = %d' % application_id)
+
         log.debug('run create_all')
         Model.metadata.create_all(bind=conn)
 
-    get_stdout = functools.partial(_tools.check_output, cwd=str(root))
     log.info('record git commit')
     log.debug('cwd: %r', root)
+    get_stdout = functools.partial(_tools.check_output, cwd=str(root))
+
     dataset = {
         'title': 'Glottolog treedb',
         'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
@@ -175,9 +185,11 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
     log.info('load languoids')
     if not (from_raw or exclude_raw):
         log.warn('must read tree 2 times (verify with compare_with_raw)')
+
     with begin() as conn:
         root_or_bind = conn if from_raw else root
         log.debug('root_or_bind: %r', root_or_bind)
+
         pairs = languoids.iterlanguoids(root_or_bind)
         models_load.load(pairs, conn)
 
@@ -188,6 +200,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     walltime = datetime.timedelta(seconds=time.time() - start)
     log.debug('load timer stopped')
+
     log.info('database loaded')
     log.info('git describe %r', dataset['git_describe'])
     print(walltime)
@@ -199,6 +212,7 @@ def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
     log.debug('engine: %r', engine)
+
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 

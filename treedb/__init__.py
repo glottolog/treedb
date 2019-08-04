@@ -46,6 +46,7 @@ _log = _logging.getLogger(__name__)
 def set_engine_file(filename, require=False, resolve=False):
     _log.info('set engine file')
     _log.debug('filename: %r', filename)
+
     if require and filename is not None:
         path = _tools.path_from_filename(filename)
         if not path.exists():

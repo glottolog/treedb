@@ -62,6 +62,7 @@ def iterfiles(top, verbose=False):
         top = pathlib.Path.cwd().joinpath(top).resolve()
 
     stack = [str(top)]
+
     while stack:
         root = stack.pop()
         if verbose:
@@ -87,7 +88,9 @@ def path_from_filename(filename, *args):
 
 def sha256sum(file, raw=False):
     result = hashlib.sha256()
+
     update_hash(result, file)
+
     if not raw:
         result = result.hexdigest()
     return result
@@ -102,6 +105,7 @@ def update_hash(hash_, file, chunksize=2**16):  # 64 kB
 
 def check_output(args, cwd=None, encoding=ENCODING):
     log.debug('get stdout of %r', args)
+
     if platform.system() == 'Windows':
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW

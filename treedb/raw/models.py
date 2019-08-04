@@ -134,15 +134,19 @@ class Fields(object):
     def is_lines(cls, section, option, unknown_as_scalar=True):
         """Return whether the section option is treated as list of lines."""
         result = cls._fields.get((section, None))
+
         if result is None:
             try:
                 return cls._fields[section, option]
             except KeyError:
                 msg = 'section %r unknown option %r'
                 log.warn(msg, section, option)
+
                 if unknown_as_scalar:
                     warnings.warn(msg % (section, option))
                     return None
+
                 log.exception('unknown option')
                 raise
+
         return result

@@ -31,6 +31,7 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
 def _iterrecords(bind, windowsize, skip_unknown):
     log.info('enter raw records')
     log.debug('bind: %r', bind)
+
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
@@ -48,11 +49,13 @@ def _iterrecords(bind, windowsize, skip_unknown):
 
     for in_slice in window_slices(File.id, size=windowsize, bind=bind):
         if log.level <= logging.DEBUG:
-            where = in_slice(File.id).compile(compile_kwargs={'literal_binds': True}).string
-            log.debug('fetch rows %r', where)
+            where = in_slice(File.id).compile(compile_kwargs={'literal_binds': True})
+            log.debug('fetch rows %r', where.string)
+
         files = select_files.where(in_slice(File.id)).execute().fetchall()
         # single thread: no isolation level concerns
         values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
+
         # join by file_id total order index
         for (path,), (_, values) in zip(files, groupby_file(values)):
             record = {
@@ -83,7 +86,9 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     # right-inclusive indexes for windows of given size for continuous keys
     yield lambda c, end=end: (c <= end)
     last = end
+
     for end in keys:
         yield lambda c, last=last, end=end: sa.and_(c > last, c <= end)
         last = end
+
     yield lambda c, end=end: (c > end)

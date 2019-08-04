@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 def dropfunc(func, bind=ENGINE):
     def wrapper(bind=bind):
         log.info('execute %r', func.__name__)
+
         delete_rows = func()
 
         rows_deleted = bind.execute(delete_rows).rowcount

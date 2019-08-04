@@ -70,6 +70,7 @@ def write_csv(query=None, filename=None, dialect=DIALECT, encoding=ENCODING,
     rows = bind.execute(query)
     header = rows.keys()
     log.info('header: %r', header)
+
     return _tools.write_csv(filename, rows, header=header,
                             dialect=dialect, encoding=encoding)
 
@@ -84,10 +85,10 @@ def hash_csv(query=None, raw=False, name=None,
 
     rows = bind.execute(query)
     header = rows.keys()
+    log.info('header: %r', header)
 
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
-    log.info('header: %r', header)
     _tools.write_csv(result, rows, header=header,
                      dialect=dialect, encoding=encoding)
 

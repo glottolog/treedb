@@ -49,7 +49,6 @@ class EngineProxy(sa.engine.Engine):
         url = None
         if self._engine is not None:
             url = str(self.engine.url)
-
         return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__, url)
 
 
