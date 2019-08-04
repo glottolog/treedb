@@ -28,7 +28,7 @@ def print_stats(bind=ENGINE):
 
     select_nvalues = sa.select([
             Option.section, Option.option, sa.func.count().label('n'),
-        ], bind=bind)\
+        ])\
         .select_from(sa.join(Option, Value))\
         .group_by(Option.section, Option.option)\
         .order_by('section', sa.desc('n'))
@@ -45,8 +45,7 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
     if weak:
         select_rows = sa.select([
                 File.path, Option.section, Option.option, Value.value,
-            ], bind=bind)\
-            .select_from(sa.join(File, Value).join(Option))\
+            ]).select_from(sa.join(File, Value).join(Option))\
 
         order = ['path', 'section', 'option']
         if weak == 'unordered':
@@ -54,11 +53,9 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
         else:
             order.append(Value.line)
         select_rows.append_order_by(*order)
-        
+
     else:
-        select_rows = sa.select([
-                File.path, File.sha256
-            ], bind=bind).order_by('path')
+        select_rows = sa.select([File.path, File.sha256]).order_by('path')
 
     hash_ = _queries.hash_csv(select_rows, raw=True, name=name,
                                dialect=dialect, encoding=encoding, bind=bind)

@@ -48,7 +48,7 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     with bind.connect() as conn:
         select_files.bind = conn
         select_values.bind = conn
-        for in_slice in window_slices(File.id, size=windowsize, bind=bind):
+        for in_slice in window_slices(File.id, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
                 where = literal_compile(in_slice(File.id))
                 log.debug('fetch rows %r', where.string)

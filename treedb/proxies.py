@@ -6,7 +6,7 @@ import sqlalchemy as sa
 
 from . import tools as _tools
 
-__all__ = ['SqliteEngineProxy']
+__all__ = ['SQLiteEngineProxy']
 
 UNSPECIFIED = object()
 
