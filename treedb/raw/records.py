@@ -23,6 +23,12 @@ log =  logging.getLogger(__name__)
 
 def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
+    with bind.connect() as conn:
+        for x in _iterrecords(conn, windowsize, skip_unknown):
+            yield x
+
+
+def _iterrecords(bind, windowsize, skip_unknown):
     log.info('read raw records')
     log.debug('bind: %r', bind)
     select_files = sa.select([File.path], bind=bind).order_by(File.id)
