@@ -34,9 +34,7 @@ if PY2:
             mode = mode + 'b'
         return io.open(filename, mode)
 
-    def csv_write(writer, rows, header=None, encoding=ENCODING):
-        if header is not None:
-            writer.writerow([h.encode(encoding) for h in header])
+    def csv_writerows(writer, rows, encoding=ENCODING):
         for r in rows:
             writer.writerow([unicode(col).encode(encoding) if col else col
                              for col in r])
@@ -64,7 +62,5 @@ else:
     def csv_open(filename, mode, encoding=ENCODING):
         return io.open(filename, mode, newline='', encoding=encoding)
 
-    def csv_write(writer, rows, header=None, encoding=ENCODING):
-        if header is not None:
-            writer.writerow(header)
+    def csv_writerows(writer, rows, encoding=ENCODING):
         writer.writerows(rows)

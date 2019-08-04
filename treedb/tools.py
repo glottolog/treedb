@@ -114,32 +114,43 @@ def check_output(args, cwd=None, encoding=ENCODING):
 
 
 def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
-    make_writer = functools.partial(csv.writer, dialect=dialect)
+    def get_writerows(f):
+        writer = csv.writer(f, dialect=dialect)
+        return functools.partial(_compat.csv_writerows, writer, encoding=encoding)
 
     if hasattr(filename, 'hexdigest'):
         hash_ = filename
+
         with _compat.make_csv_io() as f:
-            writer = make_writer(f)
-            write = functools.partial(_compat.csv_write, writer, encoding=encoding)
+            writerows = get_writerows(f)
             get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
-            write([], header=header)
+            if header is not None:
+                writerows([header])
             for rows in iterslices(rows, 100):
-                write(rows)
+                writerows(rows)
                 data = get_bytes(f.getvalue())
                 hash_.update(data)
                 # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
                 f.truncate()
+
         return None
+
     elif filename is None:
         with _compat.make_csv_io() as f:
-            writer = make_writer(f)
-            _compat.csv_write(writer, rows, header=header, encoding=encoding)
+            writerows = get_writerows(f)
+            if header is not None:
+                writerows([header])
+            writerows(rows)
             data = f.getvalue()
+
         return _compat.get_csv_io_bytes(data, encoding)
 
-    with _compat.csv_open(filename, 'w', encoding=encoding) as f:
-        writer = make_writer(f)
-        _compat.csv_write(writer, rows, header=header, encoding=encoding)
+    else:
+        with _compat.csv_open(filename, 'w', encoding=encoding) as f:
+            writerows = get_writerows(f)
+            if header is not None:
+                    writerows([header])
+            writerows(rows)
 
-    return path_from_filename(filename)
+        return path_from_filename(filename)
