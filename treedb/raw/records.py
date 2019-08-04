@@ -21,23 +21,21 @@ WINDOWSIZE = 500
 log = logging.getLogger(__name__)
 
 
+def literal_compile(expression):
+    return expression.compile(compile_kwargs={'literal_binds': True})
+
+
 def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
-    with bind.connect() as conn:
-        for x in _iterrecords(conn, windowsize, skip_unknown):
-            yield x
-
-
-def _iterrecords(bind, windowsize, skip_unknown):
     log.info('enter raw records')
     log.debug('bind: %r', bind)
 
-    select_files = sa.select([File.path], bind=bind).order_by(File.id)
+    select_files = sa.select([File.path]).order_by(File.id)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([
             Value.file_id, Option.section, Option.option,
             Option.is_lines, Value.value,
-        ], bind=bind)\
+        ])\
         .select_from(sa.join(Value, Option))\
         .order_by('file_id', 'section', Value.line, 'option')
     if skip_unknown:
@@ -47,22 +45,25 @@ def _iterrecords(bind, windowsize, skip_unknown):
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
-    for in_slice in window_slices(File.id, size=windowsize, bind=bind):
-        if log.level <= logging.DEBUG:
-            where = in_slice(File.id).compile(compile_kwargs={'literal_binds': True})
-            log.debug('fetch rows %r', where.string)
+    with bind.connect() as conn:
+        select_files.bind = conn
+        select_values.bind = conn
+        for in_slice in window_slices(File.id, size=windowsize, bind=bind):
+            if log.level <= logging.DEBUG:
+                where = literal_compile(in_slice(File.id))
+                log.debug('fetch rows %r', where.string)
 
-        files = select_files.where(in_slice(File.id)).execute().fetchall()
-        # single thread: no isolation level concerns
-        values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
+            files = select_files.where(in_slice(File.id)).execute().fetchall()
+            # single thread: no isolation level concerns
+            values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
 
-        # join by file_id total order index
-        for (path,), (_, values) in zip(files, groupby_file(values)):
-            record = {
-                s: {o: [l.value for l in lines] if is_lines else next(lines).value
-                   for (o, is_lines), lines in groupby_option(sections)}
-                for s, sections in groupby_section(values)}
-            yield tuple(path.split('/')), record
+            # join by file_id total order index
+            for (path,), (_, values) in zip(files, groupby_file(values)):
+                record = {
+                    s: {o: [l.value for l in lines] if is_lines else next(lines).value
+                       for (o, is_lines), lines in groupby_option(sections)}
+                    for s, sections in groupby_section(values)}
+                yield tuple(path.split('/')), record
 
     log.info('exit raw records')
 
