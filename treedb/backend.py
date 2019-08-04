@@ -122,7 +122,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
             engine.dispose()
 
             msg = 'delete present file: %r'
-            log.warn(msg, engine.file)
+            log.warning(msg, engine.file)
             warnings.warn(msg % engine.file)
             engine.file.unlink()
         else:
@@ -133,11 +133,11 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
             return engine
 
     if engine.file is None:
-        log.warn('connected to a transient in-memory database')
+        log.warning('connected to a transient in-memory database')
 
     if not (exclude_raw or from_raw):
         msg = '2 root reads required (use compare_with_raw() to verify)'
-        log.warn(msg)
+        log.warning(msg)
         warnings.warn(msg)
 
     @contextlib.contextmanager
@@ -198,7 +198,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     log.info('load languoids')
     if not (from_raw or exclude_raw):
-        log.warn('must read tree 2 times (verify with compare_with_raw)')
+        log.warning('must read tree 2 times (verify with compare_with_raw)')
 
     with begin() as conn:
         root_or_bind = conn if from_raw else root

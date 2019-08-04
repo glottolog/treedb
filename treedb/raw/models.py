@@ -140,7 +140,7 @@ class Fields(object):
                 return cls._fields[section, option]
             except KeyError:
                 msg = 'section %r unknown option %r'
-                log.warn(msg, section, option)
+                log.warning(msg, section, option)
 
                 if unknown_as_scalar:
                     warnings.warn(msg % (section, option))
