@@ -97,18 +97,11 @@ Use ``treedb.iterlanguoids()`` to iterate over languoids as (<path>, ``dict``) p
 
 Note: This is a low-level interface, which does not require loading.
 
-Set the filename for the database:
+Load the database into treedb.sqlite3 (and set the default engine):
 
 .. code:: python
 
-    >>> treedb.set_engine_filename('treedb.sqlite3')
-    <treedb.proxies.SqliteEngineProxy fileame='treedb.sqlite3' size=None>
-
-Load the database:
-
-.. code:: python
-
-    >>> treedb.load()
+    >>> treedb.load('treedb.sqlite3')
     ...
     <treedb.proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
 

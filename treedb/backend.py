@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 @sa.event.listens_for(sa.engine.Engine, 'connect')
 def sqlite_engine_connect(dbapi_conn, connection_record):
     """Activate sqlite3 forein key checks, enable REGEXP operator."""
-    log.debug('enable foreign key checks and regexp operator')
+    log.debug('engine connect (enable foreign keys and regexp operator)')
 
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
         cursor.execute('PRAGMA foreign_keys = ON')
@@ -83,10 +83,20 @@ class Dataset(Model):
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
-def load(root=ROOT, engine=ENGINE, rebuild=False,
+def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
-    """Load languoids/tree/**/md.ini into SQLite3 db, return filename."""
+    """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     log.info('load database')
+
+    if hasattr(filename, 'execute'):
+        engine = filename
+    else:
+        ENGINE.file = filename
+        engine = ENGINE
+
+    if require and not engine.file_exists():
+        log.error('required load file not found: %r', engine.file)
+        raise RuntimeError('engine file does not exist: %r' % engine.file)
 
     if exclude_raw and from_raw:
         log.error('incompatible exclude_raw=%r'

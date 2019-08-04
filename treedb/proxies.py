@@ -43,6 +43,7 @@ class EngineProxy(sa.engine.Engine):
     def set_url(self, url, **kwargs):
         if url is None:
             url = 'sqlite://'
+        log.debug('create_engine %r', url)
         self.engine = sa.create_engine(url, **kwargs)
 
     def __repr__(self):

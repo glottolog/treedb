@@ -12,7 +12,7 @@ logging.getLogger('treedb').setLevel(logging.INFO)
 
 print(next(treedb.iterlanguoids()))
 
-#treedb.set_engine_file('treedb.sqlite3')
+#treedb.create_engine('treedb.sqlite3')
 
 engine = treedb.load()
 
