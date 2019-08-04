@@ -122,14 +122,15 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
         writer = csv.writer(f, dialect=dialect)
         return functools.partial(_compat.csv_writerows, writer, encoding=encoding)
 
+    get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
+
     if hasattr(filename, 'hexdigest'):
         hash_ = filename
-
         with _compat.make_csv_io() as f:
             writerows = get_writerows(f)
-            get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
             if header is not None:
                 writerows([header])
+
             for rows in iterslices(rows, 100):
                 writerows(rows)
                 data = get_bytes(f.getvalue())
@@ -145,16 +146,18 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
             writerows = get_writerows(f)
             if header is not None:
                 writerows([header])
+
             writerows(rows)
             data = f.getvalue()
 
-        return _compat.get_csv_io_bytes(data, encoding)
+        return get_bytes(data)
 
     else:
         with _compat.csv_open(filename, 'w', encoding=encoding) as f:
             writerows = get_writerows(f)
             if header is not None:
-                    writerows([header])
+                writerows([header])
+
             writerows(rows)
 
         return path_from_filename(filename)
