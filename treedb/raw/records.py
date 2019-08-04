@@ -18,7 +18,7 @@ __all__ = ['iterrecords']
 WINDOWSIZE = 500
 
 
-log =  logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
@@ -71,6 +71,7 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     select_keys = sa.select([select_keys.c.key], bind=bind)\
         .where(select_keys.c.row_num % size == 0)
 
+    log.info('fetch %s slices in window of %d', key_column.expression, size)
     keys = (k for k, in select_keys.execute())
 
     try:

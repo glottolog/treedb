@@ -28,7 +28,7 @@ def dropfunc(func, bind=ENGINE):
 
         rows_deleted = bind.execute(delete_rows).rowcount
 
-        log.debug('%d rows deleted', rows_deleted)
+        log.info('%d rows deleted', rows_deleted)
         return rows_deleted
 
     return wrapper

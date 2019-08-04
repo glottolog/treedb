@@ -25,7 +25,7 @@ def load(languoids, conn):
     insert_lang = insert(Languoid, bind=conn).execute
 
     macroareas = sorted(MACROAREA)
-    log.debug('insert macroareas: %r', macroareas )
+    log.debug('insert macroareas: %r', macroareas)
     insert(Macroarea, bind=conn).execute([{'name': n} for n in macroareas])
     lang_ma = languoid_macroarea.insert(bind=conn).execute
 

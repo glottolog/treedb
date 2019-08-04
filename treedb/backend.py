@@ -83,13 +83,13 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
 
     assert engine.url.drivername == 'sqlite'
     if engine.file is not None and engine.file.exists():
-        log.debug('read __dataset__ from %r', engine.file)
+        log.debug('read %r from %r', Dataset.__tablename__, engine.file)
         try:
             found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
-        except Exception as e:
-            msg = 'error reading __dataset__'
-            log.exception(msg)
-            warnings.warn(msg)
+        except Exception:
+            msg = 'error reading %r'
+            log.exception(msg, Dataset.__tablename__)
+            warnings.warn(msg % Dataset.__tablename__)
             if force_delete:
                 msg = 'force_delete %r'
                 log.warning(msg, engine.file)
@@ -181,7 +181,7 @@ def load(root=ROOT, engine=ENGINE, rebuild=False,
         pairs = languoids.iterlanguoids(root_or_bind)
         models_load.load(pairs, conn)
 
-    log.info('write __dataset__')
+    log.info('write %r', Dataset.__tablename__)
     with begin() as conn:
         log.debug('dataset: %r', dataset)
         sa.insert(Dataset, bind=conn).execute(dataset)

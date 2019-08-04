@@ -50,7 +50,7 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
                 File.path, File.sha256
             ], bind=bind).order_by('path')
 
-    hash_  = _queries.hash_csv(select_rows, raw=True, name=name,
+    hash_ = _queries.hash_csv(select_rows, raw=True, name=name,
                                dialect=dialect, encoding=encoding, bind=bind)
 
     logging.debug('%s: %r', hash_.name, hash_.hexdigest())
