@@ -15,18 +15,17 @@ from .checks import check
 from .queries import print_rows, write_csv, hash_csv, get_query, iterdescendants
 from .sa_helpers import text, select, count
 
-from . import tools as _tools
-
 __all__ = [
-    'iterfiles',
+    'ROOT', 'ENGINE',
+    'set_root', 'iterfiles',
     'iterlanguoids', 'to_json_csv', 'compare_with_raw',
-    'load', 'Dataset', 'Session',
+    'create_engine', 'load', 'Dataset', 'Session',
     'print_schema', 'dump_sql', 'export',
     'LEVEL', 'Languoid',
     'check',
     'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',
     'text', 'select', 'count',
-    'ROOT', 'ENGINE', 'set_root', 'create_engine',
+    'root', 'engine',
 ]
 
 __title__ = 'treedb'
@@ -35,10 +34,8 @@ __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
-_PACKAGE_DIR = _tools.path_from_filename(__file__).parent
+# default root: repo_root in sister directory
+root = set_root('../glottolog')
 
-
-set_root(_PACKAGE_DIR.parent.parent.joinpath('glottolog', 'languoids', 'tree'))
-
-
-create_engine(None, title=__title__)
+# default engine: in-memory database
+engine = create_engine(None, title=__title__)

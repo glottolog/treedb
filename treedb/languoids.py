@@ -112,6 +112,7 @@ def iterlanguoids(root_or_bind=ROOT):
         iterfiles = ((pt, cfg) for pt, _, cfg in files.iterfiles(root))
         _make_lines = make_lines
 
+    n = 0
     for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
         core = cfg['core']
         item = {

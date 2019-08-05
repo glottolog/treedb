@@ -16,24 +16,27 @@ from . import ROOT
 
 __all__ = ['set_root', 'iterfiles', 'save', 'roundtrip']
 
+TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
+
 BASENAME = 'md.ini'
 
 
 log = logging.getLogger(__name__)
 
 
-def set_root(path, resolve=False):
+def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
     """Set and return default root for glottolog lanugoid directory tree."""
     log.info('set_root')
-    log.debug('path: %r', path)
+    if repo_root is None:
+        raise ValueError('missing repo_root path: %r' % repo_root)
 
-    if path is None:
-        raise ValueError('missing root path: %r' % path)
-
+    path = _tools.path_from_filename(repo_root)
+    log.debug('repo root: %r', repo_root)
     if resolve:
         path = _tools.path_from_filename(path).resolve(strict=False)
-        
-    ROOT.path = path
+
+    ROOT.path = repo_root / treepath
+    log.debug('root: %r', ROOT)
     return ROOT
 
 
