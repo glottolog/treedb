@@ -8,8 +8,6 @@ from . import tools as _tools
 
 __all__ = ['SQLiteEngineProxy']
 
-UNSPECIFIED = object()
-
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +23,12 @@ class EngineProxy(sa.engine.Engine):
 
         return getattr(self._engine, name)
 
+    def set_url(self, url, **kwargs):
+        if url is None:
+            url = 'sqlite://'
+        log.debug('create_engine %r', url)
+        self.engine = sa.create_engine(url, **kwargs)
+
     @property
     def engine(self):
         return self._engine
@@ -39,12 +43,6 @@ class EngineProxy(sa.engine.Engine):
             self._engine.dispose()
 
         self._engine = engine
-
-    def set_url(self, url, **kwargs):
-        if url is None:
-            url = 'sqlite://'
-        log.debug('create_engine %r', url)
-        self.engine = sa.create_engine(url, **kwargs)
 
     def __repr__(self):
         url = None
@@ -67,17 +65,11 @@ class SQLiteEngineProxy(EngineProxy):
         return _tools.path_from_filename(file)
 
     @file.setter
-    def file(self, filename, resolve=False, memory_filename=UNSPECIFIED):
+    def file(self, filename):
         if filename is None:
             url = None
-            if memory_filename is not UNSPECIFIED:
-                self._memory_path = _tools.path_from_filename(memory_filename)
         else:
-            path = _tools.path_from_filename(filename)
-            if resolve:
-                path = path.resolve(strict=False)
-            url = 'sqlite:///%s' % path
-
+            url = 'sqlite:///%s' % filename
         self.set_url(url)
 
     def __repr__(self):

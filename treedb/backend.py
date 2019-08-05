@@ -23,6 +23,7 @@ from . import tools as _tools
 from . import ENGINE, ROOT
 
 __all__ = [
+    'create_engine',
     'Model', 'print_schema',
     'Dataset',
     'Session',
@@ -31,6 +32,21 @@ __all__ = [
 
 
 log = logging.getLogger(__name__)
+
+
+def create_engine(filename, resolve=False, title=None):
+    """Return new sqlite3 engine and set it as default engine for treedb."""
+    log.info('create_engine')
+    log.debug('filename: %r', filename)
+
+    if resolve and filename is not None:
+        filename = _tools.path_from_filename(filename).resolve(strict=False)
+
+    if filename is None and title is not None:
+        ENGINE._memory_path = _tools.path_from_filename('%s-memory' % title)
+
+    ENGINE.file = filename
+    return ENGINE
 
 
 @sa.event.listens_for(sa.engine.Engine, 'connect')
@@ -91,8 +107,7 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
     if hasattr(filename, 'execute'):
         engine = filename
     else:
-        ENGINE.file = filename
-        engine = ENGINE
+        engine = create_engine(filename)
 
     if require and not engine.file_exists():
         log.error('required load file not found: %r', engine.file)
