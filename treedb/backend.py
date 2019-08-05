@@ -148,11 +148,7 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
             engine.file.unlink()
         else:
             log.info('use present %r', engine.file)
-            log.info('git describe %(git_describe)r clean: %(clean)r', dict(ds))
-            if not ds.clean:
-                warnings.warn('%r not clean' % Dataset.__tablename__)
-            log.debug('%r.title: %r', Dataset.__tablename__, ds.title)
-            log.debug('%r.git_commit: %r', Dataset.__tablename__, ds.git_commit)
+            log_dataset(dict(ds))
             return engine
 
     if engine.file is None:
@@ -237,9 +233,17 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
     log.debug('load timer stopped')
 
     log.info('database loaded')
-    log.info('git describe %r', dataset['git_describe'])
+    log_dataset(dataset)
     print(walltime)
     return engine
+
+
+def log_dataset(params, name=Dataset.__tablename__):
+    log.info('git describe %(git_describe)r clean: %(clean)r', params)
+    if not params['clean']:
+        warnings.warn('%r not clean' % name)
+    log.debug('%r.title: %r', name, params['title'])
+    log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
 def dump_sql(engine=ENGINE, filename=None, encoding=ENCODING):
