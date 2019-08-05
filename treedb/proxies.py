@@ -2,6 +2,8 @@
 
 import logging
 
+from ._compat import pathlib
+
 import sqlalchemy as sa
 
 from . import tools as _tools
@@ -12,16 +14,18 @@ __all__ = ['SQLiteEngineProxy']
 log = logging.getLogger(__name__)
 
 
-class EngineProxy(sa.engine.Engine):
+class Proxy(object):
+
+    _delegate = None
+
+    def __getattr__(self, name):
+        return getattr(self._delegate, name)
+
+
+class EngineProxy(Proxy, sa.engine.Engine):
 
     def __init__(self, engine=None):
         self.engine = engine
-
-    def __getattr__(self, name):
-        if name in ('_file', '_engine'):
-            return super(EngineProxy, self).__getattr__(name)
-
-        return getattr(self._engine, name)
 
     def set_url(self, url, **kwargs):
         if url is None:
@@ -31,23 +35,21 @@ class EngineProxy(sa.engine.Engine):
 
     @property
     def engine(self):
-        return self._engine
+        return self._delegate
 
     @engine.setter
     def engine(self, engine):
         if engine is not None:
             assert engine.url.drivername == 'sqlite'
 
-        if getattr(self, '_engine', None) is not None:
-            log.debug('dispose engine %r', self._engine)
-            self._engine.dispose()
+        if self._delegate is not None:
+            log.debug('dispose engine %r', self._delegate)
+            self._delegate.dispose()
 
-        self._engine = engine
+        self._delegate = engine
 
     def __repr__(self):
-        url = None
-        if self._engine is not None:
-            url = str(self.engine.url)
+        url = str(self.url) if self._delegate is not None else None
         return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__, url)
 
 
@@ -57,12 +59,9 @@ class SQLiteEngineProxy(EngineProxy):
 
     @property
     def file(self):
-        if self.engine is None:
+        if self.engine is None or self.engine.url.database is None:
             return None
-        file = self.engine.url.database
-        if file is None:
-            return None
-        return _tools.path_from_filename(file)
+        return _tools.path_from_filename(self.engine.url.database)
 
     @file.setter
     def file(self, filename):
