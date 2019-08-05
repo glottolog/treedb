@@ -154,8 +154,6 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
 
-    if not (exclude_raw or from_raw):
-        warnings.warn('2 root reads required (use compare_with_raw() to verify)')
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -210,13 +208,13 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
             log.debug('root: %r', root)
             raw.load(root, conn)
 
+    if not (from_raw or exclude_raw):
+        warnings.warn('2 tree reads required (use compare_with_raw() to verify)')
+
     log.debug('import module languoids')
     from . import languoids
 
     log.info('load languoids')
-    if not (from_raw or exclude_raw):
-        warnings.warning('must read tree 2 times (verify with compare_with_raw)')
-
     with begin() as conn:
         root_or_bind = conn if from_raw else root
         log.debug('root_or_bind: %r', root_or_bind)
