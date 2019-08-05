@@ -125,23 +125,24 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
         log.debug('read %r from %r', Dataset.__tablename__, engine.file)
 
         try:
-            found = sa.select([Dataset.exclude_raw], bind=engine).scalar()
+            ds, = sa.select([Dataset], bind=engine).execute()
         except Exception:
+            ds = None
             msg = 'error reading %r'
             log.exception(msg, Dataset.__tablename__)
             warnings.warn(msg % Dataset.__tablename__)
-            if force_delete:
-                msg = 'force_delete %r'
-                log.warning(msg, engine.file)
-                warnings.warn(msg % engine.file)
-                rebuild = True
-            else:
+            if not force_delete:
                 raise
 
-        if found != exclude_raw:
-            log.info('rebuild needed from exclude_raw mismatch')
+            msg = 'force_delete %r'
+            log.warning(msg, engine.file)
+            warnings.warn(msg % engine.file)
+            rebuild = True
+        else:
+            if ds.exclude_raw != bool(exclude_raw):
+                log.info('rebuild needed from exclude_raw mismatch')
 
-        if rebuild or found != exclude_raw:
+        if rebuild or ds.exclude_raw != bool(exclude_raw):
             log.info('rebuild database')
             log.debug('dispose engine %r', engine)
             engine.dispose()
@@ -152,9 +153,11 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
             engine.file.unlink()
         else:
             log.info('use present %r', engine.file)
-            if log.level <= logging.INFO:
-                git_describe = sa.select([Dataset.git_describe], bind=engine).scalar()
-                log.info('git describe %r' % git_describe)
+            log.info('git describe %(git_describe)r clean: %(clean)r', dict(ds))
+            if not ds.clean:
+                log.warning('%r not clean', Dataset.__tablename__)
+            log.debug('%r.title: %r', Dataset.__tablename__, ds.title)
+            log.debug('%r.git_commit: %r', Dataset.__tablename__, ds.git_commit)
             return engine
 
     if engine.file is None:

@@ -17,13 +17,15 @@ from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname)
 
+from . import ENGINE
+
 __all__ = ['check']
 
 
 log = logging.getLogger(__name__)
 
 
-def check(func=None):
+def check(func=None, bind=ENGINE):
     """Run consistency/sanity checks on database."""
     if func is not None:
         try:
@@ -33,22 +35,23 @@ def check(func=None):
         return func
 
     passed = True
-    for func in check.registered:
-        ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
-        check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
+    with bind.connect() as conn:
+        for func in check.registered:
+            ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
+            check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
 
-        session = Session()
+            session = Session(bind=conn)
 
-        check_inst = check_cls(session)
+            check_inst = check_cls(session)
 
-        try:
-            log.debug('validate %r', func.__name__)
-            check_passed = check_inst.validate()
-        finally:
-            session.close()
+            try:
+                log.debug('validate %r', func.__name__)
+                check_passed = check_inst.validate()
+            finally:
+                session.close()
 
-        if not check_passed:
-            passed = False
+            if not check_passed:
+                passed = False
 
     return passed
 

@@ -48,7 +48,7 @@ class PathProxy(Proxy):
         return str(self._delegate)
 
     def __repr__(self):
-        if  self._delegate is None:
+        if self._delegate is None:
             path = None
             inode = ''
         else:
@@ -56,6 +56,7 @@ class PathProxy(Proxy):
             inode = ' inode=%r' % self.inode()
         return '<%s.%s path=%r%s>' % (self.__module__, self.__class__.__name__,
                                       path, inode)
+
     def inode(self):
         if self._delegate is None or not self._delegate.exists():
             return None
