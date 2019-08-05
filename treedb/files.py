@@ -90,9 +90,11 @@ def iterfiles(root=ROOT, load=ConfigParser.from_path, make_path=pathlib.Path):
     log.info('enter directory tree %r', root)
 
     path_slice = slice(len(root.parts), -1)
-    for d in _tools.iterfiles(root):
+    for n, d in enumerate(_tools.iterfiles(root), 1):
         path = make_path(d.path)
         yield path.parts[path_slice], d, load(path)
+        if not (n % 2500):
+            log.debug('%d files loaded' % n)
 
     log.info('exit directory tree %r', root)
 
