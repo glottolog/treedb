@@ -8,6 +8,7 @@ import treedb
 from treedb import Languoid, select
 
 logging.basicConfig(format='[%(levelname)s@%(name)s] %(message)s')
+logging.captureWarnings(True)
 logging.getLogger('treedb').setLevel(logging.INFO)
 
 treedb.set_root('../glottolog')

@@ -128,15 +128,12 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
             ds, = sa.select([Dataset], bind=engine).execute()
         except Exception:
             ds = None
-            msg = 'error reading %r'
-            log.exception(msg, Dataset.__tablename__)
-            warnings.warn(msg % Dataset.__tablename__)
+            log.exception('error reading %r', Dataset.__tablename__)
             if not force_delete:
                 raise
 
             msg = 'force_delete %r'
-            log.warning(msg, engine.file)
-            warnings.warn(msg % engine.file)
+            warnings.warn('force delete %r' % engine.file)
             rebuild = True
         else:
             if ds.exclude_raw != bool(exclude_raw):
@@ -147,15 +144,13 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
             log.debug('dispose engine %r', engine)
             engine.dispose()
 
-            msg = 'delete present file: %r'
-            log.warning(msg, engine.file)
-            warnings.warn(msg % engine.file)
+            warnings.warn('delete present file: %r' % engine.file)
             engine.file.unlink()
         else:
             log.info('use present %r', engine.file)
             log.info('git describe %(git_describe)r clean: %(clean)r', dict(ds))
             if not ds.clean:
-                log.warning('%r not clean', Dataset.__tablename__)
+                warnings.warn('%r not clean' % Dataset.__tablename__)
             log.debug('%r.title: %r', Dataset.__tablename__, ds.title)
             log.debug('%r.git_commit: %r', Dataset.__tablename__, ds.git_commit)
             return engine
@@ -164,9 +159,7 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
         log.warning('connected to a transient in-memory database')
 
     if not (exclude_raw or from_raw):
-        msg = '2 root reads required (use compare_with_raw() to verify)'
-        log.warning(msg)
-        warnings.warn(msg)
+        warnings.warn('2 root reads required (use compare_with_raw() to verify)')
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -226,7 +219,7 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
 
     log.info('load languoids')
     if not (from_raw or exclude_raw):
-        log.warning('must read tree 2 times (verify with compare_with_raw)')
+        warnings.warning('must read tree 2 times (verify with compare_with_raw)')
 
     with begin() as conn:
         root_or_bind = conn if from_raw else root

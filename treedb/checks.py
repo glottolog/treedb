@@ -69,7 +69,7 @@ class Check(object):
 
     def validate(self):
         self.invalid_count = self.query.count()
-        log.debug('invalid count: %r' % self.invalid_count)
+        log.debug('invalid count: %d', self.invalid_count)
         print(self)
 
         if self.invalid_count:

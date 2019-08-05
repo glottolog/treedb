@@ -139,11 +139,10 @@ class Fields(object):
             try:
                 return cls._fields[section, option]
             except KeyError:
-                msg = 'section %r unknown option %r'
-                log.warning(msg, section, option)
+                warnings.warn('section %r unknown option %r' % (section, option))
 
                 if unknown_as_scalar:
-                    warnings.warn(msg % (section, option))
+                    log.warning('treating %r as scalar', (section, option))
                     return None
 
                 log.exception('unknown option')
