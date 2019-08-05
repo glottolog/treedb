@@ -39,13 +39,18 @@ class PathProxy(Proxy):
             log.debug('replace root path %r with %r', self._delegate, path)
         self._delegate = path
 
+    def __fspath__(self):
+        return self._delegate.__fspath__()
+
     def __str__(self):
         if self._delegate is None:
             raise RuntimeError('str() on empty path proxy')
         return str(self._delegate)
 
     def __repr__(self):
-        return '<%s.%s path=%r>' % (self.__module__, self.__class__.__name__, self._delegate)
+        path = self._delegate.as_posix() if self._delegate is not None else None
+        return '<%s.%s path=%r>' % (self.__module__, self.__class__.__name__,
+                                    path)
 
 
 class EngineProxy(Proxy, sa.engine.Engine):

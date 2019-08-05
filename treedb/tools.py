@@ -60,6 +60,7 @@ def iterfiles(top, verbose=False):
     top = path_from_filename(top)
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
+    log.debug('recursive scandir %r', top)
 
     stack = [str(top)]
 

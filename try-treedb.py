@@ -10,6 +10,8 @@ from treedb import Languoid, select
 logging.basicConfig(format='[%(levelname)s@%(name)s] %(message)s')
 logging.getLogger('treedb').setLevel(logging.INFO)
 
+treedb.set_root('../glottolog/languoids/tree')
+
 print(next(treedb.iterlanguoids()))
 
 #treedb.create_engine('treedb.sqlite3')

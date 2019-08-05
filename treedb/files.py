@@ -83,7 +83,7 @@ class ConfigParser(configparser.ConfigParser):
 
 def iterfiles(root=ROOT, load=ConfigParser.from_path, make_path=pathlib.Path):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
-    root = _tools.path_from_filename(root)
+    root = _tools.path_from_filename(root).resolve()
     log.info('enter directory tree %r', root)
 
     path_slice = slice(len(root.parts), -1)
