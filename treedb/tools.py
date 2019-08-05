@@ -78,7 +78,7 @@ def iterfiles(top, verbose=False):
 
 
 def path_from_filename(filename, *args):
-    if isinstance(filename, pathlib.Path):
+    if hasattr(filename, 'open'):
         assert not args
         del args
     else:

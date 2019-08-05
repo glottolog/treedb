@@ -2,13 +2,11 @@
 
 import logging
 
-from ._compat import pathlib
-
 import sqlalchemy as sa
 
 from . import tools as _tools
 
-__all__ = ['SQLiteEngineProxy']
+__all__ = ['PathProxy', 'SQLiteEngineProxy']
 
 
 log = logging.getLogger(__name__)
@@ -20,6 +18,34 @@ class Proxy(object):
 
     def __getattr__(self, name):
         return getattr(self._delegate, name)
+
+
+class PathProxy(Proxy):
+
+    def __init__(self, path=None):
+        self.path = path
+
+    @property
+    def path(self):
+        return self._delegate
+
+    @path.setter
+    def path(self, path):
+        if path is not None:
+            path = _tools.path_from_filename(path)
+        if self._delegate is None:
+            log.debug('set root path %r', path)
+        else:
+            log.debug('replace root path %r with %r', self._delegate, path)
+        self._delegate = path
+
+    def __str__(self):
+        if self._delegate is None:
+            raise RuntimeError('str() on empty path proxy')
+        return str(self._delegate)
+
+    def __repr__(self):
+        return '<%s.%s path=%r>' % (self.__module__, self.__class__.__name__, self._delegate)
 
 
 class EngineProxy(Proxy, sa.engine.Engine):

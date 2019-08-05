@@ -14,12 +14,27 @@ from . import tools as _tools
 
 from . import ROOT
 
-__all__ = ['iterfiles', 'save', 'roundtrip']
+__all__ = ['set_root', 'iterfiles', 'save', 'roundtrip']
 
 BASENAME = 'md.ini'
 
 
 log = logging.getLogger(__name__)
+
+
+def set_root(path, resolve=False):
+    """Set and return default root for glottolog lanugoid directory tree."""
+    log.info('set_root')
+    log.debug('path: %r', path)
+
+    if path is None:
+        raise ValueError('missing root path: %r' % path)
+
+    if resolve:
+        path = _tools.path_from_filename(path).resolve(strict=False)
+        
+    ROOT.path = path
+    return ROOT
 
 
 class ConfigParser(configparser.ConfigParser):
@@ -39,7 +54,7 @@ class ConfigParser(configparser.ConfigParser):
 
     @classmethod
     def from_filename(cls, filename, encoding=ENCODING, **kwargs):
-        path = pathlib.Path(filename)
+        path = _tools.path_from_filename(filename)
         return cls.from_path(path, encoding=encoding, **kwargs)
 
     @classmethod
@@ -57,7 +72,7 @@ class ConfigParser(configparser.ConfigParser):
         super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
 
     def to_filename(self, filename, encoding=ENCODING):
-        path = pathlib.Path(filename)
+        path = _tools.path_from_filename(filename)
         self.to_path(path, encoding=encoding)
 
     def to_path(self, path, encoding=ENCODING):
@@ -66,14 +81,14 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterfiles(root=ROOT, load=ConfigParser.from_path):
+def iterfiles(root=ROOT, load=ConfigParser.from_path, make_path=pathlib.Path):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     root = _tools.path_from_filename(root)
     log.info('enter directory tree %r', root)
 
     path_slice = slice(len(root.parts), -1)
     for d in _tools.iterfiles(root):
-        path = pathlib.Path(d.path)
+        path = make_path(d.path)
         yield path.parts[path_slice], d, load(path)
 
     log.info('exit directory tree %r', root)
