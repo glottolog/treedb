@@ -101,7 +101,8 @@ class Dataset(Model):
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
-def load(filename=ENGINE, repo_root=None, require=False, rebuild=False,
+def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
+         require=False, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     log.info('load database')
@@ -111,7 +112,10 @@ def load(filename=ENGINE, repo_root=None, require=False, rebuild=False,
     else:
         engine = create_engine(filename)
 
-    root = _files.set_root(repo_root) if repo_root is not None else ROOT
+    if repo_root is not None:
+        root = _files.set_root(repo_root, treepath=treepath)
+    else:
+        root = ROOT
     if not root.exists():
         log.error('root does not exist')
         raise RuntimeError('tree root not found: %r' % root)

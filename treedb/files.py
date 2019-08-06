@@ -35,7 +35,7 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
     if resolve:
         path = _tools.path_from_filename(path).resolve(strict=False)
 
-    ROOT.path = repo_root / treepath
+    ROOT.path = repo_root / _tools.path_from_filename(treepath)
     log.debug('root: %r', ROOT)
     return ROOT
 
