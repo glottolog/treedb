@@ -18,6 +18,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
+from . import files as _files
 from . import tools as _tools
 
 from . import ENGINE, ROOT
@@ -99,7 +100,7 @@ class Dataset(Model):
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
-def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
+def load(filename=ENGINE, repo_root=None, require=False, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     log.info('load database')
@@ -108,6 +109,11 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
         engine = filename
     else:
         engine = create_engine(filename)
+
+    root = _files.set_root(repo_root) if repo_root is not None else ROOT
+    if not root.exists():
+        log.error('root does not exist')
+        raise RuntimeError('tree root not found: %r' % root)
 
     if require and not engine.file_exists():
         log.error('required load file not found: %r', engine.file)
@@ -193,14 +199,18 @@ def load(filename=ENGINE, root=ROOT, require=False, rebuild=False,
     log.debug('cwd: %r', root)
     get_stdout = functools.partial(_tools.check_output, cwd=str(root))
 
-    dataset = {
-        'title': 'Glottolog treedb',
-        'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
-        'git_describe': get_stdout(['git', 'describe', '--tags', '--always']),
-        # neither changes in index nor untracked files
-        'clean': not get_stdout(['git', 'status', '--porcelain']),
-        'exclude_raw': exclude_raw,
-    }
+    try:
+        dataset = {
+            'title': 'Glottolog treedb',
+            'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
+            'git_describe': get_stdout(['git', 'describe', '--tags', '--always']),
+            # neither changes in index nor untracked files
+            'clean': not get_stdout(['git', 'status', '--porcelain']),
+            'exclude_raw': exclude_raw,
+        }
+    except Exception:
+        log.exception('error running git command in %r', str(root))
+        raise
 
     if not exclude_raw:
         log.info('load raw')
