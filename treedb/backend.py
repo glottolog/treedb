@@ -71,6 +71,7 @@ Model = sa.ext.declarative.declarative_base()
 
 
 def print_schema(metadata=Model.metadata, engine=ENGINE):
+    """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql):
         print(sql.compile(dialect=engine.dialect))
 
@@ -255,15 +256,21 @@ def log_dataset(params, name=Dataset.__tablename__):
 
 
 def dump_sql(engine=ENGINE, filename=None, encoding=ENCODING):
+    """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql').name
     path = _tools.path_from_filename(filename)
+    log.info('dump sql to %r', path)
 
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
          path.open('w', encoding=ENCODING) as f:
-        for line in dbapi_conn.iterdump():
+        n = 0
+        for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
+            if not (n % 100000):
+                log.debug('%d lines written', n)
 
+    log.info('%d lines total', n)
     return path
 
 
