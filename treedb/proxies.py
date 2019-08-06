@@ -19,11 +19,22 @@ class Proxy(object):
     def __getattr__(self, name):
         return getattr(self._delegate, name)
 
+    def __repr__(self):
+        return '<%s.%s>' % (self.__module__, self.__class__.__name__)
+
 
 class PathProxy(Proxy):
 
     def __init__(self, path=None):
         self.path = path
+
+    def __fspath__(self):
+        return self._delegate.__fspath__()
+
+    def __str__(self):
+        if self._delegate is None:
+            raise RuntimeError('str() on empty path proxy')
+        return str(self._delegate)
 
     @property
     def path(self):
@@ -39,40 +50,23 @@ class PathProxy(Proxy):
             log.debug('replace root path %r with %r', self._delegate, path)
         self._delegate = path
 
-    def __fspath__(self):
-        return self._delegate.__fspath__()
-
-    def __str__(self):
-        if self._delegate is None:
-            raise RuntimeError('str() on empty path proxy')
-        return str(self._delegate)
-
     def __repr__(self):
-        if self._delegate is None:
-            path = None
-            inode = ''
-        else:
-            path = self._delegate.as_posix()
-            inode = ' inode=%r' % self.inode()
-        return '<%s.%s path=%r%s>' % (self.__module__, self.__class__.__name__,
-                                      path, inode)
+        if self.path is None:
+            return super(PathProxy, self).__repr__()
+        return ('<%s.%s path=%r'
+                ' inode=%r>' % (self.__module__, self.__class__.__name__,
+                                self.path.as_posix(), self.inode()))
 
     def inode(self):
-        if self._delegate is None or not self._delegate.exists():
+        if self.path is None or not self.path.exists():
             return None
-        return self._delegate.stat().st_ino
+        return self.path.stat().st_ino
 
 
 class EngineProxy(Proxy, sa.engine.Engine):
 
     def __init__(self, engine=None):
         self.engine = engine
-
-    def set_url(self, url, **kwargs):
-        if url is None:
-            url = 'sqlite://'
-        log.debug('create_engine %r', url)
-        self.engine = sa.create_engine(url, **kwargs)
 
     @property
     def engine(self):
@@ -89,9 +83,20 @@ class EngineProxy(Proxy, sa.engine.Engine):
 
         self._delegate = engine
 
+    @property
+    def url(self):
+        return self.engine.url if self.engine is not None else None
+
+    @url.setter
+    def url(self, url):
+        log.debug('create_engine %r', url)
+        self.engine = sa.create_engine(url)
+
     def __repr__(self):
-        url = str(self.url) if self._delegate is not None else None
-        return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__, url)
+        if self.engine is None:
+            return super(EngineProxy, self).__repr__()
+        return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__,
+                                   str(self.url))
 
 
 class SQLiteEngineProxy(EngineProxy):
@@ -100,20 +105,19 @@ class SQLiteEngineProxy(EngineProxy):
 
     @property
     def file(self):
-        if self.engine is None or self.engine.url.database is None:
+        if self.url is None or self.url.database is None:
             return None
-        return _tools.path_from_filename(self.engine.url.database)
+        return _tools.path_from_filename(self.url.database)
 
     @file.setter
     def file(self, filename):
-        if filename is None:
-            url = None
-        else:
-            url = 'sqlite:///%s' % filename
-        self.set_url(url)
+        url = 'sqlite://'
+        if filename is not None:
+            url = '%s/%s' % (url, filename)
+        self.url = url
 
     def __repr__(self):
-        if self.engine is None or self.file is None:
+        if self.file is None:
             return super(SQLiteEngineProxy, self).__repr__()
 
         parent = ''
