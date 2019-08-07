@@ -142,7 +142,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
     return files_written
 
 
-def roundtrip(root=ROOT, verbose=True):
+def roundtrip(root=ROOT, verbose=False):
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root)
 
