@@ -40,7 +40,7 @@ class Options(dict):
 
 
 def itervalues(cfg, file_id, options):
-    get_line = _tools.next_count()
+    get_line = _tools.next_count(start=1)
     for section, sec in iteritems(cfg):
         for option, value in iteritems(sec):
             option_id, is_lines = options[section, option]

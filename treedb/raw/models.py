@@ -62,7 +62,7 @@ class Value(Model):
     __tablename__ = '_value'
 
     file_id = Column(ForeignKey('_file.id'), primary_key=True)
-    line = Column(Integer, CheckConstraint('line >= 0'), primary_key=True)
+    line = Column(Integer, CheckConstraint('line > 0'), primary_key=True)
     option_id = Column(ForeignKey('_option.id'), primary_key=True)
 
     # TODO: consider adding version for selective updates
