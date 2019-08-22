@@ -28,7 +28,8 @@ class File(Model):
 
     glottocode = Column(String(8), CheckConstraint('length(glottocode) = 8'), nullable=False, unique=True)
 
-    path = Column(Text, CheckConstraint('length(path) >= 8'), nullable=False, unique=True)
+    path = Column(Text, CheckConstraint('length(path) >= 8 AND (length(path) + 1) % 9 = 0'),
+                  nullable=False, unique=True)
 
     size = Column(Integer, CheckConstraint('size > 0'), nullable=False)
     sha256 = Column(String(64), CheckConstraint('length(sha256) = 64'), unique=True, nullable=False)
