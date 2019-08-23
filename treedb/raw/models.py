@@ -6,7 +6,8 @@ import logging
 import warnings
 
 from sqlalchemy import (Column, Integer, String, Text, Boolean,
-                        ForeignKey, CheckConstraint, UniqueConstraint)
+                        ForeignKey, CheckConstraint, UniqueConstraint,
+                        func)
 
 from ..backend import Model
 
@@ -38,6 +39,9 @@ class File(Model):
         CheckConstraint('substr(path, -length(glottocode)) = glottocode'),
     )
 
+    @classmethod
+    def path_depth(cls, label='path_depth'):
+        return ((func.length(cls.path) + 1) / 9).label(label)
 
 class Option(Model):
     """Unique (section, option) key of the values with lines config."""
