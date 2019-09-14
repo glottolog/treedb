@@ -86,7 +86,6 @@ def update_countries(bind=ENGINE):
         'Cape Verde (CV)': 'Cabo Verde (CV)', 
         'Czech Republic (CZ)': 'Czechia (CZ)',
         'Macedonia, Republic of (MK)': 'North Macedonia (MK)',
-        'Saint Helena, Ascension and Tristan da Cunha (SH)': 'Saint Helena (SH)',
         'Swaziland (SZ)': 'Eswatini (SZ)',
     }
 
