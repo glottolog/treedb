@@ -64,4 +64,5 @@ treedb.check()
 
 #import treedb.raw.fixes
 #treedb.raw.fixes.update_countries()
+#treedb.raw.fixes.update_wikidata_links()
 #treedb.raw.to_files()

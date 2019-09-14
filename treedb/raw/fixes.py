@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from sqlalchemy import delete, exists, update, bindparam
+from sqlalchemy import delete, exists, update, bindparam, func
 from sqlalchemy.orm import aliased
 
 from .. import ENGINE
@@ -16,6 +16,7 @@ __all__ = [
     'drop_duplicated_triggers',
     'drop_duplicated_crefs',
     'update_countries',
+    'update_wikidata_links',
 ]
 
 
@@ -101,3 +102,16 @@ def update_countries(bind=ENGINE):
         log.info('update countries: %r -> %r', old, new)
         rows_updated = query.execute(old=old, new=new).rowcount
         log.info('%d rows updated', rows_updated)
+
+
+def update_wikidata_links(bind=ENGINE):
+    query = update(Value, bind=bind)\
+        .where(exists()
+            .where(Option.id == Value.option_id)
+            .where(Option.section == 'core')
+            .where(Option.option == 'links'))\
+        .where(Value.value.like('http://www.wikidata.org/%'))\
+        .values(value=func.replace(Value.value, 'http://', 'https://'))
+
+    rows_updated = query.execute().rowcount
+    log.info('%d rows updated', rows_updated)
