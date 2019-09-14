@@ -61,3 +61,7 @@ treedb.check()
 #raw.drop_duplicated_triggers()
 #raw.drop_duplicated_crefs()
 #raw.to_files()
+
+#import treedb.raw.fixes
+#treedb.raw.fixes.update_countries()
+#treedb.raw.to_files()
