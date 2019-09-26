@@ -1,8 +1,10 @@
 Glottolog ``treedb``
 ====================
 
+|PyPI version| |License| |Supported Python| |Format|
+
 This tool loads the content of the `languoids/tree`_ directory from the
-Glottolog_ `master repo`_ into a normalized sqlite_ database.
+Glottolog_ `master repo`_ into a normalized SQLite_ database.
 
 Each file under in that directory contains the definition of one Glottolog
 languoid_. Loading their content into a relational database allows to perform
@@ -32,7 +34,10 @@ Links
 -----
 
 - GitHub: https://github.com/glottolog/treedb
+- PyPI: https://pypi.org/project/treedb/
 - Example: https://nbviewer.jupyter.org/github/glottolog/treedb/blob/master/Stats.ipynb
+- Issue Tracker: https://github.com/glottolog/treedb/issues
+- Download: https://pypi.org/project/treedb/#files
 
 
 Quickstart
@@ -174,7 +179,7 @@ This tool is distributed under the `Apache license`_.
 .. _Glottolog: https://glottolog.org/
 .. _master repo: https://github.com/glottolog/glottolog
 .. _languoids/tree: https://github.com/glottolog/glottolog/tree/master/languoids/tree
-.. _sqlite: https://sqlite.org
+.. _SQLite: https://sqlite.org
 .. _languoid: https://glottolog.org/meta/glossary#Languoid
 .. _example: https://github.com/glottolog/treedb/blob/36c7cdcdd017e7aa4386ef085ee84fb3036c01ca/treedb/checks.py#L154-L169
 .. _pyglottolog: https://github.com/glottolog/pyglottolog
@@ -191,4 +196,19 @@ This tool is distributed under the `Apache license`_.
 
 .. _Apache license: https://opensource.org/licenses/Apache-2.0
 
+
 .. |--| unicode:: U+2013
+
+
+.. |PyPI version| image:: https://img.shields.io/pypi/v/treedb.svg
+    :target: https://pypi.org/project/treedb/
+    :alt: Latest PyPI Version
+.. |License| image:: https://img.shields.io/pypi/l/treedb.svg
+    :target: https://pypi.org/project/treedb/
+    :alt: License
+.. |Supported Python| image:: https://img.shields.io/pypi/pyversions/treedb.svg
+    :target: https://pypi.org/project/treedb/
+    :alt: Supported Python Versions
+.. |Format| image:: https://img.shields.io/pypi/format/treedb.svg
+    :target: https://pypi.org/project/treedb/
+    :alt: Format
