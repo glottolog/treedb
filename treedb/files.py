@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import os
 import logging
 import configparser
 
@@ -14,7 +15,7 @@ from . import tools as _tools
 
 from . import ROOT
 
-__all__ = ['set_root', 'iterfiles', 'save', 'roundtrip']
+__all__ = ['get_default_root', 'set_root', 'iterfiles', 'save', 'roundtrip']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 
@@ -22,6 +23,19 @@ BASENAME = 'md.ini'
 
 
 log = logging.getLogger(__name__)
+
+
+def get_default_root(env_var, checkout_root, package_root):
+    """Return default root from environment variable or fallbacks."""
+    result = os.getenv(env_var)
+    if result is None:
+        from . import __file__
+        pkg_dir = _tools.path_from_filename(__file__).parent
+        if (pkg_dir.parent / '.git').exists():
+            result = checkout_root
+        else:
+            result = package_root
+    return result
 
 
 def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):

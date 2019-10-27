@@ -5,7 +5,11 @@ Changelog
 Version 0.1.1 (in development)
 ------------------------------
 
+Allow to specify glottolog repository location via TREEDB_REPO environment
+variable (alternative to ``treedb.set_root()``).
 
+Use current working as default glottolog repository location if ``treedb`` is
+imported as plain installed package instead of a git checkout.
 
 
 Version 0.1

@@ -2,13 +2,11 @@
 
 """Load glottolog lanuoid tree ini files into SQLite3 database."""
 
-import os
-
 from . import proxies as _proxies
 
 ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
 
-from .files import set_root, iterfiles
+from .files import get_default_root, set_root, iterfiles
 from .languoids import iterlanguoids, to_json_csv, compare_with_raw
 from .backend import (create_engine, load, Dataset, Session,
                       print_schema, dump_sql, export)
@@ -36,8 +34,8 @@ __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
 
-# default root: TREEDB_REPO or repo_root in sister directory
-root = set_root(os.getenv('TREEDB_REPO', '../glottolog'))
+# default root: TREEDB_REPO or repo_root in sister git checkout or cwd
+root = set_root(get_default_root('TREEDB_REPO', '../glottolog', '.'))
 
 # default engine: in-memory database
 engine = create_engine(None, title=__title__)
