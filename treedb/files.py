@@ -44,12 +44,12 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
     if repo_root is None:
         raise ValueError('missing repo_root path: %r' % repo_root)
 
-    path = _tools.path_from_filename(repo_root)
     log.debug('repo root: %r', repo_root)
+    repo_path = _tools.path_from_filename(repo_root).expanduser()
     if resolve:
-        path = _tools.path_from_filename(path).resolve(strict=False)
+        repo_path = repo_path.resolve(strict=False)
 
-    ROOT.path = repo_root / _tools.path_from_filename(treepath)
+    ROOT.path = repo_path / _tools.path_from_filename(treepath)
     log.debug('root: %r', ROOT)
     return ROOT
 
