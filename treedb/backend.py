@@ -40,8 +40,10 @@ def create_engine(filename, resolve=False, title=None):
     log.info('create_engine')
     log.debug('filename: %r', filename)
 
-    if resolve and filename is not None:
-        filename = _tools.path_from_filename(filename).resolve(strict=False)
+    if filename is not None:
+        filename = _tools.path_from_filename(filename).expanduser()
+        if resolve:
+            filename = filename.resolve(strict=False)
 
     if filename is None and title is not None:
         ENGINE._memory_path = _tools.path_from_filename('%s-memory' % title)
