@@ -66,7 +66,13 @@ ENDANGERMENT_STATUS = (
     'extinct',
 )
 
-ENDANGERMENT_SOURCE = {'E20', 'E21', 'E22', 'ElCat', 'UNESCO', 'Glottolog'}
+ENDANGERMENT_SOURCE = {
+    'E20', 'E21', 'E22',
+    'ElCat',
+    'Glottolog',
+    'Nyima and Suzuki (2019:58)',
+    'UNESCO',
+}
 
 EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 
