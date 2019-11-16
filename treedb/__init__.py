@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 __title__ = 'treedb'
-__version__ = '0.1.2'
+__version__ = '0.1.3.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
