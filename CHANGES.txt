@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 0.1.2 (in development)
-------------------------------
+Version 0.1.2
+-------------
 
-
+Use ``expanduser()``in ``treedb.create_engine()`` and ``treedb.set_root()``.
 
 
 Version 0.1.1
