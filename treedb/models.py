@@ -42,7 +42,7 @@ SOURCE_PROVIDER = {'glottolog'}
 ALTNAME_PROVIDER = {
     'multitree', 'lexvo', 'hhbib_lgcode',
     'wals', 'wals other', 'moseley & asher (1994)', 'ruhlen (1987)',
-    'glottolog', 'ethnologue', 'elcat',
+    'glottolog', 'ethnologue', 'elcat', 'aiatsis',
 }
 
 TRIGGER_FIELD = {'lgcode', 'inlg'}
@@ -70,7 +70,7 @@ ENDANGERMENT_SOURCE = {
     'E20', 'E21', 'E22',
     'ElCat',
     'Glottolog',
-    'Nyima and Suzuki (2019:58)',
+    '**hh:hvld:NyimaSuzuki:Chamdo:2019**:58',
     'UNESCO',
 }
 
