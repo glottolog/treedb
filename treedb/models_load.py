@@ -46,13 +46,13 @@ def load(languoids, conn):
     insert_ir = insert(IsoRetirement, bind=conn).execute
     insert_irct = insert(IsoRetirementChangeTo, bind=conn).execute
 
-    def unseen_countries(name_cc_pairs, _seen={}):
-        for name, cc in name_cc_pairs:
+    def unseen_countries(countries, _seen={}):
+        for c in countries:
             try:
-                assert _seen[cc] == name
+                assert _seen[c['id']] == c['name']
             except KeyError:
-                _seen[cc] = name
-                yield name, cc
+                _seen[c['id']] = c['name']
+                yield c
 
     for _, l in languoids:
         lid = l['id']
@@ -77,16 +77,15 @@ def load(languoids, conn):
                      for ma in macroareas])
 
         if countries:
-            new_countries = [{'id': cc, 'name': name}
-                            for name, cc in unseen_countries(countries)]
+            new_countries = list(unseen_countries(countries))
             if new_countries:
                 ids = [n['id'] for n in new_countries]
                 log.debug('insert new countries: %r', ids)
 
                 insert_country(new_countries)
 
-            lang_country([{'languoid_id': lid, 'country_id': cc}
-                          for _, cc in countries])
+            lang_country([{'languoid_id': lid, 'country_id': c['id']}
+                          for c in countries])
 
         if links:
             insert_link([dict(languoid_id=lid, ord=i, **link)

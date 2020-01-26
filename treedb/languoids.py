@@ -54,8 +54,8 @@ def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
 
 
 def splitcountry(name, _match=re.compile(
-        r'(?P<name>.+) \((?P<cc>[^)]+)\)$').match):
-    return _match(name).groups()
+        r'(?P<name>.+) \((?P<id>[^)]+)\)$').match):
+    return _match(name).groupdict()
 
 
 def splitlink(markdown, _match=re.compile(
