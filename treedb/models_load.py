@@ -48,10 +48,11 @@ def load(languoids, conn):
 
     def unseen_countries(countries, _seen={}):
         for c in countries:
+            id_, name = (c[k] for k in ('id', 'name'))
             try:
-                assert _seen[c['id']] == c['name']
+                assert _seen[id_] == name
             except KeyError:
-                _seen[c['id']] = c['name']
+                _seen[id_] = name
                 yield c
 
     for _, l in languoids:
