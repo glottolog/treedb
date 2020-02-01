@@ -71,6 +71,7 @@ ENDANGERMENT_SOURCE = {
     'ElCat',
     'Glottolog',
     '**hh:hvld:NyimaSuzuki:Chamdo:2019**:58',
+    'SafarWebster',
     'UNESCO',
 }
 
