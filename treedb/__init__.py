@@ -29,10 +29,10 @@ __all__ = [
 ]
 
 __title__ = 'treedb'
-__version__ = '0.1.4.dev0'
+__version__ = '0.1.4'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'Apache License, see LICENSE.txt'
-__copyright__ = 'Copyright (c) 2017-2019 Sebastian Bank'
+__copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 
 # default root: TREEDB_REPO or repo_root in sister git checkout or cwd
 root = set_root(get_default_root('TREEDB_REPO', '../glottolog', '.'))

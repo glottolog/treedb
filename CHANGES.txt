@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 0.1.3 (in development)
-------------------------------
+Version 0.1.4
+-------------
 
+Represent countries as dicts instead of tuples in ``treedb.iterlanguoids``.
 
+Update endangerment sources.
 
 
 Version 0.1.3
