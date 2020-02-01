@@ -12,6 +12,10 @@ setup(
     keywords='glottolog languoids sqlite3 database',
     license='Apache Software License',
     url='https://github.com/glottolog/treedb',
+    project_urls={
+        'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',
+        'Issue Tracker': 'https://github.com/glottolog/treedb/issues',
+    },
     packages=find_packages(),
     platforms='any',
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
