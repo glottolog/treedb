@@ -25,7 +25,8 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      languoid_country, Country,
                      Link, Source, Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
-                     Endangerment, EthnologueComment,
+                     Endangerment, EndangermentSource,
+                     EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = [
@@ -186,6 +187,7 @@ def get_query(bind=ENGINE):
                 .order_by(famr.ord)
                 .label('classification_familyrefs'),
             ] + get_cols(Endangerment, label='endangerment_%s')
+            + [EndangermentSource.name.label('endangerment_source')]
             + get_cols(EthnologueComment, label='elcomment_%s')
             + get_cols(IsoRetirement, label='iso_retirement_%s')
             + [
@@ -196,7 +198,7 @@ def get_query(bind=ENGINE):
         ], bind=bind).select_from(froms
             .outerjoin(subc, sa.and_(subc.languoid_id == Languoid.id, subc.kind == 'sub'))
             .outerjoin(famc, sa.and_(famc.languoid_id == Languoid.id, famc.kind == 'family'))
-            .outerjoin(Endangerment)
+            .outerjoin(sa.join(Endangerment, EndangermentSource))
             .outerjoin(EthnologueComment)
             .outerjoin(IsoRetirement))\
         .order_by(Languoid.id)

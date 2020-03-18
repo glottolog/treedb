@@ -66,15 +66,11 @@ ENDANGERMENT_STATUS = (
     'extinct',
 )
 
-ENDANGERMENT_SOURCE = {
-    'E20', 'E21', 'E22',
-    'Edwards',
-    'ElCat',
-    'Glottolog',
-    '**hh:hvld:NyimaSuzuki:Chamdo:2019**:58',
-    'SafarWebster',
-    'UNESCO',
-}
+ENDANGERMENT_SOURCE = (r'^('
+                           r'\w+\d*'
+                       r'|'
+                           r'\*{2}[^*]+\*{2}:\d+'
+                       r')$')
 
 EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 
@@ -481,7 +477,7 @@ class Endangerment(Model):
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
     status = Column(Enum(*ENDANGERMENT_STATUS), nullable=False)
-    source = Column(Enum(*sorted(ENDANGERMENT_SOURCE)), nullable=False)
+    source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
     date = Column(DateTime, nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
@@ -492,6 +488,24 @@ class Endangerment(Model):
     languoid = relationship('Languoid',
                             innerjoin=True,
                             back_populates='endangerment')
+
+    source = relationship('EndangermentSource',
+                          innerjoin=True,
+                          back_populates='endangerment')
+
+
+class EndangermentSource(Model):
+
+    __tablename__ = 'endangerment_source'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Text,
+                  CheckConstraint("name REGEXP '%s'" % ENDANGERMENT_SOURCE),
+                  nullable=False, unique=True)
+
+    endangerment = relationship('Endangerment',
+                                uselist=False,
+                                back_populates='source')
 
 
 class EthnologueComment(Model):

@@ -12,7 +12,8 @@ from .models import (MACROAREA, CLASSIFICATION,
                      languoid_country, Country,
                      Link, Source, Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
-                     Endangerment, EthnologueComment,
+                     Endangerment, EndangermentSource,
+                     EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = ['load']
@@ -33,19 +34,6 @@ def load(languoids, conn):
     insert_country = insert(Country, bind=conn).execute
     lang_country = languoid_country.insert(bind=conn).execute
 
-    insert_link = insert(Link, bind=conn).execute
-    insert_source = insert(Source, bind=conn).execute
-    insert_altname = insert(Altname, bind=conn).execute
-    insert_trigger = insert(Trigger, bind=conn).execute
-    insert_ident = insert(Identifier, bind=conn).execute
-    insert_comment = insert(ClassificationComment, bind=conn).execute
-    insert_ref = insert(ClassificationRef, bind=conn).execute
-    insert_enda = insert(Endangerment, bind=conn).execute
-    insert_el = insert(EthnologueComment, bind=conn).execute
-
-    insert_ir = insert(IsoRetirement, bind=conn).execute
-    insert_irct = insert(IsoRetirementChangeTo, bind=conn).execute
-
     def unseen_countries(countries, _seen={}):
         for c in countries:
             id_, name = (c[k] for k in ('id', 'name'))
@@ -54,6 +42,31 @@ def load(languoids, conn):
             except KeyError:
                 _seen[id_] = name
                 yield c
+
+    insert_link = insert(Link, bind=conn).execute
+    insert_source = insert(Source, bind=conn).execute
+    insert_altname = insert(Altname, bind=conn).execute
+    insert_trigger = insert(Trigger, bind=conn).execute
+    insert_ident = insert(Identifier, bind=conn).execute
+    insert_comment = insert(ClassificationComment, bind=conn).execute
+    insert_ref = insert(ClassificationRef, bind=conn).execute
+
+    insert_enda = insert(Endangerment, bind=conn).execute
+    insert_enda_source = insert(EndangermentSource, bind=conn).execute
+
+    class EndangermentSourceMap(dict):
+
+        def __missing__(self, name):
+            id, = insert_enda_source(name=name).inserted_primary_key
+            self[name] = id
+            return id
+
+    es_ids = EndangermentSourceMap()
+
+    insert_el = insert(EthnologueComment, bind=conn).execute
+
+    insert_ir = insert(IsoRetirement, bind=conn).execute
+    insert_irct = insert(IsoRetirementChangeTo, bind=conn).execute
 
     for _, l in languoids:
         lid = l['id']
@@ -122,7 +135,9 @@ def load(languoids, conn):
                     insert_comment(languoid_id=lid, kind=kind, comment=value)
 
         if endangerment is not None:
-            insert_enda(languoid_id=lid, **endangerment)
+            source = endangerment.pop('source')
+            insert_enda(languoid_id=lid,
+                        source_id=es_ids[source], **endangerment)
 
         if hh_ethnologue_comment is not None:
             insert_el(languoid_id=lid, **hh_ethnologue_comment)
