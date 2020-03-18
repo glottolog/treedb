@@ -13,6 +13,7 @@ setup(
     license='Apache Software License',
     url='https://github.com/glottolog/treedb',
     project_urls={
+        'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',
         'Issue Tracker': 'https://github.com/glottolog/treedb/issues',
     },
     packages=find_packages(),
