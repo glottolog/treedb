@@ -20,7 +20,7 @@ class Proxy(object):
         return getattr(self._delegate, name)
 
     def __repr__(self):
-        return '<%s.%s>' % (self.__module__, self.__class__.__name__)
+        return f'<{self.__module__}.{self.__class__.__name__}>'
 
 
 class PathProxy(Proxy):
@@ -52,10 +52,10 @@ class PathProxy(Proxy):
 
     def __repr__(self):
         if self.path is None:
-            return super(PathProxy, self).__repr__()
-        return ('<%s.%s path=%r'
-                ' inode=%r>' % (self.__module__, self.__class__.__name__,
-                                self.path.as_posix(), self.inode()))
+            return super().__repr__()
+        return (f'<{self.__module__}.{self.__class__.__name__}'
+                f' path={self.path.as_posix()!r}'
+                f' inode={self.inode()!r}>')
 
     def inode(self):
         if self.path is None or not self.path.exists():
@@ -94,9 +94,9 @@ class EngineProxy(Proxy, sa.engine.Engine):
 
     def __repr__(self):
         if self.engine is None:
-            return super(EngineProxy, self).__repr__()
-        return '<%s.%s url=%r>' % (self.__module__, self.__class__.__name__,
-                                   str(self.url))
+            return super().__repr__()
+        return (f'{self.__module__}.{self.__class__.__name__}'
+                f' url={str(self.url)!r}>')
 
 
 class SQLiteEngineProxy(EngineProxy):
@@ -113,22 +113,22 @@ class SQLiteEngineProxy(EngineProxy):
     def file(self, filename):
         url = 'sqlite://'
         if filename is not None:
-            url = '%s/%s' % (url, filename)
+            url = f'{url}/{filename}'
         self.url = url
 
     def __repr__(self):
         if self.file is None:
-            return super(SQLiteEngineProxy, self).__repr__()
+            return super().__repr__()
 
         parent = ''
         name = self.file.as_posix()
         if self.file.is_absolute():
-            parent = ' parent=%r' % self.file.parent.name
+            parent = f' parent={self.file.parent.name!r}'
             name = self.file.name
 
-        return ('<%s.%s filename=%r' '%s'
-                ' size=%r>' % (self.__module__, self.__class__.__name__,
-                               name, parent, self.file_size()))
+        return (f'<{self.__module__}.{self.__class__.__name__}'
+                f' filename={name!r}{parent}'
+                f' size={self.file_size()!r}>')
 
     def file_with_suffix(self, suffix):
         path = self.file if self.file is not None else self._memory_path

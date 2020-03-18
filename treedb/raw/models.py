@@ -1,7 +1,5 @@
 # models.py
 
-from __future__ import unicode_literals
-
 import logging
 import warnings
 
@@ -140,7 +138,7 @@ class Fields(object):
             try:
                 return cls._fields[section, option]
             except KeyError:
-                warnings.warn('section %r unknown option %r' % (section, option))
+                warnings.warn(f'section {section!r} unknown option {option!r}')
 
                 if unknown_as_scalar:
                     log.warning('treating %r as scalar', (section, option))

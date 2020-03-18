@@ -1,16 +1,12 @@
 # languoids.py - load ../../languoids/tree/**/md.ini into dicts
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
-import re
+import datetime
+import functools
+import itertools
 import json
 import logging
-import datetime
 import operator
-import functools
-
-from ._compat import DIALECT, ENCODING, iteritems, map, zip_longest
+import re
 
 from . import tools as _tools
 
@@ -42,7 +38,7 @@ def make_lines_raw(value):
 
 
 def skip_empty(mapping):
-    return {k: v for k, v in iteritems(mapping) if v}
+    return {k: v for k, v in mapping.items() if v}
 
 
 def make_date(value, format_='%Y-%m-%d'):
@@ -53,13 +49,13 @@ def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
     return datetime.datetime.strptime(value, format_)
 
 
-def splitcountry(name, _match=re.compile(
-        r'(?P<name>.+) \((?P<id>[^)]+)\)$').match):
+def splitcountry(name, _match=re.compile(r'(?P<name>.+)'
+                                         r' \((?P<id>[^)]+)\)').fullmatch):
     return _match(name).groupdict()
 
 
-def splitlink(markdown, _match=re.compile(
-        r'\[(?P<title>[^]]+)\]\((?P<url>[^)]+)\)$').match):
+def splitlink(markdown, _match=re.compile(r'\[(?P<title>[^]]+)\]'
+                                          r'\((?P<url>[^)]+)\)').fullmatch):
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -86,7 +82,7 @@ def splitsource(s, _match=re.compile(
 
 def splitaltname(s, parse_fail='!', _match=re.compile(
         r'(?P<name>[^[]+)'
-        r'(?: \[(?P<lang>[a-z]{2,3})\])?$').match):
+        r'(?: \[(?P<lang>[a-z]{2,3})\])?').fullmatch):
     ma = _match(s)
     if ma is None:
         return {'name': s, 'lang': parse_fail}
@@ -132,7 +128,7 @@ def iterlanguoids(root_or_bind=ROOT):
         if 'sources' in cfg:
             sources = skip_empty({
                 provider: [splitsource(p) for p in _make_lines(sources)]
-                for provider, sources in iteritems(cfg['sources'])
+                for provider, sources in cfg['sources'].items()
             })
             if sources:
                 item['sources'] = sources
@@ -140,13 +136,13 @@ def iterlanguoids(root_or_bind=ROOT):
         if 'altnames' in cfg:
             item['altnames'] = {
                 provider: [splitaltname(a) for a in _make_lines(altnames)]
-                for provider, altnames in iteritems(cfg['altnames'])
+                for provider, altnames in cfg['altnames'].items()
             }
 
         if 'triggers' in cfg:
             item['triggers'] = {
                 field: _make_lines(triggers)
-                for field, triggers in iteritems(cfg['triggers'])
+                for field, triggers in cfg['triggers'].items()
             }
 
         if 'identifier' in cfg:
@@ -158,7 +154,7 @@ def iterlanguoids(root_or_bind=ROOT):
                 c: list(map(splitsource, _make_lines(classifications)))
                    if c.endswith('refs') else
                    classifications
-                for c, classifications in iteritems(cfg['classification'])
+                for c, classifications in cfg['classification'].items()
             })
             if classification:
                 item['classification'] = classification
@@ -199,7 +195,8 @@ def iterlanguoids(root_or_bind=ROOT):
     log.info('%d languoids extracted', n)
 
 
-def to_json_csv(root_or_bind=ROOT, filename=None, dialect=DIALECT, encoding=ENCODING):
+def to_json_csv(root_or_bind=ROOT, filename=None,
+                dialect=_tools.DIALECT, encoding=_tools.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv'
@@ -227,7 +224,7 @@ def compare_with_raw(root=ROOT):
     from . import ENGINE
 
     same = True
-    for files, raw in zip_longest(*map(iterlanguoids, (root, ENGINE))):
+    for files, raw in itertools.zip_longest(*map(iterlanguoids, (root, ENGINE))):
         if files != raw:
             same = False
             print('', '', files, '', raw, '', '', sep='\n')

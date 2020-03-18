@@ -1,15 +1,7 @@
 # queries.py - sqlalchemy queries for sqlite3 db
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
-import logging
-
-from . import _compat
-
-from ._compat import DIALECT, ENCODING
-
 import hashlib
+import logging
 
 import sqlalchemy as sa
 from sqlalchemy import select
@@ -47,13 +39,14 @@ def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
     rows = bind.execute(query)
 
     if format_ is not None:
-        rows = _compat.map(format_.format_map, rows)
+        rows = map(format_.format_map, rows)
 
     for r in rows:
         print(r)
 
 
-def write_csv(query=None, filename=None, dialect=DIALECT, encoding=ENCODING,
+def write_csv(query=None, filename=None,
+              dialect=_tools.DIALECT, encoding=_tools.ENCODING,
               verbose=False, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
@@ -75,7 +68,8 @@ def write_csv(query=None, filename=None, dialect=DIALECT, encoding=ENCODING,
 
 
 def hash_csv(query=None, raw=False, name=None,
-             dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
+             dialect=_tools.DIALECT, encoding=_tools.ENCODING,
+             bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -101,7 +95,7 @@ def get_query(bind=ENGINE):
     def get_cols(model, label='%s', ignore='id'):
         cols = model.__table__.columns
         if ignore:
-            ignore_suffix = '_%s' % ignore
+            ignore_suffix = f'_{ignore}'
             cols = [c for c in cols if c.name != ignore and not c.name.endswith(ignore_suffix)]
         return [c.label(label % c.name) for c in cols]
 
@@ -224,12 +218,12 @@ def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
         elif parent_level in LEVEL:
             cond = (Parent.level == parent_level)
         else:
-            raise ValueError('invalid parent_level: %r' % parent_level)
+            raise ValueError(f'invalid parent_level: {parent_level!r}')
         select_pairs.append_whereclause(cond)
 
     if child_level is not None:
         if child_level not in LEVEL:
-            raise ValueError('invalid child_level: %r' % child_level)
+            raise ValueError(f'invalid child_level: {child_level!r}')
         select_pairs.append_whereclause(Child.level == child_level)
 
     rows = select_pairs.execute()

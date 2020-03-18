@@ -1,12 +1,8 @@
 # checks.py
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
-import logging
+import inspect
 import itertools
-
-from ._compat import getfullargspec
+import logging
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -38,7 +34,7 @@ def check(func=None, bind=ENGINE):
     with bind.connect() as conn:
         for func in check.registered:
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
-            check_cls = type(str('%sCheck' % func.__name__), (Check,), ns)
+            check_cls = type(f'{func.__name__}Check', (Check,), ns)
 
             session = Session(bind=conn)
 
@@ -83,20 +79,21 @@ class Check(object):
 
     def __str__(self):
         if self.invalid_count:
-            msg = '%d invalid\n    (violating %s)' % (self.invalid_count, self.__doc__)
+            msg = (f'{self.invalid_count:d} invalid\n'
+                   f'    (violating {self.__doc__})')
         else:
             msg = 'OK'
-        return '%s: %s' % (self.__class__.__name__, msg)
+        return f'{self.__class__.__name__}: {msg}'
 
     @staticmethod
     def show_detail(invalid, invalid_count, number=25):
         ids = (i.id for i in itertools.islice(invalid, number))
         cont = ', ...' if number < invalid_count else ''
-        print('    %s%s' % (', '.join(ids), cont))
+        print(f"    {', '.join(ids)}{cont}")
 
 
 def docformat(func):
-    spec = getfullargspec(func)
+    spec = inspect.getfullargspec(func)
     defaults = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
     func.__doc__ = func.__doc__ % defaults
     return func

@@ -1,15 +1,9 @@
 # files.py - load/write ../../languoids/tree/**/md.ini
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
-import os
-import logging
 import configparser
-
-from ._compat import pathlib
-
-from ._compat import ENCODING, iteritems
+import logging
+import os
+import pathlib
 
 from . import tools as _tools
 
@@ -45,7 +39,7 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
     """Set and return default root for glottolog lanugoid directory tree."""
     log.info('set_root')
     if repo_root is None:
-        raise ValueError('missing repo_root path: %r' % repo_root)
+        raise ValueError(f'missing repo_root path: {repo_root!r}')
 
     log.debug('repo root: %r', repo_root)
     repo_path = _tools.path_from_filename(repo_root).expanduser()
@@ -62,7 +56,7 @@ class ConfigParser(configparser.ConfigParser):
 
     _basename = BASENAME
 
-    _header = '# -*- coding: %s -*-\n'
+    _header = '# -*- coding: {encoding} -*-\n'
 
     _newline = '\r\n'
 
@@ -73,12 +67,12 @@ class ConfigParser(configparser.ConfigParser):
     }
 
     @classmethod
-    def from_filename(cls, filename, encoding=ENCODING, **kwargs):
+    def from_filename(cls, filename, encoding=_tools.ENCODING, **kwargs):
         path = _tools.path_from_filename(filename)
         return cls.from_path(path, encoding=encoding, **kwargs)
 
     @classmethod
-    def from_path(cls, path, encoding=ENCODING, **kwargs):
+    def from_path(cls, path, encoding=_tools.ENCODING, **kwargs):
         assert path.name == cls._basename
 
         inst = cls(**kwargs)
@@ -87,17 +81,17 @@ class ConfigParser(configparser.ConfigParser):
         return inst
 
     def __init__(self, defaults=None, **kwargs):
-        for k, v in iteritems(self._init_defaults):
+        for k, v in self._init_defaults.items():
             kwargs.setdefault(k, v)
-        super(ConfigParser, self).__init__(defaults=defaults, **kwargs)
+        super().__init__(defaults=defaults, **kwargs)
 
-    def to_filename(self, filename, encoding=ENCODING):
+    def to_filename(self, filename, encoding=_tools.ENCODING):
         path = _tools.path_from_filename(filename)
         self.to_path(path, encoding=encoding)
 
-    def to_path(self, path, encoding=ENCODING):
+    def to_path(self, path, encoding=_tools.ENCODING):
         with path.open('wt', encoding=encoding, newline=self._newline) as f:
-            f.write(self._header % encoding)
+            f.write(self._header.format(encoding=encoding))
             self.write(f)
 
 
@@ -133,7 +127,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
         for s in drop_sections:
             cfg.remove_section(s)
 
-        for section, s in iteritems(d):
+        for section, s in d.items():
             if section != 'core':
                 drop_options = set(cfg.options(section))
                 if section == 'iso_retirement':
@@ -144,14 +138,14 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
                 for o in drop_options:
                     cfg.remove_option(section, o)
 
-            for option, value in iteritems(s):
+            for option, value in s.items():
                 if cfg.get(section, option) != value:
                     changed = True
                     cfg.set(section, option, value)
 
         if changed:
             if verbose:
-                print('write %r' % path)
+                print(f'write {path!r}')
             cfg.to_path(path)
             files_written += 1
 
@@ -165,7 +159,7 @@ def roundtrip(root=ROOT, verbose=False):
 
     def _iterpairs(triples):
         for path_tuple, _, cfg in triples:
-            d = {s: dict(m) for s, m in iteritems(cfg) if s != 'DEFAULT'}
+            d = {s: dict(m) for s, m in cfg.items() if s != 'DEFAULT'}
             yield path_tuple, d
 
     return save(_iterpairs(triples), root, assume_changed=True, verbose=verbose)

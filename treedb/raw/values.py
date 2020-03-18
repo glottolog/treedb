@@ -1,9 +1,5 @@
 # values.py
 
-from __future__ import unicode_literals
-
-from .._compat import DIALECT, ENCODING, iteritems
-
 import logging
 
 import sqlalchemy as sa
@@ -41,7 +37,8 @@ def print_stats(bind=ENGINE):
     _queries.print_rows(select_nvalues, format_=template, bind=bind)
 
 
-def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
+def checksum(weak=False, name=None,
+             dialect=_tools.DIALECT, encoding=_tools.ENCODING,
              bind=ENGINE):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
@@ -65,10 +62,12 @@ def checksum(weak=False, name=None, dialect=DIALECT, encoding=ENCODING,
                                dialect=dialect, encoding=encoding, bind=bind)
 
     logging.debug('%s: %r', hash_.name, hash_.hexdigest())
-    return '%s:%s:%s' % (kind, hash_.name, hash_.hexdigest())
+    return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
 
 
-def to_raw_csv(filename=None, dialect=DIALECT, encoding=ENCODING, bind=ENGINE):
+def to_raw_csv(filename=None,
+               dialect=_tools.DIALECT, encoding=_tools.ENCODING,
+               bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
@@ -89,7 +88,7 @@ def to_files(root=ROOT, bind=ENGINE, verbose=True, is_lines=Fields.is_lines):
 
     def _iterpairs(records):
         for p, r in records:
-            for section, s in iteritems(r):
+            for section, s in r.items():
                 for option in s:
                     if is_lines(section, option):
                         s[option] = '\n'.join([''] + s[option])

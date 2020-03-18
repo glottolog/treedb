@@ -1,18 +1,13 @@
 # backend.py - sqlite3 database engine
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
+import contextlib
+import datetime
+import functools
+import logging
 import re
 import time
-import logging
-import zipfile
-import datetime
 import warnings
-import functools
-import contextlib
-
-from ._compat import DIALECT, ENCODING
+import zipfile
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -44,7 +39,7 @@ def create_engine(filename, resolve=False, title=None):
             filename = filename.resolve(strict=False)
 
     if filename is None and title is not None:
-        ENGINE._memory_path = _tools.path_from_filename('%s-memory' % title)
+        ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory')
 
     ENGINE.file = filename
     return ENGINE
@@ -118,11 +113,11 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
         root = ROOT
     if not root.exists():
         log.error('root does not exist')
-        raise RuntimeError('tree root not found: %r' % root)
+        raise RuntimeError(f'tree root not found: {root!r}')
 
     if require and not engine.file_exists():
         log.error('required load file not found: %r', engine.file)
-        raise RuntimeError('engine file does not exist: %r' % engine.file)
+        raise RuntimeError(f'engine file does not exist: {engine.file!r}')
 
     if exclude_raw and from_raw:
         log.error('incompatible exclude_raw=%r'
@@ -143,7 +138,7 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
             if not force_delete:
                 raise
 
-            warnings.warn('force delete %r' % engine.file)
+            warnings.warn(f'force delete {engine.file!r}')
             rebuild = True
         else:
             if ds.exclude_raw != bool(exclude_raw):
@@ -154,7 +149,7 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
             log.debug('dispose engine %r', engine)
             engine.dispose()
 
-            warnings.warn('delete present file: %r' % engine.file)
+            warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
         else:
             log.info('use present %r', engine.file)
@@ -194,7 +189,7 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
     log.info('create tables')
     with begin() as conn:
         log.debug('set application_id = %r', application_id)
-        conn.execute('PRAGMA application_id = %d' % application_id)
+        conn.execute(f'PRAGMA application_id = {application_id:d}')
 
         log.debug('run create_all')
         Model.metadata.create_all(bind=conn)
@@ -253,21 +248,21 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
 def log_dataset(params, name=Dataset.__tablename__):
     log.info('git describe %(git_describe)r clean: %(clean)r', params)
     if not params['clean']:
-        warnings.warn('%r not clean' % name)
+        warnings.warn(f'{name} not clean')
     log.debug('%r.title: %r', name, params['title'])
     log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
-def dump_sql(engine=ENGINE, filename=None, encoding=ENCODING):
+def dump_sql(engine=ENGINE, filename=None, encoding=_tools.ENCODING):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql').name
     path = _tools.path_from_filename(filename)
     log.info('dump sql to %r', path)
 
+    n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
-         path.open('w', encoding=ENCODING) as f:
-        n = 0
+         path.open('w', encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
             if not (n % 100000):
@@ -277,7 +272,8 @@ def dump_sql(engine=ENGINE, filename=None, encoding=ENCODING):
     return path
 
 
-def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,
+def export(engine=ENGINE, filename=None,
+           dialect=_tools.DIALECT, encoding=_tools.ENCODING,
            metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
@@ -287,14 +283,15 @@ def export(engine=ENGINE, filename=None, dialect=DIALECT, encoding=ENCODING,
         filename = engine.file_with_suffix('.zip').name
 
     log.info('write %r', filename)
-    with engine.connect() as conn, zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
+    with engine.connect() as conn,\
+         zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
             data = _tools.write_csv(None, rows, header=header,
                                     dialect=dialect, encoding=encoding)
-            z.writestr('%s.csv' % table.name, data)
+            z.writestr(f'{table.name}.csv', data)
 
     log.info('database exported')
     return _tools.path_from_filename(filename)

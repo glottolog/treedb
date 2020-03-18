@@ -1,7 +1,5 @@
 # models.py - sqlalchemy schema, loading, checking, and queries for sqlite3 db
 
-from __future__ import unicode_literals
-
 import sqlalchemy as sa
 
 from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
@@ -86,12 +84,16 @@ class Languoid(Model):
     longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
     __table_args__ = (CheckConstraint('(latitude IS NULL)'
-                                      '= (longitude IS NULL)'),)
+                                      ' = (longitude IS NULL)'),)
 
     def __repr__(self):
-        hid_iso = ['%s=%r' % (n, getattr(self, n)) for n in ('hid', 'iso639_3') if getattr(self, n)]
-        return '<%s id=%r level=%r name=%r%s>' % (self.__class__.__name__,
-            self.id, self.level, self.name, ' ' + ' '.join(hid_iso) if hid_iso else '')
+        hid_iso = [f'{n}={getattr(self, n)!r}' for n in ('hid', 'iso639_3') if getattr(self, n)]
+        hid_iso = ' '.join(hid_iso) if hid_iso else ''
+        return (f'<{self.__class__.__name__}'
+                f' id={self.id!r}'
+                f' level={self.level!r}'
+                f' name={self.name!r}'
+                f'{hid_iso}>')
 
     parent = relationship('Languoid', remote_side=[id])
 
@@ -236,7 +238,8 @@ class Macroarea(Model):
     name = Column(Enum(*sorted(MACROAREA)), primary_key=True)
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__, self.name)
+        return (f'<{self.__class__.__name__}'
+                f' {self.name!r}>')
 
     languoids = relationship('Languoid',
                              secondary='languoid_macroarea',
@@ -259,7 +262,9 @@ class Country(Model):
                   unique=True)
 
     def __repr__(self):
-        return '<%s id=%r name=%r>' % (self.__class__.__name__, self.id, self.name)
+        return (f'<{self.__class__.__name__}'
+                f' id={self.id!r}'
+                f' name={self.name!r}>')
 
     languoids = relationship('Languoid',
                              secondary='languoid_country',
@@ -293,9 +298,12 @@ class Link(Model):
                             back_populates='links')
 
     def __repr__(self):
-        return '<%s languoid_id=%r ord=%r url=%r title=%r scheme=%r>' % (
-            self.__class__.__name__,
-            self.languoid_id, self.ord, self.url, self.title, self.scheme)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' ord={self.ord!r}'
+                f' url={self.url!r}'
+                f' title={self.title!r}'
+                f' scheme={self.schemme!r}>')
 
     @classmethod
     def printf(cls):
@@ -321,8 +329,11 @@ class Source(Model):
     __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
 
     def __repr__(self):
-        return '<%s languoid_id=%r povider=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.provider, self.bibfile, self.bibkey)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' provider={self.provider!r}'
+                f' bibfile={self.bibfile!r}'
+                f' bibkey={self.bibkey!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -360,8 +371,11 @@ class Altname(Model):
     __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
 
     def __repr__(self):
-        return '<%s languoid_id=%r povider=%r lang=%r name=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.provider, self.lang, self.name)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' povider={self.provider!r}'
+                f' lang={self.lang!r}'
+                f' name={self.name!r}>')
 
     languoid = relationship('Languoid', innerjoin=True,
                             back_populates='altnames')
@@ -388,8 +402,10 @@ class Trigger(Model):
     __table_args__ = (UniqueConstraint(languoid_id, field, ord),)
 
     def __repr__(self):
-        return '<%s languoid_id=%r field=%r trigger=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.field, self.trigger)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' field={self.field!r}'
+                f' trigger={self.trigger!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -406,8 +422,10 @@ class Identifier(Model):
     identifier = Column(Text, CheckConstraint("identifier != ''"), nullable=False)
 
     def __repr__(self):
-        return '<%s languoid_id=%r site=%r identifier=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.site, self.identifier)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' site={self.site!r}'
+                f' identifier={self.identifier!r}>')
 
     languoid = relationship('Languoid', innerjoin=True,
                              back_populates='identifiers')
@@ -423,8 +441,10 @@ class ClassificationComment(Model):
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
-        return '<%s languoid_id=%r kind=%r comment=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.kind, self.comment)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' kind={self.kind!r}'
+                f' comment={self.comment!r}>')
 
     languoid = relationship('Languoid', innerjoin=True)
 
@@ -445,8 +465,11 @@ class ClassificationRef(Model):
     __table_args__ = (UniqueConstraint(languoid_id, kind, ord),)
 
     def __repr__(self):
-        return '<%s languoid_id=%r kind=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.kind, self.bibfile, self.bibkey)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' kind={self.kind!r}'
+                f' bibfile={self.bibfile!r}'
+                f' bibkey={self.bibkey!r}>')
 
     languoid = relationship('Languoid', innerjoin=True)
 
@@ -468,8 +491,11 @@ class Endangerment(Model):
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
-        return '<%s languoid_id=%r status=%r source=%r date=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.status, self.source, self.date)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' status={self.status!r}'
+                f' source_id={self.source_id!r}'
+                f' date={self.date!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -489,6 +515,11 @@ class EndangermentSource(Model):
                   CheckConstraint("name REGEXP '%s'" % ENDANGERMENT_SOURCE),
                   nullable=False, unique=True)
 
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' id={self.id!r}'
+                f' name={self.name!r}')
+
     endangerment = relationship('Endangerment',
                                 uselist=False,
                                 back_populates='source')
@@ -506,8 +537,11 @@ class EthnologueComment(Model):
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
     def __repr__(self):
-        return '<%s languoid_id=%r isohid=%r comment_type=%r ethnologue_versions=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.isohid, self.comment_type, self.ethnologue_versions)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' isohid={self.isohid!r}'
+                f' comment_type={self.comment_type!r}'
+                f' ethnologue_versions={self.ethnologue_versions!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -538,9 +572,14 @@ class IsoRetirement(Model):
     )
 
     def __repr__(self):
-        return '<%s languoid_id=%r code=%r name=%r change_request=%r effective=%r reason=%r remedy=%r>' % (
-            self.__class__.__name__, self.languoid_id, self.code, self.name, self.change_request,
-            self.effective, self.reason, self.remedy)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' code={self.code!r}'
+                f' name={self.name!r}'
+                f' change_request={self.change_request!r}'
+                f' effective={self.effective!r}'
+                f' reason={self.reason!r}'
+                f' remedy={self.remedy!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -563,8 +602,9 @@ class IsoRetirementChangeTo(Model):
     __table_args__ = (UniqueConstraint('languoid_id', 'ord'),)
 
     def __repr__(self):
-        return '<%s languoid_id=%r code=%r>' % (self.__class__.__name__,
-            self.languoid_id, self.code)
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' code={self.code!r}>')
 
     iso_retirement = relationship('IsoRetirement',
                                   innerjoin=True,

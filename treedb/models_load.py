@@ -2,8 +2,6 @@
 
 import logging
 
-from ._compat import iteritems
-
 from sqlalchemy import insert
 
 from .models import (MACROAREA, CLASSIFICATION,
@@ -107,26 +105,26 @@ def load(languoids, conn):
 
         if sources is not None:
             insert_source([dict(languoid_id=lid, provider=provider, ord=i, **s)
-                           for provider, data in iteritems(sources)
+                           for provider, data in sources.items()
                            for i, s in enumerate(data, 1)])
 
         if altnames is not None:
             insert_altname([dict(languoid_id=lid, provider=provider, ord=i, **n)
-                            for provider, names in iteritems(altnames)
+                            for provider, names in altnames.items()
                             for i, n in enumerate(names, 1)])
 
         if triggers is not None:
             insert_trigger([{'languoid_id': lid, 'field': field,
                              'trigger': t, 'ord': i}
-                            for field, triggers in iteritems(triggers)
+                            for field, triggers in triggers.items()
                             for i, t in enumerate(triggers, 1)])
 
         if identifier is not None:
             insert_ident([dict(languoid_id=lid, site=site, identifier=i)
-                          for site, i in iteritems(identifier)])
+                          for site, i in identifier.items()])
 
         if classification is not None:
-            for c, value in iteritems(classification):
+            for c, value in classification.items():
                 isref, kind = CLASSIFICATION[c]
                 if isref:
                     insert_ref([dict(languoid_id=lid, kind=kind, ord=i, **r)

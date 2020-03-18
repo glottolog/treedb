@@ -1,7 +1,5 @@
 # fixex.py
 
-from __future__ import unicode_literals
-
 import logging
 
 from sqlalchemy import delete, exists, update, bindparam, func

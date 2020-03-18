@@ -1,22 +1,20 @@
 # tools.py - generic re-useable self-contained helpers
 
-from __future__ import print_function
-
 import csv
-import logging
-import hashlib
-import platform
-import operator
-import itertools
 import functools
+import hashlib
+import io
+import itertools
+import logging
+import operator
+import os
+import pathlib
+import platform
 import subprocess
 
-from ._compat import pathlib
-from ._compat import scandir
+DIALECT = 'excel'
 
-from . import _compat
-
-from ._compat import ENCODING, DIALECT
+ENCODING = 'utf-8'
 
 __all__ = ['next_count',
            'iterslices',
@@ -66,7 +64,7 @@ def iterfiles(top, verbose=False):
         root = stack.pop()
         if verbose:
             print(root)
-        direntries = scandir(root)
+        direntries = os.scandir(root)
         dirs = []
         for d in direntries:
             if d.is_dir():
@@ -117,22 +115,17 @@ def check_output(args, cwd=None, encoding=ENCODING):
 
 
 def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
-    def get_writerows(f):
-        writer = csv.writer(f, dialect=dialect)
-        return functools.partial(_compat.csv_writerows, writer, encoding=encoding)
-
-    get_bytes = functools.partial(_compat.get_csv_io_bytes, encoding=encoding)
-
     if hasattr(filename, 'hexdigest'):
         hash_ = filename
-        with _compat.make_csv_io() as f:
-            writerows = get_writerows(f)
+        with io.StringIO() as f:
+            writerows = csv.writer(f, dialect=dialect).writerows
             if header is not None:
                 writerows([header])
 
             for rows in iterslices(rows, 100):
                 writerows(rows)
-                data = get_bytes(f.getvalue())
+                data = f.getvalue()
+                data = data.encode(encoding)
                 hash_.update(data)
                 # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
@@ -141,19 +134,20 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
         return None
 
     elif filename is None:
-        with _compat.make_csv_io() as f:
-            writerows = get_writerows(f)
+        with io.StringIO() as f:
+            writerows = csv.writer(f, dialect=dialect).writerows
             if header is not None:
                 writerows([header])
 
             writerows(rows)
+
             data = f.getvalue()
 
-        return get_bytes(data)
+        return data.encode(encoding)
 
     else:
-        with _compat.csv_open(filename, 'w', encoding=encoding) as f:
-            writerows = get_writerows(f)
+        with open(filename, 'w', encoding=encoding, newline='') as f:
+            writerows = csv.writer(f, dialect=dialect).writerows
             if header is not None:
                 writerows([header])
 

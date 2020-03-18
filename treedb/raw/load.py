@@ -1,10 +1,6 @@
 # load.py
 
-from __future__ import unicode_literals
-
 import logging
-
-from .._compat import iteritems
 
 from sqlalchemy import insert
 
@@ -23,7 +19,7 @@ class Options(dict):
     """Insert optons on demand and cache id and lines config."""
 
     def __init__(self, items=(), insert=None):
-        super(Options, self).__init__(items)
+        super().__init__(items)
         self.insert = insert
 
     def __missing__(self, key):
@@ -41,8 +37,8 @@ class Options(dict):
 
 def itervalues(cfg, file_id, options):
     get_line = _tools.next_count(start=1)
-    for section, sec in iteritems(cfg):
-        for option, value in iteritems(sec):
+    for section, sec in cfg.items():
+        for option, value in sec.items():
             option_id, is_lines = options[section, option]
             if is_lines:
                 for v in value.strip().splitlines():

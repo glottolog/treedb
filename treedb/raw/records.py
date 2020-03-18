@@ -1,9 +1,7 @@
 # records.py
 
-import logging
 import itertools
-
-from .._compat import zip
+import logging
 
 import sqlalchemy as sa
 
