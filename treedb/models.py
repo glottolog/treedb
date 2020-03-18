@@ -68,6 +68,7 @@ ENDANGERMENT_STATUS = (
 
 ENDANGERMENT_SOURCE = {
     'E20', 'E21', 'E22',
+    'Edwards',
     'ElCat',
     'Glottolog',
     '**hh:hvld:NyimaSuzuki:Chamdo:2019**:58',
