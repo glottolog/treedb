@@ -93,7 +93,7 @@ class ConfigParser(configparser.ConfigParser):
         self.to_path(path, encoding=encoding)
 
     def to_path(self, path, encoding=ENCODING):
-        with path.open('w', encoding=encoding, newline=self._newline) as f:
+        with path.open('wt', encoding=encoding, newline=self._newline) as f:
             f.write(self._header % encoding)
             self.write(f)
 
