@@ -10,7 +10,7 @@ setup(
     author_email='sebastian.bank@uni-leipzig.de',
     description='Glottolog languoid tree as SQLite database',
     keywords='glottolog languoids sqlite3 database',
-    license='Apache Software License',
+    license='MIT',
     url='https://github.com/glottolog/treedb',
     project_urls={
         'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',

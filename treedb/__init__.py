@@ -29,7 +29,7 @@ __all__ = ['ROOT', 'ENGINE',
 __title__ = 'treedb'
 __version__ = '0.2.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
-__license__ = 'Apache License, see LICENSE.txt'
+__license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 
 # default root: TREEDB_REPO or repo_root in sister git checkout or cwd
