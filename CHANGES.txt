@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 0.1.6 (in development)
-------------------------------
+Version 0.1.6
+-------------
 
-
+Make endangerment sources open-ended.
 
 
 Version 0.1.5
