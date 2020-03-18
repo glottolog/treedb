@@ -18,16 +18,14 @@ from . import _compat
 
 from ._compat import ENCODING, DIALECT
 
-__all__ = [
-    'next_count',
-    'iterslices',
-    'groupby_itemgetter', 'groupby_attrgetter',
-    'iterfiles',
-    'path_from_filename',
-    'sha256sum',
-    'check_output',
-    'write_csv',
-]
+__all__ = ['next_count',
+           'iterslices',
+           'groupby_itemgetter', 'groupby_attrgetter',
+           'iterfiles',
+           'path_from_filename',
+           'sha256sum',
+           'check_output',
+           'write_csv']
 
 
 log = logging.getLogger(__name__)

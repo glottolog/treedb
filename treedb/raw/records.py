@@ -7,9 +7,9 @@ from .._compat import zip
 
 import sqlalchemy as sa
 
-from .. import ENGINE
-
 from .. import tools as _tools
+
+from .. import ENGINE
 
 from .models import File, Option, Value
 
@@ -71,8 +71,8 @@ def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
     """Yield where clause making function for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
-    select_keys = sa.select([select_keys.c.key], bind=bind)\
-        .where(select_keys.c.row_num % size == 0)
+    select_keys = (sa.select([select_keys.c.key], bind=bind)
+                  .where(select_keys.c.row_num % size == 0))
 
     log.info('fetch %r slices for window of %d', str(key_column.expression), size)
     keys = (k for k, in select_keys.execute())

@@ -15,9 +15,9 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from . import ENGINE
-
 from . import tools as _tools
+
+from . import ENGINE
 
 from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      Languoid,
@@ -29,11 +29,9 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
-__all__ = [
-    'print_rows', 'write_csv', 'hash_csv',
-    'get_query',
-    'iterdescendants',
-]
+__all__ = ['print_rows', 'write_csv', 'hash_csv',
+           'get_query',
+           'iterdescendants']
 
 
 log = logging.getLogger(__name__)

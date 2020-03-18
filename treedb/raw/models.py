@@ -11,10 +11,8 @@ from sqlalchemy import (Column, Integer, String, Text, Boolean,
 
 from ..backend import Model
 
-__all__ = [
-    'File', 'Option', 'Value',
-    'Fields',
-]
+__all__ = ['File', 'Option', 'Value',
+           'Fields']
 
 
 log = logging.getLogger(__name__)
@@ -27,21 +25,23 @@ class File(Model):
 
     id = Column(Integer, primary_key=True)
 
-    glottocode = Column(String(8), CheckConstraint('length(glottocode) = 8'), nullable=False, unique=True)
+    glottocode = Column(String(8), CheckConstraint('length(glottocode) = 8'),
+                        nullable=False, unique=True)
 
     path = Column(Text, CheckConstraint('length(path) >= 8 AND (length(path) + 1) % 9 = 0'),
                   nullable=False, unique=True)
 
     size = Column(Integer, CheckConstraint('size > 0'), nullable=False)
-    sha256 = Column(String(64), CheckConstraint('length(sha256) = 64'), unique=True, nullable=False)
+    sha256 = Column(String(64), CheckConstraint('length(sha256) = 64'),
+                    unique=True, nullable=False)
 
-    __table_args__ = (
-        CheckConstraint('substr(path, -length(glottocode)) = glottocode'),
-    )
+    __table_args__ = (CheckConstraint('substr(path, -length(glottocode))'
+                                      ' = glottocode'),)
 
     @classmethod
     def path_depth(cls, label='path_depth'):
         return ((func.length(cls.path) + 1) / 9).label(label)
+
 
 class Option(Model):
     """Unique (section, option) key of the values with lines config."""
@@ -55,9 +55,7 @@ class Option(Model):
 
     is_lines = Column(Boolean)
 
-    __table_args__ = (
-        UniqueConstraint(section, option),
-    )
+    __table_args__ = (UniqueConstraint(section, option),)
 
 
 class Value(Model):
@@ -72,9 +70,7 @@ class Value(Model):
     # TODO: consider adding version for selective updates
     value = Column(Text, CheckConstraint("value != ''"), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint(file_id, line),
-    )
+    __table_args__ = (UniqueConstraint(file_id, line),)
 
 
 class Fields(object):

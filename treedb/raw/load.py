@@ -8,8 +8,8 @@ from .._compat import iteritems
 
 from sqlalchemy import insert
 
-from .. import files as _files
-from .. import tools as _tools
+from .. import (tools as _tools,
+                files as _files)
 
 from .models import File, Option, Value, Fields
 
@@ -61,12 +61,11 @@ def load(root, conn):
     insert_value = insert(Value, bind=conn).execute
 
     for path_tuple, dentry, cfg in _files.iterfiles(root):
-        file_params = {
-            'glottocode': path_tuple[-1],
-            'path': '/'.join(path_tuple),
-            'size': dentry.stat().st_size,
-            'sha256': _tools.sha256sum(dentry.path, raw=True).hexdigest(),
-        }
+        sha256 = _tools.sha256sum(dentry.path, raw=True).hexdigest()
+        file_params = {'glottocode': path_tuple[-1],
+                       'path': '/'.join(path_tuple),
+                       'size': dentry.stat().st_size,
+                       'sha256': sha256}
         file_id, = insert_file(file_params).inserted_primary_key
 
         value_params = list(itervalues(cfg, file_id, options))

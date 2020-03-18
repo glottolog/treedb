@@ -10,14 +10,18 @@ import sqlalchemy as sa
 
 from .. import ENGINE, ROOT
 
-from .. import files as _files
-from .. import queries as _queries
+from .. import (tools as _tools,
+                files as _files,
+                queries as _queries)
 
 from . import records as _records
 
 from .models import File, Option, Value, Fields
 
-__all__ = ['print_stats', 'checksum', 'to_raw_csv', 'to_files']
+__all__ = ['print_stats',
+           'checksum',
+           'to_raw_csv',
+           'to_files']
 
 
 log = logging.getLogger(__name__)

@@ -15,7 +15,10 @@ from . import tools as _tools
 
 from . import ROOT
 
-__all__ = ['get_default_root', 'set_root', 'iterfiles', 'save', 'roundtrip']
+__all__ = ['get_default_root', 'set_root',
+           'iterfiles',
+           'save',
+           'roundtrip']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 

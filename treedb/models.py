@@ -18,53 +18,42 @@ FAMILY, LANGUAGE, DIALECT = LEVEL = ('family', 'language', 'dialect')
 
 BOOKKEEPING = 'Bookkeeping'
 
-SPECIAL_FAMILIES = (
-    'Unattested',
-    'Unclassifiable',
-    'Pidgin',
-    'Mixed Language',
-    'Artificial Language',
-    'Speech Register',
-    'Sign Language',
-)
+SPECIAL_FAMILIES = ('Unattested',
+                    'Unclassifiable',
+                    'Pidgin',
+                    'Mixed Language',
+                    'Artificial Language',
+                    'Speech Register',
+                    'Sign Language')
 
-MACROAREA = {
-    'North America', 'South America',
-    'Eurasia',
-    'Africa',
-    'Australia', 'Papunesia',
-}
+MACROAREA = {'North America', 'South America',
+             'Eurasia',
+             'Africa',
+             'Australia', 'Papunesia'}
 
 LINK_SCHEME = {'https', 'http'}
 
 SOURCE_PROVIDER = {'glottolog'}
 
-ALTNAME_PROVIDER = {
-    'multitree', 'lexvo', 'hhbib_lgcode',
-    'wals', 'wals other', 'moseley & asher (1994)', 'ruhlen (1987)',
-    'glottolog', 'ethnologue', 'elcat', 'aiatsis',
-}
+ALTNAME_PROVIDER = {'multitree', 'lexvo', 'hhbib_lgcode',
+                    'wals', 'wals other',
+                    'moseley & asher (1994)', 'ruhlen (1987)',
+                    'glottolog', 'ethnologue', 'elcat', 'aiatsis'}
 
 TRIGGER_FIELD = {'lgcode', 'inlg'}
 
-IDENTIFIER_SITE = {
-    'multitree', 'endangeredlanguages',
-    'wals', 'languagelandscape',
-}
+IDENTIFIER_SITE = {'multitree', 'endangeredlanguages',
+                   'wals', 'languagelandscape'}
 
-CLASSIFICATION = {
-    'sub': (False, 'sub'), 'subrefs': (True, 'sub'),
-    'family': (False, 'family'), 'familyrefs': (True, 'family')
-}
+CLASSIFICATION = {'sub': (False, 'sub'), 'subrefs': (True, 'sub'),
+                  'family': (False, 'family'), 'familyrefs': (True, 'family')}
 
 CLASSIFICATION_KIND = {c for _, c in CLASSIFICATION.values()}
 
-ENDANGERMENT_STATUS = (
-    'not endangered',
-    'threatened', 'shifting',
-    'moribund', 'nearly extinct',
-    'extinct',
-)
+ENDANGERMENT_STATUS = ('not endangered',
+                       'threatened', 'shifting',
+                       'moribund', 'nearly extinct',
+                       'extinct')
 
 ENDANGERMENT_SOURCE = (r'^('
                            r'\w+\d*'
@@ -83,20 +72,21 @@ class Languoid(Model):
 
     id = Column(String(8), CheckConstraint('length(id) = 8'), primary_key=True)
 
-    name = Column(String, CheckConstraint("name != ''"), nullable=False, unique=True)
+    name = Column(String, CheckConstraint("name != ''"),
+                  nullable=False, unique=True)
 
     level = Column(Enum(*LEVEL), nullable=False)
 
     parent_id = Column(ForeignKey('languoid.id'), index=True)
 
     hid = Column(Text, CheckConstraint('length(hid) >= 3'), unique=True)
-    iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'), unique=True)
+    iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'),
+                      unique=True)
     latitude = Column(Float, CheckConstraint('latitude BETWEEN -90 AND 90'))
     longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
-    __table_args__ = (
-        CheckConstraint('(latitude IS NULL) = (longitude IS NULL)'),
-    )
+    __table_args__ = (CheckConstraint('(latitude IS NULL)'
+                                      '= (longitude IS NULL)'),)
 
     def __repr__(self):
         hid_iso = ['%s=%r' % (n, getattr(self, n)) for n in ('hid', 'iso639_3') if getattr(self, n)]
@@ -265,7 +255,8 @@ class Country(Model):
 
     id = Column(String(2), CheckConstraint('length(id) = 2'), primary_key=True)
 
-    name = Column(Text, CheckConstraint("name != ''"), nullable=False, unique=True)
+    name = Column(Text, CheckConstraint("name != ''"), nullable=False,
+                  unique=True)
 
     def __repr__(self):
         return '<%s id=%r name=%r>' % (self.__class__.__name__, self.id, self.name)
@@ -293,10 +284,9 @@ class Link(Model):
     title = Column(Text, CheckConstraint("title != ''"))
     scheme = Column(Text, Enum(*sorted(LINK_SCHEME)))
 
-    __table_args__ = (
-        UniqueConstraint(languoid_id, url),
-        CheckConstraint("substr(url, 1, length(scheme) + 3) = scheme || '://'"),
-    )
+    __table_args__ = (UniqueConstraint(languoid_id, url),
+                      CheckConstraint("substr(url, 1, length(scheme) + 3)"
+                                      " = scheme || '://'"))
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -309,10 +299,9 @@ class Link(Model):
 
     @classmethod
     def printf(cls):
-        return sa.case([
-            (cls.title != None,
-                sa.func.printf('(%s)[%s]', cls.title, cls.url)),
-            ], else_=cls.url)
+        return sa.case([(cls.title != None,
+                         sa.func.printf('(%s)[%s]', cls.title, cls.url))],
+                       else_=cls.url)
 
 
 class Source(Model):
@@ -329,9 +318,7 @@ class Source(Model):
     pages = Column(Text, CheckConstraint("pages != ''"))
     trigger = Column(Text, CheckConstraint("trigger != ''"))
 
-    __table_args__ = (
-        UniqueConstraint(languoid_id, provider, ord),
-    )
+    __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
 
     def __repr__(self):
         return '<%s languoid_id=%r povider=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
@@ -343,14 +330,20 @@ class Source(Model):
 
     @classmethod
     def printf(cls):
-        return sa.case([
-            (sa.and_(cls.pages != None, cls.trigger != None),
-                 sa.func.printf('**%s:%s**:%s<trigger "%s">', cls.bibfile, cls.bibkey, cls.pages, cls.trigger)),
-            (cls.pages != None,
-                 sa.func.printf('**s:%s**:%s', cls.bibfile, cls.bibkey, cls.pages)),
-            (cls.trigger != None,
-                 sa.func.printf('**%s:%s**<trigger "%s">', cls.bibfile, cls.bibkey, cls.trigger)),
-            ], else_=sa.func.printf('**%s:%s**', cls.bibfile, cls.bibkey))
+        return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
+                         sa.func.printf('**%s:%s**:%s<trigger "%s">',
+                                       cls.bibfile, cls.bibkey,
+                                       cls.pages, cls.trigger)),
+                        (cls.pages != None,
+                         sa.func.printf('**s:%s**:%s',
+                                        cls.bibfile, cls.bibkey,
+                                        cls.pages)),
+                        (cls.trigger != None,
+                         sa.func.printf('**%s:%s**<trigger "%s">',
+                                        cls.bibfile, cls.bibkey,
+                                        cls.trigger))],
+                       else_=sa.func.printf('**%s:%s**',
+                                            cls.bibfile, cls.bibkey))
 
 
 class Altname(Model):
@@ -364,9 +357,7 @@ class Altname(Model):
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint(languoid_id, provider, ord),
-    )
+    __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
 
     def __repr__(self):
         return '<%s languoid_id=%r povider=%r lang=%r name=%r>' % (self.__class__.__name__,
@@ -377,12 +368,11 @@ class Altname(Model):
 
     @classmethod
     def printf(cls):
-        return sa.case([
-            (cls.lang == '',
-                 cls.name),
-            (sa.between(sa.func.length(cls.lang), 2, 3),
-                 sa.func.printf('%s [%s]', cls.name, cls.lang)),
-            ], else_=cls.name)
+        return sa.case([(cls.lang == '',
+                         cls.name),
+                        (sa.between(sa.func.length(cls.lang), 2, 3),
+                         sa.func.printf('%s [%s]', cls.name, cls.lang))],
+                       else_=cls.name)
 
 
 class Trigger(Model):
@@ -395,9 +385,7 @@ class Trigger(Model):
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint(languoid_id, field, ord),
-    )
+    __table_args__ = (UniqueConstraint(languoid_id, field, ord),)
 
     def __repr__(self):
         return '<%s languoid_id=%r field=%r trigger=%r>' % (self.__class__.__name__,
@@ -454,9 +442,7 @@ class ClassificationRef(Model):
 
     pages = Column(Text, CheckConstraint("pages != ''"))
 
-    __table_args__ = (
-        UniqueConstraint(languoid_id, kind, ord),
-    )
+    __table_args__ = (UniqueConstraint(languoid_id, kind, ord),)
 
     def __repr__(self):
         return '<%s languoid_id=%r kind=%r bibfile=%r bibkey=%r>' % (self.__class__.__name__,
@@ -574,9 +560,7 @@ class IsoRetirementChangeTo(Model):
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint('languoid_id', 'ord'),
-    )
+    __table_args__ = (UniqueConstraint('languoid_id', 'ord'),)
 
     def __repr__(self):
         return '<%s languoid_id=%r code=%r>' % (self.__class__.__name__,
