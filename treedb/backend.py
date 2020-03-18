@@ -145,7 +145,6 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
             if not force_delete:
                 raise
 
-            msg = 'force_delete %r'
             warnings.warn('force delete %r' % engine.file)
             rebuild = True
         else:
