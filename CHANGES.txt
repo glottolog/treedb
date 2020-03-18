@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 0.1.5 (in development)
-------------------------------
+Version 0.1.5
+-------------
 
+Update endangerment sources.
 
+Add PyPI project_urls to setup.py.
 
 
 Version 0.1.4

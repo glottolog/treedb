@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='treedb',
-    version='0.1.5.dev0',
+    version='0.1.5',
     author='Sebastian Bank',
     author_email='sebastian.bank@uni-leipzig.de',
     description='Glottolog languoid tree as SQLite database',
@@ -13,7 +13,6 @@ setup(
     license='Apache Software License',
     url='https://github.com/glottolog/treedb',
     project_urls={
-        'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',
         'Issue Tracker': 'https://github.com/glottolog/treedb/issues',
     },
     packages=find_packages(),
