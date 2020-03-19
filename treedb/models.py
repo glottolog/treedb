@@ -530,9 +530,12 @@ class EndangermentSource(Model):
 
     @classmethod
     def printf(cls):
-        return sa.case([(cls.name != None, cls.name)],
-                       else_=sa.func.printf('**%s:%s**:%s',
-                                            cls.bibfile, cls.bibkey, cls.pages))
+        return sa.case([(cls.name != None, cls.name),
+                        (cls.bibkey == None, '')],
+                       else_=sa.func.printf('**%s:%s**:%s', cls.bibfile,
+                                                            cls.bibkey,
+                                                            cls.pages))
+
  
 class EthnologueComment(Model):
 
