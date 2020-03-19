@@ -74,13 +74,16 @@ def iterfiles(top, verbose=False):
         stack.extend(dirs[::-1])
 
 
-def path_from_filename(filename, *args):
+def path_from_filename(filename, *args, expanduser=True):
     if hasattr(filename, 'open'):
         assert not args
         del args
+        result = filename
     else:
-        filename = pathlib.Path(filename, *args)
-    return filename
+        result = pathlib.Path(filename, *args)
+    if expanduser:
+        result = result.expanduser()
+    return result
 
 
 def sha256sum(file, raw=False):
@@ -146,7 +149,7 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
         return data.encode(encoding)
 
     else:
-        filename = path_from_filename(filename).expanduser()
+        filename = path_from_filename(filename)
         with open(filename, 'wt', encoding=encoding, newline='') as f:
             writerows = csv.writer(f, dialect=dialect).writerows
             if header is not None:

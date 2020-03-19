@@ -42,7 +42,7 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
         raise ValueError(f'missing repo_root path: {repo_root!r}')
 
     log.debug('repo root: %r', repo_root)
-    repo_path = _tools.path_from_filename(repo_root).expanduser()
+    repo_path = _tools.path_from_filename(repo_root)
     if resolve:
         repo_path = repo_path.resolve(strict=False)
 

@@ -72,7 +72,7 @@ def to_raw_csv(filename=None,
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
     else:
-        filename = _tools.path_from_filename(filename).expanduser()
+        filename = _tools.path_from_filename(filename)
 
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,

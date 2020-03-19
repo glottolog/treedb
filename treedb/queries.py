@@ -54,7 +54,7 @@ def write_csv(query=None, filename=None,
 
     if filename is None:
         filename = bind.file_with_suffix('.csv').name
-    filename = _tools.path_from_filename(filename).expanduser()
+    filename = _tools.path_from_filename(filename)
 
     log.info('write csv: %r', filename)
     if verbose:

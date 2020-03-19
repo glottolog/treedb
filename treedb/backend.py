@@ -34,12 +34,13 @@ def create_engine(filename, resolve=False, title=None):
     log.debug('filename: %r', filename)
 
     if filename is not None:
-        filename = _tools.path_from_filename(filename).expanduser()
+        filename = _tools.path_from_filename(filename)
         if resolve:
             filename = filename.resolve(strict=False)
 
     if filename is None and title is not None:
-        ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory')
+        ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory',
+                                                        expanduser=False)
 
     ENGINE.file = filename
     return ENGINE

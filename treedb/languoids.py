@@ -233,7 +233,7 @@ def to_json_csv(root_or_bind=ROOT, filename=None,
             path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.name
     else:
-        filename = _tools.path_from_filename(filename).expanduser()
+        filename = _tools.path_from_filename(filename)
 
     log.info('write json csv: %r', filename)
 
