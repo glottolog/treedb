@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 0.2 (in development)
-----------------------------
+Version 0.2
+-----------
 
 Drop Python 2 and 3.5 support.
+
+Parse endangerment source references into infividual fields.
 
 Switch license to MIT license.
 
