@@ -340,7 +340,7 @@ class Source(Model):
                                        cls.bibfile, cls.bibkey,
                                        cls.pages, cls.trigger)),
                         (cls.pages != None,
-                         sa.func.printf('**s:%s**:%s',
+                         sa.func.printf('**%s:%s**:%s',
                                         cls.bibfile, cls.bibkey,
                                         cls.pages)),
                         (cls.trigger != None,
@@ -469,7 +469,7 @@ class ClassificationRef(Model):
 
     @classmethod
     def printf(cls):
-        return sa.func.printf(sa.case([(cls.pages != None, '**s:%s**:%s')],
+        return sa.func.printf(sa.case([(cls.pages != None, '**%s:%s**:%s')],
                                       else_='**%s:%s**'),
                               cls.bibfile, cls.bibkey, cls.pages)
 
@@ -531,7 +531,7 @@ class EndangermentSource(Model):
     @classmethod
     def printf(cls):
         return sa.case([(cls.name != None, cls.name)],
-                       else_=sa.func.printf('**s:%s**:%s',
+                       else_=sa.func.printf('**%s:%s**:%s',
                                             cls.bibfile, cls.bibkey, cls.pages))
  
 class EthnologueComment(Model):
