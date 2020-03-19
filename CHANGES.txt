@@ -2,10 +2,14 @@ Changelog
 =========
 
 
-Version 0.2.1 (in development)
-------------------------------
+Version 0.2.1
+-------------
 
+Fix treedb.write_csv() endangerment_source column output.
 
+Use os.path.expanduser() on filename arguments.
+
+Fix setup.py old license classifier.
 
 
 Version 0.2
