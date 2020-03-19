@@ -179,7 +179,7 @@ def get_query(bind=ENGINE):
                 .order_by(famr.ord)
                 .label('classification_familyrefs'),
             ] + get_cols(Endangerment, label='endangerment_%s')
-            + [EndangermentSource.name.label('endangerment_source')]
+            + [EndangermentSource.printf().label('endangerment_source')]
             + get_cols(EthnologueComment, label='elcomment_%s')
             + get_cols(IsoRetirement, label='iso_retirement_%s')
             + [

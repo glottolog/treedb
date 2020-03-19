@@ -50,12 +50,19 @@ def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
 
 
 def splitcountry(name, _match=re.compile(r'(?P<name>.+)'
-                                         r' \((?P<id>[^)]+)\)').fullmatch):
+                                         r' '
+                                         r'\('
+                                         r'(?P<id>[^)]+)'
+                                         r'\)').fullmatch):
     return _match(name).groupdict()
 
 
-def splitlink(markdown, _match=re.compile(r'\[(?P<title>[^]]+)\]'
-                                          r'\((?P<url>[^)]+)\)').fullmatch):
+def splitlink(markdown, _match=re.compile(r'\['
+                                          r'(?P<title>[^]]+)'
+                                          r'\]'
+                                          r'\('
+                                          r'(?P<url>[^)]+)'
+                                          r'\)').fullmatch):
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -73,16 +80,36 @@ def splitlink(markdown, _match=re.compile(r'\[(?P<title>[^]]+)\]'
     return {'url': url, 'title': title, 'scheme': scheme}
 
 
-def splitsource(s, _match=re.compile(
-        r"\*\*(?P<bibfile>[a-z0-9\-_]+):(?P<bibkey>[a-zA-Z.?\-;*'/()\[\]!_:0-9\u2014]+?)\*\*"
-        r"(:(?P<pages>[0-9\-f]+))?"
-        r'(?:<trigger "(?P<trigger>[^\"]+)">)?').match):
-    return _match(s).groupdict()
+def splitsource(s, _match=re.compile(r'\*{2}'
+                                     r'(?P<bibfile>[a-z0-9\-_]+)'
+                                     r':'
+                                     r"(?P<bibkey>[a-zA-Z.?\-;*'/()\[\]!_:0-9\u2014]+?)"
+                                     r'\*{2}'
+                                     r'(?:'
+                                         r':'
+                                         r'(?P<pages>[0-9\-f]+)'
+                                     r')?'
+                                     r'(?:'
+                                         r'<trigger "'
+                                         r'(?P<trigger>[^\"]+)'
+                                     r'">'
+                                     r')?').match,
+                endangerment=False):
+    if endangerment and s.isalnum():
+        return {'name': s}
+
+    result = _match(s).groupdict()
+    if endangerment:
+        result.pop('trigger', None)
+    return result
 
 
-def splitaltname(s, parse_fail='!', _match=re.compile(
-        r'(?P<name>[^[]+)'
-        r'(?: \[(?P<lang>[a-z]{2,3})\])?').fullmatch):
+def splitaltname(s, _match=re.compile(r'(?P<name>[^[]+)'
+                                      r'(?: '
+                                          r'\['
+                                          r'(?P<lang>[a-z]{2,3})'
+                                          r'\]'
+                                      r')?').fullmatch, parse_fail='!'):
     ma = _match(s)
     if ma is None:
         return {'name': s, 'lang': parse_fail}
@@ -163,7 +190,7 @@ def iterlanguoids(root_or_bind=ROOT):
             sct = cfg['endangerment']
             item['endangerment'] = {
                 'status': sct['status'],
-                'source': sct['source'],
+                'source': splitsource(sct['source'], endangerment=True),
                 'date': make_datetime(sct['date']),
                 'comment': sct['comment'],
             }

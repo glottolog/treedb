@@ -53,12 +53,6 @@ ENDANGERMENT_STATUS = ('not endangered',
                        'moribund', 'nearly extinct',
                        'extinct')
 
-ENDANGERMENT_SOURCE = (r'^('
-                           r'\w+\d*'
-                       r'|'
-                           r'\*{2}[^*]+\*{2}:\d+'
-                       r')$')
-
 EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
@@ -475,8 +469,9 @@ class ClassificationRef(Model):
 
     @classmethod
     def printf(cls):
-        format_ = sa.case([(cls.pages != None, '**s:%s**:%s')], else_='**%s:%s**')
-        return sa.func.printf(format_, cls.bibfile, cls.bibkey, cls.pages)
+        return sa.func.printf(sa.case([(cls.pages != None, '**s:%s**:%s')],
+                                      else_='**%s:%s**'),
+                              cls.bibfile, cls.bibkey, cls.pages)
 
 
 class Endangerment(Model):
@@ -511,20 +506,34 @@ class EndangermentSource(Model):
     __tablename__ = 'endangerment_source'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text,
-                  CheckConstraint("name REGEXP '%s'" % ENDANGERMENT_SOURCE),
-                  nullable=False, unique=True)
+    name = Column(Text, CheckConstraint("name != ''"), unique=True)
+    bibfile = Column(Text, CheckConstraint("bibfile != ''"))
+    bibkey = Column(Text, CheckConstraint("bibkey != ''"))
+    pages = Column(Text, CheckConstraint("pages != ''"))
+
+    __table_args__ = (UniqueConstraint(bibfile, bibkey, pages),
+                      CheckConstraint('(name IS NULL) != (bibkey IS NULL)'),
+                      CheckConstraint('(bibfile IS NULL) = (bibkey IS NULL)'
+                                      ' AND (bibkey IS NULL) = (pages IS NULL)'))
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' id={self.id!r}'
-                f' name={self.name!r}')
+                f' name={self.name!r}'
+                f' bibfile={self.bibfile!r}'
+                f' bibkey={self.bibkey!r}'
+                f' pages={self.pages!r}')
 
     endangerment = relationship('Endangerment',
                                 uselist=False,
                                 back_populates='source')
 
-
+    @classmethod
+    def printf(cls):
+        return sa.case([(cls.name != None, cls.name)],
+                       else_=sa.func.printf('**s:%s**:%s',
+                                            cls.bibfile, cls.bibkey, cls.pages))
+ 
 class EthnologueComment(Model):
 
     __tablename__ = 'ethnologuecomment'

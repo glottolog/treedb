@@ -54,9 +54,14 @@ def load(languoids, conn):
 
     class EndangermentSourceMap(dict):
 
-        def __missing__(self, name):
-            id, = insert_enda_source(name=name).inserted_primary_key
-            self[name] = id
+        @staticmethod
+        def params_to_key(params):
+            return tuple(sorted(params.items()))
+
+        def __missing__(self, key):
+            params = dict(key)
+            id, = insert_enda_source(**params).inserted_primary_key
+            self[key] = id
             return id
 
     es_ids = EndangermentSourceMap()
@@ -133,9 +138,10 @@ def load(languoids, conn):
                     insert_comment(languoid_id=lid, kind=kind, comment=value)
 
         if endangerment is not None:
-            source = endangerment.pop('source')
+            source = es_ids.params_to_key(endangerment.pop('source'))
             insert_enda(languoid_id=lid,
-                        source_id=es_ids[source], **endangerment)
+                        source_id=es_ids[source],
+                        **endangerment)
 
         if hh_ethnologue_comment is not None:
             insert_el(languoid_id=lid, **hh_ethnologue_comment)
