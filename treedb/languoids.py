@@ -232,6 +232,8 @@ def to_json_csv(root_or_bind=ROOT, filename=None,
         except AttributeError:
             path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.name
+    else:
+        filename = _tools.path_from_filename(filename).expanduser()
 
     log.info('write json csv: %r', filename)
 

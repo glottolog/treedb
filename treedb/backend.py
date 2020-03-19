@@ -262,7 +262,7 @@ def dump_sql(engine=ENGINE, filename=None, encoding=_tools.ENCODING):
 
     n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
-         path.open('w', encoding=encoding) as f:
+         path.open('wt', encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
             if not (n % 100000):

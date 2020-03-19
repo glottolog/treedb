@@ -146,7 +146,8 @@ def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
         return data.encode(encoding)
 
     else:
-        with open(filename, 'w', encoding=encoding, newline='') as f:
+        filename = path_from_filename(filename).expanduser()
+        with open(filename, 'wt', encoding=encoding, newline='') as f:
             writerows = csv.writer(f, dialect=dialect).writerows
             if header is not None:
                 writerows([header])

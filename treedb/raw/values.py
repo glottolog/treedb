@@ -71,6 +71,8 @@ def to_raw_csv(filename=None,
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
+    else:
+        filename = _tools.path_from_filename(filename).expanduser()
 
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,
