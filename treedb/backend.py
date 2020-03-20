@@ -28,7 +28,7 @@ __all__ = ['create_engine',
 log = logging.getLogger(__name__)
 
 
-def create_engine(filename, resolve=False, title=None):
+def create_engine(filename, *, resolve=False, title=None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('create_engine')
     log.debug('filename: %r', filename)
@@ -66,7 +66,7 @@ def _regexp(pattern, value):
 Model = sa.ext.declarative.declarative_base()
 
 
-def print_schema(metadata=Model.metadata, engine=ENGINE):
+def print_schema(metadata=Model.metadata, *, engine=ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql):
         print(sql.compile(dialect=engine.dialect))
@@ -97,7 +97,8 @@ class Dataset(Model):
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
-def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
+def load(filename=ENGINE, repo_root=None, *,
+         treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
@@ -159,7 +160,6 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
-
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -246,7 +246,7 @@ def load(filename=ENGINE, repo_root=None, treepath=_files.TREE_IN_ROOT,
     return engine
 
 
-def log_dataset(params, name=Dataset.__tablename__):
+def log_dataset(params, *, name=Dataset.__tablename__):
     log.info('git describe %(git_describe)r clean: %(clean)r', params)
     if not params['clean']:
         warnings.warn(f'{name} not clean')
@@ -254,7 +254,7 @@ def log_dataset(params, name=Dataset.__tablename__):
     log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
-def dump_sql(engine=ENGINE, filename=None, encoding=_tools.ENCODING):
+def dump_sql(engine=ENGINE, filename=None, *, encoding=_tools.ENCODING):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql').name
@@ -273,7 +273,7 @@ def dump_sql(engine=ENGINE, filename=None, encoding=_tools.ENCODING):
     return path
 
 
-def export(engine=ENGINE, filename=None,
+def export(engine=ENGINE, filename=None, *,
            dialect=_tools.DIALECT, encoding=_tools.ENCODING,
            metadata=Model.metadata):
     """Write all tables to <tablename>.csv in <databasename>.zip."""

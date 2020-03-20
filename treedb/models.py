@@ -148,7 +148,7 @@ class Languoid(Model):
                                   back_populates='languoid')
 
     @classmethod
-    def tree(cls, include_self=False, with_steps=False, with_terminal=False):
+    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
         Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
 
         tree_1 = sa.select([Child.id.label('child_id')])
@@ -190,7 +190,7 @@ class Languoid(Model):
         return tree_1.union_all(tree_2)
 
     @classmethod
-    def path(cls, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
+    def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
         tree = _tree
         if tree is None:
             tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
@@ -203,7 +203,7 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def path_family_language(cls, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
+    def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
 
@@ -536,7 +536,7 @@ class EndangermentSource(Model):
                                                             cls.bibkey,
                                                             cls.pages))
 
- 
+
 class EthnologueComment(Model):
 
     __tablename__ = 'ethnologuecomment'

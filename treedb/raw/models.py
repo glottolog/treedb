@@ -130,7 +130,7 @@ class Fields(object):
         return (section, None) in cls._fields or (section, option) in cls._fields
 
     @classmethod
-    def is_lines(cls, section, option, unknown_as_scalar=True):
+    def is_lines(cls, section, option, *, unknown_as_scalar=True):
         """Return whether the section option is treated as list of lines."""
         result = cls._fields.get((section, None))
 

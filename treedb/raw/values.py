@@ -37,7 +37,7 @@ def print_stats(bind=ENGINE):
     _queries.print_rows(select_nvalues, format_=template, bind=bind)
 
 
-def checksum(weak=False, name=None,
+def checksum(weak=False, name=None, *,
              dialect=_tools.DIALECT, encoding=_tools.ENCODING,
              bind=ENGINE):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
@@ -65,7 +65,7 @@ def checksum(weak=False, name=None,
     return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
 
 
-def to_raw_csv(filename=None,
+def to_raw_csv(filename=None, *,
                dialect=_tools.DIALECT, encoding=_tools.ENCODING,
                bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
@@ -83,7 +83,8 @@ def to_raw_csv(filename=None,
                               dialect=dialect, encoding=encoding, bind=bind)
 
 
-def to_files(root=ROOT, bind=ENGINE, verbose=True, is_lines=Fields.is_lines):
+def to_files(root=ROOT, bind=ENGINE, *,
+             verbose=True, is_lines=Fields.is_lines):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write raw records to tree')
     records = _records.iterrecords(bind)

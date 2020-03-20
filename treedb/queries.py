@@ -29,7 +29,7 @@ __all__ = ['print_rows', 'write_csv', 'hash_csv',
 log = logging.getLogger(__name__)
 
 
-def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
+def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -45,7 +45,7 @@ def print_rows(query=None, format_=None, verbose=False, bind=ENGINE):
         print(r)
 
 
-def write_csv(query=None, filename=None,
+def write_csv(query=None, filename=None, *,
               dialect=_tools.DIALECT, encoding=_tools.ENCODING,
               verbose=False, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
@@ -68,7 +68,8 @@ def write_csv(query=None, filename=None,
                             dialect=dialect, encoding=encoding)
 
 
-def hash_csv(query=None, raw=False, name=None,
+def hash_csv(query=None, *,
+             raw=False, name=None,
              dialect=_tools.DIALECT, encoding=_tools.ENCODING,
              bind=ENGINE):
     if query is None:
@@ -199,7 +200,7 @@ def get_query(bind=ENGINE):
     return select_languoid
 
 
-def iterdescendants(parent_level=None, child_level=None, bind=ENGINE):
+def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165

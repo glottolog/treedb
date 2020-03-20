@@ -21,7 +21,7 @@ __all__ = ['check']
 log = logging.getLogger(__name__)
 
 
-def check(func=None, bind=ENGINE):
+def check(func=None, *, bind=ENGINE):
     """Run consistency/sanity checks on database."""
     if func is not None:
         try:
@@ -93,32 +93,33 @@ class Check(object):
 
 
 def docformat(func):
-    spec = inspect.getfullargspec(func)
-    defaults = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
-    func.__doc__ = func.__doc__ % defaults
+    sig = inspect.signature(func)
+    defaults = {n: p.default for n, p in sig.parameters.items()
+                if p.default != inspect.Parameter.empty}
+    func.__doc__ = func.__doc__.format_map(defaults)
     return func
 
 
 @check
 @docformat
-def valid_glottocode(session, pattern=r'^[a-z0-9]{4}\d{4}$'):
-    """Glottocodes match %(pattern)r."""
+def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
+    """Glottocodes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
         .filter(~Languoid.id.op('REGEXP')(pattern))
 
 
 @check
 @docformat
-def valid_iso639_3(session, pattern=r'^[a-z]{3}$'):
-    """Iso codes match %(pattern)r."""
+def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
+    """Iso codes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
         .filter(~Languoid.iso639_3.op('REGEXP')(pattern))
 
 
 @check
 @docformat
-def valid_hid(session, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
-    """Hids match %(pattern)r."""
+def valid_hid(session, *, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
+    """Hids match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
         .filter(~Languoid.hid.op('REGEXP')(pattern))
 

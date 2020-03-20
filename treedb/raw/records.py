@@ -23,7 +23,7 @@ def literal_compile(expression):
     return expression.compile(compile_kwargs={'literal_binds': True})
 
 
-def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
+def iterrecords(bind=ENGINE, *, windowsize=WINDOWSIZE, skip_unknown=True):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     log.info('enter raw records')
     log.debug('bind: %r', bind)
@@ -65,7 +65,7 @@ def iterrecords(bind=ENGINE, windowsize=WINDOWSIZE, skip_unknown=True):
     log.info('exit raw records')
 
 
-def window_slices(key_column, size=WINDOWSIZE, bind=ENGINE):
+def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     """Yield where clause making function for key_column windows of size."""
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()

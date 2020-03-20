@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class Options(dict):
     """Insert optons on demand and cache id and lines config."""
 
-    def __init__(self, items=(), insert=None):
+    def __init__(self, items=(), *, insert=None):
         super().__init__(items)
         self.insert = insert
 

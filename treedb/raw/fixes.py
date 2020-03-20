@@ -19,7 +19,7 @@ __all__ = ['drop_duplicate_sources',
 log = logging.getLogger(__name__)
 
 
-def dropfunc(func, bind=ENGINE):
+def dropfunc(func, *, bind=ENGINE):
     def wrapper(bind=bind):
         log.info('execute %r', func.__name__)
 
@@ -77,7 +77,7 @@ def drop_duplicated_crefs():
 def update_countries(bind=ENGINE):
     # https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
     # TODO: missing 'Saint Lucia (LC)'
-    old_new = {'Cape Verde (CV)': 'Cabo Verde (CV)', 
+    old_new = {'Cape Verde (CV)': 'Cabo Verde (CV)',
                'Czech Republic (CZ)': 'Czechia (CZ)',
                'Macedonia, Republic of (MK)': 'North Macedonia (MK)',
                'Swaziland (SZ)': 'Eswatini (SZ)'}

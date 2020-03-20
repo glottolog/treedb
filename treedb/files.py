@@ -35,7 +35,7 @@ def get_default_root(env_var, checkout_root, package_root):
     return result
 
 
-def set_root(repo_root, treepath=TREE_IN_ROOT, resolve=False):
+def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
     """Set and return default root for glottolog lanugoid directory tree."""
     log.info('set_root')
     if repo_root is None:
@@ -67,12 +67,12 @@ class ConfigParser(configparser.ConfigParser):
     }
 
     @classmethod
-    def from_filename(cls, filename, encoding=_tools.ENCODING, **kwargs):
+    def from_filename(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
         path = _tools.path_from_filename(filename)
         return cls.from_path(path, encoding=encoding, **kwargs)
 
     @classmethod
-    def from_path(cls, path, encoding=_tools.ENCODING, **kwargs):
+    def from_path(cls, path, *, encoding=_tools.ENCODING, **kwargs):
         assert path.name == cls._basename
 
         inst = cls(**kwargs)
@@ -80,22 +80,22 @@ class ConfigParser(configparser.ConfigParser):
             inst.read_file(f)
         return inst
 
-    def __init__(self, defaults=None, **kwargs):
+    def __init__(self, *, defaults=None, **kwargs):
         for k, v in self._init_defaults.items():
             kwargs.setdefault(k, v)
         super().__init__(defaults=defaults, **kwargs)
 
-    def to_filename(self, filename, encoding=_tools.ENCODING):
+    def to_filename(self, filename, *, encoding=_tools.ENCODING):
         path = _tools.path_from_filename(filename)
         self.to_path(path, encoding=encoding)
 
-    def to_path(self, path, encoding=_tools.ENCODING):
+    def to_path(self, path, *, encoding=_tools.ENCODING):
         with path.open('wt', encoding=encoding, newline=self._newline) as f:
             f.write(self._header.format(encoding=encoding))
             self.write(f)
 
 
-def iterfiles(root=ROOT, load=ConfigParser.from_path, make_path=pathlib.Path):
+def iterfiles(root=ROOT, *, load=ConfigParser.from_path, make_path=pathlib.Path):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     root = _tools.path_from_filename(root).resolve()
     log.info('enter directory tree %r', root)
@@ -110,7 +110,8 @@ def iterfiles(root=ROOT, load=ConfigParser.from_path, make_path=pathlib.Path):
     log.info('exit directory tree %r', root)
 
 
-def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
+def save(pairs, root=ROOT, *,
+         basename=BASENAME, assume_changed=False,
          verbose=True, load=ConfigParser.from_path):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
@@ -153,7 +154,7 @@ def save(pairs, root=ROOT, basename=BASENAME, assume_changed=False,
     return files_written
 
 
-def roundtrip(root=ROOT, verbose=False):
+def roundtrip(root=ROOT, *, verbose=False):
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root)
 

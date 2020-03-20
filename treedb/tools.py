@@ -50,7 +50,7 @@ def groupby_attrgetter(*attrnames):
     return functools.partial(itertools.groupby, key=key)
 
 
-def iterfiles(top, verbose=False):
+def iterfiles(top, *, verbose=False):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = path_from_filename(top)
@@ -86,7 +86,7 @@ def path_from_filename(filename, *args, expanduser=True):
     return result
 
 
-def sha256sum(file, raw=False):
+def sha256sum(file, *, raw=False):
     result = hashlib.sha256()
 
     update_hash(result, file)
@@ -96,14 +96,14 @@ def sha256sum(file, raw=False):
     return result
 
 
-def update_hash(hash_, file, chunksize=2**16):  # 64 kB
+def update_hash(hash_, file, *, chunksize=2**16):  # 64 kB
     with path_from_filename(file).open('rb') as f:
         read = functools.partial(f.read, chunksize)
         for chunk in iter(read, b''):
             hash_.update(chunk)
 
 
-def check_output(args, cwd=None, encoding=ENCODING):
+def check_output(args, *, cwd=None, encoding=ENCODING):
     log.debug('get stdout of %r', args)
 
     if platform.system() == 'Windows':
@@ -117,7 +117,8 @@ def check_output(args, cwd=None, encoding=ENCODING):
     return out.decode(encoding).strip()
 
 
-def write_csv(filename, rows, header=None, dialect=DIALECT, encoding=ENCODING):
+def write_csv(filename, rows, *, header=None,
+              dialect=DIALECT, encoding=ENCODING):
     if hasattr(filename, 'hexdigest'):
         hash_ = filename
         with io.StringIO() as f:

@@ -41,28 +41,28 @@ def skip_empty(mapping):
     return {k: v for k, v in mapping.items() if v}
 
 
-def make_date(value, format_='%Y-%m-%d'):
+def make_date(value, *, format_='%Y-%m-%d'):
     return datetime.datetime.strptime(value, format_).date()
 
 
-def make_datetime(value, format_='%Y-%m-%dT%H:%M:%S'):
+def make_datetime(value, *, format_='%Y-%m-%dT%H:%M:%S'):
     return datetime.datetime.strptime(value, format_)
 
 
-def splitcountry(name, _match=re.compile(r'(?P<name>.+)'
-                                         r' '
-                                         r'\('
-                                         r'(?P<id>[^)]+)'
-                                         r'\)').fullmatch):
+def splitcountry(name, *, _match=re.compile(r'(?P<name>.+)'
+                                            r' '
+                                            r'\('
+                                            r'(?P<id>[^)]+)'
+                                            r'\)').fullmatch):
     return _match(name).groupdict()
 
 
-def splitlink(markdown, _match=re.compile(r'\['
-                                          r'(?P<title>[^]]+)'
-                                          r'\]'
-                                          r'\('
-                                          r'(?P<url>[^)]+)'
-                                          r'\)').fullmatch):
+def splitlink(markdown, *, _match=re.compile(r'\['
+                                             r'(?P<title>[^]]+)'
+                                             r'\]'
+                                             r'\('
+                                             r'(?P<url>[^)]+)'
+                                             r'\)').fullmatch):
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -80,23 +80,23 @@ def splitlink(markdown, _match=re.compile(r'\['
     return {'url': url, 'title': title, 'scheme': scheme}
 
 
-def splitsource(s, _match=re.compile(r'\*{2}'
-                                     r'(?P<bibfile>[a-z0-9_\-]+)'
-                                     r':'
-                                     r"(?P<bibkey>[a-zA-Z0-9_\-/.;:?!'()\[\]]+?)"
-                                     r'\*{2}'
-                                     r'(?:'
-                                         r':'
-                                         r'(?P<pages>'
-                                             r'[0-9]+(?:-[0-9]+)?'
-                                             r'(?:, [0-9]+(?:-[0-9]+)?)*'
-                                         r')'
-                                     r')?'
-                                     r'(?:'
-                                         r'<trigger "'
-                                         r'(?P<trigger>[^\"]+)'
-                                     r'">'
-                                     r')?').match,
+def splitsource(s, *, _match=re.compile(r'\*{2}'
+                                        r'(?P<bibfile>[a-z0-9_\-]+)'
+                                        r':'
+                                        r"(?P<bibkey>[a-zA-Z0-9_\-/.;:?!'()\[\]]+?)"
+                                        r'\*{2}'
+                                        r'(?:'
+                                            r':'
+                                            r'(?P<pages>'
+                                                r'[0-9]+(?:-[0-9]+)?'
+                                                r'(?:, [0-9]+(?:-[0-9]+)?)*'
+                                           r')'
+                                        r')?'
+                                        r'(?:'
+                                            r'<trigger "'
+                                            r'(?P<trigger>[^\"]+)'
+                                        r'">'
+                                        r')?').match,
                 endangerment=False):
     if endangerment and s.isalnum():
         return {'name': s}
@@ -107,12 +107,12 @@ def splitsource(s, _match=re.compile(r'\*{2}'
     return result
 
 
-def splitaltname(s, _match=re.compile(r'(?P<name>[^[]+)'
-                                      r'(?: '
-                                          r'\['
-                                          r'(?P<lang>[a-z]{2,3})'
-                                          r'\]'
-                                      r')?').fullmatch, parse_fail='!'):
+def splitaltname(s, *, _match=re.compile(r'(?P<name>[^[]+)'
+                                         r'(?: '
+                                             r'\['
+                                             r'(?P<lang>[a-z]{2,3})'
+                                             r'\]'
+                                         r')?').fullmatch, parse_fail='!'):
     ma = _match(s)
     if ma is None:
         return {'name': s, 'lang': parse_fail}
@@ -225,7 +225,7 @@ def iterlanguoids(root_or_bind=ROOT):
     log.info('%d languoids extracted', n)
 
 
-def to_json_csv(root_or_bind=ROOT, filename=None,
+def to_json_csv(root_or_bind=ROOT, filename=None, *,
                 dialect=_tools.DIALECT, encoding=_tools.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
