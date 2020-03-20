@@ -81,13 +81,16 @@ def splitlink(markdown, _match=re.compile(r'\['
 
 
 def splitsource(s, _match=re.compile(r'\*{2}'
-                                     r'(?P<bibfile>[a-z0-9\-_]+)'
+                                     r'(?P<bibfile>[a-z0-9_\-]+)'
                                      r':'
-                                     r"(?P<bibkey>[a-zA-Z.?\-;*'/()\[\]!_:0-9\u2014]+?)"
+                                     r"(?P<bibkey>[a-zA-Z0-9_\-/.;:?!*'()\[\]\u2014]+?)"
                                      r'\*{2}'
                                      r'(?:'
                                          r':'
-                                         r'(?P<pages>[0-9\-f]+)'
+                                         r'(?P<pages>'
+                                             r'[0-9]+(?:-[0-9]+)?'
+                                             r'(?:, [0-9]+(?:-[0-9]+)?)*'
+                                         r')'
                                      r')?'
                                      r'(?:'
                                          r'<trigger "'
