@@ -37,7 +37,7 @@ def print_stats(*, bind=ENGINE):
     _queries.print_rows(select_nvalues, format_=template, bind=bind)
 
 
-def checksum(weak=False, name=None, *,
+def checksum(*, weak=False, name=None,
              dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)

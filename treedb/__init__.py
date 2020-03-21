@@ -10,26 +10,32 @@ from .files import get_default_root, set_root, iterfiles
 
 from .languoids import iterlanguoids, write_json_csv, compare_with_raw
 
-from .backend import (create_engine, load, Dataset, Session,
-                      print_schema, dump_sql, export, backup)
+from .backend import (set_engine, load, Dataset, Session,
+                      print_schema, dump_sql, export, backup,
+                      print_table_sql, select_stats)
 
 from .models import LEVEL, Languoid
 
 from .checks import check
 
-from .queries import print_rows, write_csv, hash_csv, get_query, iterdescendants
+from .queries import (print_rows, write_csv, hash_csv,
+                      get_query,
+                      iterdescendants)
 
-from .sa_helpers import text, select, count
+from .shortcuts import (count, select, text,
+                        pd_read_sql,
+                        configure_logging)
 
 __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
            'iterlanguoids', 'write_json_csv', 'compare_with_raw',
-           'create_engine', 'load', 'Dataset', 'Session',
+           'set_engine', 'load', 'Dataset', 'Session',
            'print_schema', 'dump_sql', 'export', 'backup',
+           'print_table_sql', 'select_stats',
            'LEVEL', 'Languoid',
            'check',
            'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',
-           'text', 'select', 'count',
+           'count', 'select', 'text', 'pd_read_sql', 'configure_logging',
            'root', 'engine']
 
 __title__ = 'treedb'
@@ -42,4 +48,4 @@ __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 root = set_root(get_default_root('TREEDB_REPO', '../glottolog', '.'))
 
 # default engine: in-memory database
-engine = create_engine(None, title=__title__)
+engine = set_engine(None, title=__title__)

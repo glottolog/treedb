@@ -22,7 +22,7 @@ __all__ = ['next_count',
            'iterfiles',
            'path_from_filename',
            'sha256sum',
-           'check_output',
+           'run',
            'write_csv']
 
 
@@ -103,18 +103,24 @@ def update_hash(hash_, file, *, chunksize=2**16):  # 64 kB
             hash_.update(chunk)
 
 
-def check_output(args, *, cwd=None, encoding=ENCODING):
-    log.debug('get stdout of %r', args)
+def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False):
+    log.info('subprocess.run(%r)', cmd)
+
+    kwargs = {'capture_output': capture_output,
+              'cwd': cwd, 'encoding': encoding}
 
     if platform.system() == 'Windows':
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
+        kwargs['startupinfo'] = s = subprocess.STARTUPINFO()
+        s.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        s.wShowWindow = subprocess.SW_HIDE
     else:
-        startupinfo = None
+        kwargs['startupinfo'] = None
 
-    out = subprocess.check_output(args, cwd=cwd, startupinfo=startupinfo)
-    return out.decode(encoding).strip()
+    proc = subprocess.run(cmd, **kwargs)
+
+    if capture_output and unpack:
+        return proc.stdout.strip()
+    return proc
 
 
 def write_csv(filename, rows, *, header=None,

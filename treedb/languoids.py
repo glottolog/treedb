@@ -219,7 +219,7 @@ def iterlanguoids(root_or_bind=ROOT):
 
         yield path_tuple, item
 
-    log.info('%d languoids extracted', n)
+    log.info('%s languoids extracted', f'{n:_d}')
 
 
 def write_json_csv(root_or_bind=ROOT, filename=None, *,

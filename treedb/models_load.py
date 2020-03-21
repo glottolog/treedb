@@ -60,6 +60,7 @@ def load(languoids, conn):
 
         def __missing__(self, key):
             params = dict(key)
+            log.debug('insert new endangerment_source: %r', params)
             id, = insert_enda_source(**params).inserted_primary_key
             self[key] = id
             return id

@@ -18,20 +18,21 @@ from . import (tools as _tools,
 
 from . import ROOT, ENGINE
 
-__all__ = ['create_engine',
+__all__ = ['set_engine',
            'Model', 'print_schema',
            'Dataset',
            'Session',
            'load',
-           'dump_sql', 'export', 'backup']
+           'dump_sql', 'export', 'backup',
+           'print_table_sql', 'select_stats']
 
 
 log = logging.getLogger(__name__)
 
 
-def create_engine(filename, *, resolve=False, title=None):
+def set_engine(filename, *, resolve=False, title=None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
-    log.info('create_engine')
+    log.info('set_engine')
     log.debug('filename: %r', filename)
 
     if filename is not None:
@@ -108,7 +109,7 @@ def load(filename=ENGINE, repo_root=None, *,
     if hasattr(filename, 'execute'):
         engine = filename
     else:
-        engine = create_engine(filename)
+        engine = set_engine(filename)
 
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
@@ -130,7 +131,11 @@ def load(filename=ENGINE, repo_root=None, *,
         from_raw = not exclude_raw
 
     assert engine.url.drivername == 'sqlite'
-    if engine.file is not None and engine.file.exists():
+    if engine.file is None:
+        log.debug('dispose engine %r', engine)
+        engine.dispose()
+        log.warning('connected to a transient in-memory database')
+    elif engine.file.exists():
         log.debug('read %r from %r', Dataset.__tablename__, engine.file)
 
         try:
@@ -158,9 +163,6 @@ def load(filename=ENGINE, repo_root=None, *,
             log.info('use present %r', engine.file)
             log_dataset(dict(ds))
             return engine
-
-    if engine.file is None:
-        log.warning('connected to a transient in-memory database')
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -198,17 +200,16 @@ def load(filename=ENGINE, repo_root=None, *,
 
     log.info('record git commit')
     log.debug('cwd: %r', root)
-    get_stdout = functools.partial(_tools.check_output, cwd=str(root))
+    run = functools.partial(_tools.run, cwd=str(root),
+                            capture_output=True, unpack=True)
 
     try:
-        dataset = {
-            'title': 'Glottolog treedb',
-            'git_commit': get_stdout(['git', 'rev-parse', 'HEAD']),
-            'git_describe': get_stdout(['git', 'describe', '--tags', '--always']),
-            # neither changes in index nor untracked files
-            'clean': not get_stdout(['git', 'status', '--porcelain']),
-            'exclude_raw': exclude_raw,
-        }
+        dataset = {'title': 'Glottolog treedb',
+                   'git_commit': run(['git', 'rev-parse', 'HEAD']),
+                   'git_describe': run(['git', 'describe', '--tags', '--always']),
+                   # neither changes in index nor untracked files
+                   'clean': not run(['git', 'status', '--porcelain']),
+                   'exclude_raw': exclude_raw}
     except Exception:
         log.exception('error running git command in %r', str(root))
         raise
@@ -306,11 +307,20 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 def backup(filename=None, *, pages=0, engine=ENGINE):
     """Write the database into another .sqlite3 file and return its engine."""
     log.info('backup database')
+    log.info('source: %r', engine)
+
     url = 'sqlite://'
     if filename is not None:
         path = _tools.path_from_filename(filename)
+        if path.exists():
+            if engine.file is not None and path.samefile(engine.file):
+                raise ValueError(f'backup destination {path!r} same file as'
+                                 f' source {engine.file!r}')
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
         url += f'/{path}'
 
+    log.info('destination: %r', url)
     result = sa.create_engine(url)
 
     def progress(status, remaining, total):
@@ -323,7 +333,63 @@ def backup(filename=None, *, pages=0, engine=ENGINE):
         dest.execute('PRAGMA synchronous = OFF')
         dest.execute('PRAGMA journal_mode = MEMORY')
 
-        source.backup(dest.connection, pages=pages, progress=progress)
+        with dest.connection as dbapi_conn:
+            source.backup(dbapi_conn, pages=pages, progress=progress)
 
     log.info('database backup complete')
     return result
+
+
+def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
+    if hasattr(model_or_table, '__tablename__'):
+        table_name = model_or_table.__tablename__
+        label = model_or_table.__name__.lower()
+    elif hasattr(model_or_table, 'name'):
+        table_name = label = model_or_table.name
+    else:
+        table_name = label = model_or_table
+        model_or_table = sa.text(model_or_table)
+
+
+    print(select_sql(table_name, bind=bind).scalar())
+
+    if include_nrows:
+        select_nrows = sa.select([
+                sa.func.count().label(f'n_{label}s'),
+            ], bind=bind).select_from(model_or_table)
+        print(select_nrows.scalar())
+
+
+sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',
+                                                           'type',
+                                                           'sql']))
+
+
+def select_sql(table_name, *, bind=ENGINE):
+    result = sa.select([sqlite_master.c.sql], bind=bind)\
+        .where(sqlite_master.c.type == 'table')\
+        .where(sqlite_master.c.name == sa.bindparam('table_name'))
+
+    if table_name is not None:
+        result = result.params(table_name=table_name)
+    return result
+
+
+def select_stats(*, bind=ENGINE):
+    table_name = sqlite_master.c.name.label('table_name')
+
+    select_tables = sa.select([table_name], bind=bind)\
+        .where(sqlite_master.c.type == 'table')\
+        .where(~table_name.like('sqlite_%'))\
+        .order_by('table_name')
+
+    def iterselects(tables_result):
+        for t, in tables_result:
+            table_name = sa.literal(t).label('table_name')
+            n_rows = (sa.select([sa.func.count()])
+                      .select_from(sa.table(t))
+                      .label('n_rows'))
+            yield sa.select([table_name, n_rows])
+
+    tables_result = select_tables.execute()
+    return sa.union_all(*iterselects(tables_result), bind=bind)

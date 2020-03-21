@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 # try-treedb.py - usage examples
 
-import logging
-
 import treedb
 
 from treedb import Languoid, select
 
-logging.basicConfig(format='[%(levelname)s@%(name)s] %(message)s')
-logging.captureWarnings(True)
-logging.getLogger('treedb').setLevel(logging.INFO)
+treedb.configure_logging(level='INFO', log_sql=False)
 
 treedb.set_root('../glottolog')
 
 print(next(treedb.iterlanguoids()))
 
-#treedb.create_engine('treedb.sqlite3')
+#treedb.set_engine('treedb.sqlite3')
 
 engine = treedb.load()
 
@@ -29,19 +25,17 @@ print(next(treedb.iterdescendants(parent_level='top', child_level='language')))
 
 query = treedb.get_query()  # big example query containing 'everything'
 
-try:
-    import pandas as pd
-except ImportError:
-    pass
-else:
-    df = pd.read_sql_query(query, con=engine, index_col='id')
+df = treedb.pd_read_sql(query, index_col='id')
+if df is not None:
     df.info()
 
 # run sanity checks
 treedb.check()
 
-#treedb.export()
 #treedb.write_csv()
+
+#treedb.export()
+#treedb.dump_sql()
 
 #treedb.files.roundtrip()
 
@@ -55,7 +49,7 @@ treedb.check()
 #raw.write_raw_csv()
 
 #treedb.languoids.compare_with_raw()
-#treedb.languoids.to_json_csv(engine)
+#treedb.languoids.write_json_csv(engine)
 
 #raw.drop_duplicate_sources()
 #raw.drop_duplicated_triggers()

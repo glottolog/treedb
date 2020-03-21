@@ -1,5 +1,6 @@
 # proxies.py - proxies for global default variables that can be updated
 
+import datetime
 import logging
 
 import sqlalchemy as sa
@@ -137,8 +138,17 @@ class SQLiteEngineProxy(EngineProxy):
     def file_exists(self):
         return self.file is not None and self.file.exists()
 
-    def file_size(self):
-        return self.file.stat().st_size if self.file_exists() else None
+    def file_mtime(self):
+        return (datetime.datetime.fromtimestamp(self.file.stat().st_mtime)
+                if self.file_exists() else None)
+
+    def file_size(self, as_megabytes=False):
+        if self.file_exists():
+            result = self.file.stat().st_size
+            if as_megabytes:
+                result /= 2**20
+            return result 
+        return  None
 
     def file_sha256(self):
         return _tools.sha256sum(self.file) if self.file_exists() else None
