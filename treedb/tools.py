@@ -77,10 +77,10 @@ def iterfiles(top, *, verbose=False):
 def path_from_filename(filename, *args, expanduser=True):
     if hasattr(filename, 'open'):
         assert not args
-        del args
         result = filename
     else:
         result = pathlib.Path(filename, *args)
+
     if expanduser:
         result = result.expanduser()
     return result

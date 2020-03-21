@@ -125,7 +125,7 @@ def iterlanguoids(root_or_bind=ROOT):
 
         from . import raw
 
-        iterfiles = raw.iterrecords(bind)
+        iterfiles = raw.iterrecords(bind=bind)
         _make_lines = make_lines_raw
     else:
         root = root_or_bind

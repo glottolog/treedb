@@ -23,7 +23,7 @@ __all__ = ['print_stats',
 log = logging.getLogger(__name__)
 
 
-def print_stats(bind=ENGINE):
+def print_stats(*, bind=ENGINE):
     log.info('fetch statistics')
 
     select_nvalues = sa.select([
@@ -38,8 +38,7 @@ def print_stats(bind=ENGINE):
 
 
 def checksum(weak=False, name=None, *,
-             dialect=_tools.DIALECT, encoding=_tools.ENCODING,
-             bind=ENGINE):
+             dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
 
@@ -66,8 +65,7 @@ def checksum(weak=False, name=None, *,
 
 
 def to_raw_csv(filename=None, *,
-               dialect=_tools.DIALECT, encoding=_tools.ENCODING,
-               bind=ENGINE):
+               dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
@@ -83,8 +81,8 @@ def to_raw_csv(filename=None, *,
                               dialect=dialect, encoding=encoding, bind=bind)
 
 
-def to_files(root=ROOT, bind=ENGINE, *,
-             verbose=True, is_lines=Fields.is_lines):
+def to_files(root=ROOT, *,
+             verbose=True, is_lines=Fields.is_lines, bind=ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write raw records to tree')
     records = _records.iterrecords(bind)

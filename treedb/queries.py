@@ -45,9 +45,8 @@ def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
         print(r)
 
 
-def write_csv(query=None, filename=None, *,
-              dialect=_tools.DIALECT, encoding=_tools.ENCODING,
-              verbose=False, bind=ENGINE):
+def write_csv(query=None, filename=None, *, verbose=False,
+              dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
         query = get_query()
@@ -70,8 +69,7 @@ def write_csv(query=None, filename=None, *,
 
 def hash_csv(query=None, *,
              raw=False, name=None,
-             dialect=_tools.DIALECT, encoding=_tools.ENCODING,
-             bind=ENGINE):
+             dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -92,7 +90,7 @@ def hash_csv(query=None, *,
     return result
 
 
-def get_query(bind=ENGINE):
+def get_query(*, bind=ENGINE):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     def get_cols(model, label='%s', ignore='id'):
         cols = model.__table__.columns

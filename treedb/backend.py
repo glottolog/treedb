@@ -254,7 +254,7 @@ def log_dataset(params, *, name=Dataset.__tablename__):
     log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
-def dump_sql(engine=ENGINE, filename=None, *, encoding=_tools.ENCODING):
+def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql').name
@@ -273,9 +273,8 @@ def dump_sql(engine=ENGINE, filename=None, *, encoding=_tools.ENCODING):
     return path
 
 
-def export(engine=ENGINE, filename=None, *,
-           dialect=_tools.DIALECT, encoding=_tools.ENCODING,
-           metadata=Model.metadata):
+def export(filename=None, *, metadata=Model.metadata,
+           dialect=_tools.DIALECT, encoding=_tools.ENCODING, engine=ENGINE):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
     log.debug('engine: %r', engine)

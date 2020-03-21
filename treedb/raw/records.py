@@ -23,7 +23,7 @@ def literal_compile(expression):
     return expression.compile(compile_kwargs={'literal_binds': True})
 
 
-def iterrecords(bind=ENGINE, *, windowsize=WINDOWSIZE, skip_unknown=True):
+def iterrecords(*, windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     log.info('enter raw records')
     log.debug('bind: %r', bind)
