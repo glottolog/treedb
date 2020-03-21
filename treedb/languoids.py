@@ -107,16 +107,13 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
     return result
 
 
-def splitaltname(s, *, _match=re.compile(r'(?P<name>[^[]+)'
+def splitaltname(s, *, _match=re.compile(r'(?P<name>.+)'
                                          r'(?: '
                                              r'\['
                                              r'(?P<lang>[a-z]{2,3})'
                                              r'\]'
-                                         r')?').fullmatch, parse_fail='!'):
-    ma = _match(s)
-    if ma is None:
-        return {'name': s, 'lang': parse_fail}
-    return ma.groupdict('')
+                                         r')?').fullmatch):
+    return _match(s).groupdict('')
 
 
 def iterlanguoids(root_or_bind=ROOT):

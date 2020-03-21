@@ -337,12 +337,11 @@ class Source(Model):
     def printf(cls):
         return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
                          sa.func.printf('**%s:%s**:%s<trigger "%s">',
-                                       cls.bibfile, cls.bibkey,
-                                       cls.pages, cls.trigger)),
+                                        cls.bibfile, cls.bibkey, cls.pages,
+                                        cls.trigger)),
                         (cls.pages != None,
                          sa.func.printf('**%s:%s**:%s',
-                                        cls.bibfile, cls.bibkey,
-                                        cls.pages)),
+                                        cls.bibfile, cls.bibkey, cls.pages)),
                         (cls.trigger != None,
                          sa.func.printf('**%s:%s**<trigger "%s">',
                                         cls.bibfile, cls.bibkey,
@@ -357,7 +356,7 @@ class Altname(Model):
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
     provider = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
-    lang = Column(String(3), CheckConstraint("length(lang) IN (0, 2, 3) OR lang = '!'"), primary_key=True)
+    lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
@@ -376,11 +375,8 @@ class Altname(Model):
 
     @classmethod
     def printf(cls):
-        return sa.case([(cls.lang == '',
-                         cls.name),
-                        (sa.between(sa.func.length(cls.lang), 2, 3),
-                         sa.func.printf('%s [%s]', cls.name, cls.lang))],
-                       else_=cls.name)
+        return sa.case([(cls.lang == '', cls.name)],
+                       else_=sa.func.printf('%s [%s]',cls.name, cls.lang))
 
 
 class Trigger(Model):
