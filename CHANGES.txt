@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 0.2.2 (in development)
-------------------------------
+Version 0.2.2
+-------------
 
+Add treedb.backup() (requires Python 3.7+).
 
+Add exclude_raw to treedb.export().
 
 
 Version 0.2.1
