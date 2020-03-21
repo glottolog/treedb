@@ -305,6 +305,7 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
 def backup(filename=None, *, pages=0, engine=ENGINE):
     """Write the database into another .sqlite3 file and return its engine."""
+    log.info('backup database')
     url = 'sqlite://'
     if filename is not None:
         path = _tools.path_from_filename(filename)
@@ -317,6 +318,12 @@ def backup(filename=None, *, pages=0, engine=ENGINE):
 
     with contextlib.closing(engine.raw_connection()) as source,\
          contextlib.closing(result.raw_connection()) as dest:
-        source.connection.backup(dest.connection, pages=pages, progress=progress)
+        log.debug('sqlite3.backup(%r)', dest.connection)
 
+        dest.execute('PRAGMA synchronous = OFF')
+        dest.execute('PRAGMA journal_mode = MEMORY')
+
+        source.backup(dest.connection, pages=pages, progress=progress)
+
+    log.info('database backup complete')
     return result
