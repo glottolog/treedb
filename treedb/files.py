@@ -3,7 +3,6 @@
 import configparser
 import logging
 import os
-import pathlib
 
 from . import tools as _tools
 
@@ -67,12 +66,8 @@ class ConfigParser(configparser.ConfigParser):
     }
 
     @classmethod
-    def from_filename(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
+    def from_file(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
         path = _tools.path_from_filename(filename)
-        return cls.from_path(path, encoding=encoding, **kwargs)
-
-    @classmethod
-    def from_path(cls, path, *, encoding=_tools.ENCODING, **kwargs):
         assert path.name == cls._basename
 
         inst = cls(**kwargs)
@@ -92,32 +87,38 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterfiles(root=ROOT, *, load=ConfigParser.from_path, make_path=pathlib.Path):
+def iterfiles(root=ROOT):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
-    root = _tools.path_from_filename(root).resolve()
+    make_path = _tools.path_from_filename
+    load_config = ConfigParser.from_file
+
+    root = make_path(root).resolve()
     log.info('enter directory tree %r', root)
 
     path_slice = slice(len(root.parts), -1)
+
     for n, d in enumerate(_tools.iterfiles(root), 1):
-        path = make_path(d.path)
-        yield path.parts[path_slice], d, load(path)
+        path = make_path(d)
+        yield path.parts[path_slice], d, load_config(path)
+
         if not (n % 2500):
             log.debug('%d files loaded' % n)
 
     log.info('exit directory tree %r', root)
 
 
-def save(pairs, root=ROOT, *,
-         basename=BASENAME, assume_changed=False,
-         verbose=True, load=ConfigParser.from_path):
+def save(pairs, root=ROOT, *, assume_changed=False, verbose=True,
+         basename=BASENAME):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
+    load_config = ConfigParser.from_file
+
     root = _tools.path_from_filename(root)
     log.info('write directory tree %r', root)
 
     files_written = 0
     for path_tuple, d in pairs:
         path = root.joinpath(*path_tuple + (basename,))
-        cfg = load(path)
+        cfg = load_config(path)
 
         # FIXME: missing sections and options
         drop_sections = set(cfg.sections()).difference(set(d) | {'core', 'sources'})
