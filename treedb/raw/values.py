@@ -16,8 +16,8 @@ from .models import File, Option, Value, Fields
 
 __all__ = ['print_stats',
            'checksum',
-           'to_raw_csv',
-           'to_files']
+           'write_raw_csv',
+           'write_files']
 
 
 log = logging.getLogger(__name__)
@@ -64,8 +64,8 @@ def checksum(weak=False, name=None, *,
     return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
 
 
-def to_raw_csv(filename=None, *,
-               dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
+def write_raw_csv(filename=None, *,
+                  dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name
@@ -81,8 +81,8 @@ def to_raw_csv(filename=None, *,
                               dialect=dialect, encoding=encoding, bind=bind)
 
 
-def to_files(root=ROOT, *,
-             verbose=True, is_lines=Fields.is_lines, bind=ENGINE):
+def write_files(root=ROOT, *,
+                verbose=True, is_lines=Fields.is_lines, bind=ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write raw records to tree')
     records = _records.iterrecords(bind)

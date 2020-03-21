@@ -12,7 +12,7 @@ from . import tools as _tools
 
 from . import ROOT
 
-__all__ = ['iterlanguoids', 'to_json_csv', 'compare_with_raw']
+__all__ = ['iterlanguoids', 'write_json_csv', 'compare_with_raw']
 
 
 log = logging.getLogger(__name__)
@@ -222,8 +222,8 @@ def iterlanguoids(root_or_bind=ROOT):
     log.info('%d languoids extracted', n)
 
 
-def to_json_csv(root_or_bind=ROOT, filename=None, *,
-                dialect=_tools.DIALECT, encoding=_tools.ENCODING):
+def write_json_csv(root_or_bind=ROOT, filename=None, *,
+                   dialect=_tools.DIALECT, encoding=_tools.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv'

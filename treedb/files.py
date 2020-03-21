@@ -10,8 +10,7 @@ from . import ROOT
 
 __all__ = ['get_default_root', 'set_root',
            'iterfiles',
-           'save',
-           'roundtrip']
+           'write_files', 'roundtrip']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 
@@ -107,8 +106,8 @@ def iterfiles(root=ROOT):
     log.info('exit directory tree %r', root)
 
 
-def save(pairs, root=ROOT, *, assume_changed=False, verbose=True,
-         basename=BASENAME):
+def write_files(pairs, root=ROOT, *, assume_changed=False, verbose=True,
+                basename=BASENAME):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
 
@@ -161,4 +160,5 @@ def roundtrip(root=ROOT, *, verbose=False):
             d = {s: dict(m) for s, m in cfg.items() if s != 'DEFAULT'}
             yield path_tuple, d
 
-    return save(_iterpairs(triples), root, assume_changed=True, verbose=verbose)
+    pairs = _iterpairs(triples)
+    return write_files(pairs, root, assume_changed=True, verbose=verbose)

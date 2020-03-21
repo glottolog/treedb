@@ -7,17 +7,23 @@ from . import proxies as _proxies
 ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
 
 from .files import get_default_root, set_root, iterfiles
-from .languoids import iterlanguoids, to_json_csv, compare_with_raw
+
+from .languoids import iterlanguoids, write_json_csv, compare_with_raw
+
 from .backend import (create_engine, load, Dataset, Session,
                       print_schema, dump_sql, export)
+
 from .models import LEVEL, Languoid
+
 from .checks import check
+
 from .queries import print_rows, write_csv, hash_csv, get_query, iterdescendants
+
 from .sa_helpers import text, select, count
 
 __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
-           'iterlanguoids', 'to_json_csv', 'compare_with_raw',
+           'iterlanguoids', 'write_json_csv', 'compare_with_raw',
            'create_engine', 'load', 'Dataset', 'Session',
            'print_schema', 'dump_sql', 'export',
            'LEVEL', 'Languoid',
