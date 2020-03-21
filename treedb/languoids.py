@@ -49,7 +49,7 @@ def make_datetime(value, *, format_='%Y-%m-%dT%H:%M:%S'):
     return datetime.datetime.strptime(value, format_)
 
 
-def splitcountry(name, *, _match=re.compile(r'(?P<name>.+)'
+def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
                                             r' '
                                             r'\('
                                             r'(?P<id>[^)]+)'
@@ -107,7 +107,7 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
     return result
 
 
-def splitaltname(s, *, _match=re.compile(r'(?P<name>.+)'
+def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
                                          r'(?: '
                                              r'\['
                                              r'(?P<lang>[a-z]{2,3})'
