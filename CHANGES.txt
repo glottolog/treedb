@@ -2,10 +2,18 @@ Changelog
 =========
 
 
-Version 0.2.3 (in development)
-------------------------------
+Version 0.3
+-----------
 
+Rename treedb.create_engine() to .set_engine() (backwards incompatible).
 
+Improve treedb.backup() implementation.
+
+Add helper functions and shortcuts.
+
+Refactor subprocess usage.
+
+Improve logging.
 
 
 Version 0.2.2
