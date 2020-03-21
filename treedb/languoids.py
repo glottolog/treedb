@@ -10,7 +10,7 @@ import re
 
 from . import tools as _tools
 
-from . import ROOT
+from . import ROOT, ENGINE
 
 __all__ = ['iterlanguoids', 'write_json_csv', 'compare_with_raw']
 
@@ -249,11 +249,9 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
                             dialect=dialect, encoding=encoding)
 
 
-def compare_with_raw(root=ROOT):
-    from . import ENGINE
-
+def compare_with_raw(root=ROOT, *, bind=ENGINE):
     same = True
-    for files, raw in itertools.zip_longest(*map(iterlanguoids, (root, ENGINE))):
+    for files, raw in itertools.zip_longest(*map(iterlanguoids, (root, bind))):
         if files != raw:
             same = False
             print('', '', files, '', raw, '', '', sep='\n')

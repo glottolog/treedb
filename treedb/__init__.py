@@ -11,7 +11,7 @@ from .files import get_default_root, set_root, iterfiles
 from .languoids import iterlanguoids, write_json_csv, compare_with_raw
 
 from .backend import (create_engine, load, Dataset, Session,
-                      print_schema, dump_sql, export)
+                      print_schema, dump_sql, export, backup)
 
 from .models import LEVEL, Languoid
 
@@ -25,7 +25,7 @@ __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
            'iterlanguoids', 'write_json_csv', 'compare_with_raw',
            'create_engine', 'load', 'Dataset', 'Session',
-           'print_schema', 'dump_sql', 'export',
+           'print_schema', 'dump_sql', 'export', 'backup',
            'LEVEL', 'Languoid',
            'check',
            'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',

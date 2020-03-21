@@ -113,7 +113,7 @@ class SQLiteEngineProxy(EngineProxy):
     def file(self, filename):
         url = 'sqlite://'
         if filename is not None:
-            url = f'{url}/{filename}'
+            url += f'/{filename}'
         self.url = url
 
     def __repr__(self):

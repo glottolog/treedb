@@ -4,7 +4,7 @@ import logging
 
 import sqlalchemy as sa
 
-from .. import ENGINE, ROOT
+from .. import ROOT, ENGINE
 
 from .. import (tools as _tools,
                 files as _files,

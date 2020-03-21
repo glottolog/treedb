@@ -16,13 +16,14 @@ import sqlalchemy.ext.declarative
 from . import (tools as _tools,
                files as _files)
 
-from . import ENGINE, ROOT
+from . import ROOT, ENGINE
 
 __all__ = ['create_engine',
            'Model', 'print_schema',
            'Dataset',
            'Session',
-           'load', 'dump_sql', 'export']
+           'load',
+           'dump_sql', 'export', 'backup']
 
 
 log = logging.getLogger(__name__)
@@ -300,3 +301,22 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
     log.info('database exported')
     return _tools.path_from_filename(filename)
+
+
+def backup(filename=None, *, pages=0, engine=ENGINE):
+    """Write the database into another .sqlite3 file and return its engine."""
+    url = 'sqlite://'
+    if filename is not None:
+        path = _tools.path_from_filename(filename)
+        url += f'/{path}'
+
+    result = sa.create_engine(url)
+
+    def progress(status, remaining, total):
+        log.debug('%d of %d pages copied', total - remaining, total)
+
+    with contextlib.closing(engine.raw_connection()) as source,\
+         contextlib.closing(result.raw_connection()) as dest:
+        source.connection.backup(dest.connection, pages=pages, progress=progress)
+
+    return result
