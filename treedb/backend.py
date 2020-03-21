@@ -273,7 +273,7 @@ def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
     return path
 
 
-def export(filename=None, *, metadata=Model.metadata,
+def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
            dialect=_tools.DIALECT, encoding=_tools.ENCODING, engine=ENGINE):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
@@ -282,10 +282,15 @@ def export(filename=None, *, metadata=Model.metadata,
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 
+    skip = {'_file', '_option', '_value'} if exclude_raw else {}
+
     log.info('write %r', filename)
     with engine.connect() as conn,\
          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in metadata.sorted_tables:
+            if table.name in skip:
+                log.debug('skip table %r', table.name)
+                continue
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
