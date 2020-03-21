@@ -85,11 +85,8 @@ class ConfigParser(configparser.ConfigParser):
             kwargs.setdefault(k, v)
         super().__init__(defaults=defaults, **kwargs)
 
-    def to_filename(self, filename, *, encoding=_tools.ENCODING):
+    def to_file(self, filename, *, encoding=_tools.ENCODING):
         path = _tools.path_from_filename(filename)
-        self.to_path(path, encoding=encoding)
-
-    def to_path(self, path, *, encoding=_tools.ENCODING):
         with path.open('wt', encoding=encoding, newline=self._newline) as f:
             f.write(self._header.format(encoding=encoding))
             self.write(f)
@@ -147,7 +144,7 @@ def save(pairs, root=ROOT, *,
         if changed:
             if verbose:
                 print(f'write {path!r}')
-            cfg.to_path(path)
+            cfg.to_file(path)
             files_written += 1
 
     log.info('%d files written', files_written)
