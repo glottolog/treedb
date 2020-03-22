@@ -1,5 +1,6 @@
 # tools.py - generic re-useable self-contained helpers
 
+import contextlib
 import csv
 import functools
 import hashlib
@@ -123,30 +124,32 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
     return proc
 
 
-def write_csv(filename, rows, *, header=None,
-              dialect=DIALECT, encoding=ENCODING):
+def write_csv(filename, rows, *, header=None, dialect=DIALECT,
+              encoding=ENCODING, newline=''):
+    text_kwargs = {'encoding': encoding, 'newline': newline}
     if filename is None:
         if encoding is None:
             f = io.StringIO()
         else:
-            f = io.TextIOWrapper(io.BytesIO(), encoding=encoding, newline='')
+            f = io.TextIOWrapper(io.BytesIO(), **text_kwargs)
     elif hasattr(filename, 'write'):
-        result = None
+        result = filename
         if encoding is None:
             f = filename
         else:
-            f = io.TextIOWrapper(filename, encoding=encoding, newline='')
+            f = io.TextIOWrapper(filename, **text_kwargs)
+        f = contextlib.nullcontext(f)
     elif hasattr(filename, 'hexdigest'):
-        result = None
+        result = filename
         assert encoding is not None
-        f = io.TextIOWrapper(io.BytesIO(), encoding=encoding, newline='')
+        f = io.TextIOWrapper(io.BytesIO(), **text_kwargs)
         hash_ = filename
     else:
         result = path_from_filename(filename)
         assert encoding is not None
-        f = open(filename, 'wt', encoding=encoding, newline='')
+        f = open(filename, 'wt', **text_kwargs)
 
-    with f:
+    with f as f:
         writer = csv.writer(f, dialect=dialect)
 
         if header is not None:
@@ -165,7 +168,11 @@ def write_csv(filename, rows, *, header=None,
             writer.writerows(rows)
 
         if filename is None:
-            f.seek(0)
-            result = (f.buffer if encoding is not None else f).getvalue()
+            if encoding is not None:
+                f = f.detach()
+            result = f.getvalue()
+
+    if hasattr(filename, 'write') and encoding is not None:
+        f.detach()
 
     return result
