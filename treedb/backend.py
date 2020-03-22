@@ -268,7 +268,7 @@ def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
          path.open('wt', encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
-            if not (n % 100000):
+            if not (n % 100_000):
                 log.debug('%d lines written', n)
 
     log.info('%d lines total', n)
@@ -296,9 +296,9 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
-            data = _tools.write_csv(None, rows, header=header,
-                                    dialect=dialect, encoding=encoding)
-            z.writestr(f'{table.name}.csv', data)
+            with z.open(f'{table.name}.csv', 'w') as f:
+                _tools.write_csv(f, rows, header=header,
+                                 dialect=dialect, encoding=encoding)
 
     log.info('database exported')
     return _tools.path_from_filename(filename)

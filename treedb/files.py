@@ -100,7 +100,7 @@ def iterfiles(root=ROOT):
         path = make_path(d)
         yield path.parts[path_slice], d, load_config(path)
 
-        if not (n % 2500):
+        if not (n % 2_500):
             log.debug('%s files loaded', f'{n:_d}')
 
     log.info('exit directory tree %r', root)

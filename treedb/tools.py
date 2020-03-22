@@ -125,36 +125,47 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
 
 def write_csv(filename, rows, *, header=None,
               dialect=DIALECT, encoding=ENCODING):
-    if hasattr(filename, 'hexdigest'):
+    if filename is None:
+        if encoding is None:
+            f = io.StringIO()
+        else:
+            f = io.TextIOWrapper(io.BytesIO(), encoding=encoding, newline='')
+    elif hasattr(filename, 'write'):
+        result = None
+        if encoding is None:
+            f = filename
+        else:
+            f = io.TextIOWrapper(filename, encoding=encoding, newline='')
+    elif hasattr(filename, 'hexdigest'):
+        result = None
+        assert encoding is not None
+        f = io.TextIOWrapper(io.BytesIO(), encoding=encoding, newline='')
         hash_ = filename
-        with io.StringIO() as f:
-            writerows = csv.writer(f, dialect=dialect).writerows
-            if header is not None:
-                writerows([header])
+    else:
+        result = path_from_filename(filename)
+        assert encoding is not None
+        f = open(filename, 'wt', encoding=encoding, newline='')
 
-            for rows in iterslices(rows, 100):
-                writerows(rows)
-                text = f.getvalue()
-                data = text.encode(encoding)
-                hash_.update(data)
+    with f:
+        writer = csv.writer(f, dialect=dialect)
+
+        if header is not None:
+            writer.writerows([header])
+
+        if hasattr(filename, 'hexdigest'):
+            buf = f.buffer
+            for rows in iterslices(rows, 1_000):
+                writer.writerows(rows)
+                f.seek(0)
+                hash_.update(buf.getbuffer())
                 # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
                 f.truncate()
+        else:
+            writer.writerows(rows)
 
-        return None
+        if filename is None:
+            f.seek(0)
+            result = (f.buffer if encoding is not None else f).getvalue()
 
-    with (open(filename, 'wt', encoding=encoding, newline='')
-          if filename is not None else io.StringIO()) as f:
-        writerows = csv.writer(f, dialect=dialect).writerows
-
-        if header is not None:
-            writerows([header])
-
-        writerows(rows)
-
-        result = (path_from_filename(filename)
-                  if filename is not None else f.getvalue())
-
-    if filename is None:
-        result = result.encode(encoding)
     return result
