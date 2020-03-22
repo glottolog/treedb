@@ -134,8 +134,8 @@ def write_csv(filename, rows, *, header=None,
 
             for rows in iterslices(rows, 100):
                 writerows(rows)
-                data = f.getvalue()
-                data = data.encode(encoding)
+                text = f.getvalue()
+                data = text.encode(encoding)
                 hash_.update(data)
                 # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
@@ -143,25 +143,18 @@ def write_csv(filename, rows, *, header=None,
 
         return None
 
-    elif filename is None:
-        with io.StringIO() as f:
-            writerows = csv.writer(f, dialect=dialect).writerows
-            if header is not None:
-                writerows([header])
+    with (open(filename, 'wt', encoding=encoding, newline='')
+          if filename is not None else io.StringIO()) as f:
+        writerows = csv.writer(f, dialect=dialect).writerows
 
-            writerows(rows)
+        if header is not None:
+            writerows([header])
 
-            data = f.getvalue()
+        writerows(rows)
 
-        return data.encode(encoding)
+        result = (path_from_filename(filename)
+                  if filename is not None else f.getvalue())
 
-    else:
-        filename = path_from_filename(filename)
-        with open(filename, 'wt', encoding=encoding, newline='') as f:
-            writerows = csv.writer(f, dialect=dialect).writerows
-            if header is not None:
-                writerows([header])
-
-            writerows(rows)
-
-        return path_from_filename(filename)
+    if filename is None:
+        result = result.encode(encoding)
+    return result
