@@ -284,19 +284,24 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 
+    sorted_tables = sorted(metadata.sorted_tables, key=lambda t: t.name)
+
     skip = {'_file', '_option', '_value'} if exclude_raw else {}
 
     log.info('write %r', filename)
     with engine.connect() as conn,\
          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
-        for table in metadata.sorted_tables:
+        for table in sorted_tables:
             if table.name in skip:
                 log.debug('skip table %r', table.name)
                 continue
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
-            with z.open(f'{table.name}.csv', 'w') as f:
+            date_time = datetime.datetime.now().timetuple()[:6]
+            info = zipfile.ZipInfo(f'{table.name}.csv', date_time=date_time)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            with z.open(info, 'w') as f:
                 _tools.write_csv(f, rows, header=header,
                                  dialect=dialect, encoding=encoding)
 
