@@ -7,6 +7,8 @@ import warnings
 
 import sqlalchemy as sa
 
+from . import queries as _queries
+
 from . import ENGINE
 
 __all__ = ['configure_logging',
@@ -68,7 +70,7 @@ select = functools.partial(sa.select, bind=ENGINE)
 text = functools.partial(sa.text, bind=ENGINE)
 
 
-def pd_read_sql(*args, con=ENGINE, **kwargs):
+def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
     global PANDAS
     if PANDAS is None:
         try:
@@ -77,4 +79,7 @@ def pd_read_sql(*args, con=ENGINE, **kwargs):
             warnings.warn(f'failed to import pandas: {e}')
             return None
 
-    return PANDAS.read_sql_query(*args, con=con, **kwargs)
+    if sql is None:
+        sql = _queries.get_query()
+
+    return PANDAS.read_sql_query(sql, *args, con=con, **kwargs)
