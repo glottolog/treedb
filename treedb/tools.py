@@ -90,7 +90,8 @@ def path_from_filename(filename, *args, expanduser=True):
 def sha256sum(file, *, raw=False):
     result = hashlib.sha256()
 
-    update_hash(result, file)
+    with path_from_filename(file).open('rb') as f:
+        update_hash(result, f)
 
     if not raw:
         result = result.hexdigest()
@@ -98,10 +99,9 @@ def sha256sum(file, *, raw=False):
 
 
 def update_hash(hash_, file, *, chunksize=2**16):  # 64 kB
-    with path_from_filename(file).open('rb') as f:
-        read = functools.partial(f.read, chunksize)
-        for chunk in iter(read, b''):
-            hash_.update(chunk)
+    read = functools.partial(file.read, chunksize)
+    for chunk in iter(read, b''):
+        hash_.update(chunk)
 
 
 def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False):
