@@ -283,6 +283,8 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
+    else:
+        filename = str(_tools.path_from_filename(filename))
 
     sorted_tables = sorted(metadata.sorted_tables, key=lambda t: t.name)
 
