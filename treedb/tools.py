@@ -125,29 +125,31 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
 
 
 def write_csv(filename, rows, *, header=None, dialect=DIALECT,
-              encoding=ENCODING, newline=''):
-    text_kwargs = {'encoding': encoding, 'newline': newline}
+              encoding=ENCODING):
+    open_kwargs = {'encoding': encoding, 'newline': ''}
+    textio_kwargs = dict(write_through=True, **open_kwargs)
+
     if filename is None:
         if encoding is None:
             f = io.StringIO()
         else:
-            f = io.TextIOWrapper(io.BytesIO(), **text_kwargs)
+            f = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
     elif hasattr(filename, 'write'):
         result = filename
         if encoding is None:
             f = filename
         else:
-            f = io.TextIOWrapper(filename, **text_kwargs)
+            f = io.TextIOWrapper(filename, **textio_kwargs)
         f = contextlib.nullcontext(f)
     elif hasattr(filename, 'hexdigest'):
         result = filename
         assert encoding is not None
-        f = io.TextIOWrapper(io.BytesIO(), **text_kwargs)
+        f = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
         hash_ = filename
     else:
         result = path_from_filename(filename)
         assert encoding is not None
-        f = open(filename, 'wt', **text_kwargs)
+        f = open(filename, 'wt', **open_kwargs)
 
     with f as f:
         writer = csv.writer(f, dialect=dialect)
@@ -159,7 +161,6 @@ def write_csv(filename, rows, *, header=None, dialect=DIALECT,
             buf = f.buffer
             for rows in iterslices(rows, 1_000):
                 writer.writerows(rows)
-                f.seek(0)
                 hash_.update(buf.getbuffer())
                 # NOTE: f.truncate(0) would prepend zero-bytes
                 f.seek(0)
@@ -169,7 +170,7 @@ def write_csv(filename, rows, *, header=None, dialect=DIALECT,
 
         if filename is None:
             if encoding is not None:
-                f = f.detach()
+                f = f.buffer
             result = f.getvalue()
 
     if hasattr(filename, 'write') and encoding is not None:
