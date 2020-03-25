@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 0.3 (in development)
-----------------------------
+Version 0.3.1 (in development)
+------------------------------
 
+Add missing expanduser() to treedb.export().
 
+pd_read_sql now uses the default query when called without argument.
 
 
 Version 0.3
