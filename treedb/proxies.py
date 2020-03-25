@@ -147,8 +147,8 @@ class SQLiteEngineProxy(EngineProxy):
             result = self.file.stat().st_size
             if as_megabytes:
                 result /= 2**20
-            return result 
-        return  None
+            return result
+        return None
 
     def file_sha256(self):
         return _tools.sha256sum(self.file) if self.file_exists() else None

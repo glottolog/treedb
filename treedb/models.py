@@ -376,7 +376,7 @@ class Altname(Model):
     @classmethod
     def printf(cls):
         return sa.case([(cls.lang == '', cls.name)],
-                       else_=sa.func.printf('%s [%s]',cls.name, cls.lang))
+                       else_=sa.func.printf('%s [%s]', cls.name, cls.lang))
 
 
 class Trigger(Model):
