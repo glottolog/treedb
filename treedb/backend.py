@@ -9,6 +9,8 @@ import time
 import warnings
 import zipfile
 
+import csv23
+
 import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
@@ -276,7 +278,7 @@ def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
 
 
 def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
-           dialect=_tools.DIALECT, encoding=_tools.ENCODING, engine=ENGINE):
+           dialect=csv23.DIALECT, encoding=csv23.ENCODING, engine=ENGINE):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
     log.debug('engine: %r', engine)
@@ -304,8 +306,8 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
             info = zipfile.ZipInfo(f'{table.name}.csv', date_time=date_time)
             info.compress_type = zipfile.ZIP_DEFLATED
             with z.open(info, 'w') as f:
-                _tools.write_csv(f, rows, header=header,
-                                 dialect=dialect, encoding=encoding)
+                csv23.write_csv(f, rows, header=header,
+                                dialect=dialect, encoding=encoding)
 
     log.info('database exported')
     return _tools.path_from_filename(filename)

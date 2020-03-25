@@ -8,6 +8,8 @@ import logging
 import operator
 import re
 
+import csv23
+
 from . import tools as _tools
 
 from . import ROOT, ENGINE
@@ -223,7 +225,7 @@ def iterlanguoids(root_or_bind=ROOT):
 
 
 def write_json_csv(root_or_bind=ROOT, filename=None, *,
-                   dialect=_tools.DIALECT, encoding=_tools.ENCODING):
+                   dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv'
@@ -245,7 +247,7 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
     header = ['path', 'json']
     log.info('header: %r', header)
 
-    return _tools.write_csv(filename, rows, header=header,
+    return csv23.write_csv(filename, rows, header=header,
                             dialect=dialect, encoding=encoding)
 
 

@@ -2,6 +2,8 @@
 
 import logging
 
+import csv23
+
 import sqlalchemy as sa
 
 from .. import ROOT, ENGINE
@@ -38,7 +40,7 @@ def print_stats(*, bind=ENGINE):
 
 
 def checksum(*, weak=False, name=None,
-             dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
 
@@ -65,7 +67,7 @@ def checksum(*, weak=False, name=None,
 
 
 def write_raw_csv(filename=None, *,
-                  dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
+                  dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = bind.file_with_suffix('.raw.csv').name

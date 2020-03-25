@@ -7,6 +7,8 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
+import csv23
+
 from . import tools as _tools
 
 from . import ENGINE
@@ -46,7 +48,7 @@ def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
 
 
 def write_csv(query=None, filename=None, *, verbose=False,
-              dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
+              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
         query = get_query()
@@ -63,13 +65,13 @@ def write_csv(query=None, filename=None, *, verbose=False,
     header = rows.keys()
     log.info('header: %r', header)
 
-    return _tools.write_csv(filename, rows, header=header,
-                            dialect=dialect, encoding=encoding)
+    return csv23.write_csv(filename, rows, header=header,
+                           dialect=dialect, encoding=encoding)
 
 
 def hash_csv(query=None, *,
              raw=False, name=None,
-             dialect=_tools.DIALECT, encoding=_tools.ENCODING, bind=ENGINE):
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     if query is None:
         query = get_query()
 
@@ -82,7 +84,7 @@ def hash_csv(query=None, *,
 
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
-    _tools.write_csv(result, rows, header=header,
+    csv23.write_csv(result, rows, header=header,
                      dialect=dialect, encoding=encoding)
 
     if not raw:

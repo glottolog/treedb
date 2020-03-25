@@ -1,10 +1,7 @@
 # tools.py - generic re-useable self-contained helpers
 
-import contextlib
-import csv
 import functools
 import hashlib
-import io
 import itertools
 import logging
 import operator
@@ -13,18 +10,14 @@ import pathlib
 import platform
 import subprocess
 
-DIALECT = 'excel'
-
 ENCODING = 'utf-8'
 
 __all__ = ['next_count',
-           'iterslices',
            'groupby_itemgetter', 'groupby_attrgetter',
            'iterfiles',
            'path_from_filename',
            'sha256sum',
-           'run',
-           'write_csv']
+           'run']
 
 
 log = logging.getLogger(__name__)
@@ -33,12 +26,6 @@ log = logging.getLogger(__name__)
 def next_count(start=0, step=1):
     count = itertools.count(start, step)
     return functools.partial(next, count)
-
-
-def iterslices(iterable, size):
-    iterable = iter(iterable)
-    next_slice = functools.partial(itertools.islice, iterable, size)
-    return iter(lambda: list(next_slice()), [])
 
 
 def groupby_itemgetter(*items):
@@ -122,58 +109,3 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
     if capture_output and unpack:
         return proc.stdout.strip()
     return proc
-
-
-def write_csv(filename, rows, *, header=None, dialect=DIALECT,
-              encoding=ENCODING):
-    open_kwargs = {'encoding': encoding, 'newline': ''}
-    textio_kwargs = dict(write_through=True, **open_kwargs)
-
-    if filename is None:
-        if encoding is None:
-            f = io.StringIO()
-        else:
-            f = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
-    elif hasattr(filename, 'write'):
-        result = filename
-        if encoding is None:
-            f = filename
-        else:
-            f = io.TextIOWrapper(filename, **textio_kwargs)
-        f = contextlib.nullcontext(f)
-    elif hasattr(filename, 'hexdigest'):
-        result = filename
-        assert encoding is not None
-        f = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
-        hash_ = filename
-    else:
-        result = path_from_filename(filename)
-        assert encoding is not None
-        f = open(filename, 'wt', **open_kwargs)
-
-    with f as f:
-        writer = csv.writer(f, dialect=dialect)
-
-        if header is not None:
-            writer.writerows([header])
-
-        if hasattr(filename, 'hexdigest'):
-            buf = f.buffer
-            for rows in iterslices(rows, 1_000):
-                writer.writerows(rows)
-                hash_.update(buf.getbuffer())
-                # NOTE: f.truncate(0) would prepend zero-bytes
-                f.seek(0)
-                f.truncate()
-        else:
-            writer.writerows(rows)
-
-        if filename is None:
-            if encoding is not None:
-                f = f.buffer
-            result = f.getvalue()
-
-    if hasattr(filename, 'write') and encoding is not None:
-        f.detach()
-
-    return result
