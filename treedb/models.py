@@ -108,7 +108,7 @@ class Languoid(Model):
                          back_populates='languoid')
 
     sources = relationship('Source',
-                           order_by='[Source.provider, Source.ord]',
+                           order_by='[Source.provider, Source.bibfile, Source.bibkey]',
                            back_populates='languoid')
 
     altnames = relationship('Altname',
@@ -315,12 +315,8 @@ class Source(Model):
     bibfile = Column(Text, CheckConstraint("bibfile != ''"), primary_key=True)
     bibkey = Column(Text, CheckConstraint("bibkey != ''"), primary_key=True)
 
-    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
-
     pages = Column(Text, CheckConstraint("pages != ''"))
     trigger = Column(Text, CheckConstraint("trigger != ''"))
-
-    __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'

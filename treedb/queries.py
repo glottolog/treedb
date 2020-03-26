@@ -153,7 +153,7 @@ def get_query(*, bind=ENGINE):
             select([group_concat(Source.printf(), ', ')])
                 .where(Source.languoid_id == Languoid.id)
                 .where(Source.provider == 'glottolog')
-                .order_by(Source.ord)
+                .order_by(Source.bibfile, Source.bibkey)
                 .label('sources_glottolog'),
             ] + [select([group_concat(a.printf(), ', ')])
                     .where(a.languoid_id == Languoid.id)

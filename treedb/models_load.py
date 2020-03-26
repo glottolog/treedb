@@ -110,9 +110,9 @@ def load(languoids, conn):
                          for i, link in enumerate(links, 1)])
 
         if sources is not None:
-            insert_source([dict(languoid_id=lid, provider=provider, ord=i, **s)
+            insert_source([dict(languoid_id=lid, provider=provider, **s)
                            for provider, data in sources.items()
-                           for i, s in enumerate(data, 1)])
+                           for s in data])
 
         if altnames is not None:
             insert_altname([dict(languoid_id=lid, provider=provider, ord=i, **n)
