@@ -16,7 +16,8 @@ import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 from . import (tools as _tools,
-               files as _files)
+               files as _files,
+               proxies as _proxies)
 
 from . import ROOT, ENGINE
 
@@ -35,8 +36,15 @@ log = logging.getLogger(__name__)
 def set_engine(filename, *, resolve=False, title=None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('set_engine')
-    log.debug('filename: %r', filename)
+    if isinstance(filename, sa.engine.Engine):
+        engine = filename
+        if isinstance(filename, _proxies.EngineProxy):
+            engine = engine.engine
+        log.debug('engine: %r', engine)
+        ENGINE.engine = engine
+        return ENGINE
 
+    log.debug('filename: %r', filename)
     if filename is not None:
         filename = _tools.path_from_filename(filename)
         if resolve:
@@ -322,7 +330,7 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
     return _tools.path_from_filename(filename)
 
 
-def backup(filename=None, *, pages=0, engine=ENGINE):
+def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
     """Write the database into another .sqlite3 file and return its engine."""
     log.info('backup database')
     log.info('source: %r', engine)
@@ -355,6 +363,8 @@ def backup(filename=None, *, pages=0, engine=ENGINE):
             source.backup(dbapi_conn, pages=pages, progress=progress)
 
     log.info('database backup complete')
+    if as_new_engine:
+        set_engine(result)
     return result
 
 
