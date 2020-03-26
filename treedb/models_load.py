@@ -115,9 +115,9 @@ def load(languoids, conn):
                            for s in data])
 
         if altnames is not None:
-            insert_altname([dict(languoid_id=lid, provider=provider, ord=i, **n)
+            insert_altname([dict(languoid_id=lid, provider=provider, **n)
                             for provider, names in altnames.items()
-                            for i, n in enumerate(names, 1)])
+                            for n in names])
 
         if triggers is not None:
             insert_trigger([{'languoid_id': lid, 'field': field,

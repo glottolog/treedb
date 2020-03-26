@@ -112,7 +112,7 @@ class Languoid(Model):
                            back_populates='languoid')
 
     altnames = relationship('Altname',
-                            order_by='[Altname.provider, Altname.ord]',
+                            order_by='[Altname.provider, Altname.name, Altname.lang]',
                             back_populates='languoid')
 
     triggers = relationship('Trigger',
@@ -352,19 +352,15 @@ class Altname(Model):
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
     provider = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
-    lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
-
-    ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
-
-    __table_args__ = (UniqueConstraint(languoid_id, provider, ord),)
+    lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' povider={self.provider!r}'
-                f' lang={self.lang!r}'
-                f' name={self.name!r}>')
+                f' name={self.name!r}>'
+                f' lang={self.lang!r}')
 
     languoid = relationship('Languoid', innerjoin=True,
                             back_populates='altnames')

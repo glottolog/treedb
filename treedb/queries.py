@@ -158,7 +158,7 @@ def get_query(*, bind=ENGINE):
             ] + [select([group_concat(a.printf(), ', ')])
                     .where(a.languoid_id == Languoid.id)
                     .where(a.provider == p)
-                    .order_by(a.ord)
+                    .order_by(a.name, a.lang)
                     .label('altnames_%s' % p)
                  for p, a in altnames]
             + [
