@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import warnings
 
 import sqlalchemy as sa
 from sqlalchemy import select
@@ -58,6 +59,11 @@ def write_csv(query=None, filename=None, *, verbose=False,
     filename = _tools.path_from_filename(filename)
 
     log.info('write csv: %r', filename)
+    path = _tools.path_from_filename(filename)
+    if path.exists():
+        warnings.warn(f'delete present file: {path!r}')
+        path.unlink()
+
     if verbose:
         print(query)
 

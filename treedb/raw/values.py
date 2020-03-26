@@ -1,6 +1,7 @@
 # values.py
 
 import logging
+import warnings
 
 import csv23
 
@@ -73,6 +74,11 @@ def write_raw_csv(filename=None, *,
         filename = bind.file_with_suffix('.raw.csv').name
     else:
         filename = _tools.path_from_filename(filename)
+
+    path = _tools.path_from_filename(filename)
+    if path.exists():
+        warnings.warn(f'deltete present file: {path!r}')
+        path.unlink()
 
     select_values = sa.select([
             File.path, Option.section, Option.option, Value.line, Value.value,

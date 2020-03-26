@@ -7,6 +7,7 @@ import json
 import logging
 import operator
 import re
+import warnings
 
 import csv23
 
@@ -238,6 +239,10 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
         filename = _tools.path_from_filename(filename)
 
     log.info('write json csv: %r', filename)
+    path = _tools.path_from_filename(filename)
+    if path.exists():
+        warnings.warn(f'delete peresent file {path!r}')
+        path.unlink()
 
     default_func = operator.methodcaller('isoformat')
     json_dumps = functools.partial(json.dumps, default=default_func)

@@ -265,6 +265,10 @@ def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
     path = _tools.path_from_filename(filename)
     log.info('dump sql to %r', path)
 
+    if path.exists():
+        warnings.warn(f'delete present file: {path!r}')
+        path.unlink()
+
     n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
          path.open('wt', encoding=encoding) as f:
@@ -285,8 +289,13 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
-    else:
-        filename = str(_tools.path_from_filename(filename))
+
+    path = _tools.path_from_filename(filename)
+    if path.exists():
+        warnings.warn(f'delete present file: {path!r}')
+        path.unlink()
+
+    filename = str(path)
 
     sorted_tables = sorted(metadata.sorted_tables, key=lambda t: t.name)
 
