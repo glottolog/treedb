@@ -12,7 +12,7 @@ from .languoids import iterlanguoids, write_json_csv, compare_with_raw
 
 from .backend import (set_engine, load, Dataset, Session,
                       print_schema, dump_sql, export, backup,
-                      print_table_sql, select_stats)
+                      print_table_sql, print_query_sql, select_stats)
 
 from .models import LEVEL, Languoid
 
@@ -31,7 +31,7 @@ __all__ = ['ROOT', 'ENGINE',
            'iterlanguoids', 'write_json_csv', 'compare_with_raw',
            'set_engine', 'load', 'Dataset', 'Session',
            'print_schema', 'dump_sql', 'export', 'backup',
-           'print_table_sql', 'select_stats',
+           'print_table_sql', 'print_query_sql', 'select_stats',
            'LEVEL', 'Languoid',
            'check',
            'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',

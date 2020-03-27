@@ -7,8 +7,6 @@ import warnings
 
 import sqlalchemy as sa
 
-from . import queries as _queries
-
 from . import ENGINE
 
 __all__ = ['configure_logging',
@@ -80,6 +78,7 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
             return None
 
     if sql is None:
-        sql = _queries.get_query()
+        from . import queries
+        sql = queries.get_query()
 
     return PANDAS.read_sql_query(sql, *args, con=con, **kwargs)
