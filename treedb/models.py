@@ -392,6 +392,10 @@ class Bibitem(Model):
     endangermentsources = relationship('EndangermentSource',
                                        back_populates='bibitem')
 
+    @classmethod
+    def printf(cls, bibfile):
+        return sa.func.printf('**%s:%s**', bibfile.name, self.bibkey)
+
 
 class Altname(Model):
 
@@ -543,19 +547,20 @@ class EndangermentSource(Model):
     __tablename__ = 'endangerment_source'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, CheckConstraint("name != ''"), unique=True)
+    name = Column(Text, CheckConstraint("name != ''"), nullable=False, unique=True)
+
     bibitem_id = Column(ForeignKey('bibitem.id'))
     pages = Column(Text, CheckConstraint("pages != ''"))
 
     __table_args__ = (UniqueConstraint(bibitem_id, pages),
-                      CheckConstraint('(name IS NULL) != (bibitem_id IS NULL)'),
                       CheckConstraint('(bibitem_id IS NULL) = (pages IS NULL)'))
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' id={self.id!r}'
                 f' name={self.name!r}'
-                f' bibitem_id={self.bibitem_id!r}')
+                f' bibitem_id={self.bibitem_id!r}'
+                f' pages={self.pages!r}>')
 
     bibitem = relationship('Bibitem',
                            innerjoin=True,
@@ -567,8 +572,7 @@ class EndangermentSource(Model):
 
     @classmethod
     def printf(cls, bibfile, bibitem):
-        return sa.case([(cls.name != None, cls.name),
-                        (bibitem.bibkey == None, '')],
+        return sa.case([(cls.bibitem_id == None, cls.name)],
                        else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
                                                             bibitem.bibkey,
                                                             cls.pages))

@@ -101,11 +101,13 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
                                         r'">'
                                         r')?').match,
                 endangerment=False):
-    if endangerment and s.isalnum():
-        return {'name': s}
+    if endangerment:
+        if s.isalnum():
+            return {'name': s}
 
     result = _match(s).groupdict()
     if endangerment:
+        result['name'] = s
         result.pop('trigger', None)
     return result
 
