@@ -287,10 +287,6 @@ class Link(Model):
                       CheckConstraint("substr(url, 1, length(scheme) + 3)"
                                       " = scheme || '://'"))
 
-    languoid = relationship('Languoid',
-                            innerjoin=True,
-                            back_populates='links')
-
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
@@ -298,6 +294,10 @@ class Link(Model):
                 f' url={self.url!r}'
                 f' title={self.title!r}'
                 f' scheme={self.schemme!r}>')
+
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='links')
 
     @classmethod
     def printf(cls):
