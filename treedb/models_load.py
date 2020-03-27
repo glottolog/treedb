@@ -8,7 +8,8 @@ from .models import (MACROAREA, CLASSIFICATION,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
-                     Link, Source, Altname, Trigger, Identifier,
+                     Link, Source, Bibfile, Bibitem,
+                     Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
@@ -42,7 +43,35 @@ def load(languoids, conn):
                 yield c
 
     insert_link = insert(Link, bind=conn).execute
+
     insert_source = insert(Source, bind=conn).execute
+    insert_bibfile = insert(Bibfile, bind=conn).execute
+    insert_bibitem = insert(Bibitem, bind=conn).execute
+
+    class BibfileMap(dict):
+
+        def __missing__(self, name):
+            log.debug('insert new bibfile: %r', name)
+            id, = insert_bibfile(name=name).inserted_primary_key
+            self[name] = id
+            return id
+
+    bibfile_ids = BibfileMap()
+
+    class BibitemMap(dict):
+
+        def __missing__(self, key):
+            bibfile_name, bibkey = key
+            id, = insert_bibitem(bibfile_id=bibfile_ids[bibfile_name],
+                                 bibkey=bibkey).inserted_primary_key
+            self[key] = id
+            return id
+
+        def pop_params(self, params):
+            return self[params.pop('bibfile'), params.pop('bibkey')]
+
+    bibitem_ids = BibitemMap()
+        
     insert_altname = insert(Altname, bind=conn).execute
     insert_trigger = insert(Trigger, bind=conn).execute
     insert_ident = insert(Identifier, bind=conn).execute
@@ -60,6 +89,9 @@ def load(languoids, conn):
 
         def __missing__(self, key):
             params = dict(key)
+            if 'bibfile' in params:
+                assert 'name' not in params
+                params['bibitem_id'] = bibitem_ids.pop_params(params)
             log.debug('insert new endangerment_source: %r', params)
             id, = insert_enda_source(**params).inserted_primary_key
             self[key] = id
@@ -110,7 +142,8 @@ def load(languoids, conn):
                          for i, link in enumerate(links, 1)])
 
         if sources is not None:
-            insert_source([dict(languoid_id=lid, provider=provider, **s)
+            insert_source([dict(languoid_id=lid, provider=provider,
+                                bibitem_id=bibitem_ids.pop_params(s), **s)
                            for provider, data in sources.items()
                            for s in data])
 
@@ -133,7 +166,9 @@ def load(languoids, conn):
             for c, value in classification.items():
                 isref, kind = CLASSIFICATION[c]
                 if isref:
-                    insert_ref([dict(languoid_id=lid, kind=kind, ord=i, **r)
+                    insert_ref([dict(languoid_id=lid, kind=kind,
+                                     bibitem_id=bibitem_ids.pop_params(r),
+                                     ord=i, **r)
                                 for i, r in enumerate(value, 1)])
                 else:
                     insert_comment(languoid_id=lid, kind=kind, comment=value)

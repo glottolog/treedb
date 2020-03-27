@@ -108,7 +108,7 @@ class Languoid(Model):
                          back_populates='languoid')
 
     sources = relationship('Source',
-                           order_by='[Source.provider, Source.bibfile, Source.bibkey]',
+                           order_by='[Source.provider, Source.bibitem_id]',
                            back_populates='languoid')
 
     altnames = relationship('Altname',
@@ -312,8 +312,7 @@ class Source(Model):
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
     provider = Column(Text, Enum(*sorted(SOURCE_PROVIDER)), primary_key=True)
-    bibfile = Column(Text, CheckConstraint("bibfile != ''"), primary_key=True)
-    bibkey = Column(Text, CheckConstraint("bibkey != ''"), primary_key=True)
+    bibitem_id = Column(ForeignKey('bibitem.id'), primary_key=True)
 
     pages = Column(Text, CheckConstraint("pages != ''"))
     trigger = Column(Text, CheckConstraint("trigger != ''"))
@@ -322,28 +321,76 @@ class Source(Model):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' provider={self.provider!r}'
-                f' bibfile={self.bibfile!r}'
-                f' bibkey={self.bibkey!r}>')
+                f' bibitem_id={self.bibitem_id!r}')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
                             back_populates='sources')
 
+    bibitem = relationship('Bibitem',
+                            innerjoin=True,
+                            back_populates='sources')
+
     @classmethod
-    def printf(cls):
+    def printf(cls, bibfile, bibitem):
         return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
                          sa.func.printf('**%s:%s**:%s<trigger "%s">',
-                                        cls.bibfile, cls.bibkey, cls.pages,
-                                        cls.trigger)),
+                                        bibfile.name, bibitem.bibkey,
+                                        cls.pages, cls.trigger)),
                         (cls.pages != None,
                          sa.func.printf('**%s:%s**:%s',
-                                        cls.bibfile, cls.bibkey, cls.pages)),
+                                        bibfile.name, bibitem.bibkey,
+                                        cls.pages)),
                         (cls.trigger != None,
                          sa.func.printf('**%s:%s**<trigger "%s">',
-                                        cls.bibfile, cls.bibkey,
+                                        bibfile.name, bibitem.bibkey,
                                         cls.trigger))],
                        else_=sa.func.printf('**%s:%s**',
-                                            cls.bibfile, cls.bibkey))
+                                            bibfile.name, bibitem.bibkey))
+
+
+class Bibfile(Model):
+
+    __tablename__ = 'bibfile'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, CheckConstraint("name != ''"), nullable=False,
+                  unique=True)
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' id={self.id!r}'
+                f' name={self.name!r}')
+
+    bibitems = relationship('Bibitem', back_populates='bibfile')
+
+
+class Bibitem(Model):
+
+    __tablename__ = 'bibitem'
+
+    id = Column(Integer, primary_key=True)
+    bibfile_id = Column(ForeignKey('bibfile.id'), nullable=False)
+    bibkey = Column(Text, CheckConstraint("bibkey != ''"), nullable=False)
+
+    __table_args__ = (UniqueConstraint(bibfile_id, bibkey),)
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' bibfile_id={self.bibfile_id!r}'
+                f' bibkey={self.bibkey!r}')
+
+    bibfile = relationship('Bibfile',
+                           innerjoin=True,
+                           back_populates='bibitems')
+
+    sources = relationship('Source', back_populates='bibitem')
+
+    classificationrefs = relationship('ClassificationRef',
+                                      back_populates='bibitem')
+
+    endangermentsources = relationship('EndangermentSource',
+                                       back_populates='bibitem')
 
 
 class Altname(Model):
@@ -437,8 +484,7 @@ class ClassificationRef(Model):
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
     kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
-    bibfile = Column(Text, CheckConstraint("bibfile != ''"), primary_key=True)
-    bibkey = Column(Text, CheckConstraint("bibkey != ''"), primary_key=True)
+    bibitem_id = Column(ForeignKey('bibitem.id'), primary_key=True)
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
@@ -450,16 +496,19 @@ class ClassificationRef(Model):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' kind={self.kind!r}'
-                f' bibfile={self.bibfile!r}'
-                f' bibkey={self.bibkey!r}>')
+                f' bibitem_id={self.bibitem_id!r}')
 
     languoid = relationship('Languoid', innerjoin=True)
 
+    bibitem = relationship('Bibitem',
+                           innerjoin=True,
+                           back_populates='classificationrefs')
+
     @classmethod
-    def printf(cls):
+    def printf(cls, bibfile, bibitem):
         return sa.func.printf(sa.case([(cls.pages != None, '**%s:%s**:%s')],
                                       else_='**%s:%s**'),
-                              cls.bibfile, cls.bibkey, cls.pages)
+                              bibfile.name, bibitem.bibkey, cls.pages)
 
 
 class Endangerment(Model):
@@ -495,33 +544,33 @@ class EndangermentSource(Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), unique=True)
-    bibfile = Column(Text, CheckConstraint("bibfile != ''"))
-    bibkey = Column(Text, CheckConstraint("bibkey != ''"))
+    bibitem_id = Column(ForeignKey('bibitem.id'))
     pages = Column(Text, CheckConstraint("pages != ''"))
 
-    __table_args__ = (UniqueConstraint(bibfile, bibkey, pages),
-                      CheckConstraint('(name IS NULL) != (bibkey IS NULL)'),
-                      CheckConstraint('(bibfile IS NULL) = (bibkey IS NULL)'
-                                      ' AND (bibkey IS NULL) = (pages IS NULL)'))
+    __table_args__ = (UniqueConstraint(bibitem_id, pages),
+                      CheckConstraint('(name IS NULL) != (bibitem_id IS NULL)'),
+                      CheckConstraint('(bibitem_id IS NULL) = (pages IS NULL)'))
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' id={self.id!r}'
                 f' name={self.name!r}'
-                f' bibfile={self.bibfile!r}'
-                f' bibkey={self.bibkey!r}'
-                f' pages={self.pages!r}')
+                f' bibitem_id={self.bibitem_id!r}')
+
+    bibitem = relationship('Bibitem',
+                           innerjoin=True,
+                           back_populates='endangermentsources')
 
     endangerment = relationship('Endangerment',
                                 uselist=False,
                                 back_populates='source')
 
     @classmethod
-    def printf(cls):
+    def printf(cls, bibfile, bibitem):
         return sa.case([(cls.name != None, cls.name),
-                        (cls.bibkey == None, '')],
-                       else_=sa.func.printf('**%s:%s**:%s', cls.bibfile,
-                                                            cls.bibkey,
+                        (bibitem.bibkey == None, '')],
+                       else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
+                                                            bibitem.bibkey,
                                                             cls.pages))
 
 
