@@ -245,7 +245,8 @@ def get_query(*, bind=ENGINE, separator=', '):
             ] + get_cols(EthnologueComment, label='elcomment_%s')
             + get_cols(IsoRetirement, label='iso_retirement_%s') + [
             iso_retirement_change_to,
-        ], bind=bind).select_from(froms
+        ], bind=bind)\
+        .select_from(froms
             .outerjoin(subc, sa.and_(subc.languoid_id == Languoid.id, subc.kind == 'sub'))
             .outerjoin(famc, sa.and_(famc.languoid_id == Languoid.id, famc.kind == 'family'))
             .outerjoin(sa.join(Endangerment, EndangermentSource)
@@ -374,7 +375,9 @@ def get_json_query(*, bind=ENGINE):
         .correlate(Languoid)\
         .as_scalar()
 
-    select_languoid = select([json_array(Languoid.path_json(), json_object(
+    path = Languoid.path_json()
+
+    select_languoid = select([json_array(path, json_object(
             'id', Languoid.id,
             'parent_id', Languoid.parent_id,
             'level', Languoid.level,
@@ -394,8 +397,9 @@ def get_json_query(*, bind=ENGINE):
             'endangerment', endangerment,
             'hh_ethnologue_comment', hh_ethnologue_comment,
             'iso_retirement', iso_retirement,
-        ))], bind=bind).select_from(Languoid)\
-        .order_by(Languoid.id)
+        ))], bind=bind)\
+        .select_from(Languoid)\
+        .order_by(path)
 
     return select_languoid
 
