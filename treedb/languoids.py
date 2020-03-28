@@ -123,7 +123,7 @@ def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
     return _match(s).groupdict('')
 
 
-def iterlanguoids(root_or_bind=ROOT, from_raw=False):
+def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
     log.info('extract languoids')
 
@@ -133,7 +133,7 @@ def iterlanguoids(root_or_bind=ROOT, from_raw=False):
         if not from_raw:
             from . import queries
 
-            query = queries.get_json_query(bind=bind)
+            query = queries.get_json_query(bind=bind, ordered=ordered)
 
             for s, in query.execute():
                 path, item = json.loads(s)
@@ -143,13 +143,16 @@ def iterlanguoids(root_or_bind=ROOT, from_raw=False):
 
         from . import raw
 
-        iterfiles = raw.iterrecords(bind=bind)
+        iterfiles = raw.iterrecords(bind=bind, ordered=ordered)
         _make_lines = make_lines_raw
     else:
         root = root_or_bind
 
         if from_raw:
             raise TypeError(f'from_raw=True requires bind (passed: {root!r})')
+
+        if ordered not in (True, False, 'file', 'path'):
+            raise ValueError(f'ordered={ordered!r} not implemented')
 
         from . import files
 
@@ -244,6 +247,7 @@ def iterlanguoids(root_or_bind=ROOT, from_raw=False):
 
 
 def write_json_csv(root_or_bind=ROOT, filename=None, *,
+                   from_raw=False, ordered=True,
                    dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
@@ -265,8 +269,9 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
     default_func = operator.methodcaller('isoformat')
     json_dumps = functools.partial(json.dumps, default=default_func)
 
-    rows = (('/'.join(path_tuple), json_dumps(l))
-            for path_tuple, l in iterlanguoids(root_or_bind))
+    rows = iterlanguoids(root_or_bind, from_raw=from_raw, ordered=ordered)
+    rows = (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
+
     header = ['path', 'json']
     log.info('header: %r', header)
 
@@ -275,8 +280,8 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
 
 
 def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
-    return compare(iterlanguoids(root),
-                   iterlanguoids(bind, from_raw=from_raw))
+    return compare(iterlanguoids(root, ordered=True),
+                   iterlanguoids(bind, from_raw=from_raw, ordered='path'))
 
 
 def compare(left, right):

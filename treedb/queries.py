@@ -99,7 +99,7 @@ def hash_csv(query=None, *,
     return result
 
 
-def get_query(*, bind=ENGINE, separator=', '):
+def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)
 
@@ -252,13 +252,25 @@ def get_query(*, bind=ENGINE, separator=', '):
             .outerjoin(sa.join(Endangerment, EndangermentSource)
                        .outerjoin(sa.join(e_bibitem, e_bibfile)))
             .outerjoin(EthnologueComment)
-            .outerjoin(IsoRetirement))\
-        .order_by(Languoid.id)
+            .outerjoin(IsoRetirement))
+
+    _apply_ordered(select_languoid, path, ordered=ordered)
 
     return select_languoid
 
 
-def get_json_query(*, bind=ENGINE):
+def _apply_ordered(select_languoid, path, *, ordered):
+    if ordered is False:
+        pass
+    elif ordered in (True, 'id'):
+        select_languoid.append_order_by(Languoid.id)
+    elif ordered == 'path':
+       select_languoid.append_order_by(path)
+    else:
+        raise ValueError(f'ordered={ordered!r} not implemented')
+
+
+def get_json_query(*, bind=ENGINE, ordered='id'):
     json_array = sa.func.json_array
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
@@ -398,8 +410,9 @@ def get_json_query(*, bind=ENGINE):
             'hh_ethnologue_comment', hh_ethnologue_comment,
             'iso_retirement', iso_retirement,
         ))], bind=bind)\
-        .select_from(Languoid)\
-        .order_by(path)
+        .select_from(Languoid)
+
+    _apply_ordered(select_languoid, path, ordered=ordered)
 
     return select_languoid
 

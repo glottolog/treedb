@@ -23,18 +23,34 @@ def literal_compile(expression):
     return expression.compile(compile_kwargs={'literal_binds': True})
 
 
-def iterrecords(*, windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
+def iterrecords(*, ordered=True, windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     log.info('enter raw records')
     log.debug('bind: %r', bind)
 
-    select_files = sa.select([File.path]).order_by(File.id)
-    # depend on no empty value files (save sa.outerjoin(File, Value) below)
-    select_values = sa.select([
-            Value.file_id, Option.section, Option.option,
-            Option.is_lines, Value.value,
-        ]).select_from(sa.join(Value, Option))\
-        .order_by('file_id', 'section', Value.line, 'option')
+    select_files = sa.select([File.path])
+     # depend on no empty value files (save sa.outerjoin(File, Value) below)
+    select_values = sa.select([Value.file_id, Option.section, Option.option,
+                               Option.is_lines, Value.value])
+
+    values_from = sa.join(Value, Option)
+
+    if ordered in (True, False, 'file'):
+        key_column = File.id
+        value_key = Value.file_id
+    elif ordered == 'id':
+        values_from = values_from.join(File)
+        key_column = value_key = File.glottocode
+    elif ordered == 'path':
+        values_from = values_from.join(File)
+        key_column = value_key = File.path
+    else:
+        raise ValueError(f'ordered={ordered!r} not implememted')
+
+    select_files.append_order_by(key_column)
+    select_values.append_from(values_from)
+    select_values.append_order_by(value_key, 'section', Value.line, 'option')
+
     if skip_unknown:
         select_values.append_whereclause(Option.is_lines != None)
 
@@ -45,14 +61,14 @@ def iterrecords(*, windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     with bind.connect() as conn:
         select_files.bind = conn
         select_values.bind = conn
-        for in_slice in window_slices(File.id, size=windowsize, bind=conn):
+        for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
-                where = literal_compile(in_slice(File.id))
+                where = literal_compile(in_slice(key_column))
                 log.debug('fetch rows %r', where.string)
 
-            files = select_files.where(in_slice(File.id)).execute().fetchall()
+            files = select_files.where(in_slice(key_column)).execute().fetchall()
             # single thread: no isolation level concerns
-            values = select_values.where(in_slice(Value.file_id)).execute().fetchall()
+            values = select_values.where(in_slice(value_key)).execute().fetchall()
 
             # join by file_id total order index
             for (path,), (_, values) in zip(files, groupby_file(values)):
