@@ -196,7 +196,8 @@ class Languoid(Model):
             tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
 
         squery = sa.select([tree.c.parent_id.label('path_part')])\
-            .where(tree.c.child_id == cls.id).correlate(cls)\
+            .where(tree.c.child_id == cls.id)\
+            .correlate(cls)\
             .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
 
         path = sa.func.group_concat(squery.c.path_part, delimiter)
@@ -210,13 +211,15 @@ class Languoid(Model):
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
         family = sa.select([tree.c.parent_id])\
-            .where(tree.c.child_id == cls.id).correlate(cls)\
+            .where(tree.c.child_id == cls.id)\
+            .correlate(cls)\
             .where(tree.c.steps > 0).where(tree.c.terminal == True)
 
         Ancestor = aliased(Languoid, name='ancestor')
 
         language = sa.select([tree.c.parent_id])\
-            .where(tree.c.child_id == cls.id).correlate(cls)\
+            .where(tree.c.child_id == cls.id)\
+            .correlate(cls)\
             .where(cls.level == DIALECT)\
             .where(sa.exists()
                 .where(Ancestor.id == tree.c.parent_id)
@@ -300,10 +303,10 @@ class Link(Model):
                             back_populates='links')
 
     @classmethod
-    def printf(cls):
+    def printf(cls, label='printf'):
         return sa.case([(cls.title != None,
                          sa.func.printf('(%s)[%s]', cls.title, cls.url))],
-                       else_=cls.url)
+                       else_=cls.url).label(label)
 
 
 class Source(Model):
@@ -332,21 +335,22 @@ class Source(Model):
                             back_populates='sources')
 
     @classmethod
-    def printf(cls, bibfile, bibitem):
+    def printf(cls, bibfile, bibitem, label='printf'):
         return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
                          sa.func.printf('**%s:%s**:%s<trigger "%s">',
                                         bibfile.name, bibitem.bibkey,
                                         cls.pages, cls.trigger)),
                         (cls.pages != None,
-                         sa.func.printf('**%s:%s**:%s',
-                                        bibfile.name, bibitem.bibkey,
-                                        cls.pages)),
+                         sa.func.printf('**%s:%s**:%s', bibfile.name,
+                                                        bibitem.bibkey,
+                                                        cls.pages)),
                         (cls.trigger != None,
                          sa.func.printf('**%s:%s**<trigger "%s">',
                                         bibfile.name, bibitem.bibkey,
                                         cls.trigger))],
-                       else_=sa.func.printf('**%s:%s**',
-                                            bibfile.name, bibitem.bibkey))
+                       else_=sa.func.printf('**%s:%s**', bibfile.name,
+                                                         bibitem.bibkey)
+                       ).label(label)
 
 
 class Bibfile(Model):
@@ -393,8 +397,9 @@ class Bibitem(Model):
                                        back_populates='bibitem')
 
     @classmethod
-    def printf(cls, bibfile):
-        return sa.func.printf('**%s:%s**', bibfile.name, self.bibkey)
+    def printf(cls, bibfile, label='printf'):
+        return sa.func.printf('**%s:%s**', bibfile.name,
+                                           self.bibkey).label(label)
 
 
 class Altname(Model):
@@ -417,9 +422,11 @@ class Altname(Model):
                             back_populates='altnames')
 
     @classmethod
-    def printf(cls):
+    def printf(cls, label='printf'):
         return sa.case([(cls.lang == '', cls.name)],
-                       else_=sa.func.printf('%s [%s]', cls.name, cls.lang))
+                       else_=sa.func.printf('%s [%s]', cls.name,
+                                                       cls.lang)
+                       ).label(label)
 
 
 class Trigger(Model):
@@ -509,10 +516,10 @@ class ClassificationRef(Model):
                            back_populates='classificationrefs')
 
     @classmethod
-    def printf(cls, bibfile, bibitem):
+    def printf(cls, bibfile, bibitem, label='printf'):
         return sa.func.printf(sa.case([(cls.pages != None, '**%s:%s**:%s')],
                                       else_='**%s:%s**'),
-                              bibfile.name, bibitem.bibkey, cls.pages)
+                              bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
 
 class Endangerment(Model):
@@ -571,11 +578,11 @@ class EndangermentSource(Model):
                                 back_populates='source')
 
     @classmethod
-    def printf(cls, bibfile, bibitem):
+    def printf(cls, bibfile, bibitem, label='printf'):
         return sa.case([(cls.bibitem_id == None, cls.name)],
                        else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
                                                             bibitem.bibkey,
-                                                            cls.pages))
+                                                            cls.pages)).label(label)
 
 
 class EthnologueComment(Model):
