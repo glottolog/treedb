@@ -204,7 +204,7 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def path_json(cls, include_self=True, bottomup=False):
+    def path_json(cls, *, include_self=True, bottomup=False):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
         squery = sa.select([tree.c.parent_id.label('path_part')])\
             .where(tree.c.child_id == cls.id)\
@@ -281,7 +281,7 @@ class Country(Model):
 
 
     @classmethod
-    def jsonf(cls, label='jsonf'):
+    def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('id', cls.id,
                                    'name', cls.name).label(label)
 
@@ -320,13 +320,13 @@ class Link(Model):
                             back_populates='links')
 
     @classmethod
-    def printf(cls, label='printf'):
+    def printf(cls, *, label='printf'):
         return sa.case([(cls.title != None,
                          sa.func.printf('(%s)[%s]', cls.title, cls.url))],
                        else_=cls.url).label(label)
 
     @classmethod
-    def jsonf(cls, label='jsonf'):
+    def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('url', cls.url,
                                    'title', cls.title).label(label)
 
@@ -356,7 +356,7 @@ class Source(Model):
                             back_populates='sources')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, label='printf'):
+    def printf(cls, bibfile, bibitem, *, label='printf'):
         return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
                          sa.func.printf('**%s:%s**:%s<trigger "%s">',
                                         bibfile.name, bibitem.bibkey,
@@ -374,7 +374,7 @@ class Source(Model):
                        ).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, label='jsonf'):
+    def jsonf(cls, bibfile, bibitem, *, label='jsonf'):
         return sa.func.json_object('bibfile', bibfile.name,
                                    'bibkey', bibitem.bibkey,
                                    'pages', cls.pages,
@@ -425,7 +425,7 @@ class Bibitem(Model):
                                        back_populates='bibitem')
 
     @classmethod
-    def printf(cls, bibfile, label='printf'):
+    def printf(cls, bibfile, *, label='printf'):
         return sa.func.printf('**%s:%s**', bibfile.name,
                                            self.bibkey).label(label)
 
@@ -450,14 +450,14 @@ class Altname(Model):
                             back_populates='altnames')
 
     @classmethod
-    def printf(cls, label='printf'):
+    def printf(cls, *, label='printf'):
         return sa.case([(cls.lang == '', cls.name)],
                        else_=sa.func.printf('%s [%s]', cls.name,
                                                        cls.lang)
                        ).label(label)
 
     @classmethod
-    def jsonf(cls, label='jsonf'):
+    def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('name', cls.name,
                                    'lang', cls.lang).label(label)
 
@@ -549,13 +549,13 @@ class ClassificationRef(Model):
                            back_populates='classificationrefs')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, label='printf'):
+    def printf(cls, bibfile, bibitem, *, label='printf'):
         return sa.func.printf(sa.case([(cls.pages != None, '**%s:%s**:%s')],
                                       else_='**%s:%s**'),
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, label='jsonf'):
+    def jsonf(cls, bibfile, bibitem, *, label='jsonf'):
         return sa.func.json_object('bibfile', bibfile.name,
                                    'bibkey', bibitem.bibkey,
                                    'pages', cls.pages).label(label)
@@ -588,7 +588,7 @@ class Endangerment(Model):
                           back_populates='endangerment')
 
     @classmethod
-    def jsonf(cls, source, bibfile, bibitem, label='jsonf'):
+    def jsonf(cls, source, bibfile, bibitem, *, label='jsonf'):
         source = sa.func.json_object('name', source.name,
                                      'bibfile', bibfile.name,
                                      'bibkey', bibitem.bibkey,
@@ -628,7 +628,7 @@ class EndangermentSource(Model):
                                 back_populates='source')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, label='printf'):
+    def printf(cls, bibfile, bibitem, *, label='printf'):
         return sa.case([(cls.bibitem_id == None, cls.name)],
                        else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
                                                             bibitem.bibkey,
@@ -658,7 +658,7 @@ class EthnologueComment(Model):
                             back_populates='ethnologue_comment')
 
     @classmethod
-    def jsonf(cls, label='jsonf'):
+    def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('isohid', cls.isohid,
                                    'comment_type', cls.comment_type,
                                    'ethnologue_versions', cls.ethnologue_versions,
@@ -707,7 +707,7 @@ class IsoRetirement(Model):
                              back_populates='iso_retirement')
 
     @classmethod
-    def jsonf(cls, label='jsonf'):
+    def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('code', cls.code,
                                    'name', cls.name,
                                    'change_request', cls.change_request,
