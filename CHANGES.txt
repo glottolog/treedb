@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 0.4.1 (in development)
-------------------------------
+Version 0.5 (in development)
+----------------------------
 
-
+Replace compare_with_raw(root, bind) to compare_with_files(bind, root).
 
 
 Version 0.4
