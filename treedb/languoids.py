@@ -131,7 +131,15 @@ def iterlanguoids(root_or_bind=ROOT, from_raw=False):
         bind = root_or_bind
 
         if not from_raw:
-            raise NotImplementedError
+            from . import queries
+
+            query = queries.get_json_query(bind=bind)
+
+            for s, in query.execute():
+                path, item = json.loads(s)
+                yield tuple(path), item
+
+            return
 
         from . import raw
 
