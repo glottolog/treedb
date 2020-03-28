@@ -27,7 +27,8 @@ __all__ = ['set_engine',
            'Session',
            'load',
            'dump_sql', 'export', 'backup',
-           'print_table_sql', 'print_query_sql', 'select_stats']
+           'print_table_sql', 'print_query_sql', 'get_query_sql',
+           'select_stats']
 
 
 log = logging.getLogger(__name__)
@@ -389,12 +390,17 @@ def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
 
 
 def print_query_sql(query=None, literal_binds=True):
+    print(get_query_sql(query, literal_binds=literal_binds))
+
+
+def get_query_sql(query=None, literal_binds=True):
     if query is None:
         from . import queries
+
         query = queries.get_query()
 
-    s = query.compile(compile_kwargs={'literal_binds': literal_binds})
-    print(s)
+    compiled = query.compile(compile_kwargs={'literal_binds': literal_binds})
+    return str(compiled)
 
 
 sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',
