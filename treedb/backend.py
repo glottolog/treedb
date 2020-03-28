@@ -231,7 +231,7 @@ def load(filename=ENGINE, repo_root=None, *,
             raw.load(root, conn)
 
     if not (from_raw or exclude_raw):
-        warnings.warn('2 tree reads required (use compare_with_raw() to verify)')
+        warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.debug('import module languoids')
     from . import languoids
@@ -241,7 +241,7 @@ def load(filename=ENGINE, repo_root=None, *,
         root_or_bind = conn if from_raw else root
         log.debug('root_or_bind: %r', root_or_bind)
 
-        pairs = languoids.iterlanguoids(root_or_bind)
+        pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
         models_load.load(pairs, conn)
 
     log.info('write %r', Dataset.__tablename__)

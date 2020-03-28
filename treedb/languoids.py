@@ -15,7 +15,9 @@ from . import tools as _tools
 
 from . import ROOT, ENGINE
 
-__all__ = ['iterlanguoids', 'write_json_csv', 'compare_with_raw']
+__all__ = ['iterlanguoids',
+           'write_json_csv',
+           'compare_with_files', 'compare']
 
 
 log = logging.getLogger(__name__)
@@ -121,12 +123,15 @@ def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
     return _match(s).groupdict('')
 
 
-def iterlanguoids(root_or_bind=ROOT):
+def iterlanguoids(root_or_bind=ROOT, from_raw=False):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
     log.info('extract languoids')
 
     if hasattr(root_or_bind, 'execute'):
         bind = root_or_bind
+
+        if not from_raw:
+            raise NotImplementedError
 
         from . import raw
 
@@ -134,6 +139,9 @@ def iterlanguoids(root_or_bind=ROOT):
         _make_lines = make_lines_raw
     else:
         root = root_or_bind
+
+        if from_raw:
+            raise TypeError(f'from_raw=True requires bind (passed: {root!r})')
 
         from . import files
 
@@ -258,11 +266,16 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
                             dialect=dialect, encoding=encoding)
 
 
-def compare_with_raw(root=ROOT, *, bind=ENGINE):
+def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
+    return compare(iterlanguoids(root),
+                   iterlanguoids(bind, from_raw=from_raw))
+
+
+def compare(left, right):
     same = True
-    for files, raw in itertools.zip_longest(*map(iterlanguoids, (root, bind))):
-        if files != raw:
+    for l, r in itertools.zip_longest(left, right):
+        if l != r:
             same = False
-            print('', '', files, '', raw, '', '', sep='\n')
+            print('', '', l, '', r, '', '', sep='\n')
 
     return same

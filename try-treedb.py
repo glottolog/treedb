@@ -48,7 +48,7 @@ treedb.check()
 #raw.checksum(weak=True)
 #raw.write_raw_csv()
 
-#treedb.languoids.compare_with_raw()
+#treedb.languoids.compare_with_files()
 #treedb.languoids.write_json_csv(engine)
 
 #raw.drop_duplicate_sources()

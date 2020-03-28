@@ -8,7 +8,7 @@ ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
 
 from .files import get_default_root, set_root, iterfiles
 
-from .languoids import iterlanguoids, write_json_csv, compare_with_raw
+from .languoids import iterlanguoids, write_json_csv, compare_with_files
 
 from .backend import (set_engine, load, Dataset, Session,
                       print_schema, dump_sql, export, backup,
@@ -28,7 +28,7 @@ from .shortcuts import (count, select, text,
 
 __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
-           'iterlanguoids', 'write_json_csv', 'compare_with_raw',
+           'iterlanguoids', 'write_json_csv', 'compare_with_files',
            'set_engine', 'load', 'Dataset', 'Session',
            'print_schema', 'dump_sql', 'export', 'backup',
            'print_table_sql', 'print_query_sql', 'select_stats',
