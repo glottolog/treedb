@@ -161,7 +161,77 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
 
     n = 0
     for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
+        sources = None
+        if 'sources' in cfg:
+            sources = skip_empty({
+                provider: [splitsource(p) for p in _make_lines(sources)]
+                for provider, sources in cfg['sources'].items()
+            }) or None
+
+        altnames = None
+        if 'altnames' in cfg:
+            altnames = {
+                provider: [splitaltname(a) for a in _make_lines(altnames)]
+                for provider, altnames in cfg['altnames'].items()
+            } or None
+
+        triggers = None
+        if 'triggers' in cfg:
+            triggers = {
+                field: _make_lines(triggers)
+                for field, triggers in cfg['triggers'].items()
+            } or None
+
+        itentifier = None
+        if 'identifier' in cfg:
+            # FIXME: semicolon-separated (wals)?
+            identifier = dict(cfg['identifier']) or None
+
+        classification = None
+        if 'classification' in cfg:
+            classification = skip_empty({
+                c: list(map(splitsource, _make_lines(classifications)))
+                   if c.endswith('refs') else
+                   classifications
+                for c, classifications in cfg['classification'].items()
+            }) or None
+
+        endangerment = None
+        if 'endangerment' in cfg:
+            sct = cfg['endangerment']
+            endangerment = {
+                'status': sct['status'],
+                'source': splitsource(sct['source'], endangerment=True),
+                'date': make_datetime(sct['date']),
+                'comment': sct['comment'],
+            }
+
+        hh_ethnologue_comment = None
+        if 'hh_ethnologue_comment' in cfg:
+            sct = cfg['hh_ethnologue_comment']
+            hh_ethnologue_comment = {
+                'isohid': sct['isohid'],
+                'comment_type': sct['comment_type'],
+                'ethnologue_versions': sct['ethnologue_versions'],
+                'comment': sct['comment'],
+            }
+
+        iso_retirement = None
+        if 'iso_retirement' in cfg:
+            sct = cfg['iso_retirement']
+            iso_retirement = {
+                'code': sct['code'],
+                'name': sct['name'],
+                'change_request': sct.get('change_request'),
+                'effective': make_date(sct['effective']),
+                'reason': sct['reason'],
+                'change_to': _make_lines(sct.get('change_to')),
+                'remedy': sct.get('remedy'),
+                'comment': sct.get('comment'),
+            }
+
         core = cfg['core']
+
         item = {
             'id': path_tuple[-1],
             'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
@@ -174,72 +244,15 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
             'macroareas': _make_lines(core.get('macroareas')),
             'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
             'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+            'sources': sources,
+            'altnames': altnames,
+            'triggers': triggers,
+            'identifier': identifier,
+            'classification': classification,
+            'endangerment': endangerment,
+            'hh_ethnologue_comment': hh_ethnologue_comment,
+            'iso_retirement': iso_retirement,
         }
-
-        if 'sources' in cfg:
-            sources = skip_empty({
-                provider: [splitsource(p) for p in _make_lines(sources)]
-                for provider, sources in cfg['sources'].items()
-            })
-            if sources:
-                item['sources'] = sources
-
-        if 'altnames' in cfg:
-            item['altnames'] = {
-                provider: [splitaltname(a) for a in _make_lines(altnames)]
-                for provider, altnames in cfg['altnames'].items()
-            }
-
-        if 'triggers' in cfg:
-            item['triggers'] = {
-                field: _make_lines(triggers)
-                for field, triggers in cfg['triggers'].items()
-            }
-
-        if 'identifier' in cfg:
-            # FIXME: semicolon-separated (wals)?
-            item['identifier'] = dict(cfg['identifier'])
-
-        if 'classification' in cfg:
-            classification = skip_empty({
-                c: list(map(splitsource, _make_lines(classifications)))
-                   if c.endswith('refs') else
-                   classifications
-                for c, classifications in cfg['classification'].items()
-            })
-            if classification:
-                item['classification'] = classification
-
-        if 'endangerment' in cfg:
-            sct = cfg['endangerment']
-            item['endangerment'] = {
-                'status': sct['status'],
-                'source': splitsource(sct['source'], endangerment=True),
-                'date': make_datetime(sct['date']),
-                'comment': sct['comment'],
-            }
-
-        if 'hh_ethnologue_comment' in cfg:
-            sct = cfg['hh_ethnologue_comment']
-            item['hh_ethnologue_comment'] = {
-                'isohid': sct['isohid'],
-                'comment_type': sct['comment_type'],
-                'ethnologue_versions': sct['ethnologue_versions'],
-                'comment': sct['comment'],
-            }
-
-        if 'iso_retirement' in cfg:
-            sct = cfg['iso_retirement']
-            item['iso_retirement'] = {
-                'code': sct['code'],
-                'name': sct['name'],
-                'change_request': sct.get('change_request'),
-                'effective': make_date(sct['effective']),
-                'reason': sct['reason'],
-                'change_to': _make_lines(sct.get('change_to')),
-                'remedy': sct.get('remedy'),
-                'comment': sct.get('comment'),
-            }
 
         yield path_tuple, item
 

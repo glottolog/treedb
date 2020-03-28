@@ -327,7 +327,8 @@ class Link(Model):
 
     @classmethod
     def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('url', cls.url,
+        return sa.func.json_object('scheme', cls.scheme,
+                                   'url', cls.url,
                                    'title', cls.title).label(label)
 
 class Source(Model):
@@ -558,7 +559,8 @@ class ClassificationRef(Model):
     def jsonf(cls, bibfile, bibitem, *, label='jsonf'):
         return sa.func.json_object('bibfile', bibfile.name,
                                    'bibkey', bibitem.bibkey,
-                                   'pages', cls.pages).label(label)
+                                   'pages', cls.pages,
+                                   'trigger', None).label(label)
 
 
 class Endangerment(Model):
@@ -589,10 +591,12 @@ class Endangerment(Model):
 
     @classmethod
     def jsonf(cls, source, bibfile, bibitem, *, label='jsonf'):
-        source = sa.func.json_object('name', source.name,
-                                     'bibfile', bibfile.name,
+        nobibfile = sa.func.json_object('name', source.name)
+        bibfile = sa.func.json_object('bibfile', bibfile.name,
                                      'bibkey', bibitem.bibkey,
                                      'pages', source.pages)
+        source = sa.case([(bibitem.id == None, nobibfile)],
+                         else_=bibfile)
         return sa.func.json_object('status', cls.status,
                                    'source', source,
                                    'date', cls.date,
@@ -620,7 +624,6 @@ class EndangermentSource(Model):
                 f' pages={self.pages!r}>')
 
     bibitem = relationship('Bibitem',
-                           innerjoin=True,
                            back_populates='endangermentsources')
 
     endangerment = relationship('Endangerment',

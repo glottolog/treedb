@@ -370,11 +370,10 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
 
     endangerment = select([Endangerment.jsonf(EndangermentSource,
                                               e_bibfile, e_bibitem)])\
+        .select_from(sa.join(Endangerment, EndangermentSource)
+                     .outerjoin(sa.join(e_bibitem, e_bibfile)))\
         .where(Endangerment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .where(Endangerment.source_id == EndangermentSource.id)\
-        .where(EndangermentSource.bibitem_id == e_bibitem.id)\
-        .where(e_bibitem.bibfile_id == e_bibfile.id)\
         .as_scalar()
 
     hh_ethnologue_comment = select([EthnologueComment.jsonf()])\
