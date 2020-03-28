@@ -204,6 +204,17 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
+    def path_json(cls, include_self=True, bottomup=False):
+        tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
+        squery = sa.select([tree.c.parent_id.label('path_part')])\
+            .where(tree.c.child_id == cls.id)\
+            .correlate(cls)\
+            .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
+
+        path = sa.func.json_group_array(squery.c.path_part)
+        return sa.select([path]).as_scalar()
+
+    @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
@@ -269,6 +280,12 @@ class Country(Model):
                              back_populates='countries')
 
 
+    @classmethod
+    def jsonf(cls, label='jsonf'):
+        return sa.func.json_object('id', cls.id,
+                                   'name', cls.name).label(label)
+
+
 languoid_country = Table('languoid_country', Model.metadata,
     Column('languoid_id', ForeignKey('languoid.id'), primary_key=True),
     Column('country_id', ForeignKey('country.id'), primary_key=True))
@@ -308,6 +325,10 @@ class Link(Model):
                          sa.func.printf('(%s)[%s]', cls.title, cls.url))],
                        else_=cls.url).label(label)
 
+    @classmethod
+    def jsonf(cls, label='jsonf'):
+        return sa.func.json_object('url', cls.url,
+                                   'title', cls.title).label(label)
 
 class Source(Model):
 
@@ -351,6 +372,13 @@ class Source(Model):
                        else_=sa.func.printf('**%s:%s**', bibfile.name,
                                                          bibitem.bibkey)
                        ).label(label)
+
+    @classmethod
+    def jsonf(cls, bibfile, bibitem, label='jsonf'):
+        return sa.func.json_object('bibfile', bibfile.name,
+                                   'bibkey', bibitem.bibkey,
+                                   'pages', cls.pages,
+                                   'trigger', cls.trigger).label(label)
 
 
 class Bibfile(Model):
@@ -427,6 +455,11 @@ class Altname(Model):
                        else_=sa.func.printf('%s [%s]', cls.name,
                                                        cls.lang)
                        ).label(label)
+
+    @classmethod
+    def jsonf(cls, label='jsonf'):
+        return sa.func.json_object('name', cls.name,
+                                   'lang', cls.lang).label(label)
 
 
 class Trigger(Model):
@@ -521,6 +554,12 @@ class ClassificationRef(Model):
                                       else_='**%s:%s**'),
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
+    @classmethod
+    def jsonf(cls, bibfile, bibitem, label='jsonf'):
+        return sa.func.json_object('bibfile', bibfile.name,
+                                   'bibkey', bibitem.bibkey,
+                                   'pages', cls.pages).label(label)
+
 
 class Endangerment(Model):
 
@@ -547,6 +586,17 @@ class Endangerment(Model):
     source = relationship('EndangermentSource',
                           innerjoin=True,
                           back_populates='endangerment')
+
+    @classmethod
+    def jsonf(cls, source, bibfile, bibitem, label='jsonf'):
+        source = sa.func.json_object('name', source.name,
+                                     'bibfile', bibfile.name,
+                                     'bibkey', bibitem.bibkey,
+                                     'pages', source.pages)
+        return sa.func.json_object('status', cls.status,
+                                   'source', source,
+                                   'date', cls.date,
+                                   'comment', cls.comment).label(label)
 
 
 class EndangermentSource(Model):
@@ -607,6 +657,13 @@ class EthnologueComment(Model):
                             innerjoin=True,
                             back_populates='ethnologue_comment')
 
+    @classmethod
+    def jsonf(cls, label='jsonf'):
+        return sa.func.json_object('isohid', cls.isohid,
+                                   'comment_type', cls.comment_type,
+                                   'ethnologue_versions', cls.ethnologue_versions,
+                                   'comment', cls.comment)
+
 
 class IsoRetirement(Model):
 
@@ -648,6 +705,16 @@ class IsoRetirement(Model):
     change_to = relationship('IsoRetirementChangeTo',
                              order_by='IsoRetirementChangeTo.ord',
                              back_populates='iso_retirement')
+
+    @classmethod
+    def jsonf(cls, label='jsonf'):
+        return sa.func.json_object('code', cls.code,
+                                   'name', cls.name,
+                                   'change_request', cls.change_request,
+                                   'effective', cls.effective,
+                                   'reason', cls.reason,
+                                   'remedy', cls.remedy,
+                                   'comment', cls.comment)
 
 
 class IsoRetirementChangeTo(Model):

@@ -26,7 +26,7 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = ['print_rows', 'write_csv', 'hash_csv',
-           'get_query',
+           'get_query', 'get_json_query',
            'iterdescendants']
 
 
@@ -252,6 +252,149 @@ def get_query(*, bind=ENGINE, separator=', '):
                        .outerjoin(sa.join(e_bibitem, e_bibfile)))
             .outerjoin(EthnologueComment)
             .outerjoin(IsoRetirement))\
+        .order_by(Languoid.id)
+
+    return select_languoid
+
+
+def get_json_query(*, bind=ENGINE):
+    json_array = sa.func.json_array
+    json_object = sa.func.json_object
+    group_array = sa.func.json_group_array
+    group_object = sa.func.json_group_object
+
+    macroareas = select([group_array(languoid_macroarea.c.macroarea_name)])\
+        .where(languoid_macroarea.c.languoid_id == Languoid.id)\
+        .order_by(languoid_macroarea)
+
+    countries = select([group_array(Country.jsonf())])\
+        .select_from(languoid_country.join(Country))\
+        .where(languoid_country.c.languoid_id == Languoid.id)\
+        .order_by(Country.id)\
+        .as_scalar()
+
+    links = select([group_array(Link.jsonf())])\
+        .where(Link.languoid_id == Languoid.id)\
+        .order_by(Link.ord)\
+        .as_scalar()
+
+    s_bibfile, s_bibitem = map(aliased, (Bibfile, Bibitem))
+
+    sources = select([
+            Source.provider,
+            Source.jsonf(s_bibfile, s_bibitem),
+        ]).where(Source.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .where(Source.bibitem_id == s_bibitem.id)\
+        .where(s_bibitem.bibfile_id == s_bibfile.id)\
+        .order_by(Source.provider, s_bibfile.name, s_bibitem.bibkey)
+
+    sources = select([json_object(sources.c.provider,
+                                  group_array(sa.func.json(sources.c.jsonf)))])\
+        .group_by(sources.c.provider)\
+        .as_scalar()
+
+    altnames = select([
+            Altname.provider,
+            Altname.jsonf(),
+        ]).where(Altname.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .order_by(Altname.provider, Altname.name, Altname.lang)
+
+    altnames = select([json_object(altnames.c.provider,
+                                   group_array(sa.func.json(altnames.c.jsonf)))])\
+        .group_by(altnames.c.provider)\
+        .as_scalar()
+
+    triggers = select([
+            Trigger.field,
+            Trigger.trigger,
+        ]).where(Trigger.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .order_by(Trigger.field, Trigger.ord)
+
+    triggers = select([json_object(triggers.c.field,
+                                   group_array(triggers.c.trigger))])\
+        .group_by(triggers.c.field)\
+        .as_scalar()
+
+    identifier = select([group_object(Identifier.site,
+                                      Identifier.identifier)])\
+        .where(Identifier.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .as_scalar()
+
+    classification_comment = select([
+            ClassificationComment.kind.label('key'),
+            ClassificationComment.comment.label('value'),
+        ]).where(ClassificationComment.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .as_scalar()
+
+    cr_bibfile, cr_bibitem = map(aliased, (Bibfile, Bibitem))
+
+    classification_refs = select([
+            (ClassificationRef.kind + 'ref').label('key'),
+            ClassificationRef.jsonf(cr_bibfile, cr_bibitem),
+        ]).where(ClassificationRef.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .where(ClassificationRef.bibitem_id == cr_bibitem.id)\
+        .where(cr_bibitem.bibfile_id == cr_bibfile.id)
+
+    classification_refs = select([
+            classification_refs.c.key,
+            group_array(classification_refs.c.jsonf).label('value'),
+        ]).group_by(classification_refs.c.key)
+
+    classification = classification_comment.union_all(classification_refs)
+
+    classification = select([json_object(classification.c.key,
+                                         classification.c.value)])\
+        .select_from(classification)\
+        .as_scalar()
+
+    e_bibfile, e_bibitem = map(aliased, (Bibfile, Bibitem))
+
+    endangerment = select([Endangerment.jsonf(EndangermentSource,
+                                              e_bibfile, e_bibitem)])\
+        .where(Endangerment.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .where(Endangerment.source_id == EndangermentSource.id)\
+        .where(EndangermentSource.bibitem_id == e_bibitem.id)\
+        .where(e_bibitem.bibfile_id == e_bibfile.id)\
+        .as_scalar()
+
+    hh_ethnologue_comment = select([EthnologueComment.jsonf()])\
+        .where(EthnologueComment.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .as_scalar()
+
+    iso_retirement = select([IsoRetirement.jsonf()])\
+        .where(IsoRetirement.languoid_id == Languoid.id)\
+        .correlate(Languoid)\
+        .as_scalar()
+
+    select_languoid = select([json_array(Languoid.path_json(), json_object(
+            'id', Languoid.id,
+            'parent_id', Languoid.parent_id,
+            'level', Languoid.level,
+            'name', Languoid.name,
+            'hid', Languoid.hid,
+            'iso639_3', Languoid.iso639_3,
+            'latitude', Languoid.latitude,
+            'longitude', Languoid.longitude,
+            'macroareas', macroareas,
+            'countries', countries,
+            'links', links,
+            'sources', sources,
+            'altnames', altnames,
+            'triggers', triggers,
+            'identifier', identifier,
+            'classification', classification,
+            'endangerment', endangerment,
+            'hh_ethnologue_comment', hh_ethnologue_comment,
+            'iso_retirement', iso_retirement,
+        ))], bind=bind).select_from(Languoid)\
         .order_by(Languoid.id)
 
     return select_languoid

@@ -19,7 +19,7 @@ from .models import LEVEL, Languoid
 from .checks import check
 
 from .queries import (print_rows, write_csv, hash_csv,
-                      get_query,
+                      get_query, get_json_query,
                       iterdescendants)
 
 from .shortcuts import (count, select, text,
@@ -34,7 +34,8 @@ __all__ = ['ROOT', 'ENGINE',
            'print_table_sql', 'print_query_sql', 'select_stats',
            'LEVEL', 'Languoid',
            'check',
-           'print_rows', 'write_csv', 'hash_csv', 'get_query', 'iterdescendants',
+           'print_rows', 'write_csv', 'hash_csv',
+           'get_query', 'get_json_query', 'iterdescendants',
            'count', 'select', 'text', 'pd_read_sql', 'configure_logging',
            'root', 'engine']
 
