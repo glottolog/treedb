@@ -2,8 +2,10 @@ Changelog
 =========
 
 
-Version 0.5 (in development)
-----------------------------
+Version 0.5
+-----------
+
+Add treeb.write_files().
 
 Replace compare_with_raw(root, bind) to compare_with_files(bind, root).
 
