@@ -105,7 +105,7 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
                 endangerment=False):
     if endangerment:
         if s.isalnum():
-            return {'name': s}
+            return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
 
     result = _match(s).groupdict()
     if endangerment:

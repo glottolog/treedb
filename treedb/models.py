@@ -594,11 +594,10 @@ class Endangerment(Model):
 
     @classmethod
     def jsonf(cls, source, bibfile, bibitem, *, label='jsonf'):
-        nobibfile = sa.func.json_object('name', source.name)
-        bibfile = sa.func.json_object('bibfile', bibfile.name,
+        source = sa.func.json_object('name', source.name,
+                                     'bibfile', bibfile.name,
                                      'bibkey', bibitem.bibkey,
                                      'pages', source.pages)
-        source = sa.case([(bibitem.id == None, nobibfile)], else_=bibfile)
         return sa.func.json_object('status', cls.status,
                                    'source', source,
                                    'date', cls.date,
