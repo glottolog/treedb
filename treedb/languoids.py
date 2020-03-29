@@ -10,7 +10,8 @@ from . import tools as _tools
 from . import ROOT, ENGINE
 
 __all__ = ['iterlanguoids',
-           'compare_with_files', 'compare']
+           'compare_with_files', 'compare',
+           'write_files']
 
 FLOAT_FORMAT = '%.8f'
 
