@@ -1,22 +1,15 @@
 # languoids.py - load ../../languoids/tree/**/md.ini into dicts
 
 import datetime
-import functools
 import itertools
-import json
 import logging
-import operator
 import re
-import warnings
-
-import csv23
 
 from . import tools as _tools
 
 from . import ROOT, ENGINE
 
 __all__ = ['iterlanguoids',
-           'write_json_csv',
            'compare_with_files', 'compare']
 
 
@@ -131,42 +124,23 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
     if hasattr(root_or_bind, 'execute'):
         bind = root_or_bind
 
-        if from_raw:
-            log.info('extract languoids from raw records')
+        if not from_raw:
+            from . import languoids_json
 
-            from . import raw
-
-            iterfiles = raw.iterrecords(bind=bind,
-                                        ordered=ordered,
-                                        progress_after=progress_after)
-
-            _make_lines = make_lines_raw
-
-        else:
-            log.info('select languoids from json query')
-
-            from . import queries
-
-            query = queries.get_json_query(bind=bind,
-                                           ordered=ordered)
-
-            json_datetime = datetime.datetime.fromisoformat
-
-            n = 0
-            for n, (s,) in enumerate(query.execute(), 1):
-                path, item = json.loads(s)
-
-                endangerment = item['endangerment']
-                if endangerment is not None:
-                    endangerment['date'] = json_datetime(endangerment['date'])
-
-                yield tuple(path), item
-
-                if not (n % progress_after):
-                    log.info('%s languoids fetched', f'{n:_d}')
-
-            log.info('%s languoids total', f'{n:_d}')
+            yield from languoids_json.iterlanguoids(bind,
+                                                    ordered=ordered,
+                                                    progress_after=progress_after)
             return
+
+        log.info('extract languoids from raw records')
+
+        from . import raw
+
+        iterfiles = raw.iterrecords(bind=bind,
+                                    ordered=ordered,
+                                    progress_after=progress_after)
+
+        _make_lines = make_lines_raw
 
     else:
         log.info('extract languoids from files')
@@ -283,41 +257,6 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         yield path_tuple, item
 
     log.info('%s languoids extracted', f'{n:_d}')
-
-
-def write_json_csv(root_or_bind=ROOT, filename=None, *,
-                   from_raw=False, ordered=True, sort_keys=True,
-                   dialect=csv23.DIALECT, encoding=csv23.ENCODING):
-    """Write (path, json) rows for each languoid to filename."""
-    if filename is None:
-        suffix = '.languoids-json.csv'
-        try:
-            path = root_or_bind.file_with_suffix(suffix)
-        except AttributeError:
-            path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
-        filename = path.name
-    else:
-        filename = _tools.path_from_filename(filename)
-
-    log.info('write json csv: %r', filename)
-    path = _tools.path_from_filename(filename)
-    if path.exists():
-        warnings.warn(f'delete peresent file {path!r}')
-        path.unlink()
-
-    json_dumps = functools.partial(json.dumps,
-                                   # json-serialize datetime.datetime
-                                   default=operator.methodcaller('isoformat'),
-                                   sort_keys=sort_keys)
-
-    rows = iterlanguoids(root_or_bind, from_raw=from_raw, ordered=ordered)
-    rows = (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
-
-    header = ['path', 'json']
-    log.info('header: %r', header)
-
-    return csv23.write_csv(filename, rows, header=header,
-                            dialect=dialect, encoding=encoding)
 
 
 def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
