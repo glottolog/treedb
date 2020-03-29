@@ -12,15 +12,27 @@ from . import ROOT, ENGINE
 __all__ = ['iterlanguoids',
            'compare_with_files', 'compare']
 
+FLOAT_FORMAT = '%.8f'
+
+DATE_FORMAT = '%Y-%m-%d'
+
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+
 
 log = logging.getLogger(__name__)
 
 
-def get_float(mapping, key, format_='%.8f'):
+def get_float(mapping, key, format_=FLOAT_FORMAT):
     result = mapping.get(key)
     if result is not None:
         result = float(format_ % float(result))
     return result
+
+
+def format_float(value, format_=FLOAT_FORMAT):
+    if value is None:
+        return None
+    return str(float(format_ % value))
 
 
 def make_lines(value):
@@ -39,13 +51,21 @@ def skip_empty(mapping):
     return {k: v for k, v in mapping.items() if v}
 
 
-def make_date(value, *, format_='%Y-%m-%d'):
+def make_date(value, *, format_=DATE_FORMAT):
     return datetime.datetime.strptime(value, format_).date()
 
 
-def make_datetime(value, *, format_='%Y-%m-%dT%H:%M:%S'):
+def format_date(value, *, format_=DATE_FORMAT):
+    return value.strftime(format)
+
+
+def make_datetime(value, *, format_=DATETIME_FORMAT):
     return datetime.datetime.strptime(value, format_)
 
+
+def format_datetime(value, *, format_=DATETIME_FORMAT):
+    return value.strftime(format_)
+    
 
 def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
                                             r' '
@@ -53,6 +73,10 @@ def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
                                             r'(?P<id>[^)]+)'
                                             r'\)').fullmatch):
     return _match(name).groupdict()
+
+
+def formatcountry(value):
+    return '{name} ({id})'.format_map(value)
 
 
 def splitlink(markdown, *, _match=re.compile(r'\['
@@ -78,6 +102,12 @@ def splitlink(markdown, *, _match=re.compile(r'\['
     return {'url': url, 'title': title, 'scheme': scheme}
 
 
+def formatlink(value):
+    if value.get('title') is None:
+        return value['url']
+    return '[{title}]({url})'.format_map(value)
+
+
 def splitsource(s, *, _match=re.compile(r'\*{2}'
                                         r'(?P<bibfile>[a-z0-9_\-]+)'
                                         r':'
@@ -96,15 +126,26 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
                                         r'">'
                                         r')?').match,
                 endangerment=False):
-    if endangerment:
-        if s.isalnum():
-            return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
+    if endangerment and s.isalnum():
+        return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
 
     result = _match(s).groupdict()
     if endangerment:
         result['name'] = s
         result.pop('trigger', None)
     return result
+
+
+def formatsource(value, endangerment=False):
+    if endangerment and value.get('bibfile') is None:
+        return value['name']
+
+    result = ['**{bibfile}:{bibkey}**'.format_map(value)]
+    if value.get('pages') is not None:
+        result.append(':{pages}'.format_map(value))
+    if value.get('trigger') is not None:
+        result.append('<trigger "{trigger}">'.format_map(value))
+    return ''.join(result)
 
 
 def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
@@ -114,6 +155,12 @@ def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
                                              r'\]'
                                          r')?').fullmatch):
     return _match(s).groupdict('')
+
+
+def formataltname(value):
+    if value.get('lang') in ('', None):
+        return value['name']
+    return '{name} [{lang}]'.format_map(value)
 
 
 def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
@@ -272,3 +319,68 @@ def compare(left, right):
             print('', '', l, '', r, '', '', sep='\n')
 
     return same
+
+
+def iterrecords(languoids):
+    for p, l in languoids:
+        rec = {'name': l['name'],
+               'hid': l['hid'],
+               'level': l['level'],
+               'iso639-3': l['iso639_3'],
+               'latitude': format_float(l['latitude']),
+               'longitude': format_float(l['longitude']),
+               'macroareas': l['macroareas'],
+               'countries': list(map(formatcountry, l['countries'])),
+               'links': list(map(formatlink, l['links']))}
+        rec = {'core': rec}
+
+        sources = l.get('sources') or {}
+        if sources:
+            sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
+
+        altnames = l.get('altnames') or {}
+        if altnames:
+            altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
+
+        triggers = l.get('triggers') or {}
+
+        identifier = l.get('identifier') or {}
+
+        classification = l['classification'] or {}
+        if classification:
+            classification.update({k: list(map(formatsource, classification[k]))
+                                   for k in ('subrefs', 'familyrefs')
+                                   if k in classification})
+
+        endangerment = l.get('endangerment') or {}
+        if endangerment:
+            endangerment.update(source=formatsource(endangerment['source'],
+                                                    endangerment=True),
+                                date=format_datetime(endangerment['date']))
+
+        hh_ethnologue_comment = l.get('hh_ethnologue_comment') or {}
+
+        iso_retirement = l.get('iso_retirement') or {}
+        if iso_retirement and False:  # FIXME
+            iso_retirement['effective'] = format_date(iso_retirement['effective'])
+
+        rec.update(sources=sources,
+                   altnames=altnames,
+                   triggers=triggers,
+                   identifier=identifier,
+                   classification=classification,
+                   endangerment=endangerment,
+                   hh_ethnologue_comment=hh_ethnologue_comment,
+                   iso_retirement=iso_retirement)
+
+        yield p, rec
+
+
+def write_files(root=ROOT, *, from_raw=False, bind=ENGINE):
+    log.info('write from tables to tree')
+
+    from . import files
+
+    languoids = iterlanguoids(bind, from_raw=from_raw, ordered='path')
+    records = iterrecords(languoids)
+    return files.write_files(records, root=root)

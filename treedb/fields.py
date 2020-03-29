@@ -1,5 +1,7 @@
 # fields.py
 
+"""Define known (section, option) pairs and if they are lists of lines."""
+
 import logging
 import warnings
 
@@ -8,7 +10,6 @@ log = logging.getLogger(__name__)
 
 
 class Fields(object):
-    """Define known (section, option) pairs and if they are lists of lines."""
 
     _fields = {
         ('core', 'name'): False,

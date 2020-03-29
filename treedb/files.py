@@ -112,7 +112,7 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def write_files(records, *, root=ROOT, assume_changed=False, verbose=True,
+def write_files(records, *, root=ROOT, assume_changed=False,
                 basename=BASENAME, is_lines = _fields.Fields.is_lines):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
@@ -128,36 +128,65 @@ def write_files(records, *, root=ROOT, assume_changed=False, verbose=True,
     root = _tools.path_from_filename(root)
     log.info('write directory tree %r', root)
 
+    keep_sections = ('core',)
+    leave = {'sources'}
+
     files_written = 0
     for path_tuple, d in iterpairs(records):
         path = root.joinpath(*path_tuple + (basename,))
+
         cfg = load_config(path)
 
-        # FIXME: missing sections and options
-        drop_sections = set(cfg.sections()).difference(set(d) | {'core', 'sources'})
-        changed = assume_changed or bool(drop_sections)
-        for s in drop_sections:
-            cfg.remove_section(s)
+        present = set(cfg.sections())
+        changed = assume_changed
 
+        keep = set(keep_sections)
+        keep |= {section for section, s in d.items() if s}
+
+        drop = sorted(present - keep - leave)
+        if drop:
+            log.debug('cfg.remove_section(s) for s in %r', drop)
+            for s in drop:
+                cfg.remove_section(s)
+
+            changed = True
+
+        add = sorted(keep - present)
+        if add:
+            log.debug('cfg.add_section(s) for s in %r', add)
+            for s in drop:
+                cfg.add_section(s)
+
+        # FIXME: missing options
         for section, s in d.items():
-            if section != 'core':
+            if not s:
+                continue
+            elif section != 'core':
                 drop_options = set(cfg.options(section))
                 if section == 'iso_retirement':
                     drop_options.discard('change_to')
                 drop_options.difference_update(set(s))
 
-                changed = changed or bool(drop_options)
-                for o in drop_options:
-                    cfg.remove_option(section, o)
+                if drop_options:
+                    log.debug('cfg.remove_option(%r, o) for o in %r',
+                              section, drop_options)
+                    for o in drop_options:
+                        cfg.remove_option(section, o)
+
+                    changed = True
 
             for option, value in s.items():
-                if cfg.get(section, option) != value:
-                    changed = True
+                if value is None or not value and is_lines(section, option):
+                    continue
+                elif cfg.get(section, option, fallback=None) != value:
+                    log.debug('cfg.set_option(%r, %r, %r)',
+                              section, option, value)
                     cfg.set(section, option, value)
 
+                    changed = True
+
         if changed:
-            if verbose:
-                print(f'write {path!r}')
+            log.info('write cfg.to_file(%r)', path)
             cfg.to_file(path)
             files_written += 1
 
