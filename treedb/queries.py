@@ -438,7 +438,7 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
             'endangerment', endangerment,
             'hh_ethnologue_comment', hh_ethnologue_comment,
             'iso_retirement', iso_retirement,
-        ))], bind=bind)\
+        )).label('path_languoid')], bind=bind)\
         .select_from(Languoid)
 
     _apply_ordered(select_languoid, path, ordered=ordered)
