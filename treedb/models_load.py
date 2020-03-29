@@ -110,14 +110,14 @@ def load(languoids, conn):
         countries = l.pop('countries')
         links = l.pop('links')
 
-        sources = l.pop('sources')
-        altnames = l.pop('altnames')
-        triggers = l.pop('triggers')
-        identifier = l.pop('identifier')
-        classification = l.pop('classification')
-        endangerment = l.pop('endangerment')
-        hh_ethnologue_comment = l.pop('hh_ethnologue_comment')
-        iso_retirement = l.pop('iso_retirement')
+        sources = l.pop('sources', None)
+        altnames = l.pop('altnames', None)
+        triggers = l.pop('triggers', None)
+        identifier = l.pop('identifier', None)
+        classification = l.pop('classification', None)
+        endangerment = l.pop('endangerment', None)
+        hh_ethnologue_comment = l.pop('hh_ethnologue_comment', None)
+        iso_retirement = l.pop('iso_retirement', None)
 
         insert_lang(l)
 
