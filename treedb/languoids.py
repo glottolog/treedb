@@ -150,9 +150,16 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
             query = queries.get_json_query(bind=bind,
                                            ordered=ordered)
 
+            json_datetime = datetime.datetime.fromisoformat
+
             n = 0
             for n, (s,) in enumerate(query.execute(), 1):
                 path, item = json.loads(s)
+
+                endangerment = item['endangerment']
+                if endangerment is not None:
+                    endangerment['date'] = json_datetime(endangerment['date'])
+
                 yield tuple(path), item
 
                 if not (n % progress_after):
@@ -279,7 +286,7 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
 
 
 def write_json_csv(root_or_bind=ROOT, filename=None, *,
-                   from_raw=False, ordered=True,
+                   from_raw=False, ordered=True, sort_keys=True,
                    dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
@@ -298,8 +305,10 @@ def write_json_csv(root_or_bind=ROOT, filename=None, *,
         warnings.warn(f'delete peresent file {path!r}')
         path.unlink()
 
-    default_func = operator.methodcaller('isoformat')
-    json_dumps = functools.partial(json.dumps, default=default_func)
+    json_dumps = functools.partial(json.dumps,
+                                   # json-serialize datetime.datetime
+                                   default=operator.methodcaller('isoformat'),
+                                   sort_keys=sort_keys)
 
     rows = iterlanguoids(root_or_bind, from_raw=from_raw, ordered=ordered)
     rows = (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
