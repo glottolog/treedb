@@ -595,8 +595,7 @@ class Endangerment(Model):
         bibfile = sa.func.json_object('bibfile', bibfile.name,
                                      'bibkey', bibitem.bibkey,
                                      'pages', source.pages)
-        source = sa.case([(bibitem.id == None, nobibfile)],
-                         else_=bibfile)
+        source = sa.case([(bibitem.id == None, nobibfile)], else_=bibfile)
         return sa.func.json_object('status', cls.status,
                                    'source', source,
                                    'date', cls.date,
@@ -661,11 +660,14 @@ class EthnologueComment(Model):
                             back_populates='ethnologue_comment')
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('isohid', cls.isohid,
-                                   'comment_type', cls.comment_type,
-                                   'ethnologue_versions', cls.ethnologue_versions,
-                                   'comment', cls.comment)
+    def jsonf(cls, *, label='jsonf', optional=False):
+        mapping = sa.func.json_object('isohid', cls.isohid,
+                                      'comment_type', cls.comment_type,
+                                      'ethnologue_versions', cls.ethnologue_versions,
+                                      'comment', cls.comment)
+        if optional:
+            return sa.case([(cls.languoid_id == None, None)], else_=mapping)
+        return mapping
 
 
 class IsoRetirement(Model):
@@ -710,14 +712,18 @@ class IsoRetirement(Model):
                              back_populates='iso_retirement')
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('code', cls.code,
-                                   'name', cls.name,
-                                   'change_request', cls.change_request,
-                                   'effective', cls.effective,
-                                   'reason', cls.reason,
-                                   'remedy', cls.remedy,
-                                   'comment', cls.comment)
+    def jsonf(cls, *, change_to=None, label='jsonf', optional=False):
+        mapping = sa.func.json_object('code', cls.code,
+                                      'name', cls.name,
+                                      'change_request', cls.change_request,
+                                      'change_to', change_to,
+                                      'effective', cls.effective,
+                                      'reason', cls.reason,
+                                      'remedy', cls.remedy,
+                                      'comment', cls.comment)
+        if optional:
+            return sa.case([(cls.languoid_id == None, None)], else_=mapping)
+        return mapping
 
 
 class IsoRetirementChangeTo(Model):
