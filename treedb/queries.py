@@ -203,13 +203,13 @@ def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
         .order_by(IsoRetirementChangeTo.ord)\
         .label('iso_retirement_change_to')
 
-    def get_cols(model, label='%s', ignore='id'):
+    def get_cols(model, label='{name}', ignore='id'):
         cols = model.__table__.columns
         if ignore:
             ignore_suffix = f'_{ignore}'
             cols = [c for c in cols if c.name != ignore
                     and not c.name.endswith(ignore_suffix)]
-        return [c.label(label % c.name) for c in cols]
+        return [c.label(label.format(name=col.c.name)) for c in cols]
 
     subc, famc = (aliased(ClassificationComment) for _ in range(2))
 
@@ -240,10 +240,10 @@ def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
             classification_subrefs,
             classification_family,
             classification_familyrefs,
-            ] + get_cols(Endangerment, label='endangerment_%s') + [
+            ] + get_cols(Endangerment, label='endangerment_{name}') + [
             endangerment_source,
-            ] + get_cols(EthnologueComment, label='elcomment_%s')
-            + get_cols(IsoRetirement, label='iso_retirement_%s') + [
+            ] + get_cols(EthnologueComment, label='elcomment_{name}')
+            + get_cols(IsoRetirement, label='iso_retirement_{name}') + [
             iso_retirement_change_to,
         ], bind=bind)\
         .select_from(froms
