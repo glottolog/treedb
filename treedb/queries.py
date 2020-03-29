@@ -209,7 +209,7 @@ def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
             ignore_suffix = f'_{ignore}'
             cols = [c for c in cols if c.name != ignore
                     and not c.name.endswith(ignore_suffix)]
-        return [c.label(label.format(name=col.c.name)) for c in cols]
+        return [c.label(label.format(name=c.name)) for c in cols]
 
     subc, famc = (aliased(ClassificationComment) for _ in range(2))
 
