@@ -182,7 +182,7 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
                 for field, triggers in cfg['triggers'].items()
             } or None
 
-        itentifier = None
+        identifier = None
         if 'identifier' in cfg:
             # FIXME: semicolon-separated (wals)?
             identifier = dict(cfg['identifier']) or None
