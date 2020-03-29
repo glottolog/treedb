@@ -279,6 +279,9 @@ class Country(Model):
                              order_by='Languoid.id',
                              back_populates='countries')
 
+    @classmethod
+    def printf(cls, *, label='printf'):
+        return sa.func.printf('%s (%s)', cls.name, cls.id)
 
     @classmethod
     def jsonf(cls, *, label='jsonf'):
