@@ -1,4 +1,4 @@
-# languoids.py - load ../../languoids/tree/**/md.ini into dicts
+# languoids_json.py - load languoids from tables and write json csv
 
 import datetime
 import functools
