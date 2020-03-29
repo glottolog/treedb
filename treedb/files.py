@@ -112,7 +112,7 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def write_files(records, *, root=ROOT, assume_changed=False,
+def write_files(records, *, root=ROOT, replace=False,
                 basename=BASENAME, is_lines = _fields.Fields.is_lines):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
@@ -128,8 +128,8 @@ def write_files(records, *, root=ROOT, assume_changed=False,
     root = _tools.path_from_filename(root)
     log.info('write directory tree %r', root)
 
-    keep_sections = ('core',)
-    leave = {'sources'}
+    core_sections = ('core',)
+    leave_sections = {'sources'}
 
     files_written = 0
     for path_tuple, d in iterpairs(records):
@@ -137,13 +137,16 @@ def write_files(records, *, root=ROOT, assume_changed=False,
 
         cfg = load_config(path)
 
-        present = set(cfg.sections())
-        changed = assume_changed
+        if replace:
+            cfg.clear()
 
-        keep = set(keep_sections)
+        present = set(cfg.sections())
+        changed = False
+
+        keep = set(core_sections)
         keep |= {section for section, s in d.items() if s}
 
-        drop = sorted(present - keep - leave)
+        drop = sorted(present - keep - leave_sections)
         if drop:
             log.debug('cfg.remove_section(s) for s in %r', drop)
             for s in drop:
@@ -157,7 +160,6 @@ def write_files(records, *, root=ROOT, assume_changed=False,
             for s in drop:
                 cfg.add_section(s)
 
-        # FIXME: missing options
         for section, s in d.items():
             if not s:
                 continue
