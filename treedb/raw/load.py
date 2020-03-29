@@ -5,9 +5,10 @@ import logging
 from sqlalchemy import insert
 
 from .. import (tools as _tools,
-                files as _files)
+                files as _files,
+                fields as _fields)
 
-from .models import File, Option, Value, Fields
+from .models import File, Option, Value
 
 __all__ = ['load']
 
@@ -26,7 +27,7 @@ class Options(dict):
         log.debug('insert option %r', key)
 
         section, option = key
-        is_lines = Fields.is_lines(section, option)
+        is_lines = _fields.Fields.is_lines(section, option)
 
         id_, = self.insert(section=section, option=option,
                            is_lines=is_lines).inserted_primary_key

@@ -4,7 +4,8 @@ import configparser
 import logging
 import os
 
-from . import tools as _tools
+from . import (tools as _tools,
+               fields as _fields)
 
 from . import ROOT
 
@@ -111,16 +112,24 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def write_files(pairs, root=ROOT, *, assume_changed=False, verbose=True,
-                basename=BASENAME):
+def write_files(records, *, root=ROOT, assume_changed=False, verbose=True,
+                basename=BASENAME, is_lines = _fields.Fields.is_lines):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
+
+    def iterpairs(records):
+        for p, r in records:
+            for section, s in r.items():
+                for option in s:
+                    if is_lines(section, option):
+                        s[option] = '\n'.join([''] + s[option])
+            yield p, r
 
     root = _tools.path_from_filename(root)
     log.info('write directory tree %r', root)
 
     files_written = 0
-    for path_tuple, d in pairs:
+    for path_tuple, d in iterpairs(records):
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
 

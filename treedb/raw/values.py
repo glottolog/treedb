@@ -15,7 +15,7 @@ from .. import (tools as _tools,
 
 from . import records as _records
 
-from .models import File, Option, Value, Fields
+from .models import File, Option, Value
 
 __all__ = ['print_stats',
            'checksum',
@@ -89,18 +89,8 @@ def write_raw_csv(filename=None, *,
                               dialect=dialect, encoding=encoding, bind=bind)
 
 
-def write_files(root=ROOT, *,
-                verbose=True, is_lines=Fields.is_lines, bind=ENGINE):
+def write_files(root=ROOT, *, verbose=True, bind=ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
-    log.info('write raw records to tree')
-    records = _records.iterrecords(bind)
-
-    def _iterpairs(records):
-        for p, r in records:
-            for section, s in r.items():
-                for option in s:
-                    if is_lines(section, option):
-                        s[option] = '\n'.join([''] + s[option])
-            yield p, r
-
-    return _files.save(_iterpairs(records), root, verbose=verbose)
+    log.info('write from raw records to tree')
+    records = _records.iterrecords(bind=bind)
+    return _files.write_files(records, root=root, verbose=verbose)
