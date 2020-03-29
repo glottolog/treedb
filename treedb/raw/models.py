@@ -12,6 +12,8 @@ from ..backend import Model
 __all__ = ['File', 'Option', 'Value',
            'Fields']
 
+PREFIX = '_'
+
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ log = logging.getLogger(__name__)
 class File(Model):
     """Forward-slash-joined ids from the root to each item."""
 
-    __tablename__ = '_file'
+    __tablename__ = f'{PREFIX}file'
 
     id = Column(Integer, primary_key=True)
 
@@ -44,7 +46,7 @@ class File(Model):
 class Option(Model):
     """Unique (section, option) key of the values with lines config."""
 
-    __tablename__ = '_option'
+    __tablename__ = f'{PREFIX}option'
 
     id = Column(Integer, primary_key=True)
 
@@ -59,7 +61,7 @@ class Option(Model):
 class Value(Model):
     """Item value as (path, section, option, line, value) combination."""
 
-    __tablename__ = '_value'
+    __tablename__ = f'{PREFIX}value'
 
     file_id = Column(ForeignKey('_file.id'), primary_key=True)
     option_id = Column(ForeignKey('_option.id'), primary_key=True)
