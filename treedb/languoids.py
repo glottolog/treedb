@@ -13,7 +13,7 @@ __all__ = ['iterlanguoids',
            'compare_with_files', 'compare',
            'write_files']
 
-FLOAT_FORMAT = '%.8f'
+FLOAT_FORMAT = '%.12f'
 
 DATE_FORMAT = '%Y-%m-%d'
 
@@ -118,14 +118,14 @@ def splitsource(s, *, _match=re.compile(r'\*{2}'
                                             r':'
                                             r'(?P<pages>'
                                                 r'[0-9]+(?:-[0-9]+)?'
-                                                r'(?:, [0-9]+(?:-[0-9]+)?)*'
+                                                r'(?:[,;] [0-9]+(?:-[0-9]+)?)*'
                                            r')'
                                         r')?'
                                         r'(?:'
                                             r'<trigger "'
                                             r'(?P<trigger>[^\"]+)'
                                         r'">'
-                                        r')?').match,
+                                        r')?').match,  # <=v4.1 compat
                 endangerment=False):
     if endangerment and s.isalnum():
         return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
