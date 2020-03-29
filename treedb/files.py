@@ -94,11 +94,11 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     load_config = ConfigParser.from_file
 
     root = make_path(root).resolve()
-    log.info(f'start generating {BASENAME} files from %r', root)
+    log.info(f'start parsing {BASENAME} files from %r', root)
 
     path_slice = slice(len(root.parts), -1)
 
-    msg = f'%s {BASENAME} files generated'
+    msg = f'%s {BASENAME} files parsed'
 
     n = 0
     for n, d in enumerate(_tools.iterfiles(root), 1):
