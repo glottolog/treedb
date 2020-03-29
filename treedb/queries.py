@@ -5,7 +5,7 @@ import logging
 import warnings
 
 import sqlalchemy as sa
-from sqlalchemy import select
+from sqlalchemy import select, join, outerjoin
 from sqlalchemy.orm import aliased
 
 import csv23
@@ -249,8 +249,8 @@ def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
         .select_from(froms
             .outerjoin(subc, sa.and_(subc.languoid_id == Languoid.id, subc.kind == 'sub'))
             .outerjoin(famc, sa.and_(famc.languoid_id == Languoid.id, famc.kind == 'family'))
-            .outerjoin(sa.join(Endangerment, EndangermentSource)
-                       .outerjoin(sa.join(e_bibitem, e_bibfile)))
+            .outerjoin(join(Endangerment, EndangermentSource)
+                       .outerjoin(join(e_bibitem, e_bibfile)))
             .outerjoin(EthnologueComment)
             .outerjoin(IsoRetirement))
 
@@ -370,8 +370,8 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
 
     endangerment = select([Endangerment.jsonf(EndangermentSource,
                                               e_bibfile, e_bibitem)])\
-        .select_from(sa.join(Endangerment, EndangermentSource)
-                     .outerjoin(sa.join(e_bibitem, e_bibfile)))\
+        .select_from(join(Endangerment, EndangermentSource)
+                     .outerjoin(join(e_bibitem, e_bibfile)))\
         .where(Endangerment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
         .as_scalar()
@@ -426,7 +426,7 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     select_pairs = select([
             Parent.id.label('parent_id'), Child.id.label('child_id'),
         ], bind=bind).select_from(
-            sa.outerjoin(Parent, tree, tree.c.parent_id == Parent.id)
+            outerjoin(Parent, tree, tree.c.parent_id == Parent.id)
             .outerjoin(Child, tree.c.child_id == Child.id))\
         .order_by('parent_id', 'child_id')
 
