@@ -23,11 +23,11 @@ __all__ = ['iterlanguoids',
 log = logging.getLogger(__name__)
 
 
-def get_type(mapping, key, type_):
+def get_float(mapping, key, format_='%.8f'):
     result = mapping.get(key)
-    if result is None:
-        return None
-    return type_(result)
+    if result is not None:
+        result = float(format_ % float(result))
+    return result
 
 
 def make_lines(value):
@@ -265,8 +265,8 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
             'name': core['name'],
             'hid': core.get('hid'),
             'iso639_3': core.get('iso639-3'),
-            'latitude': get_type(core, 'latitude', float),
-            'longitude': get_type(core, 'longitude', float),
+            'latitude': get_float(core, 'latitude'),
+            'longitude': get_float(core, 'longitude'),
             'macroareas': _make_lines(core.get('macroareas')),
             'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
             'links': [splitlink(c) for c in _make_lines(core.get('links'))],
