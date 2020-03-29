@@ -285,7 +285,7 @@ def dump_sql(filename=None, *, progress_after=100_000,
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
             if not (n % progress_after):
-                log.debug('%s lines written', f'{n:_d}')
+                log.info('%s lines written', f'{n:_d}')
 
     log.info('%s lines total', f'{n:_d}')
     return path
@@ -352,7 +352,7 @@ def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
     result = sa.create_engine(url)
 
     def progress(status, remaining, total):
-        log.debug('%d of %d pages copied', total - remaining, total)
+        log.info('%d of %d pages copied', total - remaining, total)
 
     with contextlib.closing(engine.raw_connection()) as source,\
          contextlib.closing(result.raw_connection()) as dest:
