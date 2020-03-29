@@ -347,7 +347,7 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
     cr_bibfile, cr_bibitem = map(aliased, (Bibfile, Bibitem))
 
     classification_refs = select([
-            (ClassificationRef.kind + 'ref').label('key'),
+            (ClassificationRef.kind + 'refs').label('key'),
             ClassificationRef.jsonf(cr_bibfile, cr_bibitem),
         ]).where(ClassificationRef.languoid_id == Languoid.id)\
         .correlate(Languoid)\
