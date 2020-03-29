@@ -67,7 +67,9 @@ class ConfigParser(configparser.ConfigParser):
     @classmethod
     def from_file(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
         path = _tools.path_from_filename(filename)
-        assert path.name == cls._basename
+        if path.name != cls._basename:
+            raise RuntimeError(f'unexpected filename {path!r}'
+                               f' (must end with {cls._basename})')
 
         inst = cls(**kwargs)
         with path.open(encoding=encoding) as f:
@@ -86,24 +88,27 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterfiles(root=ROOT):
+def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     make_path = _tools.path_from_filename
     load_config = ConfigParser.from_file
 
     root = make_path(root).resolve()
-    log.info('enter directory tree %r', root)
+    log.info(f'start generating {BASENAME} files from %r', root)
 
     path_slice = slice(len(root.parts), -1)
 
+    msg = f'%s {BASENAME} files generated'
+
+    n = 0
     for n, d in enumerate(_tools.iterfiles(root), 1):
         path = make_path(d)
         yield path.parts[path_slice], d, load_config(path)
 
-        if not (n % 2_500):
-            log.debug('%s files loaded', f'{n:_d}')
+        if not (n % progress_after):
+            log.info(msg, f'{n:_d}')
 
-    log.info('exit directory tree %r', root)
+    log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
 def write_files(pairs, root=ROOT, *, assume_changed=False, verbose=True,

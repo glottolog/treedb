@@ -23,10 +23,10 @@ def literal_compile(expression):
     return expression.compile(compile_kwargs={'literal_binds': True})
 
 
-def iterrecords(*, ordered=True, windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
+def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
+                windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
-    log.info('enter raw records')
-    log.debug('bind: %r', bind)
+    log.info('start generating raw records from %r', bind)
 
     select_files = sa.select([File.path])
      # depend on no empty value files (save sa.outerjoin(File, Value) below)
@@ -58,6 +58,7 @@ def iterrecords(*, ordered=True, windowsize=WINDOWSIZE, skip_unknown=True, bind=
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
+    n = 0
     with bind.connect() as conn:
         select_files.bind = conn
         select_values.bind = conn
@@ -69,16 +70,21 @@ def iterrecords(*, ordered=True, windowsize=WINDOWSIZE, skip_unknown=True, bind=
             files = select_files.where(in_slice(key_column)).execute().fetchall()
             # single thread: no isolation level concerns
             values = select_values.where(in_slice(value_key)).execute().fetchall()
-
             # join by file_id total order index
-            for (path,), (_, values) in zip(files, groupby_file(values)):
+            path_values = zip(files, groupby_file(values))
+
+            for count, ((path,), (_, values)) in enumerate(path_values, 1):
                 record = {
                     s: {o: [l.value for l in lines] if is_lines else next(lines).value
                        for (o, is_lines), lines in groupby_option(sections)}
                     for s, sections in groupby_section(values)}
                 yield tuple(path.split('/')), record
 
-    log.info('exit raw records')
+            n += count
+            if not (n % progress_after):
+                log.info('%s raw records generated', f'{n:_d}')
+
+    log.info('%s raw records total', f'{n:_d}')
 
 
 def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
@@ -86,7 +92,7 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_keys = sa.select([key_column.label('key'), row_num]).alias()
     select_keys = (sa.select([select_keys.c.key], bind=bind)
-                  .where(select_keys.c.row_num % size == 0))
+                  .where((select_keys.c.row_num % size) == 0))
 
     log.info('fetch %r slices for window of %d', str(key_column.expression), size)
     keys = (k for k, in select_keys.execute())

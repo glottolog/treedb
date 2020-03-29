@@ -12,6 +12,8 @@ import subprocess
 
 ENCODING = 'utf-8'
 
+PROGRESS_AFTER = 2_500
+
 __all__ = ['next_count',
            'groupby_itemgetter', 'groupby_attrgetter',
            'iterfiles',

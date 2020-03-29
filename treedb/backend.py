@@ -267,7 +267,8 @@ def log_dataset(params, *, name=Dataset.__tablename__):
     log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
-def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
+def dump_sql(filename=None, *, progress_after=100_000,
+             encoding=_tools.ENCODING, engine=ENGINE):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql').name
@@ -283,10 +284,10 @@ def dump_sql(filename=None, *, encoding=_tools.ENCODING, engine=ENGINE):
          path.open('wt', encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
-            if not (n % 100_000):
-                log.debug('%d lines written', n)
+            if not (n % progress_after):
+                log.debug('%s lines written', f'{n:_d}')
 
-    log.info('%d lines total', n)
+    log.info('%s lines total', f'{n:_d}')
     return path
 
 

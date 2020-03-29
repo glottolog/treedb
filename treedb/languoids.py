@@ -123,29 +123,46 @@ def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
     return _match(s).groupdict('')
 
 
-def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
+def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
+                  progress_after=_tools.PROGRESS_AFTER):
     """Yield dicts from ../../languoids/tree/**/md.ini files."""
-    log.info('extract languoids')
+    log.info('generate languoids')
 
     if hasattr(root_or_bind, 'execute'):
         bind = root_or_bind
 
-        if not from_raw:
+        if from_raw:
+            log.info('extract languoids from raw records')
+
+            from . import raw
+
+            iterfiles = raw.iterrecords(bind=bind,
+                                        ordered=ordered,
+                                        progress_after=progress_after)
+
+            _make_lines = make_lines_raw
+
+        else:
+            log.info('select languoids from json query')
+
             from . import queries
 
-            query = queries.get_json_query(bind=bind, ordered=ordered)
+            query = queries.get_json_query(bind=bind,
+                                           ordered=ordered)
 
-            for s, in query.execute():
+            n = 0
+            for n, (s,) in enumerate(query.execute(), 1):
                 path, item = json.loads(s)
                 yield tuple(path), item
 
+                if not (n % progress_after):
+                    log.info('%s languoids fetched', f'{n:_d}')
+
+            log.info('%s languoids total', f'{n:_d}')
             return
 
-        from . import raw
-
-        iterfiles = raw.iterrecords(bind=bind, ordered=ordered)
-        _make_lines = make_lines_raw
     else:
+        log.info('extract languoids from files')
         root = root_or_bind
 
         if from_raw:
@@ -156,7 +173,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True):
 
         from . import files
 
-        iterfiles = ((pt, cfg) for pt, _, cfg in files.iterfiles(root))
+        iterfiles = files.iterfiles(root, progress_after=progress_after)
+        iterfiles = ((pt, cfg) for pt, _, cfg in iterfiles)
+
         _make_lines = make_lines
 
     n = 0
