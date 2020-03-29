@@ -46,16 +46,16 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
     log.info('%s languoids total', f'{n:_d}')
 
 
-def write_json_csv(root_or_bind=ENGINE, filename=None, *,
+def write_json_csv(bind_or_root=ENGINE, filename=None, *,
                    from_raw=False, ordered=True, sort_keys=True,
                    dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv'
         try:
-            path = root_or_bind.file_with_suffix(suffix)
+            path = bind_or_root.file_with_suffix(suffix)
         except AttributeError:
-            path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
+            path = _tools.path_from_filename(bind_or_root).with_suffix(suffix)
         filename = path.name
     else:
         filename = _tools.path_from_filename(filename)
@@ -71,7 +71,7 @@ def write_json_csv(root_or_bind=ENGINE, filename=None, *,
                                    default=operator.methodcaller('isoformat'),
                                    sort_keys=sort_keys)
 
-    rows = _languoids.iterlanguoids(root_or_bind,
+    rows = _languoids.iterlanguoids(bind_or_root,
                                     from_raw=from_raw,
                                     ordered=ordered)
 
