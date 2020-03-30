@@ -112,12 +112,11 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def write_files(records, *, root=ROOT, replace=False,
-                basename=BASENAME, is_lines = _fields.Fields.is_lines):
+def write_files(records, *, root=ROOT, replace=False, basename=BASENAME):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
 
-    def iterpairs(records):
+    def iterpairs(records, is_lines=_fields.is_lines):
         for p, r in records:
             for section, s in r.items():
                 for option in s:

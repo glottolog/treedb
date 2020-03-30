@@ -27,7 +27,7 @@ class Options(dict):
         log.debug('insert option %r', key)
 
         section, option = key
-        is_lines = _fields.Fields.is_lines(section, option)
+        is_lines = _fields.is_lines(section, option)
 
         id_, = self.insert(section=section, option=option,
                            is_lines=is_lines).inserted_primary_key
