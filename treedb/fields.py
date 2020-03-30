@@ -2,11 +2,15 @@
 
 """Define known (section, option) pairs and if they are lists of lines."""
 
+import itertools
 import logging
 import warnings
 
+from . import tools as _tools
 
-__all__ = ['is_lines']
+__all__ = ['is_lines',
+           'sorted_sections'
+           'sorted_options']
 
 FIELDS = {('core', 'name'): False,
           ('core', 'hid'): False,
@@ -57,6 +61,11 @@ FIELDS = {('core', 'name'): False,
           ('iso_retirement', 'remedy'): False,
           ('iso_retirement', 'comment'): False}
 
+SECTION_ORDER = [s for s, _ in itertools.groupby(FIELDS, lambda x: x[0])]
+SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER)
+
+FIELD_ORDER = _tools.Ordering.fromlist(FIELDS)
+
 
 log = logging.getLogger(__name__)
 
@@ -83,3 +92,11 @@ def is_lines(section, option, *, unknown_as_scalar=True):
             raise
 
     return result
+
+
+sorted_sections = SECTION_ORDER.sorted
+
+
+def sorted_options(section, options):
+    fields = FIELD_ORDER.sorted((section, o) for o in options)
+    return [o for _, o in fields]

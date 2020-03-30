@@ -19,7 +19,8 @@ __all__ = ['next_count',
            'iterfiles',
            'path_from_filename',
            'sha256sum',
-           'run']
+           'run',
+           'Ordering']
 
 
 log = logging.getLogger(__name__)
@@ -111,3 +112,23 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
     if capture_output and unpack:
         return proc.stdout.strip()
     return proc
+
+
+class Ordering(dict):
+
+    _missing = float('inf')
+
+    @classmethod
+    def fromlist(cls, keys):
+        seen = set()
+        uniqued =  [k for k in keys if k not in seen or not seen.add(k)]
+        return cls((k, i) for i, k in enumerate(uniqued))
+
+    def __missing__(self, key):
+        return self._missing
+
+    def _sortkey(self, key):
+        return self[key], key
+
+    def sorted(self, keys):
+        return sorted(keys, key=self._sortkey)
