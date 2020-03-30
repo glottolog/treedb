@@ -58,7 +58,7 @@ def write_json_csv(*, source='tables', filename=None,
                           file_order=file_order,
                           file_means_path=file_means_path)
 
-    return _write_json_csv(sort_keys=sort_keys,
+    return _write_json_csv(filename=filename, sort_keys=sort_keys,
                            dialect=csv23.DIALECT, encoding=csv23.ENCODING,
                            **kwargs)
 
