@@ -48,7 +48,39 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
     log.info('%s languoids total', f'{n:_d}')
 
 
-def write_json_csv(bind_or_root=ENGINE, filename=None, *,
+def write_json_csv(*, source='tables', filename=None,
+                   file_order=False, file_means_path=True,
+                   sort_keys=True,
+                   dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+    """Write (path, json) rows for each languoid to filename."""
+
+    kwargs = _json_kwargs(source=source,
+                          file_order=file_order,
+                          file_means_path=file_means_path)
+
+    return _write_json_csv(sort_keys=sort_keys,
+                           dialect=csv23.DIALECT, encoding=csv23.ENCODING,
+                           **kwargs)
+
+
+def _json_kwargs(*, source, file_order, file_means_path):
+    try:
+        kwargs = {'tables': {'bind_or_root':  ENGINE,
+                             'from_raw': False},
+                  'raw': {'bind_or_root':  ENGINE,
+                          'from_raw': True},
+                  'files': {'bind_or_root': ROOT,
+                            'from_raw': False}}[source]
+    except KeyError:
+        raise ValueError(f'unknown checksum source: {source!r}'
+                         f' (possible values: {list(kwargs)})')
+
+    by_file = 'path' if file_means_path else 'file'
+    kwargs['ordered'] = by_file if file_order else 'id'
+    return kwargs
+
+
+def _write_json_csv(bind_or_root=ENGINE, filename=None, *,
                    from_raw=False, ordered=True, sort_keys=True,
                    dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
@@ -94,25 +126,18 @@ def _json_rows(bind_or_root=ENGINE, *,
     return (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
 
 
-def checksum(*, source='tables', file_order=False, file_means_path=True):
-    try:
-        kwargs = {'tables': {'bind_or_root':  ENGINE,
-                             'from_raw': False},
-                  'raw': {'bind_or_root':  ENGINE,
-                          'from_raw': True},
-                  'files': {'bind_or_root': ROOT,
-                            'from_raw': False}}[source]
-    except KeyError:
-        raise ValueError(f'unknown checksum source: {source!r}'
-                         f' (possible values: {list(kwargs)})')
+def checksum(*, source='tables', file_order=False, name=None,
+             file_means_path=True):
 
-    by_file = 'path' if file_means_path else 'file'
-    kwargs['ordered'] = by_file if file_order else 'id'
-    return _checksum(**kwargs)
+    kwargs = _json_kwargs(source=source,
+                          file_order=file_order,
+                          file_means_path=file_means_path)
+
+    return _checksum(name=name, **kwargs)
     
 
 def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
-              name='sha256', dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+              name=None, dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     log.info('calculate languoids json checksum')
 
     rows = _json_rows(bind_or_root, from_raw=from_raw,
@@ -121,6 +146,9 @@ def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
     header = ['path', 'json']
     log.info('header: %r', header)
 
-    return _queries.hash_rows(rows, header=header,
-                              name=name,
-                              dialect=dialect, encoding=encoding)
+    hash_ = _queries.hash_rows(rows, header=header,
+                               name=name, raw=True,
+                               dialect=dialect, encoding=encoding)
+    result = f"{'_'.join(header)}:{ordered}:{hash_.name}:{hash_.hexdigest()}"
+    log.debug('%s: %r', hash_.name, result)
+    return result

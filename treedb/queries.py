@@ -82,9 +82,6 @@ def hash_csv(query=None, *,
     if query is None:
         query = get_query()
 
-    name = name if name is not None else 'sha256'
-    log.info('hash csv: %r', name)
-
     rows = bind.execute(query)
 
     header = rows.keys()
@@ -96,8 +93,11 @@ def hash_csv(query=None, *,
 
 def hash_rows(rows, *, header=None, name=None, raw=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+    name = name if name is not None else 'sha256'
+    log.info('hash rows: %r', name)
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
+
     csv23.write_csv(result, rows, header=header,
                     dialect=dialect, encoding=encoding)
 
