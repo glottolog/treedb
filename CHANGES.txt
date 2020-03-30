@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 0.5.1 (in development)
-------------------------------
+Version 0.5.1
+-------------
 
-
+Add replace kwarg to treedb.write_files() and treedb.raw.write_files().
 
 
 Version 0.5
