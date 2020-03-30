@@ -25,7 +25,7 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
-__all__ = ['print_rows', 'write_csv', 'hash_csv',
+__all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query', 'get_json_query',
            'iterdescendants']
 
@@ -86,13 +86,20 @@ def hash_csv(query=None, *,
     log.info('hash csv: %r', name)
 
     rows = bind.execute(query)
+
     header = rows.keys()
     log.info('header: %r', header)
 
+    return hash_rows(rows, header=header, name=name, raw=raw,
+                     dialect=dialect, encoding=encoding)
+
+
+def hash_rows(rows, *, header=None, name=None, raw=False,
+              dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
     csv23.write_csv(result, rows, header=header,
-                     dialect=dialect, encoding=encoding)
+                    dialect=dialect, encoding=encoding)
 
     if not raw:
         result = result.hexdigest()

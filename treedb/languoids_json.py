@@ -13,10 +13,11 @@ from . import (tools as _tools,
                queries as _queries,
                languoids as _languoids)
 
-from . import ENGINE
+from . import ENGINE, ROOT
 
 __all__ = ['iterlanguoids',
-           'write_json_csv']
+           'write_json_csv',
+           'checksum']
 
 
 log = logging.getLogger(__name__)
@@ -66,6 +67,20 @@ def write_json_csv(bind_or_root=ENGINE, filename=None, *,
         warnings.warn(f'delete peresent file {path!r}')
         path.unlink()
 
+    header = ['path', 'json']
+    log.info('header: %r', header)
+
+    rows = _json_rows(bind_or_root,
+                      from_raw=from_raw,
+                      ordered=ordered,
+                      sort_keys=sort_keys)
+
+    return csv23.write_csv(filename, rows, header=header,
+                            dialect=dialect, encoding=encoding)
+
+
+def _json_rows(bind_or_root=ENGINE, *,
+               from_raw=False, ordered=True, sort_keys=True):
     json_dumps = functools.partial(json.dumps,
                                    # json-serialize datetime.datetime
                                    default=operator.methodcaller('isoformat'),
@@ -75,10 +90,36 @@ def write_json_csv(bind_or_root=ENGINE, filename=None, *,
                                     from_raw=from_raw,
                                     ordered=ordered)
 
-    rows = (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
+    return (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
+
+
+def checksum(*, source='tables', file_order=False, file_means_path=True):
+    try:
+        kwargs = {'tables': {'bind_or_root':  ENGINE,
+                             'from_raw': False},
+                  'raw': {'bind_or_root':  ENGINE,
+                          'from_raw': True},
+                  'files': {'bind_or_root': ROOT,
+                            'from_raw': False}}[source]
+    except KeyError:
+        raise ValueError(f'unknown checksum source: {source!r}'
+                         f' (possible values: {list(kwargs)})')
+
+    by_file = 'path' if file_means_path else 'file'
+    kwargs['ordered'] = by_file if file_order else 'id'
+    return _checksum(**kwargs)
+    
+
+def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
+              name='sha256', dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+    log.info('calculate languoids json checksum')
+
+    rows = _json_rows(bind_or_root, from_raw=from_raw,
+                      ordered=ordered, sort_keys=True)
 
     header = ['path', 'json']
     log.info('header: %r', header)
 
-    return csv23.write_csv(filename, rows, header=header,
-                            dialect=dialect, encoding=encoding)
+    return _queries.hash_rows(rows, header=header,
+                              name=name,
+                              dialect=dialect, encoding=encoding)
