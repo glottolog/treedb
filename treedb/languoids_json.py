@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 def iterlanguoids(bind=ENGINE, *, ordered='id',
                   progress_after=_tools.PROGRESS_AFTER):
     log.info('select languoids from json query')
+    log.info('ordered: %r', ordered)
 
     query = _queries.get_json_query(bind=bind,
                                     ordered=ordered)

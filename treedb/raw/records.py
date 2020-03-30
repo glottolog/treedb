@@ -46,6 +46,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
         key_column = value_key = File.path
     else:
         raise ValueError(f'ordered={ordered!r} not implememted')
+    log.info('ordered: %r', ordered)
 
     select_files.append_order_by(key_column)
     select_values.append_from(values_from)
