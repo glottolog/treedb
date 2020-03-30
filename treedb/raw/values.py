@@ -89,8 +89,12 @@ def write_raw_csv(filename=None, *,
                               dialect=dialect, encoding=encoding, bind=bind)
 
 
-def write_files(root=ROOT, *, replace=False, bind=ENGINE):
+def write_files(root=ROOT, *, replace=False,
+                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write from raw records to tree')
+
     records = _records.iterrecords(bind=bind)
-    return _files.write_files(records, root=root, replace=replace)
+
+    return _files.write_files(records, root=root, replace=replace,
+                              progress_after=progress_after)

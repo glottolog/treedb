@@ -377,11 +377,14 @@ def iterrecords(languoids):
         yield p, rec
 
 
-def write_files(root=ROOT, *, from_raw=False, replace=False, bind=ENGINE):
+def write_files(root=ROOT, *, from_raw=False, replace=False,
+                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
     log.info('write from tables to tree')
 
     from . import files
 
     languoids = iterlanguoids(bind, from_raw=from_raw, ordered='path')
     records = iterrecords(languoids)
-    return files.write_files(records, root=root, replace=replace)
+
+    return files.write_files(records, root=root, replace=replace,
+                             progress_after=progress_after)
