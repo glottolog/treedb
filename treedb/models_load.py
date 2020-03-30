@@ -71,7 +71,7 @@ def load(languoids, conn):
             return self[params.pop('bibfile'), params.pop('bibkey')]
 
     bibitem_ids = BibitemMap()
-        
+
     insert_altname = insert(Altname, bind=conn).execute
     insert_trigger = insert(Trigger, bind=conn).execute
     insert_ident = insert(Identifier, bind=conn).execute

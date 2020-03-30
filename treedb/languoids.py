@@ -66,7 +66,7 @@ def make_datetime(value, *, format_=DATETIME_FORMAT):
 
 def format_datetime(value, *, format_=DATETIME_FORMAT):
     return value.strftime(format_)
-    
+
 
 def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
                                             r' '

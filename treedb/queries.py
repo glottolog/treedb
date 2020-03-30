@@ -344,7 +344,7 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
             triggers.c.field.label('key'),
             group_array(triggers.c.trigger).label('value'),
         ]).group_by(triggers.c.field)
-        
+
     triggers = select([
         sa.func.nullif(group_object(triggers.c.key,
                                     triggers.c.value),

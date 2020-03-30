@@ -334,6 +334,7 @@ class Link(Model):
                                    'url', cls.url,
                                    'title', cls.title).label(label)
 
+
 class Source(Model):
 
     __tablename__ = 'source'
@@ -431,7 +432,7 @@ class Bibitem(Model):
     @classmethod
     def printf(cls, bibfile, *, label='printf'):
         return sa.func.printf('**%s:%s**', bibfile.name,
-                                           self.bibkey).label(label)
+                                           cls.bibkey).label(label)
 
 
 class Altname(Model):

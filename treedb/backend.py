@@ -380,7 +380,6 @@ def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
         table_name = label = model_or_table
         model_or_table = sa.text(model_or_table)
 
-
     print(select_sql(table_name, bind=bind).scalar())
 
     if include_nrows:

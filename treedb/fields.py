@@ -9,7 +9,7 @@ import warnings
 from . import tools as _tools
 
 __all__ = ['is_lines',
-           'sorted_sections'
+           'sorted_sections',
            'sorted_options']
 
 FIELDS = {('core', 'name'): False,

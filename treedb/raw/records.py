@@ -29,7 +29,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
     log.info('start generating raw records from %r', bind)
 
     select_files = sa.select([File.path])
-     # depend on no empty value files (save sa.outerjoin(File, Value) below)
+    # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select([Value.file_id, Option.section, Option.option,
                                Option.is_lines, Value.value])
 
@@ -70,7 +70,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
             files = select_files.where(in_slice(key_column)).execute().fetchall()
             # single thread: no isolation level concerns
             values = select_values.where(in_slice(value_key)).execute().fetchall()
-            # join by file_id total order index
+            # join in-memory by file_id total order index
             path_values = zip(files, groupby_file(values))
 
             for count, ((path,), (_, values)) in enumerate(path_values, 1):

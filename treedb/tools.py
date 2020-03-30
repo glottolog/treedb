@@ -121,7 +121,7 @@ class Ordering(dict):
     @classmethod
     def fromlist(cls, keys):
         seen = set()
-        uniqued =  [k for k in keys if k not in seen or not seen.add(k)]
+        uniqued = [k for k in keys if k not in seen or not seen.add(k)]
         return cls((k, i) for i, k in enumerate(uniqued))
 
     def __missing__(self, key):
