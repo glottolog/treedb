@@ -96,7 +96,7 @@ class EngineProxy(Proxy, sa.engine.Engine):
     def __repr__(self):
         if self.engine is None:
             return super().__repr__()
-        return (f'{self.__module__}.{self.__class__.__name__}'
+        return (f'<{self.__module__}.{self.__class__.__name__}'
                 f' url={str(self.url)!r}>')
 
 
