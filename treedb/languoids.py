@@ -13,7 +13,9 @@ __all__ = ['iterlanguoids',
            'compare_with_files', 'compare',
            'write_files']
 
-FLOAT_FORMAT = '%.12f'
+FLOAT_DIGITS = 12
+
+FLOAT_FORMAT = f'%.{FLOAT_DIGITS}f'
 
 DATE_FORMAT = '%Y-%m-%d'
 
