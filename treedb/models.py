@@ -191,28 +191,25 @@ class Languoid(Model):
 
     @classmethod
     def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
+        squery = cls._path_part(include_self=include_self, bottomup=bottomup, _tree=_tree)
+        return sa.select([sa.func.group_concat(squery.c.path_part, delimiter)]).label(label)
+
+    @classmethod
+    def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
         tree = _tree
         if tree is None:
             tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
 
-        squery = sa.select([tree.c.parent_id.label('path_part')])\
+        select_path_part = sa.select([tree.c.parent_id.label(label)])\
             .where(tree.c.child_id == cls.id)\
             .correlate(cls)\
             .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
-
-        path = sa.func.group_concat(squery.c.path_part, delimiter)
-        return sa.select([path]).label(label)
+        return select_path_part
 
     @classmethod
     def path_json(cls, *, include_self=True, bottomup=False):
-        tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
-        squery = sa.select([tree.c.parent_id.label('path_part')])\
-            .where(tree.c.child_id == cls.id)\
-            .correlate(cls)\
-            .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
-
-        path = sa.func.json_group_array(squery.c.path_part)
-        return sa.select([path]).as_scalar()
+        squery = cls._path_part(include_self=include_self, bottomup=bottomup)
+        return sa.select([sa.func.json_group_array(squery.c.path_part)]).as_scalar()
 
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
