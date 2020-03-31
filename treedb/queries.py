@@ -423,7 +423,7 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
         .correlate(Languoid)\
         .as_scalar()
 
-    path = Languoid.path_json()
+    path = Languoid.path()
 
     select_languoid = select([json_array(path, json_object(
             'id', Languoid.id,

@@ -41,7 +41,8 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
         if endangerment is not None:
             endangerment['date'] = json_datetime(endangerment['date'])
 
-        yield tuple(path), item
+        yield tuple(path.split('/')), item
+
         if not (n % progress_after):
             log.info('%s languoids fetched', f'{n:_d}')
 
