@@ -12,6 +12,8 @@ __all__ = ['is_lines',
            'sorted_sections',
            'sorted_options']
 
+ALL_OPTIONS = object()
+
 FIELDS = {('core', 'name'): False,
           ('core', 'hid'): False,
           ('core', 'level'): False,
@@ -29,13 +31,13 @@ FIELDS = {('core', 'name'): False,
 
           ('core', 'links'): True,
 
-          ('sources', None): True,
+          ('sources', ALL_OPTIONS): True,
 
-          ('altnames', None): True,
+          ('altnames', ALL_OPTIONS): True,
 
-          ('triggers', None): True,
+          ('triggers', ALL_OPTIONS): True,
 
-          ('identifier', None): False,
+          ('identifier', ALL_OPTIONS): False,
 
           ('classification', 'sub'): False,
           ('classification', 'subrefs'): True,
@@ -71,12 +73,12 @@ log = logging.getLogger(__name__)
 
 
 def is_known(section, option):
-    return (section, None) in FIELDS or (section, option) in FIELDS
+    return (section, ALL_OPTIONS) in FIELDS or (section, option) in FIELDS
 
 
 def is_lines(section, option, *, unknown_as_scalar=True):
     """Return whether the section option is treated as list of lines."""
-    result = FIELDS.get((section, None))
+    result = FIELDS.get((section, ALL_OPTIONS))
 
     if result is None:
         try:

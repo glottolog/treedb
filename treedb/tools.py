@@ -62,7 +62,7 @@ def iterfiles(top, *, verbose=False):
                 dirs.append(d.path)
             else:
                 yield d
-        stack.extend(dirs[::-1])
+        stack.extend(reversed(dirs))
 
 
 def path_from_filename(filename, *args, expanduser=True):
@@ -114,15 +114,18 @@ def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False)
     return proc
 
 
+def uniqued(iterable):
+    seen = set()
+    return [i for i in iterable if i not in seen or not seen.add(i)]
+
+
 class Ordering(dict):
 
     _missing = float('inf')
 
     @classmethod
     def fromlist(cls, keys):
-        seen = set()
-        uniqued = [k for k in keys if k not in seen or not seen.add(k)]
-        return cls((k, i) for i, k in enumerate(uniqued))
+        return cls((k, i) for i, k in enumerate(uniqued(keys)))
 
     def __missing__(self, key):
         return self._missing

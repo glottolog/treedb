@@ -27,7 +27,8 @@ __all__ = ['set_engine',
            'Session',
            'load',
            'dump_sql', 'export', 'backup',
-           'print_table_sql', 'print_query_sql', 'get_query_sql',
+           'print_table_sql',
+           'print_query_sql', 'get_query_sql', 'expression_compile',
            'select_stats']
 
 
@@ -399,8 +400,12 @@ def get_query_sql(query=None, literal_binds=True):
 
         query = queries.get_query()
 
-    compiled = query.compile(compile_kwargs={'literal_binds': literal_binds})
-    return str(compiled)
+    compiled = expression_compile(query, literal_binds=literal_binds)
+    return compiled.string
+
+
+def expression_compile(expression, literal_binds=True):
+    return expression.compile(compile_kwargs={'literal_binds': literal_binds})
 
 
 sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',

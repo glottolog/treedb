@@ -5,7 +5,9 @@ import logging
 
 import sqlalchemy as sa
 
-from .. import tools as _tools
+from .. import (tools as _tools,
+                backend as _backend)
+
 
 from .. import ENGINE
 
@@ -17,10 +19,6 @@ WINDOWSIZE = 500
 
 
 log = logging.getLogger(__name__)
-
-
-def literal_compile(expression):
-    return expression.compile(compile_kwargs={'literal_binds': True})
 
 
 def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
@@ -65,7 +63,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
         select_values.bind = conn
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
-                where = literal_compile(in_slice(key_column))
+                where = _backend.expression_compile(in_slice(key_column))
                 log.debug('fetch rows %r', where.string)
 
             files = select_files.where(in_slice(key_column)).execute().fetchall()
