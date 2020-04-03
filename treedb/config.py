@@ -6,10 +6,10 @@ import os
 
 from . import tools as _tools
 
+from . import CONFIG
+
 __all__ = ['get_default_root',
            'configure']
-
-PATH = 'treedb.ini'
 
 ROOT = 'glottolog', 'repo_root'
 
@@ -19,7 +19,7 @@ ENGINE = 'treedb', 'engine'
 log = logging.getLogger(__name__)
 
 
-def get_default_root(env_var, *, config_path=PATH, fallback):
+def get_default_root(env_var, *, config_path, fallback):
     """Return default root from environment variable, config, or fallback."""
     root = os.getenv(env_var)
 
@@ -41,9 +41,9 @@ def _load_config_file(path, *, default_repo_root):
     return cfg
 
 
-def configure(config_path=PATH, default_repo_root='.'):
+def configure(config_path=CONFIG, *, loglevel=None, default_repo_root='.'):
     log.info('configure from %r', config_path)
-    log.debug('deault repo root: %r', default_repo_root)
+    log.debug('default repo root: %r', default_repo_root)
 
     from . import (files,
                    backend,
@@ -54,10 +54,11 @@ def configure(config_path=PATH, default_repo_root='.'):
         raise ValueError(f'config file not found: {config_path!r}')
 
 
-    cfg = _load_config_file(config_path, default_repo_root=default_repo_root)
+    cfg = _load_config_file(config_path,
+                            default_repo_root=default_repo_root)
 
     log.info('configure logging from %r', config_path)
-    shortcuts.configure_logging_from_file(config_path)
+    shortcuts.configure_logging_from_file(config_path, level=loglevel)
 
     root = cfg.get(*ROOT)
     root = _tools.path_from_filename(root)

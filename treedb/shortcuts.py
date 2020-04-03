@@ -21,13 +21,21 @@ PANDAS = None
 log = logging.getLogger(__name__)
 
 
-def configure_logging_from_file(path, capture_warnings=True):
+def configure_logging_from_file(path, *, level=None, capture_warnings=True):
     log.debug('logging.config.fileConfig(%r)', path)
     logging.config.fileConfig(path)
 
+    logger = logging.getLogger(__package__)
+    
+    if level is not None:
+        for h in logger.handlers:
+            if not isinstance(h, logging.FileHandler):
+                log.debug('%r.level = %r', h, level)
+                h.level = getattr(logging, level)
+
     _set_capture_warnings(capture_warnings)
 
-    return logging.getLogger(__package__)
+    return logger
 
 
 def _set_capture_warnings(value=True):

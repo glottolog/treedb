@@ -2,6 +2,8 @@
 
 """Load glottolog lanuoid tree ini files into SQLite3 database."""
 
+CONFIG = 'treedb.ini'
+
 from . import proxies as _proxies
 
 ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
@@ -52,8 +54,10 @@ __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 
-# default root: TREEDB_REPO, or treedb.ini glottolog/repo_root, or cwd
-root = set_root(get_default_root('TREEDB_REPO', fallback='.'))
+# default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog/repo_root, or cwd
+root = set_root(get_default_root('GLOTTOLOG_REPO_ROOT',
+                                 config_path=CONFIG,
+                                 fallback='.'))
 
 # default engine: in-memory database
 engine = set_engine(None, title=__title__)
