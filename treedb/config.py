@@ -51,7 +51,8 @@ def configure(config_path=PATH, default_repo_root='.'):
 
     config_path = _tools.path_from_filename(config_path)
     if not config_path.exists():
-        raise ValueError(r'config file not found: {config_path!r}')
+        raise ValueError(f'config file not found: {config_path!r}')
+
 
     cfg = _load_config_file(config_path, default_repo_root=default_repo_root)
 
@@ -59,7 +60,14 @@ def configure(config_path=PATH, default_repo_root='.'):
     shortcuts.configure_logging_from_file(config_path)
 
     root = cfg.get(*ROOT)
+    root = _tools.path_from_filename(root)
+    if not root.is_absolute():
+        root = config_path.parent / root
     files.set_root(root)
 
     engine = cfg.get(*ENGINE, fallback=None)
+    if engine is not None:
+        engine = _tools.path_from_filename(engine)
+        if not engine.is_absolute():
+            engine = config_path.parent / engine
     backend.set_engine(engine)
