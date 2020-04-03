@@ -5,13 +5,9 @@ import treedb
 
 from treedb import Languoid, select
 
-treedb.configure_logging(level='INFO', log_sql=False)
-
-treedb.set_root('../glottolog')
+treedb.configure()
 
 print(next(treedb.iterlanguoids()))
-
-#treedb.set_engine('treedb.sqlite3')
 
 engine = treedb.load()
 

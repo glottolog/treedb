@@ -20,6 +20,7 @@ Thumbs.db
 
 .ipynb_checkpoints/
 
+/*.log
 /*.sqlite3
 /*.csv
 /*.sql

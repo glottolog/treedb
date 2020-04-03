@@ -1,4 +1,4 @@
-# shortcuts.py - sqlalchemy/pandas short-cut functions
+# shortcuts.py - logging, sqlalchemy, and pandas short-cut functions
 
 import functools
 import logging
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 from . import ENGINE
 
-__all__ = ['configure_logging',
+__all__ = ['configure_logging', 'configure_logging_from_file',
            'count', 'select', 'text',
            'pd_read_sql']
 
@@ -21,6 +21,20 @@ PANDAS = None
 log = logging.getLogger(__name__)
 
 
+def configure_logging_from_file(path, capture_warnings=True):
+    log.debug('logging.config.fileConfig(%r)', path)
+    logging.config.fileConfig(path)
+
+    _set_capture_warnings(capture_warnings)
+
+    return logging.getLogger(__package__)
+
+
+def _set_capture_warnings(value=True):
+    log.debug('logging.captureWarnings(%r)', value)
+    logging.captureWarnings(value)
+    
+    
 def configure_logging(*,
                       level='WARNING',
                       format='[%(levelname)s@%(name)s] %(message)s',
@@ -56,7 +70,8 @@ def configure_logging(*,
 
     log.debug('logging.config.dictConfig(%r)', cfg)
     logging.config.dictConfig(cfg)
-    logging.captureWarnings(True)
+
+    _set_capture_warnings(capture_warnings)
 
     return logging.getLogger(__package__)
 

@@ -2,14 +2,13 @@
 
 import configparser
 import logging
-import os
 
 from . import (tools as _tools,
                fields as _fields)
 
 from . import ROOT
 
-__all__ = ['get_default_root', 'set_root',
+__all__ = ['set_root',
            'iterfiles',
            'write_files', 'roundtrip']
 
@@ -19,19 +18,6 @@ BASENAME = 'md.ini'
 
 
 log = logging.getLogger(__name__)
-
-
-def get_default_root(env_var, checkout_root, package_root):
-    """Return default root from environment variable or fallbacks."""
-    result = os.getenv(env_var)
-    if result is None:
-        from . import __file__
-        pkg_dir = _tools.path_from_filename(__file__).parent
-        if (pkg_dir.parent / '.git').exists():
-            result = checkout_root
-        else:
-            result = package_root
-    return result
 
 
 def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
