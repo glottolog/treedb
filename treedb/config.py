@@ -25,23 +25,34 @@ def get_default_root(*, env_var, config_path, fallback):
 
     if root is None:
         log.debug('get %r from optional config file %r', ROOT, config_path)
-        cfg = _load_config_file(config_path, default_repo_root=fallback)
+        cfg = ConfigParser.from_file(config_path, default_repo_root=fallback)
         root = cfg.get(*ROOT)
 
     return root
 
 
-def _load_config_file(path, *, default_repo_root):
-    cfg = configparser.ConfigParser()
-    cfg.add_section(ROOT[0])
-    cfg.set(*ROOT, default_repo_root)
+class ConfigParser(configparser.ConfigParser):
 
-    found = cfg.read([path])
-    if found:
-        log.debug('cfg.read() config file(s): %r', found)
-    else:
-        log.debug('no config file(s) found')
-    return cfg
+    @classmethod
+    def from_file(cls, path, *, required=False, default_repo_root):
+        path = _tools.path_from_filename(path).resolve()
+
+        defaults = {'here': path.parent.as_posix()}
+        inst = cls(defaults=defaults)
+        inst.set_default_repo_root(default_repo_root)
+
+        found = inst.read([path])
+        if found:
+            log.debug('%s().read() config file(s): %r', cls.__name__, found)
+        elif required:
+            ValueError(f'config file not found: {path!r}')
+        else:
+            log.debug('no config file(s) found')
+        return inst
+
+    def set_default_repo_root(self, repo_root):
+        self.add_section(ROOT[0])
+        self.set(*ROOT, repo_root)
 
 
 def configure(config_path=CONFIG, *, loglevel=None, log_sql=None,
@@ -54,12 +65,10 @@ def configure(config_path=CONFIG, *, loglevel=None, log_sql=None,
                    backend)
 
     config_path = _tools.path_from_filename(config_path)
-    if not config_path.exists():
-        raise ValueError(f'config file not found: {config_path!r}')
-
     log.debug('load config file %r', config_path)
-    cfg = _load_config_file(config_path,
-                            default_repo_root=default_repo_root)
+    cfg = ConfigParser.from_file(config_path,
+                                  required=True,
+                                  default_repo_root=default_repo_root)
 
     log.info('configure logging from %r', config_path)
     _logging.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
