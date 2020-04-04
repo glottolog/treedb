@@ -23,7 +23,7 @@ from . import ROOT, ENGINE
 
 __all__ = ['set_engine',
            'Model', 'print_schema',
-           'Dataset',
+           'Dataset', 'Producer',
            'Session',
            'load',
            'dump_sql', 'export', 'backup',
@@ -117,7 +117,7 @@ class Dataset(Model):
         table = cls.__tablename__
         log.debug('read %r from %r', table, bind)
         try:
-            result, = sa.select([Dataset], bind=bind).execute()
+            result, = sa.select([cls], bind=bind).execute()
         except sa.exc.OperationalError as e:
             if 'no such table' in e.orig.args[0]:
                 pass
@@ -145,6 +145,31 @@ class Dataset(Model):
             warnings.warn(f'{name} not clean')
         log.debug('%r.title: %r', name, params['title'])
         log.debug('%r.git_commit: %r', name, params['git_commit'])
+
+
+class Producer(Model):
+
+    __tablename__ = '__producer__'
+
+    id = sa.Column(sa.Boolean, sa.CheckConstraint('id'),
+                   primary_key=True, server_default=sa.true())
+
+    name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"),
+                     unique=True, nullable=False)
+
+    version = sa.Column(sa.Text, sa.CheckConstraint("version != ''"),
+                        nullable=False)
+
+    @classmethod
+    def get_producer(cls, *, bind):
+        result, = sa.select([cls], bind=bind).execute()
+        return result
+
+    @classmethod
+    def log_producer(cls, params):
+        name = cls.__tablename__
+        log.info('__producer__.name: %(name)s', params)
+        log.info('__producer__.version: %(version)s', params)
 
 
 Session = sa.orm.sessionmaker(bind=ENGINE)
@@ -183,6 +208,8 @@ def load(filename=ENGINE, repo_root=None, *,
         if ds is not None and not rebuild:
             log.info('use present %r', engine.url)
             Dataset.log_dataset(dict(ds))
+            producer = Producer.get_producer(bind=engine)
+            Producer.log_producer(dict(producer))
             return engine
 
         if rebuild or (ds is None and force_rebuild):
@@ -201,6 +228,8 @@ def load(filename=ENGINE, repo_root=None, *,
         if not rebuild:
             log.info('use present %r', engine)
             Dataset.log_dataset(dict(ds))
+            pdc = Producer.get_producer(bind=engine)
+            Producer.log_producer(dict(pdc))
             return engine
 
         log.info('rebuild database')
@@ -258,6 +287,13 @@ def load(filename=ENGINE, repo_root=None, *,
         log.exception('error running git command in %r', str(root))
         raise
 
+    from . import __version__
+
+    producer = {'name': __package__, 'version': __version__}
+    log.info('write %r: %r', Producer.__tablename__, producer)
+    with begin() as conn:
+        sa.insert(Producer, bind=conn).execute(producer)
+
     if not exclude_raw:
         log.info('load raw')
         with begin() as conn:
@@ -278,7 +314,7 @@ def load(filename=ENGINE, repo_root=None, *,
         pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
         models_load.load(pairs, conn)
 
-    log.info('write %r', Dataset.__tablename__)
+    log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
     with begin() as conn:
         log.debug('dataset: %r', dataset)
         sa.insert(Dataset, bind=conn).execute(dataset)
