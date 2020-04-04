@@ -178,7 +178,8 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 def load(filename=ENGINE, repo_root=None, *,
          treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
-         exclude_raw=False, from_raw=None, force_rebuild=False):
+         exclude_raw=False, from_raw=None, force_rebuild=False,
+         metadata=Model.metadata):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
@@ -264,7 +265,7 @@ def load(filename=ENGINE, repo_root=None, *,
     log.debug('start load timer')
     start = time.time()
 
-    log.info('create tables')
+    log.info('create %d tables from %r', len(metadata.tables), metadata)
     with begin() as conn:
         log.debug('set application_id = %r', application_id)
         conn.execute(f'PRAGMA application_id = {application_id:d}')
