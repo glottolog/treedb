@@ -42,6 +42,8 @@ def configure_logging_from_file(path, *,
         log.debug('set level of %r to %r', sql_logger, level)
         sql_logger.setLevel('INFO' if log_sql else 'WARNING')
 
+    log_version()
+
     set_capture_warnings(capture_warnings)
 
     return package_logger
@@ -53,13 +55,18 @@ def reset_logging():
         log.debug('%r.removeHandler(%r)', root_logger, h)
         root_logger.removeHandler(h)
         h.close()
-    
+
+
+def log_version():
+    from . import __version__
+    log.info('%s version: %s', __package__, __version__)
+
 
 def set_capture_warnings(value=True):
     log.debug('set logging.captureWarnings(%r)', value)
     logging.captureWarnings(value)
-    
-    
+
+
 def configure_logging(*,
                       level='WARNING',
                       log_sql=False,
@@ -85,6 +92,8 @@ def configure_logging(*,
 
     log.debug('logging.config.dictConfig(%r)', cfg)
     logging.config.dictConfig(cfg)
+
+    log_version()
 
     set_capture_warnings(capture_warnings)
 
