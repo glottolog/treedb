@@ -2,10 +2,17 @@ Changelog
 =========
 
 
-Version 0.7 (in development)
-----------------------------
+Version 0.7
+-----------
 
+Add treedb.configure() and locate the glottolog repo_root in treedb.ini in cwd.
 
+Add logging config to the dev environment treedb.ini: create treedb.log.
+
+Added handling of present databases when loading from transient in-memory
+database.
+
+Add __producer__ table recording the treedb package version used.
 
 
 Version 0.6
