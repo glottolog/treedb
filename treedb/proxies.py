@@ -45,10 +45,7 @@ class PathProxy(Proxy):
     def path(self, path):
         if path is not None:
             path = _tools.path_from_filename(path)
-        if self._delegate is None:
-            log.debug('set root path %r', path)
-        else:
-            log.debug('replace root path %r with %r', self._delegate, path)
+        log.debug('set path of %r to %r', self, path)
         self._delegate = path
 
     def __repr__(self):
@@ -69,19 +66,26 @@ class EngineProxy(Proxy, sa.engine.Engine):
     def __init__(self, engine=None):
         self.engine = engine
 
+    def dispose(self):
+        if self._delegate is not None:
+            log.debug('dispose %s.%r', self._delegate.__module__, self._delegate)
+            self._delegate.dispose()
+
     @property
     def engine(self):
         return self._delegate
 
     @engine.setter
     def engine(self, engine):
-        if engine is not None:
+        if engine is None:
+            prefix = ''
+        else:
             assert engine.url.drivername == 'sqlite'
+            prefix = f'{engine.__module__}.'
 
-        if self._delegate is not None:
-            log.debug('dispose engine %r', self._delegate)
-            self._delegate.dispose()
+        self.dispose()
 
+        log.debug('set engine of %r to %s%r', self, prefix, engine)
         self._delegate = engine
 
     @property
@@ -90,7 +94,7 @@ class EngineProxy(Proxy, sa.engine.Engine):
 
     @url.setter
     def url(self, url):
-        log.debug('create_engine %r', url)
+        log.debug('sqlalchemy.create_engine(%r)', url)
         self.engine = sa.create_engine(url)
 
     def __repr__(self):

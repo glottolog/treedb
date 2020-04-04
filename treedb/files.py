@@ -22,17 +22,15 @@ log = logging.getLogger(__name__)
 
 def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
     """Set and return default root for glottolog lanugoid directory tree."""
-    log.info('set_root')
+    log.info('set_root: %r', repo_root)
     if repo_root is None:
         raise ValueError(f'missing repo_root path: {repo_root!r}')
 
-    log.debug('repo root: %r', repo_root)
     repo_path = _tools.path_from_filename(repo_root)
     if resolve:
         repo_path = repo_path.resolve(strict=False)
 
     ROOT.path = repo_path / _tools.path_from_filename(treepath)
-    log.debug('root: %r', ROOT)
     return ROOT
 
 

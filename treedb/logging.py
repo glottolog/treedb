@@ -20,32 +20,34 @@ def configure_logging_from_file(path, *,
                                 capture_warnings=True,
                                 reset=True):
     if reset:
-        _reset_logging()
+        reset_logging()
 
     log.debug('logging.config.fileConfig(%r)', path)
     logging.config.fileConfig(path, disable_existing_loggers=reset)
 
-    logger = logging.getLogger(__package__)
+    package_logger = logging.getLogger(__package__)
     
     if level is not None:
-        if not logger.handlers:
-            log.debug('%r.setLevel(%r)', logger, level)
-            logger.setLevel(level)
+        if not package_logger.handlers:
+            log.debug('set level of %r to %r', package_logger, level)
+            package_logger.setLevel(level)
         else:
-            for h in logger.handlers:
+            for h in package_logger.handlers:
                 if not isinstance(h, logging.FileHandler):
-                    log.debug('%r.setLevel(%r)', h, level)
+                    log.debug('set level of %r to %r', h, level)
                     h.setLevel(level)
 
     if log_sql is not None:
-        logging.getLogger(SQL).setLevel('INFO' if log_sql else 'WARNING')
+        sql_logger = logging.getLogger(SQL)
+        log.debug('set level of %r to %r', sql_logger, level)
+        sql_logger.setLevel('INFO' if log_sql else 'WARNING')
 
-    _set_capture_warnings(capture_warnings)
+    set_capture_warnings(capture_warnings)
 
-    return logger
+    return package_logger
 
 
-def _reset_logging():
+def reset_logging():
     root_logger = logging.getLogger()
     for h in list(root_logger.handlers):
         log.debug('%r.removeHandler(%r)', root_logger, h)
@@ -53,8 +55,8 @@ def _reset_logging():
         h.close()
     
 
-def _set_capture_warnings(value=True):
-    log.debug('logging.captureWarnings(%r)', value)
+def set_capture_warnings(value=True):
+    log.debug('set logging.captureWarnings(%r)', value)
     logging.captureWarnings(value)
     
     
@@ -64,10 +66,6 @@ def configure_logging(*,
                       format='[%(levelname)s@%(name)s] %(message)s',
                       capture_warnings=True,
                       reset=True):
-
-    if reset:
-        _reset_logging()
-
     cfg = {'version': 1,
            'root': {'handlers': ['stderr_pretty'], 'level': level},
            'loggers': {WARNINGS: {},
@@ -82,9 +80,12 @@ def configure_logging(*,
            'formatters': {'plain': {'format': '%(message)s'},
                           'pretty': {'format': format}}}
 
+    if reset:
+        reset_logging()
+
     log.debug('logging.config.dictConfig(%r)', cfg)
     logging.config.dictConfig(cfg)
 
-    _set_capture_warnings(capture_warnings)
+    set_capture_warnings(capture_warnings)
 
     return logging.getLogger(__package__)

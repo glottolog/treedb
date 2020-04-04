@@ -35,26 +35,30 @@ __all__ = ['set_engine',
 log = logging.getLogger(__name__)
 
 
-def set_engine(filename, *, resolve=False, title=None):
+def set_engine(filename, *, resolve=False, require=False, title=None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
-    log.info('set_engine')
+    log.info('set_engine: %r', filename)
+
     if isinstance(filename, sa.engine.Engine):
         engine = filename
         if isinstance(filename, _proxies.EngineProxy):
             engine = engine.engine
-        log.debug('engine: %r', engine)
+
         ENGINE.engine = engine
         return ENGINE
 
-    log.debug('filename: %r', filename)
-    if filename is not None:
+    if filename is None:
+        if title is not None:
+            ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory',
+                                                            expanduser=False)
+    else:
         filename = _tools.path_from_filename(filename)
         if resolve:
             filename = filename.resolve(strict=False)
 
-    if filename is None and title is not None:
-        ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory',
-                                                        expanduser=False)
+        if require and not filename.exists():
+            log.error('required engine file not found: %r', filename)
+            raise RuntimeError(f'engine file does not exist: {filename!r}')
 
     ENGINE.file = filename
     return ENGINE
@@ -69,6 +73,7 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
         cursor.execute('PRAGMA foreign_keys = ON')
 
     dbapi_conn.create_function('regexp', 2, _regexp)
+    log.debug('conn: %r', dbapi_conn)
 
 
 def _regexp(pattern, value):
@@ -116,65 +121,59 @@ def load(filename=ENGINE, repo_root=None, *,
          require=False, rebuild=False,
          exclude_raw=False, from_raw=None, force_delete=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
-    log.info('load database')
-
-    if hasattr(filename, 'execute'):
-        engine = filename
-    else:
-        engine = set_engine(filename)
-
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
     else:
         root = ROOT
+    log.info('load database from %r', root)
+
+
     if not root.exists():
         log.error('root does not exist')
         raise RuntimeError(f'tree root not found: {root!r}')
 
-    if require and not engine.file_exists():
-        log.error('required load file not found: %r', engine.file)
-        raise RuntimeError(f'engine file does not exist: {engine.file!r}')
-
     if exclude_raw and from_raw:
-        log.error('incompatible exclude_raw=%r'
-                  ' and from_raw=%r', exclude_raw, from_raw)
+        log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
         raise RuntimeError('exclude_raw and from_raw cannot both be True')
     elif from_raw is None:
         from_raw = not exclude_raw
 
-    assert engine.url.drivername == 'sqlite'
+    if hasattr(filename, 'execute'):
+        engine = filename
+    else:
+        engine = set_engine(filename, require=require)
+
     if engine.file is None:
-        log.debug('dispose engine %r', engine)
-        engine.dispose()
         log.warning('connected to a transient in-memory database')
-    elif engine.file.exists():
-        log.debug('read %r from %r', Dataset.__tablename__, engine.file)
+    elif engine.file_exists():
+        log.debug('read %r from %r', Dataset.__tablename__, engine)
 
         try:
             ds, = sa.select([Dataset], bind=engine).execute()
         except Exception:
             ds = None
             log.exception('error reading %r', Dataset.__tablename__)
-            if not force_delete:
-                raise
-
-            warnings.warn(f'force delete {engine.file!r}')
             rebuild = True
+            if force_delete:
+                warnings.warn(f'force delete {engine.file!r}')
+            else:
+                raise
         else:
             if ds.exclude_raw != bool(exclude_raw):
                 log.info('rebuild needed from exclude_raw mismatch')
+                rebuild = True
 
-        if rebuild or ds.exclude_raw != bool(exclude_raw):
-            log.info('rebuild database')
-            log.debug('dispose engine %r', engine)
-            engine.dispose()
-
-            warnings.warn(f'delete present file: {engine.file!r}')
-            engine.file.unlink()
-        else:
+        if not rebuild:
             log.info('use present %r', engine.file)
             log_dataset(dict(ds))
             return engine
+
+        log.info('rebuild database')
+        if engine.file is not None:
+            engine.dispose()
+
+        warnings.warn(f'delete present file: {engine.file!r}')
+        engine.file.unlink()
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -184,8 +183,8 @@ def load(filename=ENGINE, repo_root=None, *,
             conn.execute('PRAGMA journal_mode = MEMORY')
             conn = conn.execution_options(compiled_cache={})
 
-            log.debug('conn: %r', conn)
             yield conn
+
         log.debug('end transaction on %r', bind)
 
     # import here to register models for create_all()
@@ -210,8 +209,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.debug('run create_all')
         Model.metadata.create_all(bind=conn)
 
-    log.info('record git commit')
-    log.debug('cwd: %r', root)
+    log.info('record git commit in %r', root)
     run = functools.partial(_tools.run, cwd=str(root),
                             capture_output=True, unpack=True)
 
