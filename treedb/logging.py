@@ -28,10 +28,14 @@ def configure_logging_from_file(path, *,
     logger = logging.getLogger(__package__)
     
     if level is not None:
-        for h in logger.handlers:
-            if not isinstance(h, logging.FileHandler):
-                log.debug('%r.setLevel(%r)', h, level)
-                h.setLevel(level)
+        if not logger.handlers:
+            log.debug('%r.setLevel(%r)', logger, level)
+            logger.setLevel(level)
+        else:
+            for h in logger.handlers:
+                if not isinstance(h, logging.FileHandler):
+                    log.debug('%r.setLevel(%r)', h, level)
+                    h.setLevel(level)
 
     if log_sql is not None:
         logging.getLogger(SQL).setLevel('INFO' if log_sql else 'WARNING')
@@ -42,9 +46,9 @@ def configure_logging_from_file(path, *,
 
 
 def _reset_logging():
-    log.debug('reset logging config')
     root_logger = logging.getLogger()
     for h in list(root_logger.handlers):
+        log.debug('%r.removeHandler(%r)', root_logger, h)
         root_logger.removeHandler(h)
         h.close()
     
