@@ -112,6 +112,40 @@ class Dataset(Model):
 
     exclude_raw = sa.Column(sa.Boolean, nullable=False)
 
+    @classmethod
+    def get_dataset(cls, *, bind, strict, fallback=None):
+        table = cls.__tablename__
+        log.debug('read %r from %r', table, bind)
+        try:
+            result, = sa.select([Dataset], bind=bind).execute()
+        except sa.exc.OperationalError as e:
+            if 'no such table' in e.orig.args[0]:
+                pass
+            else:
+                log.exception('error selecting %r', table)
+                if strict:
+                    raise RuntimeError('failed to select %r from %r', table, bind)
+            return fallback
+        except ValueError as e:
+            log.exception('error selecting %r', table)
+            if 'not enough values to unpack' in e.args[0] and not strict:
+                return fallback
+            raise RuntimeError('failed to select %r from %r', table, bind)
+        except Exception:
+            log.exception('error selecting %r', table)
+            raise RuntimeError('failed to select %r from %r', table, bind)
+        else:
+            return result
+
+    @classmethod
+    def log_dataset(cls, params):
+        name = cls.__tablename__
+        log.info('git describe %(git_describe)r clean: %(clean)r', params)
+        if not params['clean']:
+            warnings.warn(f'{name} not clean')
+        log.debug('%r.title: %r', name, params['title'])
+        log.debug('%r.git_commit: %r', name, params['git_commit'])
+
 
 Session = sa.orm.sessionmaker(bind=ENGINE)
 
@@ -119,22 +153,21 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 def load(filename=ENGINE, repo_root=None, *,
          treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
-         exclude_raw=False, from_raw=None, force_delete=False):
+         exclude_raw=False, from_raw=None, force_rebuild=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
     else:
         root = ROOT
+
     log.info('load database from %r', root)
-
-
     if not root.exists():
         log.error('root does not exist')
         raise RuntimeError(f'tree root not found: {root!r}')
 
     if exclude_raw and from_raw:
         log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
-        raise RuntimeError('exclude_raw and from_raw cannot both be True')
+        raise ValueError('exclude_raw and from_raw cannot both be True')
     elif from_raw is None:
         from_raw = not exclude_raw
 
@@ -145,32 +178,33 @@ def load(filename=ENGINE, repo_root=None, *,
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
-    elif engine.file_exists():
-        log.debug('read %r from %r', Dataset.__tablename__, engine)
+        ds = Dataset.get_dataset(bind=engine, strict=True)
 
-        try:
-            ds, = sa.select([Dataset], bind=engine).execute()
-        except Exception:
-            ds = None
-            log.exception('error reading %r', Dataset.__tablename__)
+        if ds is not None and not rebuild:
+            log.info('use present %r', engine.url)
+            Dataset.log_dataset(dict(ds))
+            return engine
+
+        if rebuild or (ds is None and force_rebuild):
+            log.info('rebuild database')
+            engine.dispose()
+
+    elif engine.file_exists():
+        ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
+        if ds is None:
+            warnings.warn(f'force delete {engine.file!r}')
             rebuild = True
-            if force_delete:
-                warnings.warn(f'force delete {engine.file!r}')
-            else:
-                raise
-        else:
-            if ds.exclude_raw != bool(exclude_raw):
-                log.info('rebuild needed from exclude_raw mismatch')
-                rebuild = True
+        elif ds.exclude_raw != bool(exclude_raw):
+            log.info('rebuild needed from exclude_raw mismatch')
+            rebuild = True
 
         if not rebuild:
-            log.info('use present %r', engine.file)
-            log_dataset(dict(ds))
+            log.info('use present %r', engine)
+            Dataset.log_dataset(dict(ds))
             return engine
 
         log.info('rebuild database')
-        if engine.file is not None:
-            engine.dispose()
+        engine.dispose()
 
         warnings.warn(f'delete present file: {engine.file!r}')
         engine.file.unlink()
@@ -253,17 +287,9 @@ def load(filename=ENGINE, repo_root=None, *,
     log.debug('load timer stopped')
 
     log.info('database loaded')
-    log_dataset(dataset)
+    Dataset.log_dataset(dataset)
     print(walltime)
     return engine
-
-
-def log_dataset(params, *, name=Dataset.__tablename__):
-    log.info('git describe %(git_describe)r clean: %(clean)r', params)
-    if not params['clean']:
-        warnings.warn(f'{name} not clean')
-    log.debug('%r.title: %r', name, params['title'])
-    log.debug('%r.git_commit: %r', name, params['git_commit'])
 
 
 def dump_sql(filename=None, *, progress_after=100_000,
