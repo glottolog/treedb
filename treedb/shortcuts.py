@@ -1,92 +1,23 @@
-# shortcuts.py - logging, sqlalchemy, and pandas short-cut functions
+# shortcuts.py - sqlalchemy, and pandas short-cut functions
 
 import functools
-import logging
-import logging.config
 import warnings
 
 import sqlalchemy as sa
 
 from . import ENGINE
 
-__all__ = ['configure_logging', 'configure_logging_from_file',
-           'count', 'select', 'text',
+__all__ = ['count', 'select', 'text',
            'pd_read_sql']
-
-ROOT = 'root'
 
 PANDAS = None
 
 
-log = logging.getLogger(__name__)
-
-
-def configure_logging_from_file(path, *, level=None, capture_warnings=True):
-    log.debug('logging.config.fileConfig(%r)', path)
-    logging.config.fileConfig(path)
-
-    logger = logging.getLogger(__package__)
-    
-    if level is not None:
-        for h in logger.handlers:
-            if not isinstance(h, logging.FileHandler):
-                log.debug('%r.level = %r', h, level)
-                h.level = getattr(logging, level)
-
-    _set_capture_warnings(capture_warnings)
-
-    return logger
-
-
-def _set_capture_warnings(value=True):
-    log.debug('logging.captureWarnings(%r)', value)
-    logging.captureWarnings(value)
-    
-    
-def configure_logging(*,
-                      level='WARNING',
-                      format='[%(levelname)s@%(name)s] %(message)s',
-                      capture_warnings=True,
-                      log_sql=False,
-                      reset=True):
-
-    if reset:
-        log.debug('reset logging config')
-        root = logging.getLogger(ROOT)
-        for h in list(root.handlers):
-            root.removeHandler(h)
-            h.close()
-
-    cfg = {'version': 1,
-           ROOT: {'handlers': ['plain'], 'level': 'INFO'},
-           'loggers': {'py.warnings': {'handlers': ['prefixed'],
-                                       'level': 'WARNING',
-                                       'propagate': False},
-                       'sqlalchemy.engine': {'level': ('INFO' if log_sql
-                                                       else 'WARNING')},
-                       __package__: {'handlers': ['prefixed'],
-                                     'propagate': False,
-                                     'level': level}},
-           'handlers': {'plain': {'formatter': 'plain',
-                                  'level': 'DEBUG',
-                                  'class': 'logging.StreamHandler'},
-                        'prefixed': {'formatter': 'prefixed',
-                                    'level': 'DEBUG',
-                                    'class': 'logging.StreamHandler'}},
-           'formatters': {'plain': {'format': '%(message)s'},
-                          'prefixed': {'format': format}}}
-
-    log.debug('logging.config.dictConfig(%r)', cfg)
-    logging.config.dictConfig(cfg)
-
-    _set_capture_warnings(capture_warnings)
-
-    return logging.getLogger(__package__)
-
-
 count = sa.func.count
 
+
 select = functools.partial(sa.select, bind=ENGINE)
+
 
 text = functools.partial(sa.text, bind=ENGINE)
 
