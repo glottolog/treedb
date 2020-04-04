@@ -277,7 +277,7 @@ def _apply_ordered(select_languoid, path, *, ordered):
         raise ValueError(f'ordered={ordered!r} not implemented')
 
 
-def get_json_query(*, bind=ENGINE, ordered='id'):
+def get_json_query(*, bind=ENGINE, ordered='id', load_json=True):
     json_array = sa.func.json_array
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
@@ -425,28 +425,31 @@ def get_json_query(*, bind=ENGINE, ordered='id'):
 
     path = Languoid.path()
 
-    select_languoid = select([json_array(path, json_object(
-            'id', Languoid.id,
-            'parent_id', Languoid.parent_id,
-            'level', Languoid.level,
-            'name', Languoid.name,
-            'hid', Languoid.hid,
-            'iso639_3', Languoid.iso639_3,
-            'latitude', Languoid.latitude,
-            'longitude', Languoid.longitude,
-            'macroareas', macroareas,
-            'countries', countries,
-            'links', links,
-            'sources', sources,
-            'altnames', altnames,
-            'triggers', triggers,
-            'identifier', identifier,
-            'classification', classification,
-            'endangerment', endangerment,
-            'hh_ethnologue_comment', hh_ethnologue_comment,
-            'iso_retirement', iso_retirement,
-        )).label('path_languoid')], bind=bind)\
-        .select_from(Languoid)
+    languoid = json_object('id', Languoid.id,
+                           'parent_id', Languoid.parent_id,
+                           'level', Languoid.level,
+                           'name', Languoid.name,
+                           'hid', Languoid.hid,
+                           'iso639_3', Languoid.iso639_3,
+                           'latitude', Languoid.latitude,
+                           'longitude', Languoid.longitude,
+                           'macroareas', macroareas,
+                           'countries', countries,
+                           'links', links,
+                           'sources', sources,
+                           'altnames', altnames,
+                           'triggers', triggers,
+                           'identifier', identifier,
+                           'classification', classification,
+                           'endangerment', endangerment,
+                           'hh_ethnologue_comment', hh_ethnologue_comment,
+                           'iso_retirement', iso_retirement)
+
+    if load_json:
+        languoid = sa.type_coerce(languoid, sa.types.JSON)
+
+    select_languoid = select([path, languoid.label('json')],
+                             bind=bind).select_from(Languoid)
 
     _apply_ordered(select_languoid, path, ordered=ordered)
 

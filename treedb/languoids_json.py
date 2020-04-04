@@ -29,14 +29,13 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
     log.info('ordered: %r', ordered)
 
     query = _queries.get_json_query(bind=bind,
-                                    ordered=ordered)
+                                    ordered=ordered,
+                                    load_json=True)
 
     json_datetime = datetime.datetime.fromisoformat
 
     n = 0
-    for n, (s,) in enumerate(query.execute(), 1):
-        path, item = json.loads(s)
-
+    for n, (path, item) in enumerate(query.execute(), 1):
         endangerment = item['endangerment']
         if endangerment is not None:
             endangerment['date'] = json_datetime(endangerment['date'])
