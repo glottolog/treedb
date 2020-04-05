@@ -290,7 +290,6 @@ def write_json_query_csv(filename=None, *, ordered='id', bind=ENGINE):
 
 
 def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
-    json_array = sa.func.json_array
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object

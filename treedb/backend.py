@@ -168,8 +168,8 @@ class Producer(Model):
     @classmethod
     def log_producer(cls, params):
         name = cls.__tablename__
-        log.info('__producer__.name: %(name)s', params)
-        log.info('__producer__.version: %(version)s', params)
+        log.info('%s.name: %s', name, params['name'])
+        log.info('%s.version: %s', name, params['version'])
 
 
 Session = sa.orm.sessionmaker(bind=ENGINE)

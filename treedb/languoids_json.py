@@ -65,9 +65,9 @@ def write_json_csv(*, source='tables', filename=None,
 
 def _json_kwargs(*, source, file_order, file_means_path):
     try:
-        kwargs = {'tables': {'bind_or_root':  ENGINE,
+        kwargs = {'tables': {'bind_or_root': ENGINE,
                              'from_raw': False},
-                  'raw': {'bind_or_root':  ENGINE,
+                  'raw': {'bind_or_root': ENGINE,
                           'from_raw': True},
                   'files': {'bind_or_root': ROOT,
                             'from_raw': False}}[source]
@@ -109,7 +109,7 @@ def _write_json_csv(bind_or_root=ENGINE, filename=None, *,
                       sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
-                            dialect=dialect, encoding=encoding)
+                           dialect=dialect, encoding=encoding)
 
 
 def _json_rows(bind_or_root=ENGINE, *,
@@ -134,7 +134,7 @@ def checksum(*, source='tables', file_order=False, name=None,
                           file_means_path=file_means_path)
 
     return _checksum(name=name, **kwargs)
-    
+
 
 def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
               name=None, dialect=csv23.DIALECT, encoding=csv23.ENCODING):

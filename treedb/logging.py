@@ -26,7 +26,7 @@ def configure_logging_from_file(path, *,
     logging.config.fileConfig(path, disable_existing_loggers=reset)
 
     package_logger = logging.getLogger(__package__)
-    
+
     if level is not None:
         if not package_logger.handlers:
             log.debug('set level of %r to %r', package_logger, level)
