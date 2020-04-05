@@ -157,7 +157,8 @@ class Languoid(Model):
             parent_id = Child.id
         else:
             parent_id = Child.parent_id
-            tree_1.append_whereclause(parent_id != None)
+            tree_1.append_from(sa.join(Child, Parent,
+                                       Child.parent_id == Parent.id))
         tree_1.append_column(parent_id.label('parent_id'))
 
         if with_steps:
@@ -168,14 +169,16 @@ class Languoid(Model):
             if include_self:
                 terminal = sa.type_coerce(Child.parent_id == None, sa.Boolean)
             else:
-                terminal = sa.literal(False)
+                terminal = sa.type_coerce(Parent.parent_id == None, sa.Boolean)
             tree_1.append_column(terminal.label('terminal'))
 
         tree_1 = tree_1.cte('tree', recursive=True)
 
         tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])\
-            .select_from(tree_1.join(Parent, Parent.id == tree_1.c.parent_id))\
-            .where(Parent.parent_id != None)
+            .select_from(tree_1.join(Parent, Parent.id == tree_1.c.parent_id))
+
+        if include_self:
+            tree_2.append_whereclause(Parent.parent_id != None)
 
         if with_steps:
             tree_2.append_column((tree_1.c.steps + 1).label('steps'))
