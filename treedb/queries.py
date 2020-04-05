@@ -174,12 +174,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     idents = {s: aliased(Identifier, name='ident_' + s) for s in sorted(IDENTIFIER_SITE)}
 
-    froms = Languoid.__table__
-    for s, i in idents.items():
-        froms = froms.outerjoin(i, sa.and_(i.site == s,
-                                           i.languoid_id == Languoid.id))
-
-    idents = [i.identifier.label(f'identifier_{s}') for s, i in idents.items()]
+    identifiers = [i.identifier.label(f'identifier_{s}') for s, i in idents.items()]
 
     subr = aliased(ClassificationRef, name='cr_sub')
     csr_bibfile = aliased(Bibfile, name='bibfile_csr')
@@ -254,7 +249,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             ] + altnames + [
             triggers_lgcode,
             trigggers_inlg,
-            ] + idents + [
+            ] + identifiers + [
             classifcation_sub,
             classification_subrefs,
             classification_family,
@@ -264,14 +259,22 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             ] + get_cols(EthnologueComment, label='elcomment_{name}')
             + get_cols(IsoRetirement, label='iso_retirement_{name}') + [
             iso_retirement_change_to,
-        ], bind=bind)\
-        .select_from(froms
-            .outerjoin(subc, sa.and_(subc.languoid_id == Languoid.id, subc.kind == 'sub'))
-            .outerjoin(famc, sa.and_(famc.languoid_id == Languoid.id, famc.kind == 'family'))
+        ], bind=bind)
+
+    froms = Languoid.__table__
+    for s, i in idents.items():
+        froms = froms.outerjoin(i, sa.and_(i.site == s,
+                                           i.languoid_id == Languoid.id))
+    froms = froms.outerjoin(subc, sa.and_(subc.kind == 'sub',
+                                          subc.languoid_id == Languoid.id))\
+            .outerjoin(famc, sa.and_(famc.kind == 'family',
+                                     famc.languoid_id == Languoid.id))\
             .outerjoin(join(Endangerment, EndangermentSource)
-                       .outerjoin(join(e_bibitem, e_bibfile)))
-            .outerjoin(EthnologueComment)
-            .outerjoin(IsoRetirement))
+                       .outerjoin(join(e_bibitem, e_bibfile)))\
+            .outerjoin(EthnologueComment)\
+            .outerjoin(IsoRetirement)
+
+    select_languoid.append_from(froms)
 
     _apply_ordered(select_languoid, path, ordered=ordered)
 
