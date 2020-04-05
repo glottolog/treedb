@@ -500,13 +500,12 @@ def get_stats_query(*, bind=ENGINE):
 
     tree = Languoid.tree(include_self=True, with_terminal=True)
 
-    def child_family_fromclause(*, child=Languoid):
-        family = sa.orm.aliased(Languoid)
-        child_tree = sa.join(child, tree, tree.c.child_id == child.id)
-        child_family = child_tree.join(family,
-                                       sa.and_(tree.c.parent_id == family.id,
+    Family = sa.orm.aliased(Languoid, name='family')
+    tree_family = sa.join(tree, Family,sa.and_(tree.c.parent_id == Family.id,
                                                tree.c.terminal == True))
-        return child, family, child_family
+
+    Child = sa.orm.aliased(Languoid, name='child')
+    child_family = sa.join(Child, tree_family, tree.c.child_id == Child.id)
 
     def iterselects():
         yield languoid_count('languoids')
@@ -524,26 +523,22 @@ def get_stats_query(*, bind=ENGINE):
 
         yield languoid_count('dialects').where(Languoid.level == DIALECT)
 
-        child, family, child_family = child_family_fromclause()
         yield languoid_count('Spoken L1 Languages', child_family)\
-              .where(child.level == LANGUAGE)\
-              .where(~family.name.in_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
+              .where(Child.level == LANGUAGE)\
+              .where(~Family.name.in_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
 
         for name in SPECIAL_FAMILIES:
-            child, family, child_family = child_family_fromclause()
             yield languoid_count(name, child_family)\
-                  .where(child.level == LANGUAGE)\
-                  .where(family.name == name)
+                  .where(Child.level == LANGUAGE)\
+                  .where(Family.name == name)
 
-        child, family, child_family = child_family_fromclause()
         yield languoid_count('All', child_family)\
-              .where(child.level == LANGUAGE)\
-              .where(family.name != BOOKKEEPING)
+              .where(Child.level == LANGUAGE)\
+              .where(Family.name != BOOKKEEPING)
 
-        child, family, child_family = child_family_fromclause()
         yield languoid_count(BOOKKEEPING, child_family)\
-                .where(child.level == LANGUAGE)\
-                .where(family.name == BOOKKEEPING)
+                .where(Child.level == LANGUAGE)\
+                .where(Family.name == BOOKKEEPING)
 
     return sa.union_all(*iterselects(), bind=bind)
 
