@@ -526,7 +526,7 @@ def get_stats_query(*, bind=ENGINE):
         other = SPECIAL_FAMILIES + (BOOKKEEPING,)
         yield languoid_count('Spoken L1 Languages', child_family)\
               .where(Child.level == LANGUAGE)\
-              .where(~sa.func.coalesce(Family.name, '').in_(other))
+              .where(sa.or_(Family.name == None, Family.name.notin_(other)))
 
         for name in SPECIAL_FAMILIES:
             yield languoid_count(name, child_family)\
