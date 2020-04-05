@@ -2,10 +2,15 @@ Changelog
 =========
 
 
-Version 0.7.1 (in development)
-------------------------------
+Version 0.7.1
+-------------
 
+Add treedb.print_languoid_stats() (reproducing
+https://glottolog.org/glottolog/glottologinformation).
 
+Add treedb.write_json_query_csv. To support this, treedb.get_json_query() now
+yields pairs of path and languoid json (instead of json of a two-item array
+with a path_part array as first element).
 
 
 Version 0.7
