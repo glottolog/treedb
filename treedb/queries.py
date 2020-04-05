@@ -508,13 +508,7 @@ def get_stats_query(*, bind=ENGINE):
         return select([sa.literal(kind).label('kind'),
                        sa.func.count().label('n')]).select_from(fromclause)
 
-    tree = Languoid.tree(include_self=False, with_terminal=True)
-
-    Child, Family = (aliased(Languoid, name=n) for n in ('child', 'family'))
-
-    tree_family = sa.join(tree, Family, sa.and_(tree.c.parent_id == Family.id,
-                                                tree.c.terminal == True))
-    child_family = sa.outerjoin(Child, tree_family, tree.c.child_id == Child.id)
+    Child, Family, child_family = Languoid.child_family(innerjoin=False)
 
     def iterselects():
         yield languoid_count('languoids')

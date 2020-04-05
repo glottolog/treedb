@@ -215,6 +215,19 @@ class Languoid(Model):
         return sa.select([sa.func.json_group_array(squery.c.path_part)]).as_scalar()
 
     @classmethod
+    def child_family(cls, innerjoin=False):
+        tree = Languoid.tree(include_self=False, with_terminal=True)
+
+        Child, Family = (aliased(Languoid, name=n) for n in ('child', 'family'))
+
+        tree_family = sa.join(tree, Family, sa.and_(tree.c.parent_id == Family.id,
+                                                    tree.c.terminal == True))
+
+        join = sa.join if innerjoin else sa.outerjoin
+        child_family = join(Child, tree_family, tree.c.child_id == Child.id)
+        return Child, Family, child_family
+
+    @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
