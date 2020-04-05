@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import itertools
 import warnings
 
 import sqlalchemy as sa
@@ -14,7 +15,7 @@ from . import tools as _tools
 
 from . import ENGINE
 
-from .models import (LEVEL, FAMILY, LANGUAGE,
+from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      Languoid,
@@ -41,10 +42,13 @@ def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
     if query is None:
         query = get_query(bind=bind)
 
-    if verbose:
-        print(query)
+    if not isinstance(query, sa.sql.base.Executable):
+        rows = iter(query)
+    else:
+        if verbose:
+            print(query)
 
-    rows = bind.execute(query)
+        rows = bind.execute(query)
 
     if format_ is not None:
         rows = map(format_.format_map, rows)
@@ -469,53 +473,76 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
 
 def print_languoid_stats(*, bind=ENGINE):
     select_stats = get_stats_query(bind=bind)
-    print_rows(select_stats, bind=bind)
+    rows, counts = itertools.tee(select_stats.execute())
+
+    print_rows(rows, format_='{n:5,d} {kind}', bind=bind)
+
+    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialect')),
+            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
+            ('languages', ('All', BOOKKEEPING))]
+
+    counts = dict(counts)
+    for total, parts in sums:
+        values = [counts[p] for p in parts]
+        parts_sum = sum(values)
+        if counts[total] != parts_sum:
+            term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+            raise RuntimeError(f'{term} = {parts_sum:,d}'
+                               f' (expected {counts[total]:,d} {total})') 
 
 
 def get_stats_query(*, bind=ENGINE):
     # cf. https://glottolog.org/glottolog/glottologinformation
 
-    def count(kind, fromclause=Languoid):
+    def languoid_count(kind, fromclause=Languoid):
         return select([sa.literal(kind).label('kind'),
                        sa.func.count().label('n')]).select_from(fromclause)
 
     tree = Languoid.tree(include_self=True, with_terminal=True)
 
-    def family_fromclause(child, family):
-        return sa.join(Languoid, tree, tree.c.child_id == child.id)\
-                .join(family, sa.and_(tree.c.parent_id == family.id,
-                                      tree.c.terminal == True))
+    def child_family_fromclause(*, child=Languoid):
+        family = sa.orm.aliased(Languoid)
+        child_tree = sa.join(child, tree, tree.c.child_id == child.id)
+        child_family = child_tree.join(family,
+                                       sa.and_(tree.c.parent_id == family.id,
+                                               tree.c.terminal == True))
+        return child, family, child_family
 
     def iterselects():
-        yield count('languoids')
+        yield languoid_count('languoids')
 
-        yield count('families').where(Languoid.level == FAMILY)\
+        yield languoid_count('families').where(Languoid.level == FAMILY)\
             .where(Languoid.parent_id == None)
 
-        yield count('isolates').where(Languoid.level == LANGUAGE)\
+        yield languoid_count('isolates').where(Languoid.level == LANGUAGE)\
             .where(Languoid.parent_id == None)
 
-        yield count('languages').where(Languoid.level == LANGUAGE)
+        yield languoid_count('languages').where(Languoid.level == LANGUAGE)
 
-        family = sa.orm.aliased(Languoid)
-        yield count('Spoken L1 Languages', family_fromclause(Languoid, family))\
-              .where(Languoid.level == LANGUAGE)\
+        yield languoid_count('subfamilies').where(Languoid.level == FAMILY)\
+            .where(Languoid.parent_id != None)
+
+        yield languoid_count('dialect').where(Languoid.level == DIALECT)
+
+        child, family, child_family = child_family_fromclause()
+        yield languoid_count('Spoken L1 Languages', child_family)\
+              .where(child.level == LANGUAGE)\
               .where(~family.name.in_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
 
         for name in SPECIAL_FAMILIES:
-            family = sa.orm.aliased(Languoid)
-            yield count(name, family_fromclause(Languoid, family))\
-                  .where(Languoid.level == LANGUAGE)\
+            child, family, child_family = child_family_fromclause()
+            yield languoid_count(name, child_family)\
+                  .where(child.level == LANGUAGE)\
                   .where(family.name == name)
 
-        family = sa.orm.aliased(Languoid)
-        yield count('All', family_fromclause(Languoid, family))\
-              .where(Languoid.level == LANGUAGE)\
+        child, family, child_family = child_family_fromclause()
+        yield languoid_count('All', child_family)\
+              .where(child.level == LANGUAGE)\
               .where(family.name != BOOKKEEPING)
 
-        family = sa.orm.aliased(Languoid)
-        yield count(BOOKKEEPING, family_fromclause(Languoid, family))\
-                .where(Languoid.level == LANGUAGE)\
+        child, family, child_family = child_family_fromclause()
+        yield languoid_count(BOOKKEEPING, child_family)\
+                .where(child.level == LANGUAGE)\
                 .where(family.name == BOOKKEEPING)
 
     return sa.union_all(*iterselects(), bind=bind)
