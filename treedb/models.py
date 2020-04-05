@@ -14,15 +14,15 @@ __all__ = ['LEVEL', 'Languoid']
 
 FAMILY, LANGUAGE, DIALECT = LEVEL = ('family', 'language', 'dialect')
 
-BOOKKEEPING = 'Bookkeeping'
-
-SPECIAL_FAMILIES = ('Unattested',
+SPECIAL_FAMILIES = ('Sign Language',
                     'Unclassifiable',
                     'Pidgin',
-                    'Mixed Language',
+                    'Unattested',
                     'Artificial Language',
-                    'Speech Register',
-                    'Sign Language')
+                    'Mixed Language',
+                    'Speech Register')
+
+BOOKKEEPING = 'Bookkeeping'
 
 MACROAREA = {'North America', 'South America',
              'Eurasia',

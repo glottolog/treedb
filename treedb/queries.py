@@ -14,7 +14,9 @@ from . import tools as _tools
 
 from . import ENGINE
 
-from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
+from .models import (LEVEL, FAMILY, LANGUAGE,
+                     SPECIAL_FAMILIES, BOOKKEEPING,
+                     ALTNAME_PROVIDER, IDENTIFIER_SITE,
                      Languoid,
                      languoid_macroarea,
                      languoid_country, Country,
@@ -27,6 +29,7 @@ from .models import (LEVEL, ALTNAME_PROVIDER, IDENTIFIER_SITE,
 
 __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query', 'get_json_query',
+           'print_languoid_stats', 'get_stats_query',
            'iterdescendants']
 
 
@@ -35,7 +38,7 @@ log = logging.getLogger(__name__)
 
 def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
     if query is None:
-        query = get_query()
+        query = get_query(bind=bind)
 
     if verbose:
         print(query)
@@ -53,7 +56,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
-        query = get_query()
+        query = get_query(bind=bind)
 
     if filename is None:
         filename = bind.file_with_suffix('.csv').name
@@ -80,12 +83,10 @@ def hash_csv(query=None, *,
              raw=False, name=None,
              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     if query is None:
-        query = get_query()
+        query = get_query(bind=bind)
 
     rows = bind.execute(query)
-
     header = rows.keys()
-    log.info('header: %r', header)
 
     return hash_rows(rows, header=header, name=name, raw=raw,
                      dialect=dialect, encoding=encoding)
@@ -93,8 +94,10 @@ def hash_csv(query=None, *,
 
 def hash_rows(rows, *, header=None, name=None, raw=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING):
-    name = name if name is not None else 'sha256'
-    log.info('hash rows: %r', name)
+    if name is None:
+        name = 'sha256'
+
+    log.info('hash rows with %r, header: %r', name, header)
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
 
@@ -454,6 +457,60 @@ def get_json_query(*, bind=ENGINE, ordered='id', load_json=True):
     _apply_ordered(select_languoid, path, ordered=ordered)
 
     return select_languoid
+
+
+def print_languoid_stats(*, bind=ENGINE):
+    select_stats = get_stats_query(bind=bind)
+    print_rows(select_stats, bind=bind)
+
+
+def get_stats_query(*, bind=ENGINE):
+    # cf. https://glottolog.org/glottolog/glottologinformation
+
+    def count(kind, fromclause=Languoid):
+        return select([sa.literal(kind).label('kind'),
+                       sa.func.count().label('n')]).select_from(fromclause)
+
+    tree = Languoid.tree(include_self=True, with_terminal=True)
+
+    def family_fromclause(child, family):
+        return sa.join(Languoid, tree, tree.c.child_id == child.id)\
+                .join(family, sa.and_(tree.c.parent_id == family.id,
+                                      tree.c.terminal == True))
+
+    def iterselects():
+        yield count('languoids')
+
+        yield count('families').where(Languoid.level == FAMILY)\
+            .where(Languoid.parent_id == None)
+
+        yield count('isolates').where(Languoid.level == LANGUAGE)\
+            .where(Languoid.parent_id == None)
+
+        yield count('languages').where(Languoid.level == LANGUAGE)
+
+        family = sa.orm.aliased(Languoid)
+        yield count('Spoken L1 Languages', family_fromclause(Languoid, family))\
+              .where(Languoid.level == LANGUAGE)\
+              .where(~family.name.in_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
+
+        for name in SPECIAL_FAMILIES:
+            family = sa.orm.aliased(Languoid)
+            yield count(name, family_fromclause(Languoid, family))\
+                  .where(Languoid.level == LANGUAGE)\
+                  .where(family.name == name)
+
+        family = sa.orm.aliased(Languoid)
+        yield count('All', family_fromclause(Languoid, family))\
+              .where(Languoid.level == LANGUAGE)\
+              .where(family.name != BOOKKEEPING)
+
+        family = sa.orm.aliased(Languoid)
+        yield count(BOOKKEEPING, family_fromclause(Languoid, family))\
+                .where(Languoid.level == LANGUAGE)\
+                .where(family.name == BOOKKEEPING)
+
+    return sa.union_all(*iterselects(), bind=bind)
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):

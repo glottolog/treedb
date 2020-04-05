@@ -32,6 +32,7 @@ from .checks import check
 
 from .queries import (print_rows, write_csv, hash_csv,
                       get_query, get_json_query,
+                      print_languoid_stats,
                       iterdescendants)
 
 from .shortcuts import (count, select, text,
@@ -49,6 +50,7 @@ __all__ = ['ROOT', 'ENGINE',
            'check',
            'print_rows', 'write_csv', 'hash_csv',
            'get_query', 'get_json_query',
+           'print_languoid_stats',
            'iterdescendants',
            'count', 'select', 'text',
            'pd_read_sql',
