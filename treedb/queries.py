@@ -510,11 +510,10 @@ def get_stats_query(*, bind=ENGINE):
 
     tree = Languoid.tree(include_self=False, with_terminal=True)
 
-    Family = sa.orm.aliased(Languoid, name='family')
-    tree_family = sa.join(tree, Family,sa.and_(tree.c.parent_id == Family.id,
-                                               tree.c.terminal == True))
+    Child, Family = (aliased(Languoid, name=n) for n in ('child', 'family'))
 
-    Child = sa.orm.aliased(Languoid, name='child')
+    tree_family = sa.join(tree, Family, sa.and_(tree.c.parent_id == Family.id,
+                                                tree.c.terminal == True))
     child_family = sa.outerjoin(Child, tree_family, tree.c.child_id == Child.id)
 
     def iterselects():
