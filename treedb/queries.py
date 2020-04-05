@@ -136,7 +136,8 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
         .order_by(Link.ord)\
         .label('links')
 
-    s_bibfile, s_bibitem = map(aliased, (Bibfile, Bibitem))
+    s_bibfile = aliased(Bibfile, name='source_bibfile')
+    s_bibitem = aliased(Bibitem, name='source_bibitem')
 
     sources_glottolog = select([Source.printf(s_bibfile, s_bibitem)])\
         .where(Source.provider == 'glottolog')\
@@ -157,7 +158,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                 for p, a in {p: aliased(Altname)
                              for p in sorted(ALTNAME_PROVIDER)}.items()]
 
-    ltrig, itrig = (aliased(Trigger) for _ in range(2))
+    ltrig, itrig = (aliased(Trigger, name='trigger_' + n) for n in ('lgcode', 'inlg'))
 
     triggers_lgcode = select([group_concat(ltrig.trigger)])\
         .where(ltrig.field == 'lgcode')\
@@ -171,7 +172,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
         .order_by(itrig.ord)\
         .label('trigggers_inlg')
 
-    idents = {s: aliased(Identifier) for s in sorted(IDENTIFIER_SITE)}
+    idents = {s: aliased(Identifier, name='ident_' + s) for s in sorted(IDENTIFIER_SITE)}
 
     froms = Languoid.__table__
     for s, i in idents.items():
@@ -180,8 +181,9 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     idents = [i.identifier.label(f'identifier_{s}') for s, i in idents.items()]
 
-    subr, csr_bibfile, csr_bibitem = map(aliased,
-                                         (ClassificationRef, Bibfile, Bibitem))
+    subr = aliased(ClassificationRef, name='cr_sub')
+    csr_bibfile = aliased(Bibfile, name='bibfile_csr')
+    csr_bibitem = aliased(Bibitem, name='bibitem_csr')
 
     classification_subrefs = select([subr.printf(csr_bibfile, csr_bibitem)])\
         .where(subr.kind == 'sub')\
@@ -194,8 +196,9 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     classification_subrefs = select([group_concat(classification_subrefs.c.printf)])\
         .label('classification_subrefs')
 
-    famr, cfr_bibfile, cfr_bibitem = map(aliased,
-                                         (ClassificationRef, Bibfile, Bibitem))
+    famr = aliased(ClassificationRef, name='cr_fam')
+    cfr_bibfile = aliased(Bibfile, name='bibfile_cfr')
+    cfr_bibitem = aliased(Bibitem, name='bibitem_cfr')
 
     classification_familyrefs = select([famr.printf(cfr_bibfile, cfr_bibitem)])\
         .where(famr.kind == 'family')\
@@ -208,7 +211,8 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     classification_familyrefs = select([group_concat(classification_familyrefs.c.printf)])\
         .label('classification_familyrefs')
 
-    e_bibfile, e_bibitem = map(aliased, (Bibfile, Bibitem))
+    e_bibfile = aliased(Bibfile, name='bibfile_e')
+    e_bibitem = aliased(Bibitem, name='bibitem_e')
 
     endangerment_source = EndangermentSource.printf(e_bibfile, e_bibitem)\
         .label('endangerment_source')
@@ -226,7 +230,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                     and not c.name.endswith(ignore_suffix)]
         return [c.label(label.format(name=c.name)) for c in cols]
 
-    subc, famc = (aliased(ClassificationComment) for _ in range(2))
+    subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
 
     classifcation_sub = subc.comment.label('classification_sub')
     classification_family = famc.comment.label('classification_family')
@@ -317,7 +321,8 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
 
     links = select([group_array(links.c.jsonf)]).as_scalar()
 
-    s_bibfile, s_bibitem = map(aliased, (Bibfile, Bibitem))
+    s_bibfile = aliased(Bibfile, name='source_bibfile')
+    s_bibitem = aliased(Bibitem, name='source_bibitem')
 
     sources = select([
             Source.provider,
@@ -387,7 +392,8 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
         .correlate(Languoid)\
         .as_scalar()
 
-    cr_bibfile, cr_bibitem = map(aliased, (Bibfile, Bibitem))
+    cr_bibfile = aliased(Bibfile, name='bibfile_cr')
+    cr_bibitem = aliased(Bibitem, name='bibitem_cr')
 
     classification_refs = select([
             (ClassificationRef.kind + 'refs').label('key'),
@@ -409,7 +415,8 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                                     classification.c.value),
                        '{}')]).select_from(classification).as_scalar()
 
-    e_bibfile, e_bibitem = map(aliased, (Bibfile, Bibitem))
+    e_bibfile = aliased(Bibfile, name='bibfile_e')
+    e_bibitem = aliased(Bibitem, name='bibitem_e')
 
     endangerment = select([Endangerment.jsonf(EndangermentSource,
                                               e_bibfile, e_bibitem)])\
