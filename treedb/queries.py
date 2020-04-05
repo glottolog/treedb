@@ -487,8 +487,8 @@ def print_languoid_stats(*, bind=ENGINE):
         parts_sum = sum(values)
         if counts[total] != parts_sum:
             term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
-            raise RuntimeError(f'{term} = {parts_sum:,d}'
-                               f' (expected {counts[total]:,d} {total})') 
+            warnings.warn(f'{term} = {parts_sum:,d}'
+                          f' (expected {counts[total]:,d} {total})')
 
 
 def get_stats_query(*, bind=ENGINE):
@@ -498,14 +498,14 @@ def get_stats_query(*, bind=ENGINE):
         return select([sa.literal(kind).label('kind'),
                        sa.func.count().label('n')]).select_from(fromclause)
 
-    tree = Languoid.tree(include_self=True, with_terminal=True)
+    tree = Languoid.tree(include_self=False, with_terminal=True)
 
     Family = sa.orm.aliased(Languoid, name='family')
     tree_family = sa.join(tree, Family,sa.and_(tree.c.parent_id == Family.id,
                                                tree.c.terminal == True))
 
     Child = sa.orm.aliased(Languoid, name='child')
-    child_family = sa.join(Child, tree_family, tree.c.child_id == Child.id)
+    child_family = sa.outerjoin(Child, tree_family, tree.c.child_id == Child.id)
 
     def iterselects():
         yield languoid_count('languoids')
@@ -523,9 +523,10 @@ def get_stats_query(*, bind=ENGINE):
 
         yield languoid_count('dialects').where(Languoid.level == DIALECT)
 
+        other = SPECIAL_FAMILIES + (BOOKKEEPING,)
         yield languoid_count('Spoken L1 Languages', child_family)\
               .where(Child.level == LANGUAGE)\
-              .where(~Family.name.in_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
+              .where(~sa.func.coalesce(Family.name, '').in_(other))
 
         for name in SPECIAL_FAMILIES:
             yield languoid_count(name, child_family)\
@@ -534,7 +535,7 @@ def get_stats_query(*, bind=ENGINE):
 
         yield languoid_count('All', child_family)\
               .where(Child.level == LANGUAGE)\
-              .where(Family.name != BOOKKEEPING)
+              .where(Family.name.is_distinct_from(BOOKKEEPING))
 
         yield languoid_count(BOOKKEEPING, child_family)\
                 .where(Child.level == LANGUAGE)\
