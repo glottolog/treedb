@@ -31,7 +31,8 @@ from .models import LEVEL, Languoid
 from .checks import check
 
 from .queries import (print_rows, write_csv, hash_csv,
-                      get_query, get_json_query,
+                      get_query,
+                      write_json_query_csv, get_json_query,
                       print_languoid_stats,
                       iterdescendants)
 
@@ -49,7 +50,8 @@ __all__ = ['ROOT', 'ENGINE',
            'LEVEL', 'Languoid',
            'check',
            'print_rows', 'write_csv', 'hash_csv',
-           'get_query', 'get_json_query',
+           'get_query',
+           'write_json_query_csv', 'get_json_query',
            'print_languoid_stats',
            'iterdescendants',
            'count', 'select', 'text',

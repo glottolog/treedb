@@ -28,7 +28,8 @@ from .models import (LEVEL, FAMILY, LANGUAGE,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
-           'get_query', 'get_json_query',
+           'get_query',
+           'write_json_query_csv', 'get_json_query',
            'print_languoid_stats', 'get_stats_query',
            'iterdescendants']
 
@@ -109,7 +110,7 @@ def hash_rows(rows, *, header=None, name=None, raw=False,
     return result
 
 
-def get_query(*, bind=ENGINE, separator=', ', ordered='id'):
+def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)
 
@@ -280,7 +281,15 @@ def _apply_ordered(select_languoid, path, *, ordered):
         raise ValueError(f'ordered={ordered!r} not implemented')
 
 
-def get_json_query(*, bind=ENGINE, ordered='id', load_json=True):
+def write_json_query_csv(filename=None, *, ordered='id', bind=ENGINE):
+    if filename is None:
+        filename = f'{__package__}.languoids-json_query.csv'
+
+    query = get_json_query(ordered=ordered, load_json=False, bind=bind)
+    return write_csv(query, filename=filename)
+
+
+def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     json_array = sa.func.json_array
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
