@@ -475,7 +475,7 @@ def print_languoid_stats(*, bind=ENGINE):
     select_stats = get_stats_query(bind=bind)
     rows, counts = itertools.tee(select_stats.execute())
 
-    print_rows(rows, format_='{n:5,d} {kind}', bind=bind)
+    print_rows(rows, format_='{n:6,d} {kind}', bind=bind)
 
     sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialect')),
             ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
