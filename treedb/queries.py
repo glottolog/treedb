@@ -559,11 +559,15 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
     tree = Languoid.tree()
 
+    child_tree = sa.join(Child, tree,
+                         tree.c.child_id == Child.id)
+
+    parent_child = sa.outerjoin(Parent, child_tree,
+                                tree.c.parent_id == Parent.id)
+
     select_pairs = select([
             Parent.id.label('parent_id'), Child.id.label('child_id'),
-        ], bind=bind).select_from(
-            sa.outerjoin(Parent, tree, tree.c.parent_id == Parent.id)
-            .outerjoin(Child, tree.c.child_id == Child.id))\
+        ], bind=bind).select_from(parent_child)\
         .order_by('parent_id', 'child_id')
 
     if parent_level is not None:
