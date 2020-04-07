@@ -22,9 +22,11 @@ from .languoids import (iterlanguoids,
 
 from .languoids_json import write_json_csv, checksum
 
-from .backend import (set_engine, load, Dataset, Producer, Session,
+from .backend import (set_engine, Dataset, Producer, Session,
                       print_schema, dump_sql, export, backup,
                       print_table_sql, print_query_sql, select_stats)
+
+from .backend_load import load
 
 from .models import LEVEL, Languoid
 
@@ -44,9 +46,10 @@ __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
            'iterlanguoids', 'compare_with_files', 'write_files',
            'write_json_csv', 'checksum',
-           'set_engine', 'load', 'Dataset', 'Producer', 'Session',
+           'set_engine', 'Dataset', 'Producer', 'Session',
            'print_schema', 'dump_sql', 'export', 'backup',
            'print_table_sql', 'print_query_sql', 'select_stats',
+           'load',
            'LEVEL', 'Languoid',
            'check',
            'print_rows', 'write_csv', 'hash_csv',
