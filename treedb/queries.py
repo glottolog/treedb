@@ -488,6 +488,7 @@ def print_languoid_stats(*, bind=ENGINE):
     print_rows(rows, format_='{n:6,d} {kind}', bind=bind)
 
     sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
+            ('roots', ('families', 'isolates')),
             ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
             ('languages', ('All', BOOKKEEPING))]
 
@@ -518,6 +519,8 @@ def get_stats_query(*, bind=ENGINE):
 
         yield languoid_count('isolates').where(Languoid.level == LANGUAGE)\
             .where(Languoid.parent_id == None)
+
+        yield languoid_count('roots').where(Languoid.parent_id == None)
 
         yield languoid_count('languages').where(Languoid.level == LANGUAGE)
 
