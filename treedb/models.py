@@ -220,11 +220,14 @@ class Languoid(Model):
 
         Child, Family = (aliased(Languoid, name=n) for n in ('child', 'family'))
 
-        tree_family = sa.join(tree, Family, sa.and_(tree.c.parent_id == Family.id,
-                                                    tree.c.terminal == True))
+        tree_family = sa.join(tree, Family,
+                              sa.and_(tree.c.parent_id == Family.id,
+                                      tree.c.terminal == True))
 
-        join = sa.join if innerjoin else sa.outerjoin
-        child_family = join(Child, tree_family, tree.c.child_id == Child.id)
+        child_family = sa.join(Child, tree_family,
+                               tree.c.child_id == Child.id,
+                               isouter=not innerjoin)
+
         return Child, Family, child_family
 
     @classmethod
