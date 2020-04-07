@@ -2,10 +2,16 @@ Changelog
 =========
 
 
-Version 0.7.2 (in development)
-------------------------------
+Version 0.8
+-----------
 
+Add stats and path_json views.
 
+Extend formatting of treedb.print_languoid_stats(), warn in inconsistencies.
+
+Fix Languoid.tree(include_self=False).
+
+Add names to query aliases for better SQL output.
 
 
 Version 0.7.1
