@@ -292,11 +292,11 @@ def _apply_ordered(select_languoid, path, *, ordered):
         raise ValueError(f'ordered={ordered!r} not implemented')
 
 
-def write_json_query_csv(filename=None, *, ordered='id', bind=ENGINE):
+def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
     if filename is None:
         filename = f'{__package__}.languoids-json_query.csv'
 
-    query = get_json_query(ordered=ordered, load_json=False, bind=bind)
+    query = get_json_query(ordered=ordered, load_json=raw, bind=bind)
     return write_csv(query, filename=filename)
 
 
