@@ -215,20 +215,29 @@ class Languoid(Model):
         return sa.select([sa.func.json_group_array(squery.c.path_part)]).as_scalar()
 
     @classmethod
-    def child_family(cls, innerjoin=False):
+    def child_root(cls, innerjoin=False, rightjoin=False):
         tree = Languoid.tree(include_self=False, with_terminal=True)
 
-        Child, Family = (aliased(Languoid, name=n) for n in ('child', 'family'))
+        Child, Root = (aliased(Languoid, name=n) for n in ('child', 'root'))
 
-        tree_family = sa.join(tree, Family,
-                              sa.and_(tree.c.parent_id == Family.id,
-                                      tree.c.terminal == True))
+        is_child = (tree.c.child_id == Child.id)
 
-        child_family = sa.join(Child, tree_family,
-                               tree.c.child_id == Child.id,
-                               isouter=not innerjoin)
+        is_root = sa.and_(tree.c.parent_id == Root.id,
+                          tree.c.terminal == True)
 
-        return Child, Family, child_family
+        if innerjoin:
+            child_root = sa.join(Child, tree, is_child)\
+                           .join(Root, is_root)
+        elif rightjoin:
+            child_tree = sa.join(Child, tree, is_child)
+            child_root = sa.outerjoin(Root, child_tree,
+                                      sa.and_(is_root,
+                                              Root.parent_id == None))
+        else:
+            tree_root = sa.join(tree, Root, is_root)
+            child_root = sa.outerjoin(Child, tree_root, is_child)
+
+        return Child, Root, child_root
 
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,

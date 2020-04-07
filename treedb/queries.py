@@ -509,7 +509,7 @@ def get_stats_query(*, bind=ENGINE):
         return select([sa.literal(kind).label('kind'),
                        sa.func.count().label('n')]).select_from(fromclause)
 
-    Child, Family, child_family = Languoid.child_family(innerjoin=False)
+    Child, Root, child_root = Languoid.child_root(innerjoin=False)
 
     def iterselects():
         yield languoid_count('languoids')
@@ -530,24 +530,24 @@ def get_stats_query(*, bind=ENGINE):
         yield languoid_count('dialects').where(Languoid.level == DIALECT)
 
         other = SPECIAL_FAMILIES + (BOOKKEEPING,)
-        yield languoid_count('Spoken L1 Languages', child_family)\
+        yield languoid_count('Spoken L1 Languages', child_root)\
               .where(Child.level == LANGUAGE)\
-              .where(sa.or_(Family.name == None, Family.name.notin_(other)))
+              .where(sa.or_(Root.name == None, Root.name.notin_(other)))
 
         for name in SPECIAL_FAMILIES:
-            yield languoid_count(name, child_family)\
+            yield languoid_count(name, child_root)\
                   .where(Child.level == LANGUAGE)\
-                  .where(Family.name == name)
+                  .where(Root.name == name)
 
-        yield languoid_count('All', child_family)\
+        yield languoid_count('All', child_root)\
               .where(Child.level == LANGUAGE)\
-              .where(Family.name.op('IS NOT')(BOOKKEEPING))
+              .where(Root.name.op('IS NOT')(BOOKKEEPING))
               # TODO: the following does not work with literal_binds
               #.where(Family.name.is_distinct_from(BOOKKEEPING))
 
-        yield languoid_count(BOOKKEEPING, child_family)\
+        yield languoid_count(BOOKKEEPING, child_root)\
                 .where(Child.level == LANGUAGE)\
-                .where(Family.name == BOOKKEEPING)
+                .where(Root.name == BOOKKEEPING)
 
     return sa.union_all(*iterselects(), bind=bind)
 
