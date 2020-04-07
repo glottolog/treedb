@@ -2,6 +2,8 @@
 
 import contextlib
 import datetime
+import gzip
+import io
 import logging
 import re
 import warnings
@@ -178,7 +180,7 @@ def dump_sql(filename=None, *, progress_after=100_000,
              encoding=_tools.ENCODING, engine=ENGINE):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
-        filename = engine.file_with_suffix('.sql').name
+        filename = engine.file_with_suffix('.sql.gz').name
     path = _tools.path_from_filename(filename)
     log.info('dump sql to %r', path)
 
@@ -186,9 +188,18 @@ def dump_sql(filename=None, *, progress_after=100_000,
         warnings.warn(f'delete present file: {path!r}')
         path.unlink()
 
+    if path.suffix == '.gz':
+        @contextlib.contextmanager
+        def open_path(encoding):
+            with gzip.open(path, 'wb') as z,\
+                 io.TextIOWrapper(z, encoding=encoding) as f:
+                yield f
+    else:
+        open_path = path.open
+
     n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
-         path.open('wt', encoding=encoding) as f:
+         open_path(encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
             if not (n % progress_after):

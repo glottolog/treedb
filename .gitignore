@@ -24,4 +24,5 @@ Thumbs.db
 /*.sqlite3
 /*.csv
 /*.sql
+/*.sql.gz
 /*.zip
