@@ -13,7 +13,8 @@ Version 0.8
 
 Add stats and path_json views.
 
-Extend formatting of treedb.print_languoid_stats(), warn in inconsistencies.
+Extend formatting of treedb.print_languoid_stats(), warn in case of
+inconsistencies.
 
 Fix Languoid.tree(include_self=False).
 
