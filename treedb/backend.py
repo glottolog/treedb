@@ -17,7 +17,8 @@ import sqlalchemy.ext.declarative
 
 from . import (tools as _tools,
                files as _files,
-               proxies as _proxies)
+               proxies as _proxies,
+               backend_views as _views)
 
 from . import ROOT, ENGINE
 
@@ -29,6 +30,7 @@ __all__ = ['set_engine',
            'dump_sql', 'export', 'backup',
            'print_table_sql',
            'print_query_sql', 'get_query_sql', 'expression_compile',
+           'view', 'create_view',
            'select_stats']
 
 
@@ -178,7 +180,9 @@ Session = sa.orm.sessionmaker(bind=ENGINE)
 def load(filename=ENGINE, repo_root=None, *,
          treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
-         exclude_raw=False, from_raw=None, force_rebuild=False,
+         exclude_raw=False, from_raw=None,
+         exclude_views=False,
+         force_rebuild=False,
          metadata=Model.metadata):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     if repo_root is not None:
@@ -253,10 +257,14 @@ def load(filename=ENGINE, repo_root=None, *,
 
     # import here to register models for create_all()
     if not exclude_raw:
-        log.debug('import module raw')
+        log.debug('import module %s.raw', __package__)
         from . import raw
 
-    log.debug('import module models_load')
+    if not exclude_views:
+        log.debug('import module %s.views', __package__)
+        from . import views
+
+    log.debug('import module %s.models_load', __package__)
     from . import models_load
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
@@ -467,6 +475,19 @@ def get_query_sql(query=None, literal_binds=True):
 
 def expression_compile(expression, literal_binds=True):
     return expression.compile(compile_kwargs={'literal_binds': literal_binds})
+
+
+def view(name, *, metadata=Model.metadata):
+    def decorator(func):
+        selectable = func()
+        return create_view(name, selectable, metadata=metadata)
+
+    return decorator
+
+
+def create_view(name, selectable, *, metadata=Model.metadata):
+    log.debug('create_view %r on %r', name, metadata)
+    return _views.view(name, selectable, metadata=metadata)
 
 
 sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',

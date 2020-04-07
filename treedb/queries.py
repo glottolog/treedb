@@ -538,7 +538,9 @@ def get_stats_query(*, bind=ENGINE):
 
         yield languoid_count('All', child_family)\
               .where(Child.level == LANGUAGE)\
-              .where(Family.name.is_distinct_from(BOOKKEEPING))
+              .where(Family.name.op('IS NOT')(BOOKKEEPING))
+              # TODO: the following does not work with literal_binds
+              #.where(Family.name.is_distinct_from(BOOKKEEPING))
 
         yield languoid_count(BOOKKEEPING, child_family)\
                 .where(Child.level == LANGUAGE)\
