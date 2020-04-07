@@ -271,7 +271,7 @@ def load(filename=ENGINE, repo_root=None, *,
         conn.execute(f'PRAGMA application_id = {application_id:d}')
 
         log.debug('run create_all')
-        Model.metadata.create_all(bind=conn)
+        metadata.create_all(bind=conn)
 
     log.info('record git commit in %r', root)
     run = functools.partial(_tools.run, cwd=str(root),
