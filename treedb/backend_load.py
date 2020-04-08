@@ -111,6 +111,8 @@ def load(filename=ENGINE, repo_root=None, *,
             from . import views
         except Exception:
             log.exception('error importing %s.views', __package__)
+        else:
+            assert views
 
     log.debug('import module %s.models_load', __package__)
     from . import models_load

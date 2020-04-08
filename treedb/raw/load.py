@@ -2,7 +2,7 @@
 
 import logging
 
-from sqlalchemy import insert
+import sqlalchemy as sa
 
 from .. import (tools as _tools,
                 files as _files,
@@ -51,11 +51,11 @@ def itervalues(cfg, file_id, options):
 
 
 def load(root, conn):
-    insert_file = insert(File, bind=conn).execute
+    insert_file = sa.insert(File, bind=conn).execute
 
-    options = Options(insert=insert(Option, bind=conn).execute)
+    options = Options(insert=sa.insert(Option, bind=conn).execute)
 
-    insert_value = insert(Value, bind=conn).execute
+    insert_value = sa.insert(Value, bind=conn).execute
 
     for path_tuple, dentry, cfg in _files.iterfiles(root):
         sha256 = _tools.sha256sum(dentry.path, raw=True).hexdigest()

@@ -74,6 +74,7 @@ class Languoid(Model):
     hid = Column(Text, CheckConstraint('length(hid) >= 3'), unique=True)
     iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'),
                       unique=True)
+
     latitude = Column(Float, CheckConstraint('latitude BETWEEN -90 AND 90'))
     longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
@@ -416,6 +417,7 @@ class Bibfile(Model):
     __tablename__ = 'bibfile'
 
     id = Column(Integer, primary_key=True)
+
     name = Column(String, CheckConstraint("name != ''"), nullable=False,
                   unique=True)
 
@@ -432,6 +434,7 @@ class Bibitem(Model):
     __tablename__ = 'bibitem'
 
     id = Column(Integer, primary_key=True)
+
     bibfile_id = Column(ForeignKey('bibfile.id'), nullable=False)
     bibkey = Column(Text, CheckConstraint("bibkey != ''"), nullable=False)
 
@@ -599,6 +602,7 @@ class Endangerment(Model):
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
     status = Column(Enum(*ENDANGERMENT_STATUS), nullable=False)
+
     source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
     date = Column(DateTime, nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)

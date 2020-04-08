@@ -27,7 +27,7 @@ class DropView(sa.schema.DDLElement):
 
 
 @sa.ext.compiler.compiles(CreateView)
-def compile(element, compiler, **kwargs):
+def compile_create_view(element, compiler, **kwargs):
     log.debug('CREATE VIEW %r', element.name)
     select = compiler.sql_compiler.process(element.selectable,
                                            literal_binds=True)
@@ -35,7 +35,7 @@ def compile(element, compiler, **kwargs):
 
 
 @sa.ext.compiler.compiles(DropView)
-def compile(element, compiler, **kwargs):
+def compile_drop_view(element, compiler, **kwargs):
     log.debug('DROP VIEW %r', element.name)
     return f'DROP VIEW {element.name}'
 

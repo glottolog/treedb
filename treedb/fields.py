@@ -1,4 +1,4 @@
-# fields.py
+# fields.py - known md.ini (section, option) pairs
 
 """Define known (section, option) pairs and if they are lists of lines."""
 

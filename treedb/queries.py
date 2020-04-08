@@ -1,4 +1,4 @@
-# queries.py - sqlalchemy queries for sqlite3 db
+# queries.py - batteries-included sqlalchemy queries for sqlite3 db
 
 import hashlib
 import logging
@@ -287,7 +287,7 @@ def _apply_ordered(select_languoid, path, *, ordered):
     elif ordered in (True, 'id'):
         select_languoid.append_order_by(Languoid.id)
     elif ordered == 'path':
-       select_languoid.append_order_by(path)
+        select_languoid.append_order_by(path)
     else:
         raise ValueError(f'ordered={ordered!r} not implemented')
 
@@ -531,23 +531,23 @@ def get_stats_query(*, bind=ENGINE):
 
         other = SPECIAL_FAMILIES + (BOOKKEEPING,)
         yield languoid_count('Spoken L1 Languages', child_root)\
-              .where(Child.level == LANGUAGE)\
-              .where(sa.or_(Root.name == None, Root.name.notin_(other)))
+            .where(Child.level == LANGUAGE)\
+            .where(sa.or_(Root.name == None, Root.name.notin_(other)))
 
         for name in SPECIAL_FAMILIES:
             yield languoid_count(name, child_root)\
-                  .where(Child.level == LANGUAGE)\
-                  .where(Root.name == name)
+                .where(Child.level == LANGUAGE)\
+                .where(Root.name == name)
 
+        # TODO: the following does not work with literal_binds
+        #       .where(Family.name.is_distinct_from(BOOKKEEPING))
         yield languoid_count('All', child_root)\
-              .where(Child.level == LANGUAGE)\
-              .where(Root.name.op('IS NOT')(BOOKKEEPING))
-              # TODO: the following does not work with literal_binds
-              #.where(Family.name.is_distinct_from(BOOKKEEPING))
+            .where(Child.level == LANGUAGE)\
+            .where(Root.name.op('IS NOT')(BOOKKEEPING))
 
         yield languoid_count(BOOKKEEPING, child_root)\
-                .where(Child.level == LANGUAGE)\
-                .where(Root.name == BOOKKEEPING)
+            .where(Child.level == LANGUAGE)\
+            .where(Root.name == BOOKKEEPING)
 
     return sa.union_all(*iterselects(), bind=bind)
 

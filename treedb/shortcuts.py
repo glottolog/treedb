@@ -1,4 +1,4 @@
-# shortcuts.py - sqlalchemy, and pandas short-cut functions
+# shortcuts.py - sqlalchemy and pandas convenience short-cut functions
 
 import functools
 import warnings

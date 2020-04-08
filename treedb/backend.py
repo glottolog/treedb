@@ -16,7 +16,6 @@ import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 from . import (tools as _tools,
-               files as _files,
                proxies as _proxies,
                backend_views as _views)
 
@@ -117,6 +116,7 @@ class Dataset(Model):
     def get_dataset(cls, *, bind, strict, fallback=None):
         table = cls.__tablename__
         log.debug('read %r from %r', table, bind)
+
         try:
             result, = sa.select([cls], bind=bind).execute()
         except sa.exc.OperationalError as e:
@@ -236,12 +236,15 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
             if table.name in skip:
                 log.debug('skip table %r', table.name)
                 continue
+
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
             header = rows.keys()
+
             date_time = datetime.datetime.now().timetuple()[:6]
             info = zipfile.ZipInfo(f'{table.name}.csv', date_time=date_time)
             info.compress_type = zipfile.ZIP_DEFLATED
+
             with z.open(info, 'w') as f:
                 csv23.write_csv(f, rows, header=header,
                                 dialect=dialect, encoding=encoding)

@@ -1,9 +1,9 @@
-# fixex.py
+# fixes.py
 
 import logging
 
-from sqlalchemy import delete, exists, update, bindparam, func
-from sqlalchemy.orm import aliased
+import sqlalchemy as sa
+import sqlalchemy.orm
 
 from .. import ENGINE
 
@@ -35,11 +35,11 @@ def dropfunc(func, *, bind=ENGINE):
 
 @dropfunc
 def drop_duplicate_sources():
-    Other = aliased(Value)
-    return delete(Value).where(exists()
+    Other = sa.orm.aliased(Value, name='other')
+    return sa.delete(Value).where(sa.exists()
                                .where(Option.id == Value.option_id)
                                .where(Option.section == 'sources'))\
-                        .where(exists()
+                        .where(sa.exists()
                                .where(Other.file_id == Value.file_id)
                                .where(Other.option_id == Value.option_id)
                                .where(Other.value == Value.value)
@@ -48,11 +48,11 @@ def drop_duplicate_sources():
 
 @dropfunc
 def drop_duplicated_triggers():
-    Other = aliased(Value)
-    return delete(Value).where(exists()
+    Other = sa.orm.aliased(Value, namme='other')
+    return sa.delete(Value).where(sa.exists()
                                .where(Option.id == Value.option_id)
                                .where(Option.section == 'triggers'))\
-                        .where(exists()
+                        .where(sa.exists()
                                .where(Other.file_id == Value.file_id)
                                .where(Other.option_id == Value.option_id)
                                .where(Other.value == Value.value)
@@ -61,13 +61,13 @@ def drop_duplicated_triggers():
 
 @dropfunc
 def drop_duplicated_crefs():
-    Other = aliased(Value)
-    return delete(Value).where(exists()
+    Other = sa.orm.aliased(Value, name='other')
+    return sa.delete(Value).where(sa.exists()
                                .where(Option.id == Value.option_id)
                                .where(Option.section == 'classification')
                                .where(Option.option.in_(('familyrefs',
                                                          'subrefs'))))\
-                        .where(exists()
+                        .where(sa.exists()
                                .where(Other.file_id == Value.file_id)
                                .where(Other.option_id == Value.option_id)
                                .where(Other.value == Value.value)
@@ -82,13 +82,13 @@ def update_countries(bind=ENGINE):
                'Macedonia, Republic of (MK)': 'North Macedonia (MK)',
                'Swaziland (SZ)': 'Eswatini (SZ)'}
 
-    query = update(Value, bind=bind)\
-        .where(exists()
+    query = sa.update(Value, bind=bind)\
+        .where(sa.exists()
                .where(Option.id == Value.option_id)
                .where(Option.section == 'core')
                .where(Option.option == 'countries'))\
-        .where(Value.value == bindparam('old'))\
-        .values(value=bindparam('new'))
+        .where(Value.value == sa.bindparam('old'))\
+        .values(value=sa.bindparam('new'))
 
     for old, new in old_new.items():
         log.info('update countries: %r -> %r', old, new)
@@ -97,13 +97,13 @@ def update_countries(bind=ENGINE):
 
 
 def update_wikidata_links(bind=ENGINE):
-    query = update(Value, bind=bind)\
-        .where(exists()
+    query = sa.update(Value, bind=bind)\
+        .where(sa.exists()
                .where(Option.id == Value.option_id)
                .where(Option.section == 'core')
                .where(Option.option == 'links'))\
         .where(Value.value.like('http://www.wikidata.org/%'))\
-        .values(value=func.replace(Value.value, 'http://', 'https://'))
+        .values(value=sa.func.replace(Value.value, 'http://', 'https://'))
 
     rows_updated = query.execute().rowcount
     log.info('%d rows updated', rows_updated)

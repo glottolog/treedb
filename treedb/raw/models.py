@@ -1,8 +1,9 @@
 # models.py
 
+import sqlalchemy as sa
+
 from sqlalchemy import (Column, Integer, String, Text, Boolean,
-                        ForeignKey, CheckConstraint, UniqueConstraint,
-                        func)
+                        ForeignKey, CheckConstraint, UniqueConstraint)
 
 from ..backend import Model
 
@@ -33,7 +34,7 @@ class File(Model):
 
     @classmethod
     def path_depth(cls, label='path_depth'):
-        return ((func.length(cls.path) + 1) / 9).label(label)
+        return ((sa.func.length(cls.path) + 1) / 9).label(label)
 
 
 class Option(Model):

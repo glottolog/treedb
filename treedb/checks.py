@@ -1,4 +1,4 @@
-# checks.py
+# checks.py - check application-specific invariants
 
 import inspect
 import itertools
@@ -204,5 +204,6 @@ def no_empty_files(session):
         return session.query(sa.true()).filter(sa.false())
 
     from .raw import File, Value
+
     return session.query(File)\
            .filter(~sa.exists().where(Value.file_id == File.id))

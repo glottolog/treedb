@@ -1,6 +1,6 @@
-# treedb - load ../../glottolog/languoids/tree/**/md.ini into sqlite3
+# treedb - load glottolog/languoids/tree/**/md.ini into sqlite3
 
-"""Load glottolog lanuoid tree ini files into SQLite3 database."""
+"""Load Glottolog lanuoid tree md.ini files into SQLite3 database."""
 
 CONFIG = 'treedb.ini'
 
