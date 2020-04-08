@@ -28,7 +28,7 @@ __all__ = ['set_engine',
            'dump_sql', 'export', 'backup',
            'print_table_sql',
            'print_query_sql', 'get_query_sql', 'expression_compile',
-           'view', 'create_view',
+           'create_view',
            'select_stats']
 
 
@@ -326,14 +326,6 @@ def get_query_sql(query=None, literal_binds=True):
 
 def expression_compile(expression, literal_binds=True):
     return expression.compile(compile_kwargs={'literal_binds': literal_binds})
-
-
-def view(name, *, metadata=Model.metadata):
-    def decorator(func):
-        selectable = func()
-        return create_view(name, selectable, metadata=metadata)
-
-    return decorator
 
 
 def create_view(name, selectable, *, metadata=Model.metadata):
