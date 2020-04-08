@@ -44,34 +44,23 @@ Links
 Quickstart
 ----------
 
-Clone this repository side-by-side to your clone of the ``glottolog``
-`master repo`_:
+Install ``treedb`` (and dependencies):
+
+.. code:: bash
+
+    $ pip install treedb
+
+Clone the Glottolog `master repo`_ :
 
 .. code:: bash
 
     $ git clone https://github.com/glottolog/glottolog.git
-    $ git clone https://github.com/glottolog/treedb.git
-    $ cd treedb
 
-Note: ``treedb`` expects to find it under ``../glottolog/`` relative to its
-repository root.
+Note: ``treedb`` expects to find it under ``./glottolog/`` by default (i.e. in
+the current directory), use ``treedb.set_root()`` to point it to a different
+path.
 
-Optional: Create and activate a venv_ for installation into an isolated Python
-environment:
-
-.. code:: bash
-
-    $ python -m venv .venv  # PY3
-    $ source .venv/bin/activate  # Windows: .venv/Scripts/activate.bat
-
-Install ``treedb`` (and dependencies) directly from your clone (editable
-install):
-
-.. code:: bash
-
-    $ pip install -e .
-
-Load ``../glottolog/languoids/tree/**/md.ini`` into an in-memory ``sqlite3`` database.
+Load ``./glottolog/languoids/tree/**/md.ini`` into an in-memory ``sqlite3`` database.
 Write the denormalized example query into ``treedb.csv``:
 
 .. code:: bash
@@ -103,7 +92,7 @@ Use ``treedb.iterlanguoids()`` to iterate over languoids as (<path>, ``dict``) p
 
 Note: This is a low-level interface, which does not require loading.
 
-Load the database into treedb.sqlite3 (and set the default engine):
+Load the database into ``treedb.sqlite3`` (and set the default ``engine``):
 
 .. code:: python
 
