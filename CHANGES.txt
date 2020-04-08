@@ -5,7 +5,15 @@ Changelog
 Version 0.8.1 (in development)
 ------------------------------
 
+Add ``roots`` (top-level languoids) count to ``treedb.print_languoid_stats()``.
+
+Gzip-compress `treedb.dump_sql()` by default.
+
 Fix reference to old license.
+
+Add ``raw=False`` to ``treedb.write_json_query_csv()``.
+
+Update documentation.
 
 
 Version 0.8
