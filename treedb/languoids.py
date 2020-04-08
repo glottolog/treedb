@@ -168,7 +168,7 @@ def formataltname(value):
 
 def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
                   progress_after=_tools.PROGRESS_AFTER):
-    """Yield dicts from ../../languoids/tree/**/md.ini files."""
+    """Yield dicts from languoids/tree/**/md.ini files."""
     log.info('generate languoids')
 
     if hasattr(root_or_bind, 'execute'):

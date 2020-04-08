@@ -21,18 +21,38 @@ from . import (tools as _tools,
 
 from . import ENGINE
 
-__all__ = ['set_engine',
-           'Model', 'print_schema',
+__all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
+           'set_engine',
+           'Model', 'create_view', 'print_schema',
            'Dataset', 'Producer',
            'Session',
-           'dump_sql', 'export', 'backup',
+           'backup', 'dump_sql', 'export',
            'print_table_sql',
-           'print_query_sql', 'get_query_sql', 'expression_compile',
-           'create_view',
            'select_stats']
 
 
 log = logging.getLogger(__name__)
+
+
+def print_query_sql(query=None, literal_binds=True):
+    """Print the literal SQL for the given query."""
+    print(get_query_sql(query, literal_binds=literal_binds))
+
+
+def get_query_sql(query=None, literal_binds=True):
+    """Return the literal SQL for the given query."""
+    if query is None:
+        from . import queries
+
+        query = queries.get_query()
+
+    compiled = expression_compile(query, literal_binds=literal_binds)
+    return compiled.string
+
+
+def expression_compile(expression, literal_binds=True):
+    """Return literal compiled expression."""
+    return expression.compile(compile_kwargs={'literal_binds': literal_binds})
 
 
 def set_engine(filename, *, resolve=False, require=False, title=None):
@@ -77,12 +97,19 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
 
 
 def _regexp(pattern, value):
+    """Implement the REGEXP operator for sqlite3."""
     if value is None:
         return None
     return re.search(pattern, value) is not None
 
 
 Model = sa.ext.declarative.declarative_base()
+
+
+def create_view(name, selectable, *, metadata=Model.metadata):
+    """Register a CREATE VIEW for the given selectable on metadata."""
+    log.debug('create_view %r on %r', name, metadata)
+    return _views.view(name, selectable, metadata=metadata)
 
 
 def print_schema(metadata=Model.metadata, *, engine=ENGINE):
@@ -149,6 +176,7 @@ class Dataset(Model):
 
 
 class Producer(Model):
+    """Name and version of the package that created a __dataset__."""
 
     __tablename__ = '__producer__'
 
@@ -174,6 +202,44 @@ class Producer(Model):
 
 
 Session = sa.orm.sessionmaker(bind=ENGINE)
+
+
+def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
+    """Write the database into another .sqlite3 file and return its engine."""
+    log.info('backup database')
+    log.info('source: %r', engine)
+
+    url = 'sqlite://'
+    if filename is not None:
+        path = _tools.path_from_filename(filename)
+        if path.exists():
+            if engine.file is not None and path.samefile(engine.file):
+                raise ValueError(f'backup destination {path!r} same file as'
+                                 f' source {engine.file!r}')
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
+        url += f'/{path}'
+
+    log.info('destination: %r', url)
+    result = sa.create_engine(url)
+
+    def progress(status, remaining, total):
+        log.info('%d of %d pages copied', total - remaining, total)
+
+    with contextlib.closing(engine.raw_connection()) as source,\
+         contextlib.closing(result.raw_connection()) as dest:
+        log.debug('sqlite3.backup(%r)', dest.connection)
+
+        dest.execute('PRAGMA synchronous = OFF')
+        dest.execute('PRAGMA journal_mode = MEMORY')
+
+        with dest.connection as dbapi_conn:
+            source.backup(dbapi_conn, pages=pages, progress=progress)
+
+    log.info('database backup complete')
+    if as_new_engine:
+        set_engine(result)
+    return result
 
 
 def dump_sql(filename=None, *, progress_after=100_000,
@@ -253,45 +319,8 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
     return _tools.path_from_filename(filename)
 
 
-def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
-    """Write the database into another .sqlite3 file and return its engine."""
-    log.info('backup database')
-    log.info('source: %r', engine)
-
-    url = 'sqlite://'
-    if filename is not None:
-        path = _tools.path_from_filename(filename)
-        if path.exists():
-            if engine.file is not None and path.samefile(engine.file):
-                raise ValueError(f'backup destination {path!r} same file as'
-                                 f' source {engine.file!r}')
-            warnings.warn(f'delete present file: {path!r}')
-            path.unlink()
-        url += f'/{path}'
-
-    log.info('destination: %r', url)
-    result = sa.create_engine(url)
-
-    def progress(status, remaining, total):
-        log.info('%d of %d pages copied', total - remaining, total)
-
-    with contextlib.closing(engine.raw_connection()) as source,\
-         contextlib.closing(result.raw_connection()) as dest:
-        log.debug('sqlite3.backup(%r)', dest.connection)
-
-        dest.execute('PRAGMA synchronous = OFF')
-        dest.execute('PRAGMA journal_mode = MEMORY')
-
-        with dest.connection as dbapi_conn:
-            source.backup(dbapi_conn, pages=pages, progress=progress)
-
-    log.info('database backup complete')
-    if as_new_engine:
-        set_engine(result)
-    return result
-
-
 def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
+    """Print CREATE TABLE for the given table and its number of rows."""
     if hasattr(model_or_table, '__tablename__'):
         table_name = model_or_table.__tablename__
         label = model_or_table.__name__.lower()
@@ -310,35 +339,8 @@ def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
         print(select_nrows.scalar())
 
 
-def print_query_sql(query=None, literal_binds=True):
-    print(get_query_sql(query, literal_binds=literal_binds))
-
-
-def get_query_sql(query=None, literal_binds=True):
-    if query is None:
-        from . import queries
-
-        query = queries.get_query()
-
-    compiled = expression_compile(query, literal_binds=literal_binds)
-    return compiled.string
-
-
-def expression_compile(expression, literal_binds=True):
-    return expression.compile(compile_kwargs={'literal_binds': literal_binds})
-
-
-def create_view(name, selectable, *, metadata=Model.metadata):
-    log.debug('create_view %r on %r', name, metadata)
-    return _views.view(name, selectable, metadata=metadata)
-
-
-sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',
-                                                           'type',
-                                                           'sql']))
-
-
 def select_sql(table_name, *, bind=ENGINE):
+    """Select CREATE_TABLE of the given table name from sqlite_master."""
     result = sa.select([sqlite_master.c.sql], bind=bind)\
         .where(sqlite_master.c.type == 'table')\
         .where(sqlite_master.c.name == sa.bindparam('table_name'))
@@ -348,7 +350,13 @@ def select_sql(table_name, *, bind=ENGINE):
     return result
 
 
+sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',
+                                                           'type',
+                                                           'sql']))
+
+
 def select_stats(*, bind=ENGINE):
+    """Select table name and number ofrows for all tables from sqlite_master."""
     table_name = sqlite_master.c.name.label('table_name')
 
     select_tables = sa.select([table_name], bind=bind)\

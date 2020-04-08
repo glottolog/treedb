@@ -73,11 +73,12 @@ log = logging.getLogger(__name__)
 
 
 def is_known(section, option):
+    """Retun True if the section option is known or in an ALL_OPTIONS section."""
     return (section, ALL_OPTIONS) in FIELDS or (section, option) in FIELDS
 
 
 def is_lines(section, option, *, unknown_as_scalar=True):
-    """Return whether the section option is treated as list of lines."""
+    """Return True if the section option is treated as list of lines."""
     result = FIELDS.get((section, ALL_OPTIONS))
 
     if result is None:
@@ -100,5 +101,6 @@ sorted_sections = SECTION_ORDER.sorted
 
 
 def sorted_options(section, options):
+    """Return the given section options as sorted list in canonical order."""
     fields = FIELD_ORDER.sorted((section, o) for o in options)
     return [o for _, o in fields]

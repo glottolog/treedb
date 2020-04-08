@@ -41,6 +41,7 @@ def compile_drop_view(element, compiler, **kwargs):
 
 
 def view(name, selectable, *, metadata):
+    """Register create and drop view DDL on the given metadata."""
     t = sa.table(name)
 
     for c in selectable.c:

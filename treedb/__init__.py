@@ -22,9 +22,10 @@ from .languoids import (iterlanguoids,
 
 from .languoids_json import write_json_csv, checksum
 
-from .backend import (set_engine, Dataset, Producer, Session,
-                      print_schema, dump_sql, export, backup,
-                      print_table_sql, print_query_sql, select_stats)
+from .backend import (print_query_sql, set_engine, print_schema,
+                      Dataset, Producer, Session,
+                      backup, dump_sql, export,
+                      print_table_sql, select_stats)
 
 from .backend_load import load
 
@@ -46,9 +47,10 @@ __all__ = ['ROOT', 'ENGINE',
            'set_root', 'iterfiles',
            'iterlanguoids', 'compare_with_files', 'write_files',
            'write_json_csv', 'checksum',
-           'set_engine', 'Dataset', 'Producer', 'Session',
-           'print_schema', 'dump_sql', 'export', 'backup',
-           'print_table_sql', 'print_query_sql', 'select_stats',
+           'print_query_sql', 'set_engine', 'print_schema',
+           'Dataset', 'Producer', 'Session',
+           'backup', 'dump_sql', 'export',
+           'print_table_sql',  'select_stats',
            'load',
            'LEVEL', 'Languoid',
            'check',

@@ -57,6 +57,7 @@ class ConfigParser(configparser.ConfigParser):
 
 def configure(config_path=CONFIG, *, loglevel=None, log_sql=None,
               default_repo_root=DEFAULT_ROOT):
+    """Set root, and engine and configure logging from the given .ini file."""
     log.info('configure from %r', config_path)
     log.debug('default repo root: %r', default_repo_root)
 
