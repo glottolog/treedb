@@ -5,18 +5,18 @@ Changelog
 Version 0.8.1 (in development)
 ------------------------------
 
-Fix obsolete reference to old license.
+Fix reference to old license.
 
 
 Version 0.8
 -----------
 
-Add stats and path_json views.
+Add ``stats`` and ``path_json`` SQL views.
 
-Extend formatting of treedb.print_languoid_stats(), warn in case of
+Extend formatting of ``treedb.print_languoid_stats()```and warn in case of
 inconsistencies.
 
-Fix Languoid.tree(include_self=False).
+Fix ``Languoid.tree(include_self=False)``.
 
 Add names to query aliases for better SQL output.
 
@@ -24,51 +24,56 @@ Add names to query aliases for better SQL output.
 Version 0.7.1
 -------------
 
-Add treedb.print_languoid_stats() (reproducing
+Add ``treedb.print_languoid_stats()`` (reproducing
 https://glottolog.org/glottolog/glottologinformation).
 
-Add treedb.write_json_query_csv. To support this, treedb.get_json_query() now
-yields pairs of path and languoid json (instead of json of a two-item array
-with a path_part array as first element).
+Add ``treedb.write_json_query_csv()``. To support this,
+``treedb.get_json_query()`` now yields pairs of path and languoid json
+(instead of json of a two-item array with a path_part array as first element).
 
 
 Version 0.7
 -----------
 
-Add treedb.configure() and locate the glottolog repo_root in treedb.ini in cwd.
+Add ``treedb.configure()`` trying to read the Glottolog ``repo_root`` from
+``treedb.ini`` in the current working directory.
 
-Add logging config to the dev environment treedb.ini: create treedb.log.
+Add ``logging`` config to the development environment as ``treedb.ini``
+(write ``treedb.log``).
 
 Added handling of present databases when loading from transient in-memory
 database.
 
-Add __producer__ table recording the treedb package version used.
+Add ``__producer__`` table recording the ``treedb`` package version used.
 
 
 Version 0.6
 -----------
 
-Add treedb.checksum().
+Add ``treedb.checksum()``.
 
 
 Version 0.5.1
 -------------
 
-Add replace kwarg to treedb.write_files() and treedb.raw.write_files().
+Add ``replace`` kwarg to ``treedb.write_files()`` and
+``treedb.raw.write_files()``.
 
 
 Version 0.5
 -----------
 
-Add treeb.write_files().
+Add ``treeb.write_files()``.
 
-Replace compare_with_raw(root, bind) to compare_with_files(bind, root).
+Replace ``treedb.compare_with_raw(root, bind)`` with
+``treedb.compare_with_files(bind, root)``.
 
 
 Version 0.4
 -----------
 
-Add treedb.print_query_sql() for printing standalone sql with literal binds.
+Add ``treedb.print_query_sql()`` for printing standalone SQL with literal
+binds that can be pasted into query tools.
 
 Normalize bibitem references (change database structure).
 
@@ -76,23 +81,25 @@ Normalize bibitem references (change database structure).
 Version 0.3.1
 -------------
 
-Add missing expanduser() to treedb.export().
+Add missing ``os.path.expanduser()`` to ``treedb.export()``.
 
-pd_read_sql now uses the default query when called without argument.
+``treedb.pd_read_sql()`` now uses the default query when called without
+argument.
 
-Add csv23 as dependency (factored out stream handling).
+Add ``csv23`` as dependency (factored out stream handling).
 
 
 Version 0.3
 -----------
 
-Rename treedb.create_engine() to .set_engine() (backwards incompatible).
+Rename ``treedb.create_engine()`` to ``treedb.set_engine()``
+(backwards incompatible).
 
-Improve treedb.backup() implementation.
+Improve ``treedb.backup()`` implementation.
 
 Add helper functions and shortcuts.
 
-Refactor subprocess usage.
+Refactor ``subprocess`` usage.
 
 Improve logging.
 
@@ -100,17 +107,17 @@ Improve logging.
 Version 0.2.2
 -------------
 
-Add treedb.backup() (requires Python 3.7+).
+Add ``treedb.backup()`` (requires Python 3.7+).
 
-Add exclude_raw to treedb.export().
+Add ``exclude_raw=False`` to ``treedb.export()``.
 
 
 Version 0.2.1
 -------------
 
-Fix treedb.write_csv() endangerment_source column output.
+Fix ``treedb.write_csv()`` endangerment_source column output.
 
-Use os.path.expanduser() on filename arguments.
+Use ``os.path.expanduser()`` on filename arguments.
 
 Fix setup.py old license classifier.
 
@@ -120,7 +127,7 @@ Version 0.2
 
 Drop Python 2 and 3.5 support.
 
-Parse endangerment source references into infividual fields.
+Parse endangerment source references into individual fields.
 
 Switch license to MIT license.
 
@@ -136,13 +143,13 @@ Version 0.1.5
 
 Update endangerment sources.
 
-Add PyPI project_urls to setup.py.
+Add PyPI ``project_urls`` to setup.py.
 
 
 Version 0.1.4
 -------------
 
-Represent countries as dicts instead of tuples in ``treedb.iterlanguoids``.
+Represent countries as dicts instead of tuples in ``treedb.iterlanguoids()``.
 
 Update endangerment sources.
 
@@ -162,10 +169,10 @@ Use ``expanduser()``in ``treedb.create_engine()`` and ``treedb.set_root()``.
 Version 0.1.1
 -------------
 
-Allow to specify glottolog repository location via TREEDB_REPO environment
+Allow to specify glottolog repository location via ``TREEDB_REPO`` environment
 variable (alternative to ``treedb.set_root()``).
 
-Use current working as default glottolog repository location if ``treedb`` is
+Use current working as default Glottolog repository location if ``treedb`` is
 imported as plain installed package instead of a git checkout.
 
 
