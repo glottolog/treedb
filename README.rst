@@ -173,7 +173,7 @@ See also
 License
 -------
 
-This tool is distributed under the `Apache license`_.
+This tool is distributed under the `MIT license`_.
 
 
 .. _Glottolog: https://glottolog.org/
@@ -194,7 +194,7 @@ This tool is distributed under the `Apache license`_.
 .. _ORM: https://docs.sqlalchemy.org/en/latest/orm/
 .. _venv: https://docs.python.org/3/library/venv.html
 
-.. _Apache license: https://opensource.org/licenses/Apache-2.0
+.. _MIT license: https://opensource.org/licenses/MIT
 
 
 .. |--| unicode:: U+2013
