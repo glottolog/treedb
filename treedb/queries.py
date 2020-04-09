@@ -294,9 +294,11 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
 
-    macroareas = select([group_array(languoid_macroarea.c.macroarea_name)])\
+    macroareas = select([group_array(languoid_macroarea.c.macroarea_name)
+                         .label('macroareas')])\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
-                 .order_by(languoid_macroarea)
+                 .order_by(languoid_macroarea)\
+                 .label('macroareas')
 
     countries = select([Country.jsonf()])\
                 .select_from(languoid_country.join(Country))\
@@ -304,14 +306,15 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                 .correlate(Languoid)\
                 .order_by(Country.printf())
 
-    countries = select([group_array(sa.func.json(countries.c.jsonf))]).as_scalar()
+    countries = select([group_array(sa.func.json(countries.c.jsonf))\
+                        .label('countries')]).label('countries')
 
     links = select([Link.jsonf()])\
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
-            .order_by(Link.ord)s
+            .order_by(Link.ord)
 
-    links = select([group_array(links.c.jsonf)]).as_scalar()
+    links = select([group_array(links.c.jsonf).label('links')]).label('links')
 
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
@@ -332,7 +335,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     sources = select([
         sa.func.nullif(group_object(sources.c.key,
                                     sa.func.json(sources.c.value)),
-                       '{}')]).as_scalar()
+                       '{}').label('sources')]).label('sources')
 
     altnames = select([Altname.provider,
                        Altname.jsonf()])\
@@ -348,7 +351,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     altnames = select([
         sa.func.nullif(group_object(altnames.c.key,
                                     sa.func.json(altnames.c.value)),
-                       '{}')]).as_scalar()
+                       '{}').label('altnames')]).label('altnames')
 
     triggers = select([Trigger.field,
                        Trigger.trigger])\
@@ -363,15 +366,15 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     triggers = select([
         sa.func.nullif(group_object(triggers.c.key,
                                     triggers.c.value),
-                       '{}')]).as_scalar()
+                       '{}').label('triggers')]).label('triggers')
 
     identifier = select([
         sa.func.nullif(group_object(Identifier.site,
                                     Identifier.identifier),
-                       '{}')
+                       '{}').label('identifier')
         ]).where(Identifier.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .as_scalar()
+        .label('identifier')
 
     classification_comment = select([
             ClassificationComment.kind.label('key'),
@@ -401,39 +404,44 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     classification = select([
         sa.func.nullif(group_object(classification.c.key,
                                     classification.c.value),
-                       '{}')]).select_from(classification).as_scalar()
+                       '{}').label('classification')])\
+                      .select_from(classification).label('classification')
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
     endangerment = select([Endangerment.jsonf(EndangermentSource,
-                                              e_bibfile, e_bibitem)])\
+                                              e_bibfile, e_bibitem,
+                                              label='endangerment')])\
         .select_from(sa.join(Endangerment, EndangermentSource)
                      .outerjoin(sa.join(e_bibitem, e_bibfile)))\
         .where(Endangerment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .as_scalar()
+        .label('endangerment')
 
-    hh_ethnologue_comment = select([EthnologueComment.jsonf()])\
+    hh_ethnologue_comment = select([EthnologueComment
+                                    .jsonf(label='hh_ethnologue_comment')])\
                             .where(EthnologueComment.languoid_id
                                    == Languoid.id)\
                             .correlate(Languoid)\
-                            .as_scalar()
+                            .label('hh_ethnologue_comment')
 
-    change_to = select([IsoRetirementChangeTo.code])\
-                .select_from(IsoRetirementChangeTo)\
-                .where(IsoRetirementChangeTo.languoid_id
-                       == IsoRetirement.languoid_id)\
+    irct = aliased(IsoRetirementChangeTo, name='irct')
+
+    change_to = select([irct.code])\
+                .where(irct.languoid_id == IsoRetirement.languoid_id)\
                 .correlate(IsoRetirement)\
-                .order_by(IsoRetirementChangeTo.ord)
+                .order_by(irct.ord)
 
-    change_to = select([group_array(change_to.c.code)]).as_scalar()
+    change_to = select([group_array(change_to.c.code)
+                        .label('change_to')]).label('change_to')
 
     iso_retirement = select([IsoRetirement.jsonf(change_to=change_to,
-                                                 optional=True)])\
+                                                 optional=True,
+                                                 label='iso_retirement')])\
                      .where(IsoRetirement.languoid_id == Languoid.id)\
                      .correlate(Languoid)\
-                     .as_scalar()
+                     .label('iso_retirement')
 
     path = Languoid.path()
 
@@ -544,8 +552,7 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
-    tree = Languoid.tree()
+    Child, Parent, tree = Languoid.tree()
 
     child_tree = sa.join(Child, tree,
                          tree.c.child_id == Child.id)

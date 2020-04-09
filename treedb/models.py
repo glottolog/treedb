@@ -149,8 +149,9 @@ class Languoid(Model):
                                   back_populates='languoid')
 
     @classmethod
-    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
-        Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
+    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False,
+             child_alias='child', parent_alias='parent'):
+        Child, Parent = (aliased(cls, name=n) for n in (child_alias, parent_alias))
 
         tree_1 = sa.select([Child.id.label('child_id')])
 
@@ -191,7 +192,7 @@ class Languoid(Model):
             tree_2 = tree_2.select_from(tree_2.froms[-1]
                 .outerjoin(Granny, Granny.id == Parent.parent_id))
 
-        return tree_1.union_all(tree_2)
+        return Child, Parent, tree_1.union_all(tree_2)
 
     @classmethod
     def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
@@ -203,7 +204,7 @@ class Languoid(Model):
     def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
         tree = _tree
         if tree is None:
-            tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
+            _, _, tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
 
         select_path_part = sa.select([tree.c.parent_id.label(label)])\
             .where(tree.c.child_id == cls.id)\
@@ -218,9 +219,8 @@ class Languoid(Model):
 
     @classmethod
     def child_root(cls, innerjoin=False, rightjoin=False):
-        tree = Languoid.tree(include_self=False, with_terminal=True)
-
-        Child, Root = (aliased(Languoid, name=n) for n in ('child', 'root'))
+        Child, Root, tree = Languoid.tree(include_self=False, with_terminal=True,
+                                          child_alias='child', parent_alias='root')
 
         is_child = (tree.c.child_id == Child.id)
 
@@ -244,7 +244,7 @@ class Languoid(Model):
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
-        tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
+        _, _, tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
 
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
@@ -697,7 +697,7 @@ class EthnologueComment(Model):
         mapping = sa.func.json_object('isohid', cls.isohid,
                                       'comment_type', cls.comment_type,
                                       'ethnologue_versions', cls.ethnologue_versions,
-                                      'comment', cls.comment)
+                                      'comment', cls.comment).label(label)
         if optional:
             return sa.case([(cls.languoid_id == None, None)], else_=mapping)
         return mapping
@@ -753,7 +753,7 @@ class IsoRetirement(Model):
                                       'effective', cls.effective,
                                       'reason', cls.reason,
                                       'remedy', cls.remedy,
-                                      'comment', cls.comment)
+                                      'comment', cls.comment).label(label)
         if optional:
             return sa.case([(cls.languoid_id == None, None)], else_=mapping)
         return mapping

@@ -174,8 +174,8 @@ def family_children(session):
 @check
 def family_languages(session):
     """Family has at least two languages (except 'Unclassified ...')."""
-    Family, Child = (sa.orm.aliased(Languoid, name=n) for n in ('family', 'child'))
-    tree = Languoid.tree(include_self=False, with_terminal=True)
+    Child, Family, tree = Languoid.tree(include_self=False, with_terminal=True,
+                                        child_alias='child', parent_alias='family')
     return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
         .filter(~Languoid.name.startswith('Unclassified '))\
         .filter(~session.query(Family).filter_by(level=FAMILY)

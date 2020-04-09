@@ -13,7 +13,7 @@ engine = treedb.load()
 
 treedb.print_rows(select([Languoid]).order_by('id').limit(5))
 
-tree = Languoid.tree(include_self=True, with_steps=True, with_terminal=True)
+_, _, tree = Languoid.tree(include_self=True, with_steps=True, with_terminal=True)
 treedb.print_rows(tree.select().where(tree.c.child_id == 'book1242'))
 treedb.print_rows(tree.select().where(tree.c.child_id == 'ramo1244'))
 
