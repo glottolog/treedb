@@ -58,13 +58,6 @@ def load(filename=ENGINE, repo_root=None, *,
         ds = Dataset.get_dataset(bind=engine, strict=True)
         if ds is None:
             rebuild = True
-
-        if rebuild:
-            log.info('rebuild database')
-            engine.dispose()
-        else:
-            log.info('use present %r', engine.url)
-
     elif engine.file_exists():
         ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
         if ds is None:
@@ -74,13 +67,14 @@ def load(filename=ENGINE, repo_root=None, *,
             rebuild = True
             log.info('rebuild needed from exclude_raw mismatch')
 
-        if rebuild:
-            log.info('rebuild database')
-            engine.dispose()
+    if rebuild:
+        log.info('rebuild database')
+        engine.dispose()
+        if engine.file_exists():
             warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
-        else:
-            log.info('use present %r', engine)
+    else:
+        log.info('use present %r', engine)
 
     if not exclude_views:
         log.info('prepare %d views', len(_views.REGISTRY))
