@@ -54,40 +54,39 @@ def load(filename=ENGINE, repo_root=None, *,
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
+
         ds = Dataset.get_dataset(bind=engine, strict=True)
+        if ds is None:
+            rebuild = True
 
-        if ds is not None and not rebuild:
-            log.info('use present %r', engine.url)
-            Dataset.log_dataset(dict(ds))
-            producer = Producer.get_producer(bind=engine)
-            Producer.log_producer(dict(producer))
-            return engine
-
-        if rebuild or (ds is None and force_rebuild):
+        if rebuild:
             log.info('rebuild database')
             engine.dispose()
+        else:
+            log.info('use present %r', engine.url)
 
     elif engine.file_exists():
         ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
         if ds is None:
+            rebuild = True
             warnings.warn(f'force delete {engine.file!r}')
-            rebuild = True
         elif ds.exclude_raw != bool(exclude_raw):
-            log.info('rebuild needed from exclude_raw mismatch')
             rebuild = True
+            log.info('rebuild needed from exclude_raw mismatch')
 
-        if not rebuild:
+        if rebuild:
+            log.info('rebuild database')
+            engine.dispose()
+            warnings.warn(f'delete present file: {engine.file!r}')
+            engine.file.unlink()
+        else:
             log.info('use present %r', engine)
-            Dataset.log_dataset(dict(ds))
-            pdc = Producer.get_producer(bind=engine)
-            Producer.log_producer(dict(pdc))
-            return engine
 
-        log.info('rebuild database')
-        engine.dispose()
-
-        warnings.warn(f'delete present file: {engine.file!r}')
-        engine.file.unlink()
+    if not rebuild:
+        Dataset.log_dataset(dict(ds))
+        pdc = Producer.get_producer(bind=engine)
+        Producer.log_producer(dict(pdc))
+        return engine
 
     @contextlib.contextmanager
     def begin(bind=engine):
