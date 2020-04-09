@@ -1,5 +1,6 @@
 # views.py - literally serialized sqlalchemy queries for sqlite3 db
 
+import functools
 import importlib
 import logging
 
@@ -14,13 +15,13 @@ REGISTRY = {}
 log = logging.getLogger(__name__)
 
 
-def register_view(name):
+def register_view(name, **kwargs):
     log.debug('register_view(%r)', name)
 
     assert name not in REGISTRY
 
     def decorator(func):
-        REGISTRY[name] = func
+        REGISTRY[name] = functools.partial(func, **kwargs)
         return func
 
     return decorator
