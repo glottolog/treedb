@@ -196,7 +196,8 @@ class Languoid(Model):
     @classmethod
     def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup, _tree=_tree)
-        return sa.select([sa.func.group_concat(squery.c.path_part, delimiter)]).label(label)
+        path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
+        return sa.select([path]).label(label)
 
     @classmethod
     def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):

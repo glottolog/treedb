@@ -122,115 +122,105 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     path, family, language = Languoid.path_family_language()
 
-    macroareas = select([group_concat(languoid_macroarea.c.macroarea_name)])\
-        .where(languoid_macroarea.c.languoid_id == Languoid.id)\
-        .order_by(languoid_macroarea)\
-        .label('macroareas')
+    macroareas = select([group_concat(languoid_macroarea.c.macroarea_name)
+                         .label('macroareas')])\
+                 .where(languoid_macroarea.c.languoid_id == Languoid.id)\
+                 .order_by(languoid_macroarea)\
+                 .label('macroareas')
 
-    countries = select([group_concat(Country.id)])\
-        .select_from(languoid_country.join(Country))\
-        .where(languoid_country.c.languoid_id == Languoid.id)\
-        .order_by(Country.id)\
-        .label('countries')
+    countries = select([group_concat(Country.id).label('countries')])\
+                .select_from(languoid_country.join(Country))\
+                .where(languoid_country.c.languoid_id == Languoid.id)\
+                .order_by(Country.id)\
+                .label('countries')
 
-    links = select([group_concat(Link.printf())])\
-        .where(Link.languoid_id == Languoid.id)\
-        .order_by(Link.ord)\
-        .label('links')
+    links = select([group_concat(Link.printf()).label('links')])\
+            .where(Link.languoid_id == Languoid.id)\
+            .order_by(Link.ord)\
+            .label('links')
 
+    source_gl = aliased(Source, name='source_glottolog')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
-    sources_glottolog = select([Source.printf(s_bibfile, s_bibitem)])\
-        .where(Source.provider == 'glottolog')\
-        .where(Source.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .where(Source.bibitem_id == s_bibitem.id)\
-        .where(s_bibitem.bibfile_id == s_bibfile.id)\
-        .order_by(s_bibfile.name, s_bibitem.bibkey)
+    sources_glottolog = select([source_gl.printf(s_bibfile, s_bibitem)])\
+                        .where(source_gl.provider == 'glottolog')\
+                        .where(source_gl.languoid_id == Languoid.id)\
+                        .correlate(Languoid)\
+                        .where(source_gl.bibitem_id == s_bibitem.id)\
+                        .where(s_bibitem.bibfile_id == s_bibfile.id)\
+                        .order_by(s_bibfile.name, s_bibitem.bibkey)
 
-    sources_glottolog = select([group_concat(sources_glottolog.c.printf)])\
-        .label('sources_glottolog')
+    sources_glottolog = select([group_concat(sources_glottolog.c.printf)
+                                .label('sources_glottolog')])\
+                        .label('sources_glottolog')
 
-    altnames = [select([group_concat(a.printf())])
-                    .where(a.provider == p)
-                    .where(a.languoid_id == Languoid.id)
-                    .order_by(a.name, a.lang)
-                    .label(f'altnames_{p}')
-                for p, a in {p: aliased(Altname)
-                             for p in sorted(ALTNAME_PROVIDER)}.items()]
+    altnames = {p: aliased(Altname, name='altname_' + p) for p in sorted(ALTNAME_PROVIDER)}
 
-    ltrig, itrig = (aliased(Trigger, name='trigger_' + n) for n in ('lgcode', 'inlg'))
+    altnames = [select([group_concat(a.printf()).label('altnames_' + p)])
+                .where(a.provider == p)
+                .where(a.languoid_id == Languoid.id)
+                .order_by(a.name, a.lang)
+                .label('altnames_' + p) for p, a in altnames.items()]
 
-    triggers_lgcode = select([group_concat(ltrig.trigger)])\
-        .where(ltrig.field == 'lgcode')\
-        .where(ltrig.languoid_id == Languoid.id)\
-        .order_by(ltrig.ord)\
-        .label('triggers_lgcode')
+    triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
-    trigggers_inlg = select([group_concat(itrig.trigger)])\
-        .where(itrig.field == 'inlg')\
-        .where(itrig.languoid_id == Languoid.id)\
-        .order_by(itrig.ord)\
-        .label('trigggers_inlg')
+    triggers = [select([group_concat(t.trigger).label('triggers_' + f)])
+                .where(t.field == f)
+                .where(t.languoid_id == Languoid.id)
+                .order_by(t.ord)
+                .label('triggers_' + f) for f, t in triggers.items()]
 
     idents = {s: aliased(Identifier, name='ident_' + s) for s in sorted(IDENTIFIER_SITE)}
 
-    identifiers = [i.identifier.label(f'identifier_{s}') for s, i in idents.items()]
+    identifiers = [i.identifier.label('identifier_' + s) for s, i in idents.items()]
 
-    subr = aliased(ClassificationRef, name='cr_sub')
-    csr_bibfile = aliased(Bibfile, name='bibfile_csr')
-    csr_bibitem = aliased(Bibitem, name='bibitem_csr')
+    def crefs(kind):
+        ref = aliased(ClassificationRef, name='cr_' + kind)
+        r_bibfile = aliased(Bibfile, name='bibfile_cr_' + kind)
+        r_bibitem = aliased(Bibitem, name='bibitem_cr_' + kind)
 
-    classification_subrefs = select([subr.printf(csr_bibfile, csr_bibitem)])\
-        .where(subr.kind == 'sub')\
-        .where(subr.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .where(subr.bibitem_id == csr_bibitem.id)\
-        .where(csr_bibitem.bibfile_id == csr_bibfile.id)\
-        .order_by(subr.ord)
+        refs = select([ref.printf(r_bibfile, r_bibitem)])\
+               .where(ref.kind == kind)\
+               .where(ref.languoid_id == Languoid.id)\
+               .correlate(Languoid)\
+               .where(ref.bibitem_id == r_bibitem.id)\
+               .where(r_bibitem.bibfile_id == r_bibfile.id)\
+               .order_by(ref.ord)
 
-    classification_subrefs = select([group_concat(classification_subrefs.c.printf)])\
-        .label('classification_subrefs')
+        label = f'classification_{kind}refs'
+        return select([group_concat(refs.c.printf).label(label)]).label(label)
 
-    famr = aliased(ClassificationRef, name='cr_fam')
-    cfr_bibfile = aliased(Bibfile, name='bibfile_cfr')
-    cfr_bibitem = aliased(Bibitem, name='bibitem_cfr')
-
-    classification_familyrefs = select([famr.printf(cfr_bibfile, cfr_bibitem)])\
-        .where(famr.kind == 'family')\
-        .where(famr.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .where(famr.bibitem_id == cfr_bibitem.id)\
-        .where(cfr_bibitem.bibfile_id == cfr_bibfile.id)\
-        .order_by(famr.ord)
-
-    classification_familyrefs = select([group_concat(classification_familyrefs.c.printf)])\
-        .label('classification_familyrefs')
+    classification_subrefs, classification_familyrefs = map(crefs, ('sub', 'family'))
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
     endangerment_source = EndangermentSource.printf(e_bibfile, e_bibitem)\
-        .label('endangerment_source')
+                          .label('endangerment_source')
 
-    iso_retirement_change_to = select([group_concat(IsoRetirementChangeTo.code)])\
-        .where(IsoRetirementChangeTo.languoid_id == Languoid.id)\
-        .order_by(IsoRetirementChangeTo.ord)\
-        .label('iso_retirement_change_to')
+    iso_retirement_change_to = select([group_concat(IsoRetirementChangeTo.code)
+                                       .label('iso_retirement_change_to')])\
+                               .where(IsoRetirementChangeTo.languoid_id
+                                      == Languoid.id)\
+                               .order_by(IsoRetirementChangeTo.ord)\
+                               .label('iso_retirement_change_to')
 
     def get_cols(model, label='{name}', ignore='id'):
         cols = model.__table__.columns
         if ignore:
-            ignore_suffix = f'_{ignore}'
+            ignore_suffix = '_' + ignore
             cols = [c for c in cols if c.name != ignore
                     and not c.name.endswith(ignore_suffix)]
         return [c.label(label.format(name=c.name)) for c in cols]
 
     subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
 
-    classifcation_sub = subc.comment.label('classification_sub')
+    classification_sub = subc.comment.label('classification_sub')
     classification_family = famc.comment.label('classification_family')
+
+    classification = [classification_sub, classification_subrefs,
+                      classification_family, classification_familyrefs]
 
     select_languoid = select([
             Languoid.id,
@@ -248,15 +238,11 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             countries,
             links,
             sources_glottolog,
-            ] + altnames + [
-            triggers_lgcode,
-            trigggers_inlg,
-            ] + identifiers + [
-            classifcation_sub,
-            classification_subrefs,
-            classification_family,
-            classification_familyrefs,
-            ] + get_cols(Endangerment, label='endangerment_{name}') + [
+            ] + altnames
+            + triggers
+            + identifiers
+            + classification
+            + get_cols(Endangerment, label='endangerment_{name}') + [
             endangerment_source,
             ] + get_cols(EthnologueComment, label='elcomment_{name}')
             + get_cols(IsoRetirement, label='iso_retirement_{name}') + [
