@@ -108,7 +108,7 @@ Model = sa.ext.declarative.declarative_base()
 
 def create_view(name, selectable, *, metadata=Model.metadata):
     """Register a CREATE VIEW for the given selectable on metadata."""
-    log.debug('create_view %r on %r', name, metadata)
+    log.debug('create_view(%r) on %r', name, metadata)
     return _views.view(name, selectable, metadata=metadata)
 
 

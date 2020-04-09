@@ -10,7 +10,8 @@ import warnings
 import sqlalchemy as sa
 
 from . import (tools as _tools,
-               files as _files)
+               files as _files,
+               views as _views)
 
 from .backend import set_engine, Model, Dataset, Producer
 
@@ -103,18 +104,19 @@ def load(filename=ENGINE, repo_root=None, *,
     # import here to register models for create_all()
     if not exclude_raw:
         log.debug('import module %s.raw', __package__)
+
         from . import raw
 
     if not exclude_views:
-        log.debug('import module %s.views', __package__)
+        log.info('prepare %d views', len(_views.REGISTRY))
+
         try:
-            from . import views
+            _views.create_all_views()
         except Exception:
-            log.exception('error importing %s.views', __package__)
-        else:
-            assert views
+            log.exception('error running %s.views.create_all_views()', __package__)
 
     log.debug('import module %s.models_load', __package__)
+
     from . import models_load
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
@@ -163,6 +165,7 @@ def load(filename=ENGINE, repo_root=None, *,
         warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.debug('import module languoids')
+
     from . import languoids
 
     log.info('load languoids')

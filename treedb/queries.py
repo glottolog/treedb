@@ -11,7 +11,8 @@ from sqlalchemy.orm import aliased
 
 import csv23
 
-from . import tools as _tools
+from . import (tools as _tools,
+               views as _views)
 
 from . import ENGINE
 
@@ -300,6 +301,7 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
     return write_csv(query, filename=filename)
 
 
+@_views.register_view('path_json')
 def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
@@ -502,6 +504,7 @@ def print_languoid_stats(*, bind=ENGINE):
                           f' (expected {counts[total]:,d} {total})')
 
 
+@_views.register_view('stats')
 def get_stats_query(*, bind=ENGINE):
     # cf. https://glottolog.org/glottolog/glottologinformation
 

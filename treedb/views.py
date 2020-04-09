@@ -1,24 +1,40 @@
-# views.py - batteries-included queries for sqlite3 db
+# views.py - literally serialized sqlalchemy queries for sqlite3 db
 
-from . import (backend as _backend,
-               queries as _queries)
+import importlib
+import logging
 
-__all__ = ['stats',
-           'path_json']
+from . import backend as _backend
+
+__all__ = ['register_view',
+           'create_all_views']
+
+REGISTRY = {}
 
 
-def view(name):
+log = logging.getLogger(__name__)
+
+
+def register_view(name):
+    log.debug('register_view(%r)', name)
+
+    assert name not in REGISTRY
+
     def decorator(func):
-        return _backend.create_view(name, selectable=func())
+        REGISTRY[name] = func
+        return func
 
     return decorator
 
 
-@view('stats')
-def stats():
-    return _queries.get_stats_query()
+def create_all_views():
+    log.debug('run create_view() for %d views in REGISTRY', len(REGISTRY))
 
+    module = importlib.import_module(__name__)
 
-@view('path_json')
-def path_json():
-    return _queries.get_json_query(load_json=False)
+    for name, func in REGISTRY.items():
+        assert not hasattr(module, name)
+
+        table = _backend.create_view(name, selectable=func())
+
+        setattr(module, name, table)
+        module.__all__.append(name)
