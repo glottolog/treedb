@@ -115,6 +115,7 @@ def hash_rows(rows, *, header=None, name=None, raw=False,
     return result
 
 
+@_views.register_view('example')
 def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)

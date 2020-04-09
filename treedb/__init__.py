@@ -50,7 +50,7 @@ __all__ = ['ROOT', 'ENGINE',
            'print_query_sql', 'set_engine', 'print_schema',
            'Dataset', 'Producer', 'Session',
            'backup', 'dump_sql', 'export',
-           'print_table_sql',  'select_stats',
+           'print_table_sql', 'select_stats',
            'load',
            'LEVEL', 'Languoid',
            'check',
@@ -64,7 +64,7 @@ __all__ = ['ROOT', 'ENGINE',
            'root', 'engine']
 
 __title__ = 'treedb'
-__version__ = '0.8.2.dev0'
+__version__ = '0.8.2'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'

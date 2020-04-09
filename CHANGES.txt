@@ -2,10 +2,13 @@ Changelog
 =========
 
 
-Version 0.8.2 (in development)
-------------------------------
+Version 0.8.2
+-------------
 
+Add ``example`` view with ``treedb.get_query()``.
 
+Reorganized `treedb.load()` to better support repeated changes to
+`exclude_views`.
 
 
 Version 0.8.1

@@ -66,6 +66,8 @@ def load(filename=ENGINE, repo_root=None, *,
         elif ds.exclude_raw != bool(exclude_raw):
             rebuild = True
             log.info('rebuild needed from exclude_raw mismatch')
+    else:
+        ds = None
 
     if rebuild:
         log.info('rebuild database')
@@ -85,7 +87,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.exception('error running %s.views.create_all_views(clear=%r)',
                       __package__, exclude_views)
 
-    if not rebuild:
+    if ds is not None and not rebuild:
         Dataset.log_dataset(dict(ds))
         pdc = Producer.get_producer(bind=engine)
         Producer.log_producer(dict(pdc))
