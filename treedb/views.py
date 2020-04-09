@@ -33,9 +33,10 @@ def create_all_views():
     module = importlib.import_module(__name__)
 
     for name, func in REGISTRY.items():
-        assert not hasattr(module, name)
-
         table = _backend.create_view(name, selectable=func())
 
+        present = hasattr(module, name)
         setattr(module, name, table)
-        module.__all__.append(name)
+
+        if not pesent:
+            module.__all__.append(name)
