@@ -256,7 +256,7 @@ def dump_sql(filename=None, *, progress_after=100_000,
 
     if path.suffix == '.gz':
         @contextlib.contextmanager
-        def open_path(encoding):
+        def open_path(*, encoding):
             with gzip.open(path, 'wb') as z,\
                  io.TextIOWrapper(z, encoding=encoding) as f:
                 yield f
