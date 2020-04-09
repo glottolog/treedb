@@ -16,14 +16,13 @@ import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
 from . import (tools as _tools,
-               proxies as _proxies,
-               backend_views as _views)
+               proxies as _proxies)
 
 from . import ENGINE
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'set_engine',
-           'Model', 'create_view', 'print_schema',
+           'Model', 'print_schema',
            'Dataset', 'Producer',
            'Session',
            'backup', 'dump_sql', 'export',
@@ -104,12 +103,6 @@ def _regexp(pattern, value):
 
 
 Model = sa.ext.declarative.declarative_base()
-
-
-def create_view(name, selectable, *, metadata=Model.metadata):
-    """Register a CREATE VIEW for the given selectable on metadata."""
-    log.debug('create_view(%r) on %r', name, metadata)
-    return _views.view(name, selectable, metadata=metadata)
 
 
 def print_schema(metadata=Model.metadata, *, engine=ENGINE):

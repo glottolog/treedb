@@ -82,11 +82,33 @@ def load(filename=ENGINE, repo_root=None, *,
         else:
             log.info('use present %r', engine)
 
+    if not exclude_views:
+        log.info('prepare %d views', len(_views.REGISTRY))
+
+    try:
+        _views.create_all_views(clear=exclude_views)
+    except Exception:
+        log.exception('error running %s.views.create_all_views(clear=%r)',
+                      __package__, exclude_views)
+
     if not rebuild:
         Dataset.log_dataset(dict(ds))
         pdc = Producer.get_producer(bind=engine)
         Producer.log_producer(dict(pdc))
         return engine
+
+    # import here to register models for create_all()
+    if not exclude_raw:
+        log.debug('import module %s.raw', __package__)
+
+        from . import raw
+
+    log.debug('import module %s.models_load', __package__)
+
+    from . import models_load
+
+    application_id = sum(ord(c) for c in Dataset.__tablename__)
+    assert application_id == 1122 == 0x462
 
     @contextlib.contextmanager
     def begin(bind=engine):
@@ -99,27 +121,6 @@ def load(filename=ENGINE, repo_root=None, *,
             yield conn
 
         log.debug('end transaction on %r', bind)
-
-    # import here to register models for create_all()
-    if not exclude_raw:
-        log.debug('import module %s.raw', __package__)
-
-        from . import raw
-
-    if not exclude_views:
-        log.info('prepare %d views', len(_views.REGISTRY))
-
-        try:
-            _views.create_all_views()
-        except Exception:
-            log.exception('error running %s.views.create_all_views()', __package__)
-
-    log.debug('import module %s.models_load', __package__)
-
-    from . import models_load
-
-    application_id = sum(ord(c) for c in Dataset.__tablename__)
-    assert application_id == 1122 == 0x462
 
     log.debug('start load timer')
     start = time.time()

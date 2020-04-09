@@ -7,7 +7,11 @@ import logging
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-__all__ = ['view']
+from . import backend as _backend
+
+__all__ = ['view', 'make_table']
+
+DDL = {}
 
 
 log = logging.getLogger(__name__)
@@ -28,7 +32,6 @@ class DropView(sa.schema.DDLElement):
 
 @sa.ext.compiler.compiles(CreateView)
 def compile_create_view(element, compiler, **kwargs):
-    log.debug('CREATE VIEW %r', element.name)
     select = compiler.sql_compiler.process(element.selectable,
                                            literal_binds=True)
     return f'CREATE VIEW {element.name} AS {select}'
@@ -36,19 +39,39 @@ def compile_create_view(element, compiler, **kwargs):
 
 @sa.ext.compiler.compiles(DropView)
 def compile_drop_view(element, compiler, **kwargs):
-    log.debug('DROP VIEW %r', element.name)
     return f'DROP VIEW {element.name}'
 
 
-def view(name, selectable, *, metadata):
-    """Register create and drop view DDL on the given metadata."""
-    t = sa.table(name)
+@sa.event.listens_for(_backend.Model.metadata, 'after_create')
+def after_create(target, bind, **kwargs):
+    for name, (create_view, _) in DDL.items():
+        if create_view is not None:
+            log.debug('CREATE VIEW %r', name)
+            create_view(target, bind)
 
+
+@sa.event.listens_for(_backend.Model.metadata, 'before_drop')
+def before_drop(target, bind, **kwargs):
+    for name, (_, drop_view) in DDL.items():
+        if drop_view is not None:
+            log.debug('DROP VIEW %r', name)
+            drop_view(target, bind)
+
+
+def view(name, selectable, *, clear=False):
+    """Register a CREATE and DROP VIEW DDL for the given selectable."""
+    log.debug('view(%r, clear=%r)', name, clear)
+
+    if clear:
+        DDL[name] = None, None
+        return None
+
+    DDL[name] = (CreateView(name, selectable), DropView(name))
+    return make_table(selectable, name=name)
+
+
+def make_table(selectable, *, name='view_table'):
+    result = sa.table(name)
     for c in selectable.c:
-        c._make_proxy(t)
-
-    CreateView(name, selectable).execute_at('after-create', metadata)
-
-    DropView(name).execute_at('before-drop', metadata)
-
-    return t
+        c._make_proxy(result)
+    return result

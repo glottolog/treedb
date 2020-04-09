@@ -4,8 +4,6 @@ import functools
 import importlib
 import logging
 
-from . import backend as _backend
-
 __all__ = ['register_view',
            'create_all_views']
 
@@ -27,16 +25,18 @@ def register_view(name, **kwargs):
     return decorator
 
 
-def create_all_views():
+def create_all_views(*, clear=False):
     log.debug('run create_view() for %d views in REGISTRY', len(REGISTRY))
+
+    from . import backend_views
 
     module = importlib.import_module(__name__)
 
     for name, func in REGISTRY.items():
-        table = _backend.create_view(name, selectable=func())
+        table = backend_views.view(name, selectable=func(), clear=clear)
 
         present = hasattr(module, name)
         setattr(module, name, table)
 
-        if not pesent:
+        if not present:
             module.__all__.append(name)
