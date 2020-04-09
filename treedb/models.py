@@ -697,10 +697,10 @@ class EthnologueComment(Model):
         mapping = sa.func.json_object('isohid', cls.isohid,
                                       'comment_type', cls.comment_type,
                                       'ethnologue_versions', cls.ethnologue_versions,
-                                      'comment', cls.comment).label(label)
+                                      'comment', cls.comment)
         if optional:
-            return sa.case([(cls.languoid_id == None, None)], else_=mapping)
-        return mapping
+            return sa.case([(cls.languoid_id == None, None)], else_=mapping).label(label)
+        return mapping.label(label)
 
 
 class IsoRetirement(Model):
@@ -753,10 +753,10 @@ class IsoRetirement(Model):
                                       'effective', cls.effective,
                                       'reason', cls.reason,
                                       'remedy', cls.remedy,
-                                      'comment', cls.comment).label(label)
+                                      'comment', cls.comment)
         if optional:
-            return sa.case([(cls.languoid_id == None, None)], else_=mapping)
-        return mapping
+            return sa.case([(cls.languoid_id == None, None)], else_=mapping).label(label)
+        return mapping.label(label)
 
 
 class IsoRetirementChangeTo(Model):
