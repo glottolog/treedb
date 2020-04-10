@@ -14,7 +14,7 @@ from .config import configure, get_default_root
 
 from .glottolog import checkout_or_clone
 
-from .logging import configure_logging
+from .logging_ import configure_logging
 
 from .files import set_root, iterfiles
 
@@ -67,7 +67,7 @@ __all__ = ['ROOT', 'ENGINE',
            'root', 'engine']
 
 __title__ = 'treedb'
-__version__ = '0.9.dev0'
+__version__ = '0.9'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'

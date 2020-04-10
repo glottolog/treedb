@@ -306,7 +306,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                 .correlate(Languoid)\
                 .order_by(Country.printf())
 
-    countries = select([group_array(sa.func.json(countries.c.jsonf))\
+    countries = select([group_array(sa.func.json(countries.c.jsonf))
                         .label('countries')]).as_scalar()
 
     links = select([Link.jsonf()])\

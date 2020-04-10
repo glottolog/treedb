@@ -8,6 +8,9 @@ import pytest
 ARGS = [
     '-s',
     #'--exitfirst',
+    #'--file-engine',
+    #'--glottolog-tag', 'master',
+    #'--exclude-raw',
 ]
 
 if 'idlelib' in sys.modules:

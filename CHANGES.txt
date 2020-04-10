@@ -2,11 +2,13 @@ Changelog
 =========
 
 
-Version 0.9 (in development)
-----------------------------
+Version 0.9
+-----------
+
+Add ``treedb.checkout_or_clone()``.
 
 Add ``treedb.print_query_sql(pretty=True)`` formatting with ``sqlparse`` if
-importable (pip install ``treedb[pretty]`` to include it).
+importable (``pip install treedb[pretty]`` to include it).
 
 Improve query readability by adding unique labels.
 

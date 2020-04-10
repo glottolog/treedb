@@ -212,7 +212,6 @@ class Languoid(Model):
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
         return sa.select([path]).label(label)
 
-
     @classmethod
     def path_json(cls, *, include_self=True, bottomup=False):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup)

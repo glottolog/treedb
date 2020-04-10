@@ -63,7 +63,7 @@ def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
     log.info('configure from %r', config_path)
     log.debug('default repo root: %r', default_repo_root)
 
-    from . import (logging as _logging,
+    from . import (logging_,
                    files,
                    backend)
 
@@ -74,7 +74,7 @@ def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
                                   default_repo_root=default_repo_root)
 
     log.info('configure logging from %r', config_path)
-    _logging.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
+    logging_.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
 
     if root is NOT_SET:
         root = cfg.get(*ROOT)
@@ -82,7 +82,6 @@ def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
     if not root.is_absolute():
         root = config_path.parent / root
     files.set_root(root)
-
 
     if engine is NOT_SET:
         engine = cfg.get(*ENGINE, fallback=None)

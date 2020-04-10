@@ -1,4 +1,4 @@
-# logging.py - logging configuration
+# logging_.py - stdlib logging configuration short-cuts
 
 import logging
 import logging.config
@@ -9,6 +9,8 @@ __all__ = ['configure_logging',
 WARNINGS = 'py.warnings'
 
 SQL = 'sqlalchemy.engine'
+
+FORMAT = '[%(levelname)s@%(name)s] %(message)s'
 
 
 log = logging.getLogger(__name__)
@@ -70,7 +72,7 @@ def set_capture_warnings(value=True):
 def configure_logging(*,
                       level='WARNING',
                       log_sql=False,
-                      format='[%(levelname)s@%(name)s] %(message)s',
+                      format=FORMAT,
                       capture_warnings=True,
                       reset=True):
     cfg = {'version': 1,
