@@ -12,6 +12,8 @@ ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
 
 from .config import configure, get_default_root
 
+from .glottolog import checkout_or_clone
+
 from .logging import configure_logging
 
 from .files import set_root, iterfiles
@@ -44,6 +46,7 @@ from .shortcuts import (count, select, text,
 
 __all__ = ['ROOT', 'ENGINE',
            'configure', 'configure_logging',
+           'checkout_or_clone',
            'set_root', 'iterfiles',
            'iterlanguoids', 'compare_with_files', 'write_files',
            'write_json_csv', 'checksum',
