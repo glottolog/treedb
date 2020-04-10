@@ -6,6 +6,7 @@ import sys
 import pytest
 
 ARGS = [
+    '-s',
     #'--exitfirst',
     #'--pdb',
 ]
