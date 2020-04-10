@@ -298,7 +298,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                          .label('macroareas')])\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
                  .order_by(languoid_macroarea)\
-                 .label('macroareas')
+                 .as_scalar()
 
     countries = select([Country.jsonf()])\
                 .select_from(languoid_country.join(Country))\
@@ -307,14 +307,14 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                 .order_by(Country.printf())
 
     countries = select([group_array(sa.func.json(countries.c.jsonf))\
-                        .label('countries')]).label('countries')
+                        .label('countries')]).as_scalar()
 
     links = select([Link.jsonf()])\
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
             .order_by(Link.ord)
 
-    links = select([group_array(links.c.jsonf).label('links')]).label('links')
+    links = select([group_array(links.c.jsonf).label('links')]).as_scalar()
 
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
@@ -335,7 +335,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     sources = select([
         sa.func.nullif(group_object(sources.c.key,
                                     sa.func.json(sources.c.value)),
-                       '{}').label('sources')]).label('sources')
+                       '{}').label('sources')]).as_scalar()
 
     altnames = select([Altname.provider,
                        Altname.jsonf()])\
@@ -351,7 +351,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     altnames = select([
         sa.func.nullif(group_object(altnames.c.key,
                                     sa.func.json(altnames.c.value)),
-                       '{}').label('altnames')]).label('altnames')
+                       '{}').label('altnames')]).as_scalar()
 
     triggers = select([Trigger.field,
                        Trigger.trigger])\
@@ -366,7 +366,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     triggers = select([
         sa.func.nullif(group_object(triggers.c.key,
                                     triggers.c.value),
-                       '{}').label('triggers')]).label('triggers')
+                       '{}').label('triggers')]).as_scalar()
 
     identifier = select([
         sa.func.nullif(group_object(Identifier.site,
@@ -374,7 +374,7 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                        '{}').label('identifier')
         ]).where(Identifier.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .label('identifier')
+        .as_scalar()
 
     classification_comment = select([
             ClassificationComment.kind.label('key'),
@@ -405,7 +405,8 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
         sa.func.nullif(group_object(classification.c.key,
                                     classification.c.value),
                        '{}').label('classification')])\
-                      .select_from(classification).label('classification')
+                      .select_from(classification)\
+                      .as_scalar()
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
@@ -417,14 +418,14 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                      .outerjoin(sa.join(e_bibitem, e_bibfile)))\
         .where(Endangerment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .label('endangerment')
+        .as_scalar()
 
     hh_ethnologue_comment = select([EthnologueComment
                                     .jsonf(label='hh_ethnologue_comment')])\
                             .where(EthnologueComment.languoid_id
                                    == Languoid.id)\
                             .correlate(Languoid)\
-                            .label('hh_ethnologue_comment')
+                            .as_scalar()
 
     irct = aliased(IsoRetirementChangeTo, name='irct')
 
@@ -434,14 +435,14 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
                 .order_by(irct.ord)
 
     change_to = select([group_array(change_to.c.code)
-                        .label('change_to')]).label('change_to')
+                        .label('change_to')]).as_scalar()
 
     iso_retirement = select([IsoRetirement.jsonf(change_to=change_to,
                                                  optional=True,
                                                  label='iso_retirement')])\
                      .where(IsoRetirement.languoid_id == Languoid.id)\
                      .correlate(Languoid)\
-                     .label('iso_retirement')
+                     .as_scalar()
 
     path = Languoid.path()
 
