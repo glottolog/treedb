@@ -2,3 +2,4 @@ include README.rst LICENSE.txt CHANGES.txt
 include requirements.txt treedb.ini
 include try-treedb.py
 include Stats.ipynb
+recursive-include tests *.py

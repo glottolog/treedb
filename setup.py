@@ -25,6 +25,7 @@ setup(
     ],
     extras_require={
         'dev': ['flake8', 'pep8-naming', 'wheel', 'twine'],
+        'test': ['pytest>=5', 'pytest-cov'],
     },
     long_description=pathlib.Path('README.rst').read_text(encoding='utf-8'),
     classifiers=[

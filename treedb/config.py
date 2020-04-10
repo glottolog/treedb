@@ -15,6 +15,8 @@ ROOT = 'glottolog', 'repo_root'
 
 ENGINE = 'treedb', 'engine'
 
+NOT_SET = object()
+
 
 log = logging.getLogger(__name__)
 
@@ -55,8 +57,8 @@ class ConfigParser(configparser.ConfigParser):
         self.set(*ROOT, repo_root)
 
 
-def configure(config_path=CONFIG, *, loglevel=None, log_sql=None,
-              default_repo_root=DEFAULT_ROOT):
+def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
+              loglevel=None, log_sql=None, default_repo_root=DEFAULT_ROOT):
     """Set root, and engine and configure logging from the given .ini file."""
     log.info('configure from %r', config_path)
     log.debug('default repo root: %r', default_repo_root)
@@ -74,13 +76,16 @@ def configure(config_path=CONFIG, *, loglevel=None, log_sql=None,
     log.info('configure logging from %r', config_path)
     _logging.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
 
-    root = cfg.get(*ROOT)
+    if root is NOT_SET:
+        root = cfg.get(*ROOT)
     root = _tools.path_from_filename(root)
     if not root.is_absolute():
         root = config_path.parent / root
     files.set_root(root)
 
-    engine = cfg.get(*ENGINE, fallback=None)
+
+    if engine is NOT_SET:
+        engine = cfg.get(*ENGINE, fallback=None)
     if engine is not None:
         engine = _tools.path_from_filename(engine)
         if not engine.is_absolute():
