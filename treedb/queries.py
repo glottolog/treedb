@@ -492,8 +492,9 @@ def print_languoid_stats(*, bind=ENGINE):
     for total, parts in sums:
         values = [counts[p] for p in parts]
         parts_sum = sum(values)
+        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+        log.debug('verify %s == %d %s', term, counts[total], total)
         if counts[total] != parts_sum:
-            term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
             warnings.warn(f'{term} = {parts_sum:,d}'
                           f' (expected {counts[total]:,d} {total})')
 
