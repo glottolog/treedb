@@ -94,11 +94,12 @@ def update_hash(hash_, file, *, chunksize=2**16):  # 64 kB
         hash_.update(chunk)
 
 
-def run(cmd, *, capture_output=False, cwd=None, encoding=ENCODING, unpack=False):
+def run(cmd, *, capture_output=False, unpack=False, cwd=None, check=False,
+        encoding=ENCODING):
     log.info('subprocess.run(%r)', cmd)
 
     kwargs = {'capture_output': capture_output,
-              'cwd': cwd, 'encoding': encoding}
+              'cwd': cwd, 'check': check, 'encoding': encoding}
 
     if platform.system() == 'Windows':
         kwargs['startupinfo'] = s = subprocess.STARTUPINFO()

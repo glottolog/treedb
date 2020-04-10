@@ -130,7 +130,7 @@ def load(filename=ENGINE, repo_root=None, *,
         metadata.create_all(bind=conn)
 
     log.info('record git commit in %r', root)
-    run = functools.partial(_tools.run, cwd=str(root),
+    run = functools.partial(_tools.run, cwd=str(root), check=True,
                             capture_output=True, unpack=True)
 
     try:
