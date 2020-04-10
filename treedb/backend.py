@@ -15,6 +15,11 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 
+try:
+    import sqlparse
+except ImportError:
+    sqlparse = None
+
 from . import (tools as _tools,
                proxies as _proxies)
 
@@ -33,12 +38,12 @@ __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
 log = logging.getLogger(__name__)
 
 
-def print_query_sql(query=None, literal_binds=True):
+def print_query_sql(query=None, *,  literal_binds=True, pretty=True):
     """Print the literal SQL for the given query."""
-    print(get_query_sql(query, literal_binds=literal_binds))
+    print(get_query_sql(query, literal_binds=literal_binds, pretty=pretty))
 
 
-def get_query_sql(query=None, literal_binds=True):
+def get_query_sql(query=None, *, literal_binds=True, pretty=False):
     """Return the literal SQL for the given query."""
     if query is None:
         from . import queries
@@ -46,10 +51,14 @@ def get_query_sql(query=None, literal_binds=True):
         query = queries.get_query()
 
     compiled = expression_compile(query, literal_binds=literal_binds)
-    return compiled.string
+    result = compiled.string
+
+    if pretty and sqlparse is not None:
+        result = sqlparse.format(result, reindent=True)
+    return result
 
 
-def expression_compile(expression, literal_binds=True):
+def expression_compile(expression, *, literal_binds=True):
     """Return literal compiled expression."""
     return expression.compile(compile_kwargs={'literal_binds': literal_binds})
 
