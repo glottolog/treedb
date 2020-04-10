@@ -20,15 +20,20 @@ def checkout_or_clone(tag_or_branch, *, target=None):
         target = _files.get_repo_root(ROOT)
 
     target = _tools.path_from_filename(target)
-    if not target.exists():
-        return git_clone(tag_or_branch, target=target)
 
-    return git_checkout(tag_or_branch, target=target)
+    if not target.exists():
+        clone = git_clone(tag_or_branch, target=target)
+    else:
+        clone = None
+
+    checkout = git_checkout(tag_or_branch, target=target)
+    return clone, checkout
 
 
 def git_clone(tag_or_branch, *, target, depth=1):
     log.info('clone Glottolog master repo at %r into %r', tag_or_branch, target)
     cmd = ['git', 'clone',
+           '-c', 'advice.detachedHead=false',
            '--single-branch',
            '--branch', tag_or_branch,
            '--depth', f'{depth:d}',
