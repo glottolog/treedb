@@ -2,7 +2,8 @@
 
 import logging
 
-from . import tools as _tools
+from . import (tools as _tools,
+               files as _files)
 
 from . import ROOT
 
@@ -14,7 +15,10 @@ REPO_URL = 'https://github.com/glottolog/glottolog.git'
 log = logging.getLogger(__name__)
 
 
-def checkout_or_clone(tag_or_branch, *, target=ROOT):
+def checkout_or_clone(tag_or_branch, *, target=None):
+    if target is None:
+        target = _files.get_repo_root(ROOT)
+
     target = _tools.path_from_filename(target)
     if not target.exists():
         return git_clone(tag_or_branch, target=target)
@@ -22,16 +26,17 @@ def checkout_or_clone(tag_or_branch, *, target=ROOT):
     return git_checkout(tag_or_branch, target=target)
 
 
-def git_clone(tag_or_branch, *, target=ROOT, depth=1):
+def git_clone(tag_or_branch, *, target, depth=1):
     log.info('clone Glottolog master repo at %r into %r', tag_or_branch, target)
     cmd = ['git', 'clone',
+           '--single-branch',
            '--branch', tag_or_branch,
            '--depth', f'{depth:d}',
             REPO_URL, target]
     return _tools.run(cmd, check=True)
 
 
-def git_checkout(tag_or_branch, *, target=ROOT, set_branch=__package__):
+def git_checkout(tag_or_branch, *, target, set_branch=__package__):
     log.info('checkout %r and (re)set branch %r', tag_or_branch, set_branch)
     cmd = ['git', 'checkout']
     if set_branch is not None:

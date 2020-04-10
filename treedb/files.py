@@ -8,7 +8,7 @@ from . import (tools as _tools,
 
 from . import ROOT
 
-__all__ = ['set_root',
+__all__ = ['set_root', 'get_repo_root',
            'iterfiles',
            'write_files', 'roundtrip']
 
@@ -32,6 +32,13 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
 
     ROOT.path = repo_path / _tools.path_from_filename(treepath)
     return ROOT
+
+
+def get_repo_root(root, treepath=TREE_IN_ROOT):
+    repo_root = _tools.path_from_filename(root)
+    for _ in treepath.parts:
+        repo_root = repo_root.parent
+    return repo_root
 
 
 class ConfigParser(configparser.ConfigParser):
