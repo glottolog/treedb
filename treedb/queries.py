@@ -553,27 +553,27 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    Child, Parent, tree = Languoid.tree()
+    tree = Languoid.tree()
 
-    child_tree = sa.join(Child, tree,
-                         tree.c.child_id == Child.id)
+    Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
+
+    child_tree = sa.join(Child, tree, tree.c.child_id == Child.id)
 
     parent_child = sa.outerjoin(Parent, child_tree,
                                 tree.c.parent_id == Parent.id)
 
-    select_pairs = select([
-            Parent.id.label('parent_id'), Child.id.label('child_id'),
-        ], bind=bind).select_from(parent_child)\
-        .order_by('parent_id', 'child_id')
+    select_pairs = select([Parent.id.label('parent_id'),
+                           Child.id.label('child_id')], bind=bind)\
+                   .select_from(parent_child)\
+                   .order_by('parent_id', 'child_id')
 
     if parent_level is not None:
         if parent_level == 'top':
-            cond = (Parent.parent_id == None)
+            select_pairs.append_whereclause(Parent.parent_id == None)
         elif parent_level in LEVEL:
-            cond = (Parent.level == parent_level)
+            select_pairs.append_whereclause(Parent.level == parent_level)
         else:
             raise ValueError(f'invalid parent_level: {parent_level!r}')
-        select_pairs.append_whereclause(cond)
 
     if child_level is not None:
         if child_level not in LEVEL:

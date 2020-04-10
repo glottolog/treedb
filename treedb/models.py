@@ -149,38 +149,35 @@ class Languoid(Model):
                                   back_populates='languoid')
 
     @classmethod
-    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False,
-             child_alias='child', parent_alias='parent'):
-        Child, Parent = (aliased(cls, name=n) for n in (child_alias, parent_alias))
+    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
+        Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
 
         tree_1 = sa.select([Child.id.label('child_id')])
 
         if include_self:
-            parent_id = Child.id
+            tree_1_parent = Child
         else:
-            parent_id = Child.parent_id
+            tree_1_parent = Parent
             tree_1.append_from(sa.join(Child, Parent,
                                        Child.parent_id == Parent.id))
-        tree_1.append_column(parent_id.label('parent_id'))
+
+        tree_1.append_column(tree_1_parent.id.label('parent_id'))
 
         if with_steps:
             steps = 0 if include_self else 1
             tree_1.append_column(sa.literal(steps).label('steps'))
 
         if with_terminal:
-            if include_self:
-                terminal = sa.type_coerce(Child.parent_id == None, sa.Boolean)
-            else:
-                terminal = sa.type_coerce(Parent.parent_id == None, sa.Boolean)
+            terminal = sa.type_coerce(tree_1_parent.parent_id == None,
+                                      sa.Boolean)
             tree_1.append_column(terminal.label('terminal'))
 
         tree_1 = tree_1.cte('tree', recursive=True)
 
-        tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])\
-            .select_from(tree_1.join(Parent, Parent.id == tree_1.c.parent_id))
-
-        if include_self:
-            tree_2.append_whereclause(Parent.parent_id != None)
+        tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])
+        tree_2.append_from(tree_1.join(Parent,
+                                       sa.and_(Parent.id == tree_1.c.parent_id,
+                                               Parent.parent_id != None)))
 
         if with_steps:
             tree_2.append_column((tree_1.c.steps + 1).label('steps'))
@@ -192,7 +189,22 @@ class Languoid(Model):
             tree_2 = tree_2.select_from(tree_2.froms[-1]
                 .outerjoin(Granny, Granny.id == Parent.parent_id))
 
-        return Child, Parent, tree_1.union_all(tree_2)
+        return tree_1.union_all(tree_2)
+
+    @classmethod
+    def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
+        if _tree is None:
+            tree = cls.tree(include_self=include_self, with_steps=True)
+        else:
+            tree = _tree
+
+        select_path_part = sa.select([tree.c.parent_id.label(label)])\
+                           .where(tree.c.child_id == cls.id)\
+                           .correlate(cls)\
+                           .order_by(tree.c.steps if bottomup
+                                     else tree.c.steps.desc())
+
+        return select_path_part
 
     @classmethod
     def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
@@ -200,27 +212,18 @@ class Languoid(Model):
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
         return sa.select([path]).label(label)
 
-    @classmethod
-    def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
-        tree = _tree
-        if tree is None:
-            _, _, tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=False)
-
-        select_path_part = sa.select([tree.c.parent_id.label(label)])\
-            .where(tree.c.child_id == cls.id)\
-            .correlate(cls)\
-            .order_by(tree.c.steps if bottomup else tree.c.steps.desc())
-        return select_path_part
 
     @classmethod
     def path_json(cls, *, include_self=True, bottomup=False):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup)
-        return sa.select([sa.func.json_group_array(squery.c.path_part)]).as_scalar()
+        path = sa.func.json_group_array(squery.c.path_part)
+        return sa.select([path]).as_scalar()
 
     @classmethod
     def child_root(cls, innerjoin=False, rightjoin=False):
-        Child, Root, tree = Languoid.tree(include_self=False, with_terminal=True,
-                                          child_alias='child', parent_alias='root')
+        tree = Languoid.tree(with_terminal=True)
+
+        Child, Root = (aliased(cls, name=n) for n in ('child', 'root'))
 
         is_child = (tree.c.child_id == Child.id)
 
@@ -228,8 +231,7 @@ class Languoid(Model):
                           tree.c.terminal == True)
 
         if innerjoin:
-            child_root = sa.join(Child, tree, is_child)\
-                           .join(Root, is_root)
+            child_root = sa.join(Child, tree, is_child).join(Root, is_root)
         elif rightjoin:
             child_tree = sa.join(Child, tree, is_child)
             child_root = sa.outerjoin(Root, child_tree,
@@ -244,14 +246,15 @@ class Languoid(Model):
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
-        _, _, tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
+        tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
 
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
         family = sa.select([tree.c.parent_id])\
             .where(tree.c.child_id == cls.id)\
             .correlate(cls)\
-            .where(tree.c.steps > 0).where(tree.c.terminal == True)
+            .where(tree.c.steps > 0)\
+            .where(tree.c.terminal == True)
 
         Ancestor = aliased(Languoid, name='ancestor')
 
