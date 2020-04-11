@@ -171,8 +171,8 @@ class Dataset(Model):
         log.info('git describe %(git_describe)r clean: %(clean)r', params)
         if not params['clean']:
             warnings.warn(f'{name} not clean')
-        log.debug('%r.title: %r', name, params['title'])
-        log.debug('%r.git_commit: %r', name, params['git_commit'])
+        log.debug('%s.title: %r', name, params['title'])
+        log.info('%s.git_commit: %r', name, params['git_commit'])
 
 
 class Producer(Model):
