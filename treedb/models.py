@@ -69,7 +69,9 @@ class Languoid(Model):
 
     level = Column(Enum(*LEVEL), nullable=False)
 
-    parent_id = Column(ForeignKey('languoid.id'), index=True)
+    parent_id = Column(ForeignKey('languoid.id',
+                                  deferrable=True, initially='DEFERRED'),
+                       index=True)
 
     hid = Column(Text, CheckConstraint('length(hid) >= 3'), unique=True)
     iso639_3 = Column(String(3), CheckConstraint('length(iso639_3) = 3'),

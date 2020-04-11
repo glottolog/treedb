@@ -186,6 +186,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
 
         from . import raw
 
+        if ordered is True:  # insert languoids in id order if available
+            ordered = 'id'
+
         iterfiles = raw.iterrecords(bind=bind,
                                     ordered=ordered,
                                     progress_after=progress_after)
