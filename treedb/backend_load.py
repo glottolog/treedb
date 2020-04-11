@@ -56,21 +56,18 @@ def load(filename=ENGINE, repo_root=None, *,
         log.warning('connected to a transient in-memory database')
 
         ds = Dataset.get_dataset(bind=engine, strict=True)
-        if ds is None:
-            rebuild = True
     elif engine.file_exists():
         ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
         if ds is None:
-            rebuild = True
             warnings.warn(f'force delete {engine.file!r}')
         elif ds.exclude_raw != bool(exclude_raw):
-            rebuild = True
-            log.info('rebuild needed from exclude_raw mismatch')
+            ds = None
+            log.warning('rebuild needed from exclude_raw mismatch')
     else:
         ds = None
 
-    if rebuild:
-        log.info('rebuild database')
+    if ds is None or rebuild:
+        log.info('build new database' if ds is None else 'rebuild database')
         engine.dispose()
         if engine.file_exists():
             warnings.warn(f'delete present file: {engine.file!r}')
