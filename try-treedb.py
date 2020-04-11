@@ -13,10 +13,6 @@ engine = treedb.load()
 
 treedb.print_rows(select([Languoid]).order_by('id').limit(5))
 
-tree = Languoid.tree(include_self=True, with_steps=True, with_terminal=True)
-treedb.print_rows(tree.select().where(tree.c.child_id == 'book1242'))
-treedb.print_rows(tree.select().where(tree.c.child_id == 'ramo1244'))
-
 print(next(treedb.iterdescendants(parent_level='top', child_level='language')))
 
 query = treedb.get_query()  # big example query containing 'everything'
