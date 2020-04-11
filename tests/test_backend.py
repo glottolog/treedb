@@ -29,3 +29,11 @@ def test_print_query_sql(capsys, query, pretty, expected):
     out, err = capsys.readouterr()
     assert not err
     assert out == expected
+
+
+def test_print_schema(capsys):
+    assert treedb.print_schema() is None
+
+    out, err = capsys.readouterr()
+    assert not err
+    assert out.strip().startswith('CREATE TABLE __dataset__ (')

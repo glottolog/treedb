@@ -24,6 +24,24 @@ STATS = {'v4.1': '''\
 '''}
 
 
+def test_print_rows(capsys, treedb):
+    query = treedb.select([treedb.Languoid])\
+            .where(treedb.Languoid.iso639_3 == 'bsa')
+
+    format_ = '{id}: {name} ({level}) [{iso639_3}]'
+
+    assert treedb.print_rows(query, format_=format_, verbose=True) is None
+
+    out, err = capsys.readouterr()
+    assert not err
+    assert out == '''\
+SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.hid, languoid.iso639_3, languoid.latitude, languoid.longitude 
+FROM languoid 
+WHERE languoid.iso639_3 = ?
+abin1243: Abinomn (language) [bsa]
+'''
+
+
 def test_hash_csv(treedb, expected=HASH):
     expected = HASH.get(pytest.treedb.glottolog_tag)
 
