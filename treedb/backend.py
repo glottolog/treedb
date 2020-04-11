@@ -30,9 +30,7 @@ __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'Model', 'print_schema',
            'Dataset', 'Producer',
            'Session',
-           'backup', 'dump_sql', 'export',
-           'print_table_sql',
-           'select_stats']
+           'backup', 'dump_sql', 'export']
 
 
 log = logging.getLogger(__name__)
@@ -319,60 +317,3 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
     log.info('database exported')
     return _tools.path_from_filename(filename)
-
-
-def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
-    """Print CREATE TABLE for the given table and its number of rows."""
-    if hasattr(model_or_table, '__tablename__'):
-        table_name = model_or_table.__tablename__
-        label = model_or_table.__name__.lower()
-    elif hasattr(model_or_table, 'name'):
-        table_name = label = model_or_table.name
-    else:
-        table_name = label = model_or_table
-        model_or_table = sa.text(model_or_table)
-
-    print(select_sql(table_name, bind=bind).scalar())
-
-    if include_nrows:
-        select_nrows = sa.select([
-                sa.func.count().label(f'n_{label}s'),
-            ], bind=bind).select_from(model_or_table)
-        print(select_nrows.scalar())
-
-
-def select_sql(table_name, *, bind=ENGINE):
-    """Select CREATE_TABLE of the given table name from sqlite_master."""
-    result = sa.select([sqlite_master.c.sql], bind=bind)\
-        .where(sqlite_master.c.type == 'table')\
-        .where(sqlite_master.c.name == sa.bindparam('table_name'))
-
-    if table_name is not None:
-        result = result.params(table_name=table_name)
-    return result
-
-
-sqlite_master = sa.table('sqlite_master', *map(sa.column, ['name',
-                                                           'type',
-                                                           'sql']))
-
-
-def select_stats(*, bind=ENGINE):
-    """Select table name and number ofrows for all tables from sqlite_master."""
-    table_name = sqlite_master.c.name.label('table_name')
-
-    select_tables = sa.select([table_name], bind=bind)\
-        .where(sqlite_master.c.type == 'table')\
-        .where(~table_name.like('sqlite_%'))\
-        .order_by('table_name')
-
-    def iterselects(tables_result):
-        for t, in tables_result:
-            table_name = sa.literal(t).label('table_name')
-            n_rows = (sa.select([sa.func.count()])
-                      .select_from(sa.table(t))
-                      .label('n_rows'))
-            yield sa.select([table_name, n_rows])
-
-    tables_result = select_tables.execute()
-    return sa.union_all(*iterselects(tables_result), bind=bind)

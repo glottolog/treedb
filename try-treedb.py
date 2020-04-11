@@ -30,27 +30,28 @@ treedb.check()
 
 #treedb.write_csv()
 
-#treedb.export()
 #treedb.dump_sql()
+
+#treedb.export()
+
+#treedb.languoids.write_json_csv(engine)
+#treedb.languoids.compare_with_files()
 
 #treedb.files.roundtrip()
 
-#from treedb import raw
+#import treedb.raw
 
-#print(next(raw.iterrecords()))
-#print(next(treedb.iterlanguoids(engine)))
-#raw.print_stats()
-#raw.write_raw_csv()
+#print(next(treeedb.raw.iterrecords()))
+#treedb.raw.print_stats()
+#treedb.raw.write_raw_csv()
 
-#treedb.languoids.compare_with_files()
-#treedb.languoids.write_json_csv(engine)
-
-#raw.drop_duplicate_sources()
-#raw.drop_duplicated_triggers()
-#raw.drop_duplicated_crefs()
-#raw.write_files()
+#treedb.raw.drop_duplicate_sources()
+#treedb.raw.drop_duplicated_triggers()
+#treedb.raw.drop_duplicated_crefs()
+#treedb.raw.write_files()
 
 #import treedb.raw.fixes
+
 #treedb.raw.fixes.update_countries()
 #treedb.raw.fixes.update_wikidata_links()
 #treedb.raw.write_files()
