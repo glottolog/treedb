@@ -140,6 +140,9 @@ def load(filename=ENGINE, repo_root=None, *,
     except Exception:  # pragma: no cover
         log.exception('error running git command in %r', str(root))
         raise
+    else:
+        log.info('identified dataset')
+        Dataset.log_dataset(dataset)
 
     from . import __version__
 
