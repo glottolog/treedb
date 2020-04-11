@@ -6,7 +6,7 @@ from . import ENGINE
 
 __all__ = ['print_table_sql',
            'select_table_sql', 'select_table_nrows',
-           'select_tables_nrows', 'select_tables']
+           'select_tables_nrows', 'select_tables', 'select_views']
 
 
 def get_table_name(model_or_table):
@@ -76,5 +76,12 @@ def select_tables(*, bind=ENGINE):
     """Select all table names from sqlite_master."""
     return sa.select([sqlite_master.c.name], bind=bind)\
            .where(sqlite_master.c.type == 'table')\
+           .where(~sqlite_master.c.name.like('sqlite_%'))\
+           .order_by('name')
+
+
+def select_views(*, bind=ENGINE):
+    return sa.select([sqlite_master.c.name], bind=bind)\
+           .where(sqlite_master.c.type == 'view')\
            .where(~sqlite_master.c.name.like('sqlite_%'))\
            .order_by('name')
