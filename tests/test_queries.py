@@ -46,3 +46,13 @@ def test_print_languoid_stats(capsys, treedb):
         assert out
     else:
         assert out == expected
+
+
+def test_iterdescendants(treedb):
+    pairs = treedb.iterdescendants(parent_level='top', child_level='language')
+
+    first = next(pairs)
+
+    assert first == ('abkh1242', ['abaz1241', 'abkh1244',
+                                  'adyg1241', 'kaba1278',
+                                  'ubyk1235'])
