@@ -289,7 +289,8 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
 
 
 @_views.register_view('path_json', load_json=False)
-def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
+def get_json_query(*, ordered='id', load_json=True,
+                   path_label='path', json_label='json', bind=ENGINE):
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
@@ -469,7 +470,8 @@ def get_json_query(*, ordered='id', load_json=True, bind=ENGINE):
     if load_json:
         languoid = sa.type_coerce(languoid, sa.types.JSON)
 
-    select_languoid = select([path, languoid.label('json')],
+    select_languoid = select([path.label(path_label),
+                              languoid.label(json_label)],
                              bind=bind).select_from(Languoid)
 
     _apply_ordered(select_languoid, path, ordered=ordered)
@@ -504,8 +506,9 @@ def get_stats_query(*, bind=ENGINE):
     # cf. https://glottolog.org/glottolog/glottologinformation
 
     def languoid_count(kind, fromclause=Languoid):
-        return select([sa.literal(kind).label('kind'),
-                       sa.func.count().label('n')]).select_from(fromclause)
+        kind = sa.literal(kind)
+        n = sa.func.count()
+        return select([kind.label('kind'), n.label('n')]).select_from(fromclause)
 
     Child, Root, child_root = Languoid.child_root(innerjoin=False)
 
