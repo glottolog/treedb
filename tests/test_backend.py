@@ -22,13 +22,16 @@ import treedb
                                               '       languoid.latitude,\n'
                                               '       languoid.longitude\n'
                                               'FROM languoid\n')),
+    (None, False, None),
+    (None, True, None)
 ])
 def test_print_query_sql(capsys, query, pretty, expected):
     assert treedb.print_query_sql(query, pretty=pretty) is None
 
     out, err = capsys.readouterr()
     assert not err
-    assert out == expected
+    if expected is not None:
+        assert out == expected
 
 
 def test_print_schema(capsys):

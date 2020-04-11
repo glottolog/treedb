@@ -213,12 +213,6 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def path_json(cls, *, include_self=True, bottomup=False):
-        squery = cls._path_part(include_self=include_self, bottomup=bottomup)
-        path = sa.func.json_group_array(squery.c.path_part)
-        return sa.select([path]).as_scalar()
-
-    @classmethod
     def child_root(cls, innerjoin=False, rightjoin=False):
         tree = Languoid.tree(with_terminal=True)
 
@@ -459,11 +453,6 @@ class Bibitem(Model):
 
     endangermentsources = relationship('EndangermentSource',
                                        back_populates='bibitem')
-
-    @classmethod
-    def printf(cls, bibfile, *, label='printf'):
-        return sa.func.printf('**%s:%s**', bibfile.name,
-                                           cls.bibkey).label(label)
 
 
 class Altname(Model):

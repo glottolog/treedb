@@ -60,7 +60,7 @@ class Check(object):
         self.session = session
         self.query = self.invalid_query(session)
 
-    def invalid_query(self, session):
+    def invalid_query(self, session):  # pragma: no cover
         raise NotImplementedError
 
     def validate(self):
@@ -203,7 +203,7 @@ def bookkeeping_no_children(session):
 @check
 def no_empty_files(session):
     exclude_raw = session.query(Dataset.exclude_raw).scalar()
-    if exclude_raw:
+    if exclude_raw:  # pragma: no cover
         return session.query(sa.true()).filter(sa.false())
 
     from .raw import File, Value

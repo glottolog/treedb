@@ -1,10 +1,18 @@
 import pytest
 
 @pytest.fixture(scope='session')
-def treedb_raw():
+def treedb_raw(treedb):
     import treedb.raw
 
     return treedb.raw
+
+
+def test_print_stats(capsys, treedb_raw):
+    assert treedb_raw.print_stats() is None
+
+    out, err = capsys.readouterr()
+    assert not err
+    assert out.strip()
 
 
 @pytest.mark.parametrize('tag, weak, expected', [

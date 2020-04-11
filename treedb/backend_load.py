@@ -83,7 +83,7 @@ def load(filename=ENGINE, repo_root=None, *,
 
     try:
         _views.create_all_views(clear=exclude_views)
-    except Exception:
+    except Exception:  # pragma: no cover
         log.exception('error running %s.views.create_all_views(clear=%r)',
                       __package__, exclude_views)
 
@@ -140,7 +140,7 @@ def load(filename=ENGINE, repo_root=None, *,
                    # neither changes in index nor untracked files
                    'clean': not run(['git', 'status', '--porcelain']),
                    'exclude_raw': exclude_raw}
-    except Exception:
+    except Exception:  # pragma: no cover
         log.exception('error running git command in %r', str(root))
         raise
 
@@ -158,7 +158,7 @@ def load(filename=ENGINE, repo_root=None, *,
             log.debug('root: %r', root)
             raw.load(root, conn)
 
-    if not (from_raw or exclude_raw):
+    if not (from_raw or exclude_raw):  # pragma: no cover
         warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.debug('import module languoids')

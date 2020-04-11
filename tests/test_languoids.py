@@ -1,7 +1,7 @@
 import itertools
 
 
-def test_iterlanguoids(bare_treedb, n=42):
+def test_iterlanguoids(bare_treedb, n=100):
     pairs = bare_treedb.iterlanguoids()
     first = list(itertools.islice(pairs, n))
     assert len(first) == n
@@ -11,7 +11,7 @@ def test_iterlanguoids(bare_treedb, n=42):
         assert l['name']
 
 
-def test_iterrecords(bare_treedb, n=42):
+def test_iterrecords(bare_treedb, n=100):
     languoids = bare_treedb.iterlanguoids()
     pairs = bare_treedb.languoids.iterrecords(languoids)
     first = list(itertools.islice(pairs, n))

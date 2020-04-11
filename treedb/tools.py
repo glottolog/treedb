@@ -15,7 +15,7 @@ ENCODING = 'utf-8'
 PROGRESS_AFTER = 2_500
 
 __all__ = ['next_count',
-           'groupby_itemgetter', 'groupby_attrgetter',
+           'groupby_attrgetter',
            'iterfiles',
            'path_from_filename',
            'sha256sum',
@@ -29,11 +29,6 @@ log = logging.getLogger(__name__)
 def next_count(start=0, step=1):
     count = itertools.count(start, step)
     return functools.partial(next, count)
-
-
-def groupby_itemgetter(*items):
-    key = operator.itemgetter(*items)
-    return functools.partial(itertools.groupby, key=key)
 
 
 def groupby_attrgetter(*attrnames):

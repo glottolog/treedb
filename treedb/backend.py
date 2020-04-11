@@ -17,7 +17,7 @@ import sqlalchemy.ext.declarative
 
 try:
     import sqlparse
-except ImportError:
+except ImportError:  # pragma: no cover
     sqlparse = None
 
 from . import (tools as _tools,
@@ -159,7 +159,7 @@ class Dataset(Model):
             if 'not enough values to unpack' in e.args[0] and not strict:
                 return fallback
             raise RuntimeError('failed to select %r from %r', table, bind)
-        except Exception:
+        except Exception:  # pragma: no cover
             log.exception('error selecting %r', table)
             raise RuntimeError('failed to select %r from %r', table, bind)
         else:
@@ -170,7 +170,7 @@ class Dataset(Model):
         name = cls.__tablename__
         log.info('git describe %(git_describe)r clean: %(clean)r', params)
         if not params['clean']:
-            warnings.warn(f'{name} not clean')
+            warnings.warn(f'{name} not clean')  # pragma: no cover
         log.debug('%s.title: %r', name, params['title'])
         log.info('%s.git_commit: %r', name, params['git_commit'])
 
