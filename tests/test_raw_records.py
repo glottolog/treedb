@@ -5,12 +5,14 @@ import pytest
 import itertools
 
 
-def test_iterlanguoids_from_raw(treedb, n=501):
-    if pytest.treedb.exclude_raw:
-        pytest.skip('test skipped by --exclude-raw')
+pytestmark = pytest.mark.skipif(pytest.FLAGS.exclude_raw,
+                                reason='skipped by --exclude-raw')
 
+
+def test_iterlanguoids_from_raw(treedb, n=501):
     pairs = treedb.iterlanguoids(treedb.ENGINE, from_raw=True)
     first = list(itertools.islice(pairs, n))
+
     assert first
     assert len(first) == n
     for p, l in first:

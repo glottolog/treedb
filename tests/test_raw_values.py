@@ -18,6 +18,10 @@ RAW_CSV_SHA256 = {'v4.1': ('963163852e7f4ee34b516bc459bdbb90'
 MB = 2**20
 
 
+pytestmark = pytest.mark.skipif(pytest.FLAGS.exclude_raw,
+                                reason='skipped by --exclude-raw')
+
+
 @pytest.fixture(scope='session')
 def treedb_raw(treedb):
     import treedb.raw
@@ -26,9 +30,6 @@ def treedb_raw(treedb):
 
 
 def test_print_stats(capsys, treedb_raw):
-    if pytest.treedb.exclude_raw:
-        pytest.skip('test skipped by --exclude-raw')
-
     assert treedb_raw.print_stats() is None
 
     out, err = capsys.readouterr()
@@ -38,10 +39,7 @@ def test_print_stats(capsys, treedb_raw):
 
 @pytest.mark.parametrize('weak', [False, True, 'unordered'])
 def test_checksum(treedb_raw, weak):
-    if pytest.treedb.exclude_raw:
-        pytest.skip('test skipped by --exclude-raw')
-
-    expected = CHECKSUM.get((pytest.treedb.glottolog_tag, weak))
+    expected = CHECKSUM.get((pytest.FLAGS.glottolog_tag, weak))
 
     result = treedb_raw.checksum(weak=weak)
 
@@ -55,12 +53,9 @@ def test_checksum(treedb_raw, weak):
 
 
 def test_write_raw_csv(treedb_raw):
-    if pytest.treedb.exclude_raw:
-        pytest.skip('test skipped by --exclude-raw')
-
     import treedb
 
-    expected = RAW_CSV_SHA256.get(pytest.treedb.glottolog_tag)
+    expected = RAW_CSV_SHA256.get(pytest.FLAGS.glottolog_tag)
     suffix = '-memory' if treedb.ENGINE.file is None else ''
 
     path = treedb_raw.write_raw_csv()

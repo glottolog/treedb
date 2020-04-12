@@ -11,7 +11,7 @@ MB = 2**20
 
 
 def test_write_json_csv(treedb):
-    expected = CHECKSUM.get(pytest.treedb.glottolog_tag)
+    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
     suffix = '-memory' if treedb.ENGINE.file is None else ''
 
     path = treedb.write_json_csv()
@@ -25,7 +25,7 @@ def test_write_json_csv(treedb):
 
 
 def test_checksum(treedb):
-    expected = CHECKSUM.get(pytest.treedb.glottolog_tag)
+    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
 
     result = treedb.checksum()
 

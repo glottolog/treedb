@@ -24,36 +24,35 @@ def pytest_addoption(parser):
                      help='pass loglevel=DEBUG to treedb.configure()')
 
 
-@pytest.fixture(scope='session')
-def bare_treedb(request):
-    file_engine = request.config.getoption('file_engine')
-    glottolog_tag = request.config.getoption('glottolog_tag')
-    loglevel_debug = request.config.getoption('loglevel_debug')
+def pytest_configure(config):
+    options = ('file_engine', 'glottolog_tag',
+               'rebuild', 'exclude_raw',
+               'loglevel_debug')
 
+    options = {o: config.getoption(o) for o in options}
+
+    pytest.FLAGS = types.SimpleNamespace(**options)
+
+
+@pytest.fixture(scope='session')
+def bare_treedb():
     import treedb as bare_treedb
 
-    kwargs = {} if file_engine else {'engine': None}
-    if loglevel_debug:
+    kwargs = {} if pytest.FLAGS.file_engine else {'engine': None}
+
+    if pytest.FLAGS.loglevel_debug:
         kwargs['loglevel'] = 'DEBUG'
 
     bare_treedb.configure(**kwargs)
 
-    bare_treedb.checkout_or_clone(glottolog_tag)
-
-    pytest.treedb = types.SimpleNamespace(glottolog_tag=glottolog_tag)
+    bare_treedb.checkout_or_clone(pytest.FLAGS.glottolog_tag)
 
     return bare_treedb
 
 
 @pytest.fixture(scope='session')
-def treedb(request, bare_treedb):
-    rebuild = request.config.getoption('rebuild')
-    exclude_raw = request.config.getoption('exclude_raw')
-
-    bare_treedb.load(rebuild=rebuild, exclude_raw=exclude_raw)
+def treedb(bare_treedb):
+    bare_treedb.load(rebuild=pytest.FLAGS.rebuild,
+                     exclude_raw=pytest.FLAGS.exclude_raw)
     treedb = bare_treedb
-
-    pytest.treedb.rebuild = rebuild
-    pytest.treedb.exclude_raw = exclude_raw
-
     return treedb
