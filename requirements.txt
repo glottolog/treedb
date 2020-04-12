@@ -1,2 +1,2 @@
 # development environment: install in development mode
--e .[dev,test,pretty]
+-e .[dev,test,pretty,pandas]

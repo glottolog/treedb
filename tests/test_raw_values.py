@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture(scope='session')
 def treedb_raw(treedb):
     import treedb.raw
@@ -42,3 +43,19 @@ def test_checksum(treedb_raw, tag, weak, expected):
         assert result
     else:
         assert result == expected
+
+
+def test_write_raw_csv(treedb_raw):
+    if pytest.treedb.exclude_raw:
+        pytest.skip('test skipped by --exclude-raw')
+
+    import treedb
+
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+
+    path = treedb_raw.write_raw_csv()
+
+    assert path.name == f'treedb{suffix}.raw.csv'
+    assert path.exists()
+    assert path.is_file()
+    assert path.stat().st_size >= 2**20
