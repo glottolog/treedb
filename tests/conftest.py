@@ -20,15 +20,22 @@ def pytest_addoption(parser):
     parser.addoption('--exclude-raw', dest='exclude_raw', action='store_true',
                      help='pass exlcude_raw=True to treedb.load()')
 
+    parser.addoption('--loglevel-debug', action='store_true',
+                     help='pass loglevel=DEBUG to treedb.configure()')
+
 
 @pytest.fixture(scope='session')
 def bare_treedb(request):
     file_engine = request.config.getoption('file_engine')
     glottolog_tag = request.config.getoption('glottolog_tag')
+    loglevel_debug = request.config.getoption('loglevel_debug')
 
     import treedb as bare_treedb
 
     kwargs = {} if file_engine else {'engine': None}
+    if loglevel_debug:
+        kwargs['loglevel'] = 'DEBUG'
+
     bare_treedb.configure(**kwargs)
 
     bare_treedb.checkout_or_clone(glottolog_tag)
