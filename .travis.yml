@@ -4,9 +4,9 @@ python:
   - "3.7"
   - "3.8"
 env:
-  - RUN_TESTS_ARGS=
-  - RUN_TESTS_ARGS=--files-engine
+  - ARGS=
 cache: pip
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
-install: pip install .[test] codecov
-script: run-tests.py $RUN_TESTS_ARGS
+install: pip install .[test,pretty] codecov
+script: ./run-tests.py $ARGS
+after_success: codecov
