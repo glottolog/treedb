@@ -5,7 +5,7 @@ import datetime
 ['datetime_fromisoformat']
 
 
-if sys.version_info >= (3, 7) and False:
+if sys.version_info >= (3, 7):
     datetime_fromisoformat = datetime.datetime.fromisoformat
 
 else:

@@ -122,7 +122,7 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     select_keys = sa.select([select_all_keys.c.key], bind=bind)\
                   .where((select_all_keys.c.row_num % size) == 0)
 
-    log.debug('SELECT every %dth %s using row_number() window function',
+    log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
     cursor = select_keys.execute()
     for k, in cursor:
@@ -133,7 +133,7 @@ def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     select_keys = sa.select([key_column.label('key')], bind=bind)\
                   .order_by(key_column)
 
-    log.debug('SELECT every %s and yield every %dth one using cursor iteration',
+    log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
     cursor = select_keys.execute()
     for keys in iter(functools.partial(cursor.fetchmany, size), []):
