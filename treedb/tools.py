@@ -93,20 +93,26 @@ def run(cmd, *, capture_output=False, unpack=False, cwd=None, check=False,
         encoding=ENCODING):
     log.info('subprocess.run(%r)', cmd)
 
-    kwargs = {'capture_output': capture_output,
-              'cwd': cwd, 'check': check, 'encoding': encoding}
-
     if platform.system() == 'Windows':
-        kwargs['startupinfo'] = s = subprocess.STARTUPINFO()
-        s.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        s.wShowWindow = subprocess.SW_HIDE
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
     else:
-        kwargs['startupinfo'] = None
+        startupinfo = None
 
-    proc = subprocess.run(cmd, **kwargs)
+    kwargs = {'cwd': cwd, 'encoding': encoding, 'startupinfo': startupinfo}
 
-    if capture_output and unpack:
-        return proc.stdout.strip()
+    if capture_output:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, **kwargs)
+        out, err = proc.communicate()
+        if check and proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, cmd,
+                                                output=out, stderr=err)
+        proc = subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+        if unpack:
+            return proc.stdout.strip()
+    else:
+        proc = subprocess.run(cmd, check=check, **kwargs)
     return proc
 
 
