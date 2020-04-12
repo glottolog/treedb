@@ -20,7 +20,7 @@ setup(
     platforms='any',
     python_requires='>=3.6',
     install_requires=[
-        'csv23~=0.2',
+        'csv23~=0.3',
         'sqlalchemy>=1.0.14',
     ],
     extras_require={

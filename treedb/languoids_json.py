@@ -110,7 +110,8 @@ def _write_json_csv(bind_or_root=ENGINE, filename=None, *,
                       sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
-                           dialect=dialect, encoding=encoding)
+                           dialect=dialect, encoding=encoding,
+                           autocompress=True)
 
 
 def _json_rows(bind_or_root=ENGINE, *,

@@ -82,7 +82,8 @@ def write_csv(query=None, filename=None, *, verbose=False,
     log.info('header: %r', header)
 
     return csv23.write_csv(filename, rows, header=header,
-                           dialect=dialect, encoding=encoding)
+                           dialect=dialect, encoding=encoding,
+                           autocompress=True)
 
 
 def hash_csv(query=None, *,
