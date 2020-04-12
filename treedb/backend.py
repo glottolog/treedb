@@ -116,7 +116,7 @@ def sqlite_version(*, raw=False, bind=ENGINE, label='sqlite_version'):
 
     if not raw:
         result = tuple(map(int, result.split('.')))
-    log.debug('SELECT sqlite_version() result (raw=%r): %r', raw, result)
+    log.debug('SELECT sqlite_version(raw=%r) result: %r', raw, result)
     return result
 
 
