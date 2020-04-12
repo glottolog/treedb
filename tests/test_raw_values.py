@@ -8,6 +8,9 @@ def treedb_raw(treedb):
 
 
 def test_print_stats(capsys, treedb_raw):
+    if pytest.treedb.exclude_raw:
+        pytest.skip('test skipped by --exclude-raw')
+
     assert treedb_raw.print_stats() is None
 
     out, err = capsys.readouterr()
