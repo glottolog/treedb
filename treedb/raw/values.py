@@ -71,7 +71,7 @@ def write_raw_csv(filename=None, *,
                   dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
-        filename = bind.file_with_suffix('.raw.csv').name
+        filename = bind.file_with_suffix('.raw.csv.gz').name
     else:
         filename = _tools.path_from_filename(filename)
 

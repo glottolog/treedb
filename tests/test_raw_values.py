@@ -60,7 +60,7 @@ def test_write_raw_csv(treedb_raw):
 
     path = treedb_raw.write_raw_csv()
 
-    assert path.name == f'treedb{suffix}.raw.csv'
+    assert path.name == f'treedb{suffix}.raw.csv.gz'
     assert path.exists()
     assert path.is_file()
     assert 5 * MB <= path.stat().st_size <= 100 * MB

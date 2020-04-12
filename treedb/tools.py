@@ -1,14 +1,19 @@
 # tools.py - generic re-useable self-contained helpers
 
+import builtins
+import bz2
 import functools
+import gzip
 import hashlib
 import itertools
 import logging
+import lzma
 import operator
 import os
 import pathlib
 import platform
 import subprocess
+import warnings
 
 ENCODING = 'utf-8'
 
@@ -21,6 +26,10 @@ __all__ = ['next_count',
            'sha256sum',
            'run',
            'Ordering']
+
+SUFFIX_OPEN_MODULE = {'.bz2': bz2,
+                      '.gz': gzip,
+                      '.xz':  lzma}
 
 
 log = logging.getLogger(__name__)
@@ -72,10 +81,20 @@ def path_from_filename(filename, *args, expanduser=True):
     return result
 
 
-def sha256sum(file, *, raw=False):
+def sha256sum(file, *, raw=False, autocompress=True):
+    file = path_from_filename(file)
+
+    suffix = ''.join(str(file).rpartition('.')[1:]).lower()
+    if autocompress:
+        open_module = SUFFIX_OPEN_MODULE.get(suffix, builtins)
+    else:
+        open_module = builtins
+        if suffix in SUFFIX_OPEN_MODULE:
+            warnings.warn(f'suffix {suffix!r} but autocompress=False')
+
     result = hashlib.sha256()
 
-    with path_from_filename(file).open('rb') as f:
+    with open_module.open(file, 'rb') as f:
         update_hash(result, f)
 
     if not raw:

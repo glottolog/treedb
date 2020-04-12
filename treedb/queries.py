@@ -284,7 +284,8 @@ def _apply_ordered(select_languoid, path, *, ordered):
 def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
     if filename is None:
         suffix = '_raw' if raw else ''
-        filename = bind.file_with_suffix(f'.languoids-json_query{suffix}.csv').name
+        suffix = f'.languoids-json_query{suffix}.csv.gz'
+        filename = bind.file_with_suffix(suffix).name
 
     query = get_json_query(ordered=ordered, load_json=raw, bind=bind)
     return write_csv(query, filename=filename)

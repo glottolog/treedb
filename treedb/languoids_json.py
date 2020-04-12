@@ -86,7 +86,7 @@ def _write_json_csv(bind_or_root=ENGINE, filename=None, *,
                    dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
-        suffix = '.languoids-json.csv'
+        suffix = '.languoids-json.csv.gz'
         try:
             path = bind_or_root.file_with_suffix(suffix)
         except AttributeError:

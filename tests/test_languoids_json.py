@@ -16,7 +16,7 @@ def test_write_json_csv(treedb):
 
     path = treedb.write_json_csv()
 
-    assert path.name == f'treedb{suffix}.languoids-json.csv'
+    assert path.name == f'treedb{suffix}.languoids-json.csv.gz'
     assert path.exists()
     assert path.is_file()
     assert 5 * MB <= path.stat().st_size <= 100 * MB

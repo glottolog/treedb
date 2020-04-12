@@ -23,6 +23,9 @@ Thumbs.db
 /*.log
 /*.sqlite3
 /*.csv
+/*.csv.bz2
+/*.csv.gz
+/*.csv.xz
 /*.sql
 /*.sql.gz
 /*.zip
