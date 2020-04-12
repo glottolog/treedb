@@ -9,7 +9,8 @@ import warnings
 
 import csv23
 
-from . import (tools as _tools,
+from . import (_compat,
+               tools as _tools,
                queries as _queries,
                languoids as _languoids)
 
@@ -32,7 +33,7 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
                                     ordered=ordered,
                                     load_json=True)
 
-    json_datetime = datetime.datetime.fromisoformat
+    json_datetime = _compat.datetime_fromisoformat
 
     n = 0
     for n, (path, item) in enumerate(query.execute(), 1):
