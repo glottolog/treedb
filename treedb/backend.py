@@ -26,7 +26,7 @@ from . import (tools as _tools,
 from . import ENGINE
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
-           'set_engine',
+           'set_engine', 'sqlite_version',
            'Model', 'print_schema',
            'Dataset', 'Producer',
            'Session',
@@ -87,6 +87,7 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
             raise RuntimeError(f'engine file does not exist: {filename!r}')
 
     ENGINE.file = filename
+    log.info('sqlite version: %s', sqlite_version(raw=True, bind=ENGINE))
     return ENGINE
 
 
@@ -107,6 +108,16 @@ def _regexp(pattern, value):
     if value is None:
         return None
     return re.search(pattern, value) is not None
+
+
+def sqlite_version(*, raw=False, bind=ENGINE, label='sqlite_version'):
+    select = sa.select([sa.func.sqlite_version().label(label)], bind=bind)
+    result = select.scalar()
+
+    if not raw:
+        result = tuple(map(int, result.split('.')))
+    log.debug('SELECT sqlite_version() result (raw=%r): %r', raw, result)
+    return result
 
 
 Model = sa.ext.declarative.declarative_base()
