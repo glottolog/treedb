@@ -7,7 +7,7 @@ import re
 
 from . import tools as _tools
 
-from . import ROOT, ENGINE
+from . import ENGINE, ROOT
 
 __all__ = ['iterlanguoids',
            'compare_with_files', 'compare',

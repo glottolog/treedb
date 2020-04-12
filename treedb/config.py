@@ -57,7 +57,7 @@ class ConfigParser(configparser.ConfigParser):
         self.set(*ROOT, repo_root)
 
 
-def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
+def configure(config_path=CONFIG, *, engine=NOT_SET, root=NOT_SET,
               loglevel=None, log_sql=None, default_repo_root=DEFAULT_ROOT):
     """Set root, and engine and configure logging from the given .ini file."""
     log.info('configure from %r', config_path)
@@ -76,13 +76,6 @@ def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
     log.info('configure logging from %r', config_path)
     logging_.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
 
-    if root is NOT_SET:
-        root = cfg.get(*ROOT)
-    root = _tools.path_from_filename(root)
-    if not root.is_absolute():
-        root = config_path.parent / root
-    files.set_root(root)
-
     if engine is NOT_SET:
         engine = cfg.get(*ENGINE, fallback=None)
     if engine is not None:
@@ -90,3 +83,10 @@ def configure(config_path=CONFIG, *, root=NOT_SET, engine=NOT_SET,
         if not engine.is_absolute():
             engine = config_path.parent / engine
     backend.set_engine(engine)
+
+    if root is NOT_SET:
+        root = cfg.get(*ROOT)
+    root = _tools.path_from_filename(root)
+    if not root.is_absolute():
+        root = config_path.parent / root
+    files.set_root(root)
