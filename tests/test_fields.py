@@ -7,11 +7,9 @@ import pytest
 import treedb
 
 
-@pytest.mark.parametrize('section, option, expected', [
-    ('core', 'name', True),
-    ('core', 'spam', False),
-    ('spam', 'core', False),
-])
+@pytest.mark.parametrize('section, option, expected', [('core', 'name', True),
+                                                       ('core', 'spam', False),
+                                                       ('spam', 'core', False)])
 def test_is_known(section, option, expected):
     assert treedb.fields.is_known(section, option) == expected
 

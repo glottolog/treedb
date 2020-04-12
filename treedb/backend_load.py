@@ -84,17 +84,17 @@ def load(filename=ENGINE, repo_root=None, *,
         log.exception('error running %s.views.create_all_views(clear=%r)',
                       __package__, exclude_views)
 
-    if ds is not None and not rebuild:
-        Dataset.log_dataset(dict(ds))
-        pdc = Producer.get_producer(bind=engine)
-        Producer.log_producer(dict(pdc))
-        return engine
-
     # import here to register models for create_all()
     if not exclude_raw:
         log.debug('import module %s.raw', __package__)
 
         from . import raw
+
+    if ds is not None and not rebuild:
+        Dataset.log_dataset(dict(ds))
+        pdc = Producer.get_producer(bind=engine)
+        Producer.log_producer(dict(pdc))
+        return engine
 
     log.debug('import module %s.models_load', __package__)
 

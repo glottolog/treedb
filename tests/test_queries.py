@@ -2,8 +2,8 @@
 
 import pytest
 
-HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
-                 'b2ae26e8e0c28fc3a046a4a2dc1ee29d')}
+QUERY_HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
+                       'b2ae26e8e0c28fc3a046a4a2dc1ee29d')}
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -47,6 +47,7 @@ abin1243: Abinomn (language) [bsa]
 
 
 def test_write_csv(treedb):
+    expected = QUERY_HASH.get(pytest.treedb.glottolog_tag)
     suffix = '-memory' if treedb.ENGINE.file is None else ''
 
     path = treedb.write_csv()
@@ -55,10 +56,12 @@ def test_write_csv(treedb):
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 30 * MB
+    if expected is not None:
+        assert treedb.tools.sha256sum(path) == expected
 
 
-def test_hash_csv(treedb, expected=HASH):
-    expected = HASH.get(pytest.treedb.glottolog_tag)
+def test_hash_csv(treedb):
+    expected = QUERY_HASH.get(pytest.treedb.glottolog_tag)
 
     result = treedb.hash_csv()
 
