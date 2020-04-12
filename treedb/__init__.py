@@ -8,7 +8,9 @@ DEFAULT_ROOT = '.'
 
 from . import proxies as _proxies
 
-ROOT, ENGINE = _proxies.PathProxy(), _proxies.SQLiteEngineProxy()
+ENGINE = _proxies.SQLiteEngineProxy()
+
+ROOT = _proxies.PathProxy()
 
 from .config import configure, get_default_root
 
@@ -43,7 +45,7 @@ from .queries import (print_rows, write_csv, hash_csv,
 from .shortcuts import (count, select, text,
                         pd_read_sql)
 
-__all__ = ['ROOT', 'ENGINE',
+__all__ = ['ENGINE', 'ROOT',
            'configure', 'configure_logging',
            'checkout_or_clone',
            'set_root', 'iterfiles',
@@ -63,7 +65,7 @@ __all__ = ['ROOT', 'ENGINE',
            'iterdescendants',
            'count', 'select', 'text',
            'pd_read_sql',
-           'root', 'engine']
+           'engine', 'root']
 
 __title__ = 'treedb'
 __version__ = '0.9.1.dev0'
@@ -72,11 +74,11 @@ __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 
 
+# default engine: in-memory database
+engine = set_engine(None, title=__title__)
+
+
 # default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog/repo_root, or cwd
 root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT',
                                  config_path=CONFIG,
                                  fallback=DEFAULT_ROOT))
-
-
-# default engine: in-memory database
-engine = set_engine(None, title=__title__)

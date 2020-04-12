@@ -15,7 +15,7 @@ from . import (tools as _tools,
 
 from .backend import set_engine, Model, Dataset, Producer
 
-from . import ROOT, ENGINE
+from . import ENGINE, ROOT
 
 __all__ = ['load']
 
