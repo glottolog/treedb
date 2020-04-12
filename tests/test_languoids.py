@@ -1,5 +1,7 @@
 # test_languoids.py
 
+import pytest
+
 import itertools
 
 
@@ -30,3 +32,11 @@ def test_iterrecords(bare_treedb, n=100):
         assert isinstance(r, dict)
         assert r
         assert r['core']['name']
+
+
+@pytest.mark.skip(reason='broken')
+@pytest.mark.skipif(pytest.FLAGS.exclude_raw,
+                    reason='skipped by --exclude-raw')
+def test_compare_with_files(treedb):
+    assert treedb.compare_with_files()
+

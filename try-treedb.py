@@ -24,9 +24,6 @@ treedb.check()
 
 #treedb.write_csv()
 
-#treedb.languoids.write_json_csv(engine)
-#treedb.languoids.compare_with_files()
-
 #treedb.files.roundtrip()
 
 #import treedb.raw
