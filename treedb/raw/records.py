@@ -1,5 +1,6 @@
 # records.py
 
+import functools
 import itertools
 import logging
 
@@ -88,13 +89,13 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
 
 def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     """Yield where clause making function for key_column windows of size."""
-    row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
-    select_keys = sa.select([key_column.label('key'), row_num]).alias()
-    select_keys = (sa.select([select_keys.c.key], bind=bind)
-                  .where((select_keys.c.row_num % size) == 0))
+    if _backend.sqlite_version(bind=bind) < (3, 25):
+        iterkeys_func = iterkeys_compat
+    else:
+        iterkeys_func = iterkeys
 
     log.info('fetch %r slices for window of %d', str(key_column.expression), size)
-    keys = (k for k, in select_keys.execute())
+    keys = iterkeys_func(key_column, size=size, bind=bind)
 
     try:
         end = next(keys)
@@ -111,3 +112,30 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
         last = end
 
     yield lambda c, end=end: (c > end)
+
+
+def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
+    select_all_keys = sa.select([key_column.label('key'),
+                                 sa.func.row_number().over(order_by=key_column)
+                                 .label('row_num')]).alias()
+
+    select_keys = sa.select([select_all_keys.c.key], bind=bind)\
+                  .where((select_all_keys.c.row_num % size) == 0)
+
+    log.debug('SELECT every %dth %s using row_number() window function',
+              size, str(key_column.expression))
+    cursor = select_keys.execute()
+    for k, in cursor:
+        yield k
+
+
+def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
+    select_keys = sa.select([key_column.label('key')], bind=bind)\
+                  .order_by(key_column)
+
+    log.debug('SELECT every %s and yield every %dth one using cursor iteration',
+              str(key_column.expression), size)
+    cursor = select_keys.execute()
+    for keys in iter(functools.partial(cursor.fetchmany, size), []):
+        last, = keys[-1]
+        yield last
