@@ -63,6 +63,6 @@ def test_write_raw_csv(treedb_raw):
     assert path.name == f'treedb{suffix}.raw.csv.gz'
     assert path.exists()
     assert path.is_file()
-    assert 5 * MB <= path.stat().st_size <= 100 * MB
+    assert 1 * MB <= path.stat().st_size <= 100 * MB
     if expected is not None:
         assert treedb.tools.sha256sum(path) == expected

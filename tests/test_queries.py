@@ -81,7 +81,7 @@ def test_write_json_query_csv(treedb, raw):
     assert path.name == f'treedb{suffix}.languoids-json_query{raw_suffix}.csv.gz'
     assert path.exists()
     assert path.is_file()
-    assert 5 * MB <= path.stat().st_size <= 100 * MB
+    assert 1 * MB <= path.stat().st_size <= 100 * MB
 
 
 def test_print_languoid_stats(capsys, treedb):
