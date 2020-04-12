@@ -15,5 +15,5 @@ jobs:
 cache: pip
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
 install: pip install .[test,pretty,pandas] codecov
-script: ./run-tests.py $ARGS
+script: ./run-tests.py --loglevel-debug $ARGS
 after_success: codecov
