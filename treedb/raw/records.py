@@ -1,5 +1,6 @@
 # records.py
 
+import contextlib
 import functools
 import itertools
 import logging
@@ -117,16 +118,16 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     select_all_keys = sa.select([key_column.label('key'),
                                  sa.func.row_number().over(order_by=key_column)
-                                 .label('row_num')]).alias()
+                                 .label('row_num')]).alias('key_ord')
 
     select_keys = sa.select([select_all_keys.c.key], bind=bind)\
                   .where((select_all_keys.c.row_num % size) == 0)
 
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
-    cursor = select_keys.execute()
-    for k, in cursor:
-        yield k
+    with contextlib.closing(select_keys.execute()) as cursor:
+        for k, in cursor:
+            yield k
 
 
 def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
@@ -135,7 +136,7 @@ def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
     log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
-    cursor = select_keys.execute()
-    for keys in iter(functools.partial(cursor.fetchmany, size), []):
-        last, = keys[-1]
-        yield last
+    with contextlib.closing(select_keys.execute()) as cursor:
+        for keys in iter(functools.partial(cursor.fetchmany, size), []):
+            last, = keys[-1]
+            yield last
