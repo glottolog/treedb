@@ -14,6 +14,6 @@ jobs:
       env: ARGS=--glottolog-tag=master
 cache: pip
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
-install: pip install .[test,pretty] codecov
+install: pip install .[test,pretty,pandas] codecov
 script: ./run-tests.py $ARGS
 after_success: codecov
