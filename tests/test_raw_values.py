@@ -1,4 +1,8 @@
+# test_raw_values.py
+
 import pytest
+
+MB = 2**20
 
 
 @pytest.fixture(scope='session')
@@ -58,4 +62,4 @@ def test_write_raw_csv(treedb_raw):
     assert path.name == f'treedb{suffix}.raw.csv'
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= 2**20
+    assert 5 * MB <= path.stat().st_size <= 100 * MB

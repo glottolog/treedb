@@ -1,3 +1,5 @@
+# test_sqlite_master.py
+
 import re
 
 import pytest
@@ -21,9 +23,10 @@ def test_select_tables_nrows(treedb):
 
     assert rows
     for table, nrows in rows:
+        assert isinstance(table, str)
         assert table
         assert isinstance(nrows, int)
-        assert nrows
+        assert 1 <= nrows <= 1_000_000
 
 
 def test_select_views(treedb):

@@ -65,7 +65,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
         query = get_query(bind=bind)
 
     if filename is None:
-        filename = bind.file_with_suffix('.csv').name
+        filename = bind.file_with_suffix('.query.csv').name
     filename = _tools.path_from_filename(filename)
 
     log.info('write csv: %r', filename)
@@ -283,7 +283,7 @@ def _apply_ordered(select_languoid, path, *, ordered):
 def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
     if filename is None:
         suffix = '_raw' if raw else ''
-        filename = f'{__package__}.languoids-json_query{suffix}.csv'
+        filename = bind.file_with_suffix(f'.languoids-json_query{suffix}.csv').name
 
     query = get_json_query(ordered=ordered, load_json=raw, bind=bind)
     return write_csv(query, filename=filename)

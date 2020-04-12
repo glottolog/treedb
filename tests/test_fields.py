@@ -1,3 +1,5 @@
+# test_fields.py
+
 import re
 
 import pytest
@@ -24,16 +26,21 @@ def test_is_lines(recwarn, section, option, kwargs, expected):
     if isinstance(expected, tuple):
         if len(expected) == 3:
             expected, warning, match = expected
+
             assert treedb.fields.is_lines(section, option, **kwargs) == expected
+
             w = recwarn.pop(warning)
             assert re.search(match, str(w.message))
         else:
             exception, match = expected
+
             with pytest.raises(exception, match=match):
                 treedb.fields.is_lines(section, option, **kwargs)
+
             recwarn.pop(UserWarning)
     else:
         assert treedb.fields.is_lines(section, option, **kwargs) == expected
+
     assert not recwarn
 
 

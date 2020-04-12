@@ -1,3 +1,5 @@
+# test_queries.py
+
 import pytest
 
 HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
@@ -23,6 +25,8 @@ STATS = {'v4.1': '''\
    395 Bookkeeping
 '''}
 
+MB = 2**20
+
 
 def test_print_rows(capsys, treedb):
     query = treedb.select([treedb.Languoid])\
@@ -47,10 +51,10 @@ def test_write_csv(treedb):
 
     path = treedb.write_csv()
 
-    assert path.name == f'treedb{suffix}.csv'
+    assert path.name == f'treedb{suffix}.query.csv'
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= 2**20
+    assert 1 * MB <= path.stat().st_size <= 30 * MB
 
 
 def test_hash_csv(treedb, expected=HASH):
@@ -66,14 +70,15 @@ def test_hash_csv(treedb, expected=HASH):
 
 @pytest.mark.parametrize('raw', [False, True])
 def test_write_json_query_csv(treedb, raw):
-    suffix = '_raw' if raw else ''
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    raw_suffix = '_raw' if raw else ''
 
     path = treedb.write_json_query_csv(raw=raw)
 
-    assert path.name == f'treedb.languoids-json_query{suffix}.csv'
+    assert path.name == f'treedb{suffix}.languoids-json_query{raw_suffix}.csv'
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= 2**20
+    assert 5 * MB <= path.stat().st_size <= 100 * MB
 
 
 def test_print_languoid_stats(capsys, treedb):

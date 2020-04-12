@@ -24,10 +24,6 @@ treedb.check()
 
 #treedb.write_csv()
 
-#treedb.dump_sql()
-
-#treedb.export()
-
 #treedb.languoids.write_json_csv(engine)
 #treedb.languoids.compare_with_files()
 
@@ -35,5 +31,4 @@ treedb.check()
 
 #import treedb.raw
 #print(next(treeedb.raw.iterrecords()))
-#treedb.raw.write_raw_csv()
 #treedb.raw.write_files()

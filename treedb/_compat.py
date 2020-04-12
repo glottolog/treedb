@@ -1,3 +1,5 @@
+# _compat.py - Python 3.6 compatibility backports
+
 import sys
 
 import datetime

@@ -1,3 +1,5 @@
+# test_backend.py
+
 import pathlib
 import sys
 
@@ -54,16 +56,18 @@ def test_backup(treedb, path=pathlib.Path('treedb-backup.sqlite3')):
     assert engine.url.database == path.name
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= MB
+    assert 10 * MB <= path.stat().st_size <= 200 * MB
 
 
 def test_dump_sql(treedb):
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+
     path = treedb.dump_sql()
 
-    assert path.suffixes == ['.sql', '.gz']
+    assert path.name == f'treedb{suffix}.sql.gz'
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= MB
+    assert 1 * MB <= path.stat().st_size <= 20 * MB
 
 
 def test_export(treedb):
@@ -74,4 +78,4 @@ def test_export(treedb):
     assert path.name == f'treedb{suffix}.zip'
     assert path.exists()
     assert path.is_file()
-    assert path.stat().st_size >= MB
+    assert 1 * MB <= path.stat().st_size <= 20 * MB

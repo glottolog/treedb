@@ -1,7 +1,11 @@
+# test_shortcuts.py
+
 import pytest
 
 
-@pytest.mark.filterwarnings('ignore:the imp module is deprecated:DeprecationWarning')
+@pytest.mark.filterwarnings('ignore'
+                            ':the imp module is deprecated'
+                            ':DeprecationWarning')
 def test_pd_read_sql(treedb):
     query = treedb.select([treedb.Languoid])
 

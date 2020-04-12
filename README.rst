@@ -61,7 +61,7 @@ the current directory), use ``treedb.set_root()`` to point it to a different
 path.
 
 Load ``./glottolog/languoids/tree/**/md.ini`` into an in-memory ``sqlite3`` database.
-Write the denormalized example query into ``treedb.csv``:
+Write the denormalized example query into ``treedb.query.csv``:
 
 .. code:: bash
 
@@ -120,7 +120,7 @@ Execute the example query and write it into a CSV file with one row per languoid
 .. code:: python
 
     >>> treedb.write_csv()
-    ...Path('treedb.csv')
+    ...Path('treedb.query.csv')
 
 Rebuild the database (e.g. after an update):
 
