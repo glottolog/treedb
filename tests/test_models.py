@@ -3,6 +3,7 @@
 import pytest
 
 BOOK = 'book1242'
+
 RAMO = 'ramo1244'
 
 TREE = {BOOK: [('book1242', 'book1242', 0, True)],

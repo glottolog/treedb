@@ -38,6 +38,7 @@ def test_print_rows(capsys, treedb):
 
     out, err = capsys.readouterr()
     assert not err
+
     assert out == '''\
 SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.hid, languoid.iso639_3, languoid.latitude, languoid.longitude 
 FROM languoid 
@@ -56,7 +57,10 @@ def test_write_csv(treedb):
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 30 * MB
-    if expected is not None:
+
+    if expected is None:
+        pass
+    else:
         assert treedb.tools.sha256sum(path) == expected
 
 
@@ -78,7 +82,8 @@ def test_write_json_query_csv(treedb, raw):
 
     path = treedb.write_json_query_csv(raw=raw)
 
-    assert path.name == f'treedb{suffix}.languoids-json_query{raw_suffix}.csv.gz'
+    assert path.name == (f'treedb{suffix}'
+                         f'.languoids-json_query{raw_suffix}.csv.gz')
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 100 * MB
@@ -91,17 +96,21 @@ def test_print_languoid_stats(capsys, treedb):
 
     out, err = capsys.readouterr()
     assert not err
+
     if expected is None:
-        assert out
+        assert out.strip()
     else:
         assert out == expected
 
 
-def test_iterdescendants(treedb):
-    pairs = treedb.iterdescendants(parent_level='top', child_level='language')
-
+@pytest.mark.parametrize('kwargs, expected_first', [
+    ({'parent_level': 'top', 'child_level': 'language'},
+     ('abkh1242', ['abaz1241', 'abkh1244',
+                               'adyg1241', 'kaba1278',
+                               'ubyk1235'])),
+])
+def test_iterdescendants(treedb, kwargs, expected_first):
+    pairs = treedb.iterdescendants(**kwargs)
     first = next(pairs)
 
-    assert first == ('abkh1242', ['abaz1241', 'abkh1244',
-                                  'adyg1241', 'kaba1278',
-                                  'ubyk1235'])
+    assert first == expected_first

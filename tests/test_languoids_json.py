@@ -20,7 +20,10 @@ def test_write_json_csv(treedb):
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 100 * MB
-    if expected is not None:
+
+    if expected is None:
+        pass
+    else:
         assert treedb.tools.sha256sum(path) == expected
 
 

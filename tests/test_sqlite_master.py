@@ -14,6 +14,7 @@ def test_print_table_sql(capsys, treedb, table, expected):
 
     out, err = capsys.readouterr()
     assert not err
+
     assert expected.fullmatch(out.strip())
 
 
@@ -22,9 +23,11 @@ def test_select_tables_nrows(treedb):
     rows = query.execute().fetchall()
 
     assert rows
+
     for table, nrows in rows:
         assert isinstance(table, str)
         assert table
+
         assert isinstance(nrows, int)
         assert 1 <= nrows <= 1_000_000
 

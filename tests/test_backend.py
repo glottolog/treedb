@@ -37,7 +37,10 @@ def test_print_query_sql(capsys, query, pretty, expected):
 
     out, err = capsys.readouterr()
     assert not err
-    if expected is not None:
+
+    if expected is None:
+        assert out.strip()
+    else:
         assert out == expected
 
 
@@ -46,6 +49,7 @@ def test_print_schema(capsys):
 
     out, err = capsys.readouterr()
     assert not err
+
     assert out.strip().startswith('CREATE TABLE __dataset__ (')
 
 

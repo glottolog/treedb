@@ -15,9 +15,11 @@ def test_iterlanguoids_from_raw(treedb, n=501):
 
     assert first
     assert len(first) == n
+
     for p, l in first:
         assert isinstance(p, tuple)
         assert p
+
         assert isinstance(l, dict)
         assert l
         assert l['name']

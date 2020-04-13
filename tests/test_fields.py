@@ -16,7 +16,7 @@ def test_is_known(section, option, expected):
 
 @pytest.mark.parametrize('section, option, kwargs, expected', [
     ('core', 'name', {}, False),
-    ('core', 'links',{}, True),
+    ('core', 'links', {}, True),
     ('core', 'WARNS_SCALAR', {}, (None, UserWarning, r'unknown')),
     ('core', 'RAISES_UNKNOWN', {'unknown_as_scalar': False}, (KeyError, r'.+')),
 ])
@@ -42,6 +42,8 @@ def test_is_lines(recwarn, section, option, kwargs, expected):
     assert not recwarn
 
 
-def test_sorted_options(section='core', options=('eggs', 'iso639-3', 'name')):
-    result = treedb.fields.sorted_options(section, options)
-    assert result == ['name', 'iso639-3', 'eggs']
+@pytest.mark.parametrize('section, options, expected', [
+    ('core', ['eggs', 'iso639-3', 'name'], ['name', 'iso639-3', 'eggs']),
+])
+def test_sorted_options(section, options, expected):
+    assert treedb.fields.sorted_options(section, options) == expected

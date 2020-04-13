@@ -1,4 +1,4 @@
-# conftest.py - pytest command-line options and fixtures
+# conftest.py - pytest command-line flags and fixtures
 
 import types
 
@@ -12,7 +12,7 @@ def pytest_addoption(parser):
                      help='use configured file engine instead of in-memory db')
 
     parser.addoption('--glottolog-tag', default=GLOTTOLOG_TAG,
-                     help='tag or branch in Glottolog master repo')
+                     help='tag or branch to clone from Glottolog master repo')
 
     parser.addoption('--rebuild', action='store_true',
                      help='pass rebuild=True to treedb.load()')
