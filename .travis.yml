@@ -1,4 +1,6 @@
+version: ~> 1.0
 language: python
+cache: pip
 python:
   - "3.6"
   - "3.7"
@@ -12,8 +14,7 @@ jobs:
       env: FLAGS=--glottolog-tag=master
     - python: 3.7
       env: FLAGS=--glottolog-tag=master
-cache: pip
-before_cache: rm -f $HOME/.cache/pip/log/debug.log
 install: pip install .[test,pretty,pandas] codecov
 script: ./run-tests.py --loglevel-debug $FLAGS
+before_cache: rm -f $HOME/.cache/pip/log/debug.log
 after_success: codecov
