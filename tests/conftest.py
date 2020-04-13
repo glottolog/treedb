@@ -29,9 +29,13 @@ def pytest_configure(config):
                'rebuild', 'exclude_raw',
                'loglevel_debug')
 
-    options = {o: config.getoption(o) for o in options}
+    FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
 
-    pytest.FLAGS = types.SimpleNamespace(**options)
+    FLAGS.skip_exclude_raw  = pytest.mark.skipif(FLAGS.exclude_raw,
+                                                 reason='skipped by'
+                                                        '--exclude-raw')
+
+    pytest.FLAGS = FLAGS
 
 
 @pytest.fixture(scope='session')

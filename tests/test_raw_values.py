@@ -18,8 +18,7 @@ RAW_CSV_SHA256 = {'v4.1': ('963163852e7f4ee34b516bc459bdbb90'
 MB = 2**20
 
 
-pytestmark = pytest.mark.skipif(pytest.FLAGS.exclude_raw,
-                                reason='skipped by --exclude-raw')
+pytestmark = pytest.FLAGS.skip_exclude_raw
 
 
 @pytest.fixture(scope='session')

@@ -5,8 +5,7 @@ import pytest
 import itertools
 
 
-pytestmark = pytest.mark.skipif(pytest.FLAGS.exclude_raw,
-                                reason='skipped by --exclude-raw')
+pytestmark = pytest.FLAGS.skip_exclude_raw
 
 
 def test_iterlanguoids_from_raw(treedb, n=501):

@@ -39,7 +39,6 @@ def test_iterrecords(bare_treedb, n=100):
 
 
 @pytest.mark.skip(reason='FIXME: broken')
-@pytest.mark.skipif(pytest.FLAGS.exclude_raw,
-                    reason='skipped by --exclude-raw')
+@pytest.FLAGS.skip_exclude_raw
 def test_compare_with_files(treedb):
     assert treedb.compare_with_files()
