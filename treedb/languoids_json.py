@@ -1,6 +1,5 @@
 # languoids_json.py - load languoids from tables and write json csv
 
-import datetime
 import functools
 import json
 import logging

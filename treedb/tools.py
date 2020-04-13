@@ -29,7 +29,7 @@ __all__ = ['next_count',
 
 SUFFIX_OPEN_MODULE = {'.bz2': bz2,
                       '.gz': gzip,
-                      '.xz':  lzma}
+                      '.xz': lzma}
 
 
 log = logging.getLogger(__name__)

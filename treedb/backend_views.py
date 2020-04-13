@@ -1,6 +1,6 @@
 # backend_views - limited sqlalchemy support for views
 
-"""From https://github.com/sqlalchemy/sqlalchemy/wiki/Views"""
+"""Based on https://github.com/sqlalchemy/sqlalchemy/wiki/Views"""
 
 import logging
 

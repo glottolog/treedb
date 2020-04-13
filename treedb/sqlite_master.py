@@ -56,18 +56,19 @@ def select_table_nrows(model_or_table, *, label='n_rows', bind=ENGINE):
     """Select the number of rows for the given table."""
     table_name = get_table_name(model_or_table)
     table = sa.table(table_name)
-    return sa.select([sa.func.count().label(label)], bind=bind).select_from(table)
+    nrows = sa.func.count().label(label)
+    return sa.select([nrows], bind=bind).select_from(table)
 
 
 def select_tables_nrows(*, table_label='table_name', nrows_label='n_rows', bind=ENGINE):
     """Select table name and number of rows for all tables in sqlite_master."""
     tables = select_tables().execute()  # requires dynamic query creation
 
-    def iterselects(tables):  
+    def iterselects(tables):
         for t, in tables:
-            yield sa.select([sa.literal(t).label(table_label),
-                             sa.select([sa.func.count().label('n')])\
-                             .select_from(sa.table(t)).label(nrows_label)])
+            name = sa.literal(t)
+            n = sa.select([sa.func.count().label('n')]).select_from(sa.table(t))
+            yield sa.select([name.label(table_label), n.label(nrows_label)])
 
     return sa.union_all(*iterselects(tables), bind=bind)
 
