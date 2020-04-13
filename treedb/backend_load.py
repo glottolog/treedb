@@ -56,7 +56,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.warning('connected to a transient in-memory database')
 
         ds = Dataset.get_dataset(bind=engine, strict=True)
-    elif engine.file_exists():
+    elif engine.file_size():
         ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
         if ds is None:
             warnings.warn(f'force delete {engine.file!r}')
@@ -69,7 +69,7 @@ def load(filename=ENGINE, repo_root=None, *,
     if ds is None or rebuild:
         log.info('build new database' if ds is None else 'rebuild database')
         engine.dispose()
-        if engine.file_exists():
+        if engine.file_size():
             warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
     else:
