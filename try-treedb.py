@@ -11,6 +11,9 @@ print(next(treedb.iterlanguoids()))
 
 engine = treedb.load()
 
+# run sanity checks
+treedb.check()
+
 treedb.print_rows(select([Languoid]).order_by('id').limit(5))
 
 query = treedb.get_query()  # big example query containing 'everything'
@@ -18,9 +21,6 @@ query = treedb.get_query()  # big example query containing 'everything'
 df = treedb.pd_read_sql(query, index_col='id')
 if df is not None:
     df.info()
-
-# run sanity checks
-treedb.check()
 
 #treedb.write_csv()
 
