@@ -14,6 +14,9 @@ def pytest_addoption(parser):
     parser.addoption('--glottolog-tag', default=GLOTTOLOG_TAG,
                      help='tag or branch to clone from Glottolog master repo')
 
+    parser.addoption('--glottolog-repo-root', metavar='PATH',
+                     help='pass root=PATH to treedb.configure()')
+
     parser.addoption('--rebuild', action='store_true',
                      help='pass rebuild=True to treedb.load()')
 
@@ -28,7 +31,7 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    options = ('file_engine', 'glottolog_tag',
+    options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
                'rebuild', 'force_rebuild', 'exclude_raw',
                'loglevel_debug')
 
@@ -46,6 +49,9 @@ def bare_treedb():
     import treedb as bare_treedb
 
     kwargs = {} if pytest.FLAGS.file_engine else {'engine': None}
+
+    if pytest.FLAGS.glottolog_repo_root is not None:
+        kwargs['root'] = pytest.FLAGS.glottolog_repo_root
 
     if pytest.FLAGS.loglevel_debug:
         kwargs['loglevel'] = 'DEBUG'
