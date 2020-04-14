@@ -3,6 +3,8 @@ Glottolog ``treedb``
 
 |PyPI version| |License| |Supported Python| |Format|
 
+|Travis| |Codecov|
+
 This tool loads the content of the `languoids/tree`_ directory from the
 Glottolog_ `master repo`_ into a normalized SQLite_ database.
 
@@ -202,3 +204,10 @@ This tool is distributed under the `MIT license`_.
 .. |Format| image:: https://img.shields.io/pypi/format/treedb.svg
     :target: https://pypi.org/project/treedb/
     :alt: Format
+
+.. |Travis| image:: https://img.shields.io/travis/glottolog/treddb.svg
+    :target: https://travis-ci.org/glottolog/treedb
+    :alt: Travis
+.. |Codecov| image:: https://codecov.io/gh/glottolog/treedb/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/glottolog/treedb
+    :alt: Codecov
