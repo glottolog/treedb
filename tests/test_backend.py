@@ -54,7 +54,7 @@ def test_print_schema(capsys):
 
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason='requires Python 3.7+')
-def test_backup(treedb, path=pathlib.Path('treedb-backup.sqlite3')):
+def test_backup(treedb, path=pathlib.Path('treedb-memory.backup.sqlite3')):
     engine = treedb.backup(path.name)
 
     assert engine.url.database == path.name
