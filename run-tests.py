@@ -11,6 +11,8 @@ ARGS = [
     #'--file-engine',
     #'--glottolog-tag', 'master',
     #'--exclude-raw',
+    #'--rebuild',
+    #'--force-rebuild',
 ]
 
 if 'idlelib' in sys.modules:

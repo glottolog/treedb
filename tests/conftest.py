@@ -17,6 +17,9 @@ def pytest_addoption(parser):
     parser.addoption('--rebuild', action='store_true',
                      help='pass rebuild=True to treedb.load()')
 
+    parser.addoption('--force-rebuild', action='store_true',
+                     help='pass force_rebuild=True to treedb.load()')
+
     parser.addoption('--exclude-raw', dest='exclude_raw', action='store_true',
                      help='pass exlcude_raw=True to treedb.load()')
 
@@ -26,7 +29,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     options = ('file_engine', 'glottolog_tag',
-               'rebuild', 'exclude_raw',
+               'rebuild', 'force_rebuild', 'exclude_raw',
                'loglevel_debug')
 
     FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
@@ -57,6 +60,7 @@ def bare_treedb():
 @pytest.fixture(scope='session')
 def treedb(bare_treedb):
     bare_treedb.load(rebuild=pytest.FLAGS.rebuild,
+                     force_rebuild=pytest.FLAGS.force_rebuild,
                      exclude_raw=pytest.FLAGS.exclude_raw)
     treedb = bare_treedb
     return treedb
