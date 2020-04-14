@@ -62,6 +62,17 @@ def test_backup(treedb, path=pathlib.Path('treedb-backup.sqlite3')):
     assert path.is_file()
     assert 10 * MB <= path.stat().st_size <= 200 * MB
 
+    engine = treedb.ENGINE.__class__(engine)  # SQLiteEngineProxy
+
+    assert engine.file_exists()
+
+    assert engine.file_mtime()
+
+    assert engine.file_size() == path.stat().st_size
+    assert 10 <= engine.file_size(as_megabytes=True) <= 200
+
+    assert len(engine.file_sha256()) == 64
+
 
 def test_dump_sql(treedb):
     suffix = '-memory' if treedb.ENGINE.file is None else ''
