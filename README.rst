@@ -205,7 +205,7 @@ This tool is distributed under the `MIT license`_.
     :target: https://pypi.org/project/treedb/
     :alt: Format
 
-.. |Travis| image:: https://img.shields.io/travis/glottolog/treddb.svg
+.. |Travis| image:: https://travis-ci.org/glottolog/treedb.svg?branch=master
     :target: https://travis-ci.org/glottolog/treedb
     :alt: Travis
 .. |Codecov| image:: https://codecov.io/gh/glottolog/treedb/branch/master/graph/badge.svg
