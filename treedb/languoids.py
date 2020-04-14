@@ -21,6 +21,13 @@ DATE_FORMAT = '%Y-%m-%d'
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
+ISO_8601_INTERVAL = re.compile(r'(?P<start_bce>-?)'
+                               r'(?P<start_date>\d{1,4}-\d{2}-\d{2})'
+                               r'/'
+                               r'(?P<end_bce>-?)'
+                               r'(?P<end_date>\d{1,4}-\d{2}-\d{2})',
+                               flags=re.ASCII)
+
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +75,54 @@ def make_datetime(value, *, format_=DATETIME_FORMAT):
 
 def format_datetime(value, *, format_=DATETIME_FORMAT):
     return value.strftime(format_)
+
+
+def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
+                  _match=ISO_8601_INTERVAL.fullmatch, strict=False):
+    if value is None:
+        return None
+    value = value.strip()
+    ma = _match(value)
+    if ma is None:
+        warnings.warn(f'unmatched interval: {value!r}')
+
+        if strict:  # pragma: no cover
+            log.error('invalid interval', value)
+            raise ValueError('invalid interval', value)
+
+        log.warning('ignoring interval value %r', value)
+        return None
+
+    dates = ma.group('start_date', 'end_date')
+    if fix_year:
+        def iterdates(dates):
+            for d in dates:
+                year, sep, rest = d.partition('-')
+                assert all([year, sep, rest])
+                year = f'{int(year):04d}'
+                yield f'{year}{sep}{rest}'
+
+        dates = list(iterdates(dates))
+
+    start, end = (datetime.datetime.strptime(d, date_format).date()
+                  for d in dates)
+
+    return {'start_year': -start.year if ma.group('start_bce') else start.year,
+            'start_month': start.month,
+            'start_day': start.day,
+            'end_year': -end.year if ma.group('end_bce') else end.year,
+            'end_month': end.month,
+            'end_day': end.day}
+
+
+def format_interval(value, adapt_year=True):
+    if value is None:
+        return None
+
+    year_format = 'd' if adapt_year else '04d'
+
+    return ('{start_year:{year_format}}-{start_month:02d}-{start_day:02d}'
+            '{end_year:{year_format}}-{end_month:02d}-{end_day:02d}').format_map(value)
 
 
 def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
@@ -297,6 +352,7 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
             'macroareas': _make_lines(core.get('macroareas')),
             'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
             'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+            'timespan': make_interval(core.get('timespan')),
             'sources': sources,
             'altnames': altnames,
             'triggers': triggers,
@@ -337,7 +393,8 @@ def iterrecords(languoids):
                'longitude': format_float(l['longitude']),
                'macroareas': l['macroareas'],
                'countries': list(map(formatcountry, l['countries'])),
-               'links': list(map(formatlink, l['links']))}
+               'links': list(map(formatlink, l['links'])),
+               'timespan': format_interval(l.get('timespan'))}
         rec = {'core': rec}
 
         sources = l.get('sources') or {}

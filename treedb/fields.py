@@ -31,6 +31,8 @@ FIELDS = {('core', 'name'): False,
 
           ('core', 'links'): True,
 
+          ('core', 'timespan'): False,
+
           ('sources', ALL_OPTIONS): True,
 
           ('altnames', ALL_OPTIONS): True,

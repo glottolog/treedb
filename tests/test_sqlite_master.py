@@ -29,7 +29,8 @@ def test_select_tables_nrows(treedb):
         assert table
 
         assert isinstance(nrows, int)
-        assert 1 <= nrows <= 1_000_000
+        minimum = 0 if table == 'timespan' else 1
+        assert minimum <= nrows <= 1_000_000
 
 
 def test_select_views(treedb):

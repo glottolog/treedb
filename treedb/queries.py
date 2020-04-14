@@ -22,7 +22,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      Languoid,
                      languoid_macroarea,
                      languoid_country, Country,
-                     Link, Source, Bibfile, Bibitem,
+                     Link, Source, Timespan, Bibfile, Bibitem,
                      Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
@@ -320,6 +320,10 @@ def get_json_query(*, ordered='id', load_json=True,
 
     links = select([group_array(links.c.jsonf).label('links')]).as_scalar()
 
+    timespan = select([Timespan.jsonf()])\
+            .where(Timespan.languoid_id == Languoid.id)\
+            .as_scalar()
+
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
@@ -461,6 +465,7 @@ def get_json_query(*, ordered='id', load_json=True,
                            'macroareas', macroareas,
                            'countries', countries,
                            'links', links,
+                           'timespan', timespan,
                            'sources', sources,
                            'altnames', altnames,
                            'triggers', triggers,

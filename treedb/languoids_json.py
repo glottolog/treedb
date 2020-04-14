@@ -39,6 +39,8 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
         endangerment = item['endangerment']
         if endangerment is not None:
             endangerment['date'] = json_datetime(endangerment['date'])
+        if not item.get('timespan'):
+            item.pop('timespan', None)
 
         yield tuple(path.split('/')), item
 

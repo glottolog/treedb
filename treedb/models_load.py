@@ -8,7 +8,7 @@ from .models import (MACROAREA, CLASSIFICATION,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
-                     Link, Source, Bibfile, Bibitem,
+                     Link, Timespan, Source, Bibfile, Bibitem,
                      Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
@@ -43,6 +43,8 @@ def load(languoids, conn):
                 yield c
 
     insert_link = insert(Link, bind=conn).execute
+
+    insert_timespan = insert(Timespan, bind=conn).execute
 
     insert_source = insert(Source, bind=conn).execute
     insert_bibfile = insert(Bibfile, bind=conn).execute
@@ -109,6 +111,7 @@ def load(languoids, conn):
         macroareas = l.pop('macroareas')
         countries = l.pop('countries')
         links = l.pop('links')
+        timespan = l.pop('timespan')
 
         sources = l.pop('sources', None)
         altnames = l.pop('altnames', None)
@@ -139,6 +142,9 @@ def load(languoids, conn):
         if links:
             insert_link([dict(languoid_id=lid, ord=i, **link)
                          for i, link in enumerate(links, 1)])
+
+        if timespan:
+            insert_timespan(languoid_id=lid, **timespan)
 
         if sources is not None:
             insert_source([dict(languoid_id=lid, provider=provider,

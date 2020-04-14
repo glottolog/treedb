@@ -110,6 +110,9 @@ class Languoid(Model):
                          order_by='Link.ord',
                          back_populates='languoid')
 
+    timespan = relationship('Timespan',
+                            back_populates='languoid')
+
     sources = relationship('Source',
                            order_by='[Source.provider, Source.bibitem_id]',
                            back_populates='languoid')
@@ -358,6 +361,48 @@ class Link(Model):
         return sa.func.json_object('scheme', cls.scheme,
                                    'url', cls.url,
                                    'title', cls.title).label(label)
+
+
+class Timespan(Model):
+
+    __tablename__ = 'timespan'
+
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+
+    start_year = Column(Integer,
+                        CheckConstraint('start_year BETWEEN -999999 AND 999999'),
+                        nullable=False)
+    start_month = Column(Integer,
+                         CheckConstraint('start_month BETWEEN 1 AND 12'),
+                         nullable=False)
+    start_day = Column(Integer,
+                       CheckConstraint('start_day BETWEEN 1 AND 31'),
+                       nullable=False)
+
+    end_year = Column(Integer,
+                      CheckConstraint('end_year BETWEEN -999999 AND 999999'),
+                      nullable=False)
+    end_month = Column(Integer,
+                       CheckConstraint('end_month BETWEEN 1 AND 12'),
+                       nullable=False)
+    end_day = Column(Integer,
+                     CheckConstraint('end_day BETWEEN 1 AND 31'),
+                     nullable=False)
+
+    __table_args__ = (CheckConstraint('end_year - start_year >= 0'),)
+
+    languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='timespan')
+
+    @classmethod
+    def jsonf(cls, *, label='jsonf'):
+        return sa.func.json_object('start_year', cls.start_year,
+                                   'start_month', cls.start_month,
+                                   'start_day', cls.start_day,
+                                   'end_year', cls.end_year,
+                                   'end_month', cls.end_month,
+                                   'end_day', cls.end_day).label(label)
 
 
 class Source(Model):
