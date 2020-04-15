@@ -1,6 +1,5 @@
 # test_backend.py
 
-import pathlib
 import sys
 
 import pytest

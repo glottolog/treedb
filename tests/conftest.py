@@ -37,9 +37,9 @@ def pytest_configure(config):
 
     FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
 
-    FLAGS.skip_exclude_raw  = pytest.mark.skipif(FLAGS.exclude_raw,
-                                                 reason='skipped by'
-                                                        '--exclude-raw')
+    FLAGS.skip_exclude_raw = pytest.mark.skipif(FLAGS.exclude_raw,
+                                                reason='skipped by'
+                                                       '--exclude-raw')
 
     pytest.FLAGS = FLAGS
 

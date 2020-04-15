@@ -4,7 +4,6 @@ import contextlib
 import datetime
 import functools
 import gzip
-import io
 import logging
 import re
 import warnings
