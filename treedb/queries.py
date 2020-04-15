@@ -1,5 +1,6 @@
 # queries.py - batteries-included sqlalchemy queries for sqlite3 db
 
+import functools
 import hashlib
 import logging
 import itertools
@@ -513,50 +514,52 @@ def print_languoid_stats(*, bind=ENGINE):
 def get_stats_query(*, bind=ENGINE):
     # cf. https://glottolog.org/glottolog/glottologinformation
 
-    def languoid_count(kind, fromclause=Languoid):
-        kind = sa.literal(kind)
-        n = sa.func.count()
-        return select([kind.label('kind'), n.label('n')]).select_from(fromclause)
+    def languoid_count(kind, cls=Languoid, fromclause=Languoid,
+                       level=None, is_root=None):
+        kind = sa.literal(kind).label('kind')
+        n = sa.func.count().label('n')
+        select_nrows = select([kind, n]).select_from(fromclause)
+
+        if level is not None:
+            select_nrows.append_whereclause(cls.level == level)
+        if is_root is not None:
+            cond = (cls.parent == None) if is_root else (cls.parent != None)
+            select_nrows.append_whereclause(cond)
+        return select_nrows
 
     Child, Root, child_root = Languoid.child_root(innerjoin=False)
+
+    language_count = functools.partial(languoid_count,
+                                       cls=Child, fromclause=child_root,
+                                       level=LANGUAGE)
 
     def iterselects():
         yield languoid_count('languoids')
 
-        yield languoid_count('families').where(Languoid.level == FAMILY)\
-            .where(Languoid.parent_id == None)
+        yield languoid_count('families', level=FAMILY, is_root=True)
 
-        yield languoid_count('isolates').where(Languoid.level == LANGUAGE)\
-            .where(Languoid.parent_id == None)
+        yield languoid_count('isolates', level=LANGUAGE, is_root=True)
 
-        yield languoid_count('roots').where(Languoid.parent_id == None)
+        yield languoid_count('roots', is_root=True)
 
-        yield languoid_count('languages').where(Languoid.level == LANGUAGE)
+        yield languoid_count('languages', level=LANGUAGE)
 
-        yield languoid_count('subfamilies').where(Languoid.level == FAMILY)\
-            .where(Languoid.parent_id != None)
+        yield languoid_count('subfamilies', level=FAMILY, is_root=False)
 
-        yield languoid_count('dialects').where(Languoid.level == DIALECT)
+        yield languoid_count('dialects', level=DIALECT)
 
-        other = SPECIAL_FAMILIES + (BOOKKEEPING,)
-        yield languoid_count('Spoken L1 Languages', child_root)\
-            .where(Child.level == LANGUAGE)\
-            .where(sa.or_(Root.name == None, Root.name.notin_(other)))
+        yield language_count('Spoken L1 Languages')\
+              .where(sa.or_(Root.name == None,
+                            Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,))))
 
         for name in SPECIAL_FAMILIES:
-            yield languoid_count(name, child_root)\
-                .where(Child.level == LANGUAGE)\
-                .where(Root.name == name)
+            yield language_count(name).where(Root.name == name)
 
         # TODO: the following does not work with literal_binds
-        #       .where(Family.name.is_distinct_from(BOOKKEEPING))
-        yield languoid_count('All', child_root)\
-            .where(Child.level == LANGUAGE)\
-            .where(Root.name.op('IS NOT')(BOOKKEEPING))
+        #       .where(Root.name.is_distinct_from(BOOKKEEPING))
+        yield language_count('All').where(Root.name.op('IS NOT')(BOOKKEEPING))
 
-        yield languoid_count(BOOKKEEPING, child_root)\
-            .where(Child.level == LANGUAGE)\
-            .where(Root.name == BOOKKEEPING)
+        yield language_count(BOOKKEEPING).where(Root.name == BOOKKEEPING)
 
     return sa.union_all(*iterselects(), bind=bind)
 
