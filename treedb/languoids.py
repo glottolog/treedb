@@ -352,7 +352,6 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
             'macroareas': _make_lines(core.get('macroareas')),
             'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
             'links': [splitlink(c) for c in _make_lines(core.get('links'))],
-            'timespan': make_interval(core.get('timespan')),
             'sources': sources,
             'altnames': altnames,
             'triggers': triggers,
@@ -362,6 +361,10 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
             'hh_ethnologue_comment': hh_ethnologue_comment,
             'iso_retirement': iso_retirement,
         }
+
+        timespan = core.get('timespan')
+        if timespan:
+            item['timespan'] = make_interval(timespan)
 
         yield path_tuple, item
 

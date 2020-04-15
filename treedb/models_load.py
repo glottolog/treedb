@@ -111,7 +111,7 @@ def load(languoids, conn):
         macroareas = l.pop('macroareas')
         countries = l.pop('countries')
         links = l.pop('links')
-        timespan = l.pop('timespan')
+        timespan = l.pop('timespan', None)
 
         sources = l.pop('sources', None)
         altnames = l.pop('altnames', None)

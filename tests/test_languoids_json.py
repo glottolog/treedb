@@ -37,3 +37,29 @@ def test_checksum(treedb):
         assert len(result) - len(PREFIX) == 64
     else:
         assert treedb.checksum() == PREFIX + expected
+
+
+@pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
+                    reason='requires https://github.com/glottolog/glottolog/pull/495')
+@pytest.mark.parametrize('kwargs, prefix', [
+    ([{'source': 'tables'},
+      {'source': 'raw'}],
+     PREFIX),
+    ([{'source': 'tables', 'file_order': True},
+      {'source': 'raw', 'file_order': True},
+      #{'source': 'files', 'file_order': True}
+      ],
+     'path_json:path:sha256:'),
+])
+def test_checksum_equivalence(treedb, kwargs, prefix):
+    results = [treedb.checksum(**kw) for kw in kwargs]
+
+    for r in results:
+        assert r.startswith(prefix)
+        assert len(r) - len(prefix) == 64
+
+    last = None
+    for r in results:
+        if last is not None:
+            assert r == last
+        last = r
