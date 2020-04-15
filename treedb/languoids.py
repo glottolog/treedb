@@ -94,7 +94,7 @@ def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
         return None
 
     dates = ma.group('start_date', 'end_date')
-    if fix_year:
+    if fix_year:  # FIXME: https://en.wikipedia.org/wiki/ISO_8601#Years
         def iterdates(dates):
             for d in dates:
                 year, sep, rest = d.partition('-')
@@ -119,10 +119,10 @@ def format_interval(value, adapt_year=True):
     if value is None:
         return None
 
-    year_format = 'd' if adapt_year else '04d'
+    context = dict(value, year_format='d' if adapt_year else '04d')
 
     return ('{start_year:{year_format}}-{start_month:02d}-{start_day:02d}'
-            '{end_year:{year_format}}-{end_month:02d}-{end_day:02d}').format_map(value)
+            '/{end_year:{year_format}}-{end_month:02d}-{end_day:02d}').format_map(context)
 
 
 def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
