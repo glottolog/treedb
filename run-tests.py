@@ -10,13 +10,15 @@ ARGS = [
     #'--exitfirst',
     #'--file-engine',
     #'--glottolog-tag', 'master',
-    #'--exclude-raw',
+    #'--glottolog-repo-root', './glottolog/',
     #'--rebuild',
     #'--force-rebuild',
+    #'--exclude-raw',
+    #'--loglevel-debug',
 ]
 
 if 'idlelib' in sys.modules:
-    ARGS.extend(['--capture=sys', '--color=no'])
+    ARGS += ['--capture=sys', '--color=no']
 
 if platform.system() == 'Windows':
     ARGS.append('--pdb')
