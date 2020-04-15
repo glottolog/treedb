@@ -38,7 +38,7 @@ def test_iterrecords(bare_treedb, n=100):
         assert r['core']['name']
 
 
-@pytest.mark.skip(reason='FIXME: broken')
+@pytest.mark.skip('TODO: improve output on failiure')
 @pytest.FLAGS.skip_exclude_raw
 def test_compare_with_files(treedb):
     assert treedb.compare_with_files()

@@ -47,8 +47,7 @@ def test_checksum(treedb):
      PREFIX),
     ([{'source': 'tables', 'file_order': True},
       {'source': 'raw', 'file_order': True},
-      #{'source': 'files', 'file_order': True}
-      ],
+      {'source': 'files', 'file_order': True}],
      'path_json:path:sha256:'),
 ])
 def test_checksum_equivalence(treedb, kwargs, prefix):

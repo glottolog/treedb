@@ -45,13 +45,14 @@ def groupby_attrgetter(*attrnames):
     return functools.partial(itertools.groupby, key=key)
 
 
-def iterfiles(top, *, verbose=False):
+def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
     """Yield DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = path_from_filename(top)
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
-    log.debug('recursive scandir %r', top)
+    log.debug('recursive depth-first scandir %r', top)
+    log.debug('sortkey: %r', sortkey)
 
     stack = [str(top)]
 
@@ -59,9 +60,9 @@ def iterfiles(top, *, verbose=False):
         root = stack.pop()
         if verbose:
             print(root)
-        direntries = os.scandir(root)
+        dentries = sorted(os.scandir(root), key=sortkey)
         dirs = []
-        for d in direntries:
+        for d in dentries:
             if d.is_dir():
                 dirs.append(d.path)
             else:
