@@ -2,6 +2,7 @@
 
 import contextlib
 import datetime
+import functools
 import gzip
 import io
 import logging
@@ -266,17 +267,13 @@ def dump_sql(filename=None, *, progress_after=100_000,
         path.unlink()
 
     if path.suffix == '.gz':
-        @contextlib.contextmanager
-        def open_path(*, encoding):
-            with gzip.open(path, 'wb') as z,\
-                 io.TextIOWrapper(z, encoding=encoding) as f:
-                yield f
+        open_path = functools.partial(gzip.open, path)
     else:
         open_path = path.open
 
     n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
-         open_path(encoding=encoding) as f:
+         open_path('wt', encoding=encoding) as f:
         for n, line in enumerate(dbapi_conn.iterdump(), 1):
             print(line, file=f)
             if not (n % progress_after):
