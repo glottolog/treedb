@@ -89,7 +89,10 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
 
 
 def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
-    """Yield where clause making function for key_column windows of size."""
+    """Yield where clause making function for key_column windows of size.
+
+    adapted from https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
+    """
     if _backend.sqlite_version(bind=bind) < (3, 25):
         iterkeys_func = iterkeys_compat
     else:
