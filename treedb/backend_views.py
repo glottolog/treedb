@@ -34,12 +34,12 @@ class DropView(sa.schema.DDLElement):
 def compile_create_view(element, compiler, **kwargs):
     select = compiler.sql_compiler.process(element.selectable,
                                            literal_binds=True)
-    return f'CREATE VIEW {element.name} AS {select}'
+    return f'\nCREATE VIEW {element.name} AS {select}\n'
 
 
 @sa.ext.compiler.compiles(DropView)
 def compile_drop_view(element, compiler, **kwargs):
-    return f'DROP VIEW {element.name}'
+    return f'\nDROP VIEW {element.name}\n'
 
 
 @sa.event.listens_for(_backend.Model.metadata, 'after_create')
