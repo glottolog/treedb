@@ -51,7 +51,7 @@ def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
     top = path_from_filename(top)
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
-    log.debug('recursive depth-first scandir %r', top)
+    log.debug('recursive depth-first scandir on %r', top)
     log.debug('sortkey: %r', sortkey)
 
     stack = [str(top)]
