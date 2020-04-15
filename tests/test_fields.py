@@ -18,7 +18,7 @@ def test_is_known(section, option, expected):
     ('core', 'name', {}, False),
     ('core', 'links', {}, True),
     ('core', 'WARNS_SCALAR', {}, (None, UserWarning, r'unknown')),
-    ('core', 'RAISES_UNKNOWN', {'unknown_as_scalar': False}, (KeyError, r'.+')),
+    ('core', 'RAISES_KEYERROR', {'unknown_as_scalar': False}, (KeyError, r'.+')),
 ])
 def test_is_lines(recwarn, section, option, kwargs, expected):
     if isinstance(expected, tuple):
