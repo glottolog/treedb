@@ -2,10 +2,14 @@ Changelog
 =========
 
 
-Version 1.0 (in development)
-----------------------------
+Version 1.0
+-----------
 
+Build with Glottolog ``v4.2.1`` per default.
 
+Improve ``treedb.print_schema()`` output for views.
+
+Improve tests and logging.
 
 
 Version 0.11
