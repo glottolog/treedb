@@ -11,6 +11,7 @@ ARGS = [
     #'--file-engine',
     #'--glottolog-tag', 'master',
     #'--glottolog-tag', 'v4.1',
+    #'--glottolog-tag', 'v4.2',
     #'--glottolog-repo-root', './glottolog/',
     #'--rebuild',
     #'--force-rebuild',

@@ -5,7 +5,9 @@ import pytest
 QUERY_HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
                        'b2ae26e8e0c28fc3a046a4a2dc1ee29d'),
               'v4.2': ('ce052ea38f053c4a5e9c75bfb3425305'
-                       '978125beead1284d09c0264ac0eb92ce')}
+                       '978125beead1284d09c0264ac0eb92ce'),
+              'v4.2.1': ('b48ad1aeac73b339011da8b839b74362'
+                         '21677183e85927f53787d879e81cf8ea')}
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -26,7 +28,7 @@ STATS = {'v4.1': '''\
  8,111 All
    395 Bookkeeping
 ''',
-         'v4.2': '''\
+         'v4.2.1': '''\
 25,228 languoids
    242 families
    187 isolates
@@ -45,6 +47,8 @@ STATS = {'v4.1': '''\
  8,122 All
    393 Bookkeeping
 '''}
+
+STATS['v4.2'] = STATS['v4.2.1']
 
 MB = 2**20
 

@@ -16,12 +16,20 @@ CHECKSUM = {('v4.1', False): ('strong:sha256:'
                               'cba96ac460c29c20eba139a18bb63aa5'),
             ('v4.2', True): ('weak:sha256:'
                              'a3a5fe9e406b1c63ae3710e3583b191b'
-                             'c75ac42fa802d424f71409cd141f4d6c')}
+                             'c75ac42fa802d424f71409cd141f4d6c'),
+            ('v4.2.1', False): ('strong:sha256:'
+                                '03ae265f46c79a5fd9ae44ada3ed5084'
+                                '0dbdb897384b7ac57456ba12b6206a71'),
+            ('v4.2.1', True): ('weak:sha256:'
+                               '9cf661e51d8cd6d8ef1f5e93dbbf4612'
+                               'a8a7e06712c56747d7a280b2d83f503b')}
 
 RAW_CSV_SHA256 = {'v4.1': ('963163852e7f4ee34b516bc459bdbb90'
                            '8f2f4aab64bda58087a1a23a731921fd'),
                   'v4.2': ('e2ac065f5ce73af2165eb401831b53e0'
-                           '494d8b25c4aa360fef879322b46f5f72')}
+                           '494d8b25c4aa360fef879322b46f5f72'),
+                  'v4.2.1': ('ab9d4339f3c0fa3acb0faf0f7306dc54'
+                             '09640ecd46e451de9a76445519f5157e')}
 
 MB = 2**20
 

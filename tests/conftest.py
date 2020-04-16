@@ -9,7 +9,7 @@ def pytest_addoption(parser):
     parser.addoption('--file-engine', action='store_true',
                      help='use configured file engine instead of in-memory db')
 
-    parser.addoption('--glottolog-tag', default='v4.2',
+    parser.addoption('--glottolog-tag', default='v4.2.1',
                      help='tag or branch to clone from Glottolog master repo')
 
     parser.addoption('--glottolog-repo-root', metavar='PATH',
