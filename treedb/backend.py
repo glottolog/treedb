@@ -36,9 +36,10 @@ __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
 log = logging.getLogger(__name__)
 
 
-def print_query_sql(query=None, *, literal_binds=True, pretty=True):
+def print_query_sql(query=None, *, literal_binds=True, pretty=True, flush=True):
     """Print the literal SQL for the given query."""
-    print(get_query_sql(query, literal_binds=literal_binds, pretty=pretty))
+    sql = get_query_sql(query, literal_binds=literal_binds, pretty=pretty)
+    print(sql, flush=flush)
 
 
 def get_query_sql(query=None, *, literal_binds=True, pretty=False):

@@ -33,11 +33,13 @@ sqlite_temp_master = sa.table('sqlite_temp_master',
                               sa.column('sql', sa.Text))
 
 
-def print_table_sql(model_or_table, *, include_nrows=True, bind=ENGINE):
+def print_table_sql(model_or_table, *, include_nrows=True, flush=True, bind=ENGINE):
     """Print CREATE TABLE for the given table and its number of rows."""
-    print(select_table_sql(model_or_table, bind=bind).scalar())
+    sql = select_table_sql(model_or_table, bind=bind).scalar()
+    print(sql, flush=flush)
     if include_nrows:
-        print(select_table_nrows(model_or_table, bind=bind).scalar())
+        nrows = select_table_nrows(model_or_table, bind=bind).scalar()
+        print(nrows, flush=flush)
 
 
 def select_table_sql(model_or_table, *, bind=ENGINE):
