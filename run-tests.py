@@ -10,6 +10,7 @@ ARGS = [
     #'--exitfirst',
     #'--file-engine',
     #'--glottolog-tag', 'master',
+    #'--glottolog-tag', 'v4.1',
     #'--glottolog-repo-root', './glottolog/',
     #'--rebuild',
     #'--force-rebuild',

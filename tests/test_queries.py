@@ -3,7 +3,9 @@
 import pytest
 
 QUERY_HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
-                       'b2ae26e8e0c28fc3a046a4a2dc1ee29d')}
+                       'b2ae26e8e0c28fc3a046a4a2dc1ee29d'),
+              'v4.2': ('ce052ea38f053c4a5e9c75bfb3425305'
+                       '978125beead1284d09c0264ac0eb92ce')}
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -23,6 +25,25 @@ STATS = {'v4.1': '''\
     10 Speech Register
  8,111 All
    395 Bookkeeping
+''',
+         'v4.2': '''\
+25,228 languoids
+   242 families
+   187 isolates
+   429 roots
+ 8,515 languages
+ 4,234 subfamilies
+12,237 dialects
+ 7,604 Spoken L1 Languages
+   196 Sign Language
+   123 Unclassifiable
+    81 Pidgin
+    66 Unattested
+    28 Artificial Language
+    14 Mixed Language
+    10 Speech Register
+ 8,122 All
+   393 Bookkeeping
 '''}
 
 MB = 2**20

@@ -7,7 +7,9 @@ import pytest
 PREFIX = 'path_json:id:sha256:'
 
 CHECKSUM = {'v4.1': ('ba2569945c4542f388554b51b98e4fc8'
-                     'd063cb76602be4994b627af7c4400e72')}
+                     'd063cb76602be4994b627af7c4400e72'),
+            'v4.2': ('f80029881d8e93b5b843e6f572dfb7c8'
+                     '870098c35294fb7c6693874f35f30a2d')}
 
 MB = 2**20
 

@@ -10,10 +10,18 @@ CHECKSUM = {('v4.1', False): ('strong:sha256:'
                              '8f9dafa40024550906674a5135d05e3b'),
             ('v4.1', 'unordered'): ('unordered:sha256:'
                                     'dc6ed1762d47dec12432b09e0d1a1159'
-                                    '153f062893bd884e8f21ec6b9e42d6c8')}
+                                    '153f062893bd884e8f21ec6b9e42d6c8'),
+            ('v4.2', False): ('strong:sha256:'
+                              '413ac7809d1f604a127f94d347f8279e'
+                              'cba96ac460c29c20eba139a18bb63aa5'),
+            ('v4.2', True): ('weak:sha256:'
+                             'a3a5fe9e406b1c63ae3710e3583b191b'
+                             'c75ac42fa802d424f71409cd141f4d6c')}
 
 RAW_CSV_SHA256 = {'v4.1': ('963163852e7f4ee34b516bc459bdbb90'
-                           '8f2f4aab64bda58087a1a23a731921fd')}
+                           '8f2f4aab64bda58087a1a23a731921fd'),
+                  'v4.2': ('e2ac065f5ce73af2165eb401831b53e0'
+                           '494d8b25c4aa360fef879322b46f5f72')}
 
 MB = 2**20
 
