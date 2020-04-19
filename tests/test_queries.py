@@ -2,12 +2,12 @@
 
 import pytest
 
-QUERY_HASH = {'v4.1': ('51569805689a929ad9eec83c0345566f'
-                       'b2ae26e8e0c28fc3a046a4a2dc1ee29d'),
-              'v4.2': ('ce052ea38f053c4a5e9c75bfb3425305'
-                       '978125beead1284d09c0264ac0eb92ce'),
-              'v4.2.1': ('b48ad1aeac73b339011da8b839b74362'
-                         '21677183e85927f53787d879e81cf8ea')}
+QUERY_HASH = {'v4.1': ('3842d6fd47d534486ed15531e035ee4b'
+                       'ed8c3a31fd44b36ff565983ba5f1114e'),
+              'v4.2': ('a1ff86daa0f4ca7854407ba31ae4d7839'
+                       'bcdc1cbafd92b720d01775094862564'),
+              'v4.2.1': ('90d180f3c2beff26763359945f68e8ac'
+                         '94faf4379d1e36807ee9d7b835821ae8')}
 
 STATS = {'v4.1': '''\
 24,701 languoids

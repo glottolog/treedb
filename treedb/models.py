@@ -367,7 +367,7 @@ class Link(Model):
     @classmethod
     def printf(cls, *, label='printf'):
         return sa.case([(cls.title != None,
-                         sa.func.printf('(%s)[%s]', cls.title, cls.url))],
+                         sa.func.printf('[%s](%s)', cls.title, cls.url))],
                        else_=cls.url).label(label)
 
     @classmethod
