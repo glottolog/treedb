@@ -286,8 +286,13 @@ class Macroarea(Model):
 
 
 languoid_macroarea = Table('languoid_macroarea', Model.metadata,
-    Column('languoid_id', ForeignKey('languoid.id'), primary_key=True),
-    Column('macroarea_name', ForeignKey('macroarea.name'), primary_key=True))
+                           Column('languoid_id',
+                                  ForeignKey('languoid.id'),
+                                  primary_key=True),
+                           Column('macroarea_name',
+                                  ForeignKey('macroarea.name'),
+                                  primary_key=True),
+                           info={'without_rowid': True})
 
 
 class Country(Model):
@@ -322,8 +327,13 @@ class Country(Model):
 
 
 languoid_country = Table('languoid_country', Model.metadata,
-    Column('languoid_id', ForeignKey('languoid.id'), primary_key=True),
-    Column('country_id', ForeignKey('country.id'), primary_key=True))
+                         Column('languoid_id',
+                                ForeignKey('languoid.id'),
+                                primary_key=True),
+                         Column('country_id',
+                                ForeignKey('country.id'),
+                                primary_key=True),
+                         info={'without_rowid': True})
 
 
 class Link(Model):
