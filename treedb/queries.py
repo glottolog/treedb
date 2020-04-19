@@ -299,11 +299,13 @@ def get_json_query(*, ordered='id', load_json=True,
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
 
-    macroareas = select([group_array(languoid_macroarea.c.macroarea_name)
-                         .label('macroareas')])\
+    macroareas = select([languoid_macroarea.c.macroarea_name])\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
-                 .order_by(languoid_macroarea)\
-                 .as_scalar()
+                 .correlate(Languoid)\
+                 .order_by('macroarea_name')
+
+    macroareas = select([group_array(macroareas.c.macroarea_name)
+                         .label('macroareas')]).as_scalar()
 
     countries = select([Country.jsonf()])\
                 .select_from(languoid_country.join(Country))\
@@ -322,8 +324,8 @@ def get_json_query(*, ordered='id', load_json=True,
     links = select([group_array(links.c.jsonf).label('links')]).as_scalar()
 
     timespan = select([Timespan.jsonf()])\
-            .where(Timespan.languoid_id == Languoid.id)\
-            .as_scalar()
+               .where(Timespan.languoid_id == Languoid.id)\
+               .as_scalar()
 
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
@@ -334,7 +336,7 @@ def get_json_query(*, ordered='id', load_json=True,
              .correlate(Languoid)\
              .where(Source.bibitem_id == s_bibitem.id)\
              .where(s_bibitem.bibfile_id == s_bibfile.id)\
-             .order_by(Source.provider, s_bibfile.name, s_bibitem.bibkey)
+             .order_by('provider', s_bibfile.name, s_bibitem.bibkey)
 
     sources = select([
             sources.c.provider.label('key'),
@@ -366,7 +368,7 @@ def get_json_query(*, ordered='id', load_json=True,
                        Trigger.trigger])\
                .where(Trigger.languoid_id == Languoid.id)\
                .correlate(Languoid)\
-               .order_by(Trigger.field, Trigger.ord)
+               .order_by('field', Trigger.ord)
 
     triggers = select([triggers.c.field.label('key'),
                        group_array(triggers.c.trigger).label('value')])\
