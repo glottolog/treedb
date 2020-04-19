@@ -140,9 +140,12 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     countries = select([group_concat(countries.c.country_id).label('countries')])\
                 .label('countries')
 
-    links = select([group_concat(Link.printf()).label('links')])\
+    links = select([Link.printf()])\
             .where(Link.languoid_id == Languoid.id)\
+            .correlate(Languoid)\
             .order_by(Link.ord)\
+
+    links = select([group_concat(links.c.printf).label('links')])\
             .label('links')
 
     source_gl = aliased(Source, name='source_glottolog')
