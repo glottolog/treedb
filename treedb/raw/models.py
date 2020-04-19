@@ -64,4 +64,5 @@ class Value(Model):
     # TODO: consider adding version for selective updates
     value = Column(Text, CheckConstraint("value != ''"), nullable=False)
 
-    __table_args__ = (UniqueConstraint(file_id, line),)
+    __table_args__ = (UniqueConstraint(file_id, line),
+                      {'info': {'without_rowid': True}})

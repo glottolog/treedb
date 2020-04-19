@@ -13,6 +13,7 @@ import csv23
 
 import sqlalchemy as sa
 import sqlalchemy.orm
+import sqlalchemy.ext.compiler
 import sqlalchemy.ext.declarative
 
 try:
@@ -109,6 +110,18 @@ def _regexp(pattern, value):
     if value is None:
         return None
     return re.search(pattern, value) is not None
+
+
+@sa.ext.compiler.compiles(sa.schema.CreateTable)
+def compile(element, compiler, **kwargs):
+    """Append sqlite3 WITHOUT_ROWID to CREATE_TABLE if configured.
+
+    From https://gist.github.com/chaoflow/3a6dc9d42a90c38870b8d4033b58a4d1
+    """
+    text = compiler.visit_create_table(element, **kwargs)
+    if element.element.info.get('without_rowid'):
+        text = text.rstrip() + ' WITHOUT ROWID\n\n'
+    return text
 
 
 def sqlite_version(*, raw=False, bind=ENGINE, label='sqlite_version'):
