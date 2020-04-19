@@ -140,8 +140,7 @@ class Dataset(Model):
 
     __tablename__ = '__dataset__'
 
-    id = sa.Column(sa.Boolean, sa.CheckConstraint('id'),
-                   primary_key=True, server_default=sa.true())
+    id = sa.Column(sa.Integer, sa.CheckConstraint('id = 1'), primary_key=True)
 
     title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"), nullable=False)
 
@@ -192,8 +191,7 @@ class Producer(Model):
 
     __tablename__ = '__producer__'
 
-    id = sa.Column(sa.Boolean, sa.CheckConstraint('id'),
-                   primary_key=True, server_default=sa.true())
+    id = sa.Column(sa.Integer, sa.CheckConstraint('id = 1'), primary_key=True)
 
     name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"),
                      unique=True, nullable=False)
