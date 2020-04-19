@@ -403,11 +403,12 @@ def get_json_query(*, ordered='id', load_json=True,
         ]).where(ClassificationRef.languoid_id == Languoid.id)\
         .correlate(Languoid)\
         .where(ClassificationRef.bibitem_id == cr_bibitem.id)\
-        .where(cr_bibitem.bibfile_id == cr_bibfile.id)
+        .where(cr_bibitem.bibfile_id == cr_bibfile.id)\
+        .order_by(ClassificationRef.kind, ClassificationRef.ord)
 
     classification_refs = select([
             classification_refs.c.key,
-            group_array(classification_refs.c.jsonf).label('value'),
+            group_array(sa.func.json(classification_refs.c.jsonf)).label('value'),
         ]).group_by(classification_refs.c.key)
 
     classification = classification_comment.union_all(classification_refs)
