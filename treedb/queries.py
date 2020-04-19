@@ -124,16 +124,20 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     path, family, language = Languoid.path_family_language()
 
-    macroareas = select([group_concat(languoid_macroarea.c.macroarea_name)
-                         .label('macroareas')])\
+    macroareas = select([languoid_macroarea.c.macroarea_name])\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
-                 .order_by(languoid_macroarea)\
-                 .label('macroareas')
+                 .correlate(Languoid)\
+                 .order_by('macroarea_name')
 
-    countries = select([group_concat(Country.id).label('countries')])\
-                .select_from(languoid_country.join(Country))\
+    macroareas = select([group_concat(macroareas.c.macroarea_name)
+                         .label('macroareas')]).label('macroareas')
+
+    countries = select([languoid_country.c.country_id])\
                 .where(languoid_country.c.languoid_id == Languoid.id)\
-                .order_by(Country.id)\
+                .correlate(Languoid)\
+                .order_by('country_id')
+
+    countries = select([group_concat(countries.c.country_id).label('countries')])\
                 .label('countries')
 
     links = select([group_concat(Link.printf()).label('links')])\
