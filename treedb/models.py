@@ -273,6 +273,8 @@ class Macroarea(Model):
 
     name = Column(Enum(*sorted(MACROAREA)), primary_key=True)
 
+    __table_args__ = {'info': {'without_rowid': True}}
+
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' {self.name!r}>')
@@ -296,6 +298,8 @@ class Country(Model):
 
     name = Column(Text, CheckConstraint("name != ''"), nullable=False,
                   unique=True)
+
+    __table_args__ = {'info': {'without_rowid': True}}
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
