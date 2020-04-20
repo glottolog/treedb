@@ -182,12 +182,12 @@ def family_languages(session):
         .filter(~Languoid.name.startswith('Unclassified '))\
         .filter(~session.query(Family).filter_by(level=FAMILY)
             .filter(Family.name.in_(SPECIAL_FAMILIES))
-            .join(tree, tree.c.parent_id == Family.id)
+            .join(tree, Family.id == tree.c.parent_id)
             .filter_by(child_id=Languoid.id, terminal=True)
             .exists())\
         .filter(session.query(sa.func.count())
             .select_from(Child).filter_by(level=LANGUAGE)
-            .join(tree, tree.c.child_id == Child.id)
+            .join(tree, Child.id == tree.c.child_id)
             .filter_by(parent_id=Languoid.id)
             .as_scalar() < 2)
 
