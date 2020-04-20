@@ -81,7 +81,8 @@ class Languoid(Model):
     longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
     __table_args__ = (CheckConstraint('(latitude IS NULL)'
-                                      ' = (longitude IS NULL)'),)
+                                      ' = (longitude IS NULL)'),
+                      {'info': {'without_rowid': True}})
 
     def __repr__(self):
         hid_iso = [f'{n}={getattr(self, n)!r}' for n in ('hid', 'iso639_3') if getattr(self, n)]
@@ -350,7 +351,8 @@ class Link(Model):
 
     __table_args__ = (UniqueConstraint(languoid_id, url),
                       CheckConstraint("substr(url, 1, length(scheme) + 3)"
-                                      " = scheme || '://'"))
+                                      " = scheme || '://'"),
+                      {'info': {'without_rowid': True}})
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -403,7 +405,8 @@ class Timespan(Model):
                      CheckConstraint('end_day BETWEEN 1 AND 31'),
                      nullable=False)
 
-    __table_args__ = (CheckConstraint('end_year - start_year >= 0'),)
+    __table_args__ = (CheckConstraint('end_year - start_year >= 0'),
+                      {'info': {'without_rowid': True}})
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -429,6 +432,8 @@ class Source(Model):
 
     pages = Column(Text, CheckConstraint("pages != ''"))
     trigger = Column(Text, CheckConstraint("trigger != ''"))
+
+    __table_args__ = {'info': {'without_rowid': True}}
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -525,6 +530,8 @@ class Altname(Model):
     name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
     lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
 
+    __table_args__ = {'info': {'without_rowid': True}}
+
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
@@ -558,7 +565,8 @@ class Trigger(Model):
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    __table_args__ = (UniqueConstraint(languoid_id, field, ord),)
+    __table_args__ = (UniqueConstraint(languoid_id, field, ord),
+                      {'info': {'without_rowid': True}})
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -580,6 +588,8 @@ class Identifier(Model):
 
     identifier = Column(Text, CheckConstraint("identifier != ''"), nullable=False)
 
+    __table_args__ = {'info': {'without_rowid': True}}
+
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
@@ -598,6 +608,8 @@ class ClassificationComment(Model):
     kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
 
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
+
+    __table_args__ = {'info': {'without_rowid': True}}
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -620,7 +632,8 @@ class ClassificationRef(Model):
 
     pages = Column(Text, CheckConstraint("pages != ''"))
 
-    __table_args__ = (UniqueConstraint(languoid_id, kind, ord),)
+    __table_args__ = (UniqueConstraint(languoid_id, kind, ord),
+                      {'info': {'without_rowid': True}})
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -659,6 +672,8 @@ class Endangerment(Model):
     source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
     date = Column(DateTime, nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
+
+    __table_args__ = {'info': {'without_rowid': True}}
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -733,6 +748,8 @@ class EthnologueComment(Model):
     ethnologue_versions = Column(Text, CheckConstraint('length(ethnologue_versions) >= 3'), nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
+    __table_args__ = {'info': {'without_rowid': True}}
+
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
@@ -776,6 +793,7 @@ class IsoRetirement(Model):
         # TODO: fix disagreement
         Index('change_request_key', sa.func.coalesce(change_request, effective)),
         CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
+        {'info': {'without_rowid': True}},
     )
 
     def __repr__(self):
@@ -820,7 +838,8 @@ class IsoRetirementChangeTo(Model):
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
 
-    __table_args__ = (UniqueConstraint('languoid_id', 'ord'),)
+    __table_args__ = (UniqueConstraint('languoid_id', 'ord'),
+                      {'info': {'without_rowid': True}})
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
