@@ -178,9 +178,9 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
     triggers = {f: select([t.trigger])
+                   .where(t.field == f)
                    .where(t.languoid_id == Languoid.id)
                    .correlate(Languoid)
-                   .where(t.field == f)
                    .order_by(t.ord) for f, t in triggers.items()}
 
     triggers = [select([group_concat(t.c.trigger).label('triggers_' + f)])
