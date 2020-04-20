@@ -120,7 +120,7 @@ def compile(element, compiler, **kwargs):
     """
     text = compiler.visit_create_table(element, **kwargs)
     if element.element.info.get('without_rowid'):
-        text = text.rstrip() + ' WITHOUT ROWID\n\n'
+        text = text.rstrip() + ' WITHOUT ROWID'
     return text
 
 
