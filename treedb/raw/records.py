@@ -93,7 +93,7 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
     adapted from https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
     """
-    if _backend.sqlite_version(bind=bind) < (3, 25):
+    if bind.dialect.dbapi.sqlite_version_info < (3, 25):
         iterkeys_func = iterkeys_compat
     else:
         iterkeys_func = iterkeys

@@ -27,7 +27,7 @@ from . import (tools as _tools,
 from . import ENGINE
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
-           'set_engine', 'sqlite_version',
+           'set_engine',
            'Model', 'print_schema',
            'Dataset', 'Producer',
            'Session',
@@ -89,7 +89,7 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
             raise RuntimeError(f'engine file does not exist: {filename!r}')
 
     ENGINE.file = filename
-    log.info('sqlite version: %s', sqlite_version(raw=True, bind=ENGINE))
+    log.info('sqlite version: %s', ENGINE.dialect.dbapi.sqlite_version)
     return ENGINE
 
 
@@ -122,16 +122,6 @@ def compile(element, compiler, **kwargs):
     if element.element.info.get('without_rowid'):
         text = text.rstrip() + ' WITHOUT ROWID'
     return text
-
-
-def sqlite_version(*, raw=False, bind=ENGINE, label='sqlite_version'):
-    select = sa.select([sa.func.sqlite_version().label(label)], bind=bind)
-    result = select.scalar()
-
-    if not raw:
-        result = tuple(map(int, result.split('.')))
-    log.debug('SELECT sqlite_version(raw=%r) result: %r', raw, result)
-    return result
 
 
 Model = sa.ext.declarative.declarative_base()
