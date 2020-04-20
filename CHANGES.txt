@@ -2,10 +2,28 @@ Changelog
 =========
 
 
-Version 1.1 (in development)
-----------------------------
+Version 1.1
+-----------
 
+Fix some aggregation orders in ``get_json_query()`` that depended on the
+insertion order.
 
+Fix ```get_query()`` link markup. Use the same aggregation order as
+``get_json_query``.
+
+Fixed ``treedb.iterdescendants()`` to include roots with no descencants.
+
+Improve ``treedb.print_languoid_stats()`` performance and the query used for
+the ``stats`` view.
+
+Reduce file size adding WITHOUT ROWID to tables with non-integer or composite
+primary keys.
+
+Stabilize ``treedb.print_query_sql()`` notebook output with ``flush=True``.
+
+Change __dataset__ and __producer__ primary key from BOOLEAN to INTEGER.
+
+Use ``sqlite.sqlite_version`` instead of querying the engine.
 
 
 Version 1.0
