@@ -23,7 +23,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      Languoid,
                      languoid_macroarea,
                      languoid_country, Country,
-                     Link, Source, Timespan, Bibfile, Bibitem,
+                     Link, Source, SourceProvider, Timespan, Bibfile, Bibitem,
                      Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
@@ -149,13 +149,15 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             .label('links')
 
     source_gl = aliased(Source, name='source_glottolog')
+    s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
     sources_glottolog = select([source_gl.printf(s_bibfile, s_bibitem)])\
-                        .where(source_gl.provider == 'glottolog')\
                         .where(source_gl.languoid_id == Languoid.id)\
                         .correlate(Languoid)\
+                        .where(source_gl.provider_id == s_provider.id)\
+                        .where(s_provider.name == 'glottolog')\
                         .where(source_gl.bibitem_id == s_bibitem.id)\
                         .where(s_bibitem.bibfile_id == s_bibfile.id)\
                         .order_by(s_bibfile.name, s_bibitem.bibkey)
@@ -342,16 +344,18 @@ def get_json_query(*, ordered='id', load_json=True,
                .where(Timespan.languoid_id == Languoid.id)\
                .as_scalar()
 
+    s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
-    sources = select([Source.provider,
+    sources = select([s_provider.name.label('provider'),
                       Source.jsonf(s_bibfile, s_bibitem)])\
              .where(Source.languoid_id == Languoid.id)\
              .correlate(Languoid)\
+             .where(Source.provider_id == s_provider.id)\
              .where(Source.bibitem_id == s_bibitem.id)\
              .where(s_bibitem.bibfile_id == s_bibfile.id)\
-             .order_by('provider', s_bibfile.name, s_bibitem.bibkey)
+             .order_by(s_provider.name, s_bibfile.name, s_bibitem.bibkey)
 
     sources = select([
             sources.c.provider.label('key'),

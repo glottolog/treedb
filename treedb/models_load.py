@@ -8,7 +8,9 @@ from .models import (MACROAREA, CLASSIFICATION,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
-                     Link, Timespan, Source, Bibfile, Bibitem,
+                     Link, Timespan,
+                     Source, SourceProvider,
+                     Bibfile, Bibitem,
                      Altname, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
@@ -47,6 +49,18 @@ def load(languoids, conn):
     insert_timespan = insert(Timespan, bind=conn).execute
 
     insert_source = insert(Source, bind=conn).execute
+    insert_sourceprovider = insert(SourceProvider, bind=conn).execute
+
+    class SourceProviderMap(dict):
+
+        def __missing__(self, name):
+                log.debug('insert new source provider: %r', name)
+                id, = insert_sourceprovider(name=name).inserted_primary_key
+                self[name] = id
+                return id
+
+    sourceprovider_ids = SourceProviderMap()
+
     insert_bibfile = insert(Bibfile, bind=conn).execute
     insert_bibitem = insert(Bibitem, bind=conn).execute
 
@@ -147,10 +161,12 @@ def load(languoids, conn):
             insert_timespan(languoid_id=lid, **timespan)
 
         if sources is not None:
-            insert_source([dict(languoid_id=lid, provider=provider,
-                                bibitem_id=bibitem_ids.pop_params(s), **s)
-                           for provider, data in sources.items()
-                           for s in data])
+            for provider, data in sources.items():
+                provider_id = sourceprovider_ids[provider]
+                insert_source([dict(languoid_id=lid,
+                                    provider_id=provider_id,
+                                    bibitem_id=bibitem_ids.pop_params(s), **s)
+                               for s in data])
 
         if altnames is not None:
             insert_altname([dict(languoid_id=lid, provider=provider, **n)

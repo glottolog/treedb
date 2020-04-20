@@ -115,7 +115,7 @@ class Languoid(Model):
                             back_populates='languoid')
 
     sources = relationship('Source',
-                           order_by='[Source.provider, Source.bibitem_id]',
+                           order_by='[Source.provider_id, Source.bibitem_id]',
                            back_populates='languoid')
 
     altnames = relationship('Altname',
@@ -434,7 +434,7 @@ class Source(Model):
     __tablename__ = 'source'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    provider = Column(Text, Enum(*sorted(SOURCE_PROVIDER)), primary_key=True)
+    provider_id = Column(ForeignKey('sourceprovider.id'), primary_key=True)
     bibitem_id = Column(ForeignKey('bibitem.id'), primary_key=True)
 
     pages = Column(Text, CheckConstraint("pages != ''"))
@@ -445,10 +445,14 @@ class Source(Model):
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
-                f' provider={self.provider!r}'
+                f' provider_id={self.provider_id!r}'
                 f' bibitem_id={self.bibitem_id!r}')
 
     languoid = relationship('Languoid',
+                            innerjoin=True,
+                            back_populates='sources')
+
+    provider = relationship('SourceProvider',
                             innerjoin=True,
                             back_populates='sources')
 
@@ -480,6 +484,22 @@ class Source(Model):
                                    'bibkey', bibitem.bibkey,
                                    'pages', cls.pages,
                                    'trigger', cls.trigger).label(label)
+
+
+class SourceProvider(Model):
+
+    __tablename__ = 'sourceprovider'
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Text, Enum(*sorted(SOURCE_PROVIDER)), nullable=False,
+                  unique=True)
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' name={self.name!r}')
+
+    sources = relationship('Source', back_populates='provider')
 
 
 class Bibfile(Model):
