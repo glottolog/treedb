@@ -11,7 +11,7 @@ from .backend import Session, Dataset
 
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
-                     Languoid, Altname)
+                     Languoid, Altname, AltnameProvider)
 
 from . import ENGINE
 
@@ -105,7 +105,7 @@ def docformat(func):
 def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
     """Glottocodes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-        .filter(~Languoid.id.op('REGEXP')(pattern))
+           .filter(~Languoid.id.op('REGEXP')(pattern))
 
 
 @check
@@ -113,7 +113,7 @@ def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
 def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
     """Iso codes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-        .filter(~Languoid.iso639_3.op('REGEXP')(pattern))
+           .filter(~Languoid.iso639_3.op('REGEXP')(pattern))
 
 
 @check
@@ -121,83 +121,83 @@ def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
 def valid_hid(session, *, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
     """Hids match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-        .filter(~Languoid.hid.op('REGEXP')(pattern))
+           .filter(~Languoid.hid.op('REGEXP')(pattern))
 
 
 @check
 def clean_name(session):
     """Glottolog names lack problematic characters."""
+    gl = session.query(AltnameProvider.id).filter_by(name='glottolog')
 
     def cond(col):
         yield col.startswith(' ')
         yield col.endswith(' ')
         yield col.op('REGEXP')('[`_*:\xa4\xab\xb6\xbc]')  # \xa4.. common in mojibake
 
+    match_gl = Languoid.altnames.any(sa.or_(*cond(Altname.name)), provider_id=gl)
     return session.query(Languoid).order_by('id')\
-        .filter(sa.or_(
-            Languoid.altnames.any(sa.or_(*cond(Altname.name)), provider='glottolog'),
-            *cond(Languoid.name)))
+           .filter(sa.or_(match_gl, *cond(Languoid.name)))
 
 
 @check
 def family_parent(session):
     """Parent of a family is a family."""
     return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-        .join(Languoid.parent, aliased=True)\
-        .filter(Languoid.level != FAMILY)
+           .join(Languoid.parent, aliased=True)\
+           .filter(Languoid.level != FAMILY)
 
 
 @check
 def language_parent(session):
     """Parent of a language is a family."""
     return session.query(Languoid).filter_by(level=LANGUAGE).order_by('id')\
-        .join(Languoid.parent, aliased=True)\
-        .filter(Languoid.level != FAMILY)
+           .join(Languoid.parent, aliased=True)\
+           .filter(Languoid.level != FAMILY)
 
 
 @check
 def dialect_parent(session):
     """Parent of a dialect is a language or dialect."""
     return session.query(Languoid).filter_by(level=DIALECT).order_by('id')\
-        .join(Languoid.parent, aliased=True)\
-        .filter(Languoid.level.notin_([LANGUAGE, DIALECT]))
+           .join(Languoid.parent, aliased=True)\
+           .filter(Languoid.level.notin_([LANGUAGE, DIALECT]))
 
 
 @check
 def family_children(session):
     """Family has at least one subfamily or language."""
     return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-        .filter(~Languoid.children.any(
-            Languoid.level.in_([FAMILY, LANGUAGE])))
+           .filter(~Languoid.children.any(Languoid.level.in_([FAMILY,
+                                                              LANGUAGE])))
 
 
 @check
 def family_languages(session):
     """Family has at least two languages (except 'Unclassified ...')."""
-    tree = Languoid.tree(include_self=False, with_terminal=True)
-
     Family, Child = (sa.orm.aliased(Languoid, name=n) for n in ('family', 'child'))
 
+    tree = Languoid.tree(include_self=False, with_terminal=True)
+
     return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-        .filter(~Languoid.name.startswith('Unclassified '))\
-        .filter(~session.query(Family).filter_by(level=FAMILY)
-            .filter(Family.name.in_(SPECIAL_FAMILIES))
-            .join(tree, Family.id == tree.c.parent_id)
-            .filter_by(child_id=Languoid.id, terminal=True)
-            .exists())\
-        .filter(session.query(sa.func.count())
-            .select_from(Child).filter_by(level=LANGUAGE)
-            .join(tree, Child.id == tree.c.child_id)
-            .filter_by(parent_id=Languoid.id)
-            .as_scalar() < 2)
+           .filter(~Languoid.name.startswith('Unclassified '))\
+           .filter(~session.query(Family).filter_by(level=FAMILY)
+                   .filter(Family.name.in_(SPECIAL_FAMILIES))
+                   .join(tree, Family.id == tree.c.parent_id)
+                   .filter_by(child_id=Languoid.id, terminal=True)
+                   .exists())\
+           .filter(session.query(sa.func.count())
+                   .select_from(Child).filter_by(level=LANGUAGE)
+                   .join(tree, Child.id == tree.c.child_id)
+                   .filter_by(parent_id=Languoid.id)
+                   .as_scalar() < 2)
 
 
 @check
 def bookkeeping_no_children(session):
     """Bookkeeping languoids lack children (book1242 is flat)."""
     return session.query(Languoid).order_by('id')\
-        .filter(Languoid.parent.has(name=BOOKKEEPING))\
-        .filter(Languoid.children.any())
+           .filter(Languoid.parent.has(name=BOOKKEEPING))\
+           .filter(Languoid.children.any())
 
 
 @check

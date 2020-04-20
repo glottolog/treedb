@@ -11,7 +11,8 @@ from .models import (MACROAREA, CLASSIFICATION,
                      Link, Timespan,
                      Source, SourceProvider,
                      Bibfile, Bibitem,
-                     Altname, Trigger, Identifier,
+                     Altname, AltnameProvider,
+                     Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
@@ -89,6 +90,18 @@ def load(languoids, conn):
     bibitem_ids = BibitemMap()
 
     insert_altname = insert(Altname, bind=conn).execute
+    insert_altnameprovider = insert(AltnameProvider, bind=conn).execute
+
+    class AltnameProviderMap(dict):
+
+        def __missing__(self, name):
+            log.debug('insert new altname provider: %r', name)
+            id, = insert_altnameprovider(name=name).inserted_primary_key
+            self[name] = id
+            return id
+
+    altnameprovider_ids = AltnameProviderMap()
+    
     insert_trigger = insert(Trigger, bind=conn).execute
     insert_ident = insert(Identifier, bind=conn).execute
     insert_comment = insert(ClassificationComment, bind=conn).execute
@@ -169,9 +182,11 @@ def load(languoids, conn):
                                for s in data])
 
         if altnames is not None:
-            insert_altname([dict(languoid_id=lid, provider=provider, **n)
-                            for provider, names in altnames.items()
-                            for n in names])
+            for provider, names in altnames.items():
+                provider_id = altnameprovider_ids[provider]
+                insert_altname([dict(languoid_id=lid,
+                                     provider_id=provider_id, **n)
+                                for n in names])
 
         if triggers is not None:
             insert_trigger([{'languoid_id': lid, 'field': field,

@@ -119,7 +119,7 @@ class Languoid(Model):
                            back_populates='languoid')
 
     altnames = relationship('Altname',
-                            order_by='[Altname.provider, Altname.name, Altname.lang]',
+                            order_by='[Altname.provider_id, Altname.name, Altname.lang]',
                             back_populates='languoid')
 
     triggers = relationship('Trigger',
@@ -553,7 +553,7 @@ class Altname(Model):
     __tablename__ = 'altname'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    provider = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), primary_key=True)
+    provider_id = Column(ForeignKey('altnameprovider.id'), primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
     lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
 
@@ -562,11 +562,15 @@ class Altname(Model):
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
-                f' povider={self.provider!r}'
+                f' povider_id={self.provider_id!r}'
                 f' name={self.name!r}>'
                 f' lang={self.lang!r}')
 
     languoid = relationship('Languoid', innerjoin=True,
+                            back_populates='altnames')
+
+    provider = relationship('AltnameProvider',
+                            innerjoin=True,
                             back_populates='altnames')
 
     @classmethod
@@ -580,6 +584,22 @@ class Altname(Model):
     def jsonf(cls, *, label='jsonf'):
         return sa.func.json_object('name', cls.name,
                                    'lang', cls.lang).label(label)
+
+
+class AltnameProvider(Model):
+
+    __tablename__ = 'altnameprovider'
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), nullable=False,
+                  unique=True)
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' name={self.name!r}')
+
+    altnames = relationship('Altname', back_populates='provider')
 
 
 class Trigger(Model):

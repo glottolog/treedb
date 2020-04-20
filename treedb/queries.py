@@ -24,7 +24,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      languoid_macroarea,
                      languoid_country, Country,
                      Link, Source, SourceProvider, Timespan, Bibfile, Bibitem,
-                     Altname, Trigger, Identifier,
+                     Altname, AltnameProvider, Trigger, Identifier,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
@@ -166,13 +166,16 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                                 .label('sources_glottolog')])\
                         .label('sources_glottolog')
 
-    altnames = {p: aliased(Altname, name='altname_' + p) for p in sorted(ALTNAME_PROVIDER)}
+    altnames = {p: (aliased(Altname, name='altname_' + p),
+                    aliased(AltnameProvider, name='altname_'+ p + '_provider'))
+                for p in sorted(ALTNAME_PROVIDER)}
 
     altnames = {p: select([a.printf()])
-                   .where(a.provider == p)
                    .where(a.languoid_id == Languoid.id)
                    .correlate(Languoid)
-                   .order_by(a.name, a.lang) for p, a in altnames.items()}
+                   .where(a.provider_id == ap.id)
+                   .where(ap.name == p)
+                   .order_by(a.name, a.lang) for p, (a, ap) in altnames.items()}
 
     altnames = [select([group_concat(a.c.printf).label('altnames_' + p)])
                 .label('altnames_' + p) for p, a in altnames.items()]
@@ -367,11 +370,13 @@ def get_json_query(*, ordered='id', load_json=True,
                                     sa.func.json(sources.c.value)),
                        '{}').label('sources')]).as_scalar()
 
-    altnames = select([Altname.provider,
+    a_provider = aliased(AltnameProvider, name='altname_provider')
+    altnames = select([a_provider.name.label('provider'),
                        Altname.jsonf()])\
                .where(Altname.languoid_id == Languoid.id)\
                .correlate(Languoid)\
-               .order_by('provider', Altname.printf())
+               .where(Altname.provider_id == a_provider.id)\
+               .order_by(a_provider.name, Altname.printf())
 
     altnames = select([
             altnames.c.provider.label('key'),
