@@ -220,25 +220,11 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def child_root(cls, innerjoin=False):
-        Child, Root = (aliased(cls, name=n) for n in ('child', 'root'))
-
-        tree = Languoid.tree(with_terminal=True)
-
-        is_child = (Child.id == tree.c.child_id)
-        is_root = sa.and_(Root.id == tree.c.parent_id, tree.c.terminal == True)
-
-        if innerjoin:
-            child_root = tree.join(Child, is_child).join(Root, is_root)
-        else:
-            tree_root = tree.join(Root, is_root)
-            child_root = sa.outerjoin(Child, tree_root, is_child)
-
-        return Child, Root, child_root
-
-    @classmethod
-    def root_child(cls, innerjoin=True):
+    def root_child(cls, include_self=True, innerjoin=True):
         Root, Child = (sa.orm.aliased(cls, name=n) for n in ('root', 'child'))
+
+        if not include_self:
+            raise NotImplementedError
 
         tree_1 = sa.select([Root.id.label('parent_id'),
                             Root.id.label('child_id')])\
