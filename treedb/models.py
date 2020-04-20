@@ -182,7 +182,7 @@ class Languoid(Model):
 
         tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])
         tree_2.append_from(tree_1.join(Parent,
-                                       sa.and_(Parent.id == tree_1.c.parent_id,
+                                       sa.and_(tree_1.c.parent_id == Parent.id,
                                                Parent.parent_id != None)))
 
         if with_steps:
@@ -193,7 +193,7 @@ class Languoid(Model):
 
             tree_2.append_column((Granny.parent_id == None).label('terminal'))
             fromclause = tree_2.froms[-1].outerjoin(Granny,
-                                                    Granny.id == Parent.parent_id)
+                                                    Parent.parent_id == Granny.id)
             tree_2 = tree_2.select_from(fromclause)
 
         return tree_1.union_all(tree_2)
@@ -231,13 +231,13 @@ class Languoid(Model):
                  .where(Root.parent_id == None)\
                  .cte('tree', recursive=True)
 
-        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])\
-                 .select_from(tree_1.join(Child, Child.parent_id == tree_1.c.child_id))
+        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
+        tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
 
         tree = tree_1.union_all(tree_2)
 
-        is_root = (Root.id == tree.c.parent_id)
-        is_child = (Child.id == tree.c.child_id)
+        is_root = (tree.c.parent_id == Root.id)
+        is_child = (tree.c.child_id == Child.id)
 
         if innerjoin:
             root_child = tree.join(Root, is_root).join(Child, is_child)
@@ -268,7 +268,7 @@ class Languoid(Model):
                    .correlate(cls)\
                    .where(cls.level == DIALECT)\
                    .where(sa.exists()
-                          .where(Ancestor.id == tree.c.parent_id)
+                          .where(tree.c.parent_id == Ancestor.id)
                           .where(Ancestor.level == LANGUAGE))\
                    .label(language_label)
 
