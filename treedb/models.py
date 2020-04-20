@@ -192,8 +192,9 @@ class Languoid(Model):
             Granny = aliased(Languoid, name='grandparent')
 
             tree_2.append_column((Granny.parent_id == None).label('terminal'))
-            tree_2 = tree_2.select_from(tree_2.froms[-1]
-                .outerjoin(Granny, Granny.id == Parent.parent_id))
+            fromclause = tree_2.froms[-1].outerjoin(Granny,
+                                                    Granny.id == Parent.parent_id)
+            tree_2 = tree_2.select_from(fromclause)
 
         return tree_1.union_all(tree_2)
 
@@ -220,17 +221,15 @@ class Languoid(Model):
 
     @classmethod
     def child_root(cls, innerjoin=False, rightjoin=False):
-        tree = Languoid.tree(with_terminal=True)
-
         Child, Root = (aliased(cls, name=n) for n in ('child', 'root'))
 
-        is_child = (tree.c.child_id == Child.id)
+        tree = Languoid.tree(with_terminal=True)
 
-        is_root = sa.and_(tree.c.parent_id == Root.id,
-                          tree.c.terminal == True)
+        is_child = (Child.id == tree.c.child_id)
+        is_root = sa.and_(Root.id == tree.c.parent_id, tree.c.terminal == True)
 
         if innerjoin:
-            child_root = sa.join(Child, tree, is_child).join(Root, is_root)
+            child_root = tree.join(Child, is_child).join(Root, is_root)
         elif rightjoin:
             child_tree = sa.join(Child, tree, is_child)
             child_root = sa.outerjoin(Root, child_tree,
@@ -250,22 +249,24 @@ class Languoid(Model):
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
         family = sa.select([tree.c.parent_id])\
-            .where(tree.c.child_id == cls.id)\
-            .correlate(cls)\
-            .where(tree.c.steps > 0)\
-            .where(tree.c.terminal == True)
+                 .where(tree.c.child_id == cls.id)\
+                 .correlate(cls)\
+                 .where(tree.c.steps > 0)\
+                 .where(tree.c.terminal == True)\
+                 .label(family_label)
 
         Ancestor = aliased(Languoid, name='ancestor')
 
         language = sa.select([tree.c.parent_id])\
-            .where(tree.c.child_id == cls.id)\
-            .correlate(cls)\
-            .where(cls.level == DIALECT)\
-            .where(sa.exists()
-                .where(Ancestor.id == tree.c.parent_id)
-                .where(Ancestor.level == LANGUAGE))
+                   .where(tree.c.child_id == cls.id)\
+                   .correlate(cls)\
+                   .where(cls.level == DIALECT)\
+                   .where(sa.exists()
+                          .where(Ancestor.id == tree.c.parent_id)
+                          .where(Ancestor.level == LANGUAGE))\
+                   .label(language_label)
 
-        return path, family.label(family_label), language.label(language_label)
+        return path, family, language
 
 
 class Macroarea(Model):

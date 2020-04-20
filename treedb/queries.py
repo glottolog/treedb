@@ -586,14 +586,12 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    tree = Languoid.tree()
-
     Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
 
-    child_tree = sa.join(Child, tree, tree.c.child_id == Child.id)
+    tree = Languoid.tree()
 
-    parent_child = sa.outerjoin(Parent, child_tree,
-                                tree.c.parent_id == Parent.id)
+    parent_child = tree.join(Child, Child.id == tree.c.child_id)\
+                   .outerjoin(Parent, Parent.id == tree.c.parent_id)
 
     select_pairs = select([Parent.id.label('parent_id'),
                            Child.id.label('child_id')], bind=bind)\
