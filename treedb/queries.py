@@ -166,18 +166,24 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     altnames = {p: aliased(Altname, name='altname_' + p) for p in sorted(ALTNAME_PROVIDER)}
 
-    altnames = [select([group_concat(a.printf()).label('altnames_' + p)])
-                .where(a.provider == p)
-                .where(a.languoid_id == Languoid.id)
-                .order_by(a.name, a.lang)
+    altnames = {p: select([a.printf()])
+                   .where(a.provider == p)
+                   .where(a.languoid_id == Languoid.id)
+                   .correlate(Languoid)
+                   .order_by(a.name, a.lang) for p, a in altnames.items()}
+
+    altnames = [select([group_concat(a.c.printf).label('altnames_' + p)])
                 .label('altnames_' + p) for p, a in altnames.items()]
 
     triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
-    triggers = [select([group_concat(t.trigger).label('triggers_' + f)])
-                .where(t.field == f)
-                .where(t.languoid_id == Languoid.id)
-                .order_by(t.ord)
+    triggers = {f: select([t.trigger])
+                   .where(t.languoid_id == Languoid.id)
+                   .correlate(Languoid)
+                   .where(t.field == f)
+                   .order_by(t.ord) for f, t in triggers.items()}
+
+    triggers = [select([group_concat(t.c.trigger).label('triggers_' + f)])
                 .label('triggers_' + f) for f, t in triggers.items()]
 
     idents = {s: aliased(Identifier, name='ident_' + s) for s in sorted(IDENTIFIER_SITE)}
@@ -208,11 +214,13 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     endangerment_source = EndangermentSource.printf(e_bibfile, e_bibitem)\
                           .label('endangerment_source')
 
-    iso_retirement_change_to = select([group_concat(IsoRetirementChangeTo.code)
+    iso_retirement_change_to = select([IsoRetirementChangeTo.code])\
+                               .where(IsoRetirementChangeTo.languoid_id == Languoid.id)\
+                               .correlate(Languoid)\
+                               .order_by(IsoRetirementChangeTo.ord)
+
+    iso_retirement_change_to = select([group_concat(iso_retirement_change_to.c.code)
                                        .label('iso_retirement_change_to')])\
-                               .where(IsoRetirementChangeTo.languoid_id
-                                      == Languoid.id)\
-                               .order_by(IsoRetirementChangeTo.ord)\
                                .label('iso_retirement_change_to')
 
     def get_cols(model, label='{name}', ignore='id'):
