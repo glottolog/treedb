@@ -220,7 +220,7 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def child_root(cls, innerjoin=False, rightjoin=False):
+    def child_root(cls, innerjoin=False):
         Child, Root = (aliased(cls, name=n) for n in ('child', 'root'))
 
         tree = Languoid.tree(with_terminal=True)
@@ -230,16 +230,36 @@ class Languoid(Model):
 
         if innerjoin:
             child_root = tree.join(Child, is_child).join(Root, is_root)
-        elif rightjoin:
-            child_tree = sa.join(Child, tree, is_child)
-            child_root = sa.outerjoin(Root, child_tree,
-                                      sa.and_(is_root,
-                                              Root.parent_id == None))
         else:
-            tree_root = sa.join(tree, Root, is_root)
+            tree_root = tree.join(Root, is_root)
             child_root = sa.outerjoin(Child, tree_root, is_child)
 
         return Child, Root, child_root
+
+    @classmethod
+    def root_child(cls, innerjoin=True):
+        Root, Child = (sa.orm.aliased(cls, name=n) for n in ('root', 'child'))
+
+        tree_1 = sa.select([Root.id.label('parent_id'),
+                            Root.id.label('child_id')])\
+                 .where(Root.parent_id == None)\
+                 .cte('tree', recursive=True)
+
+        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])\
+                 .select_from(tree_1.join(Child, Child.parent_id == tree_1.c.child_id))
+
+        tree = tree_1.union_all(tree_2)
+
+        is_root = (Root.id == tree.c.parent_id)
+        is_child = (Child.id == tree.c.child_id)
+
+        if innerjoin:
+            root_child = tree.join(Root, is_root).join(Child, is_child)
+        else:
+            tree_child = tree.join(Child, is_child)
+            root_child = sa.outerjoin(Root, tree_child, is_root)
+
+        return Root, Child, root_child
 
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,

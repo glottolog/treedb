@@ -540,15 +540,17 @@ def get_stats_query(*, bind=ENGINE):
 
         if level is not None:
             select_nrows.append_whereclause(cls.level == level)
+
         if is_root is not None:
             cond = (cls.parent == None) if is_root else (cls.parent != None)
             select_nrows.append_whereclause(cond)
+
         return select_nrows
 
-    Child, Root, child_root = Languoid.child_root(innerjoin=False)
+    Root, Child, root_child = Languoid.root_child()
 
     language_count = functools.partial(languoid_count,
-                                       cls=Child, fromclause=child_root,
+                                       cls=Child, fromclause=root_child,
                                        level=LANGUAGE)
 
     def iterselects():
