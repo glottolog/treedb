@@ -590,10 +590,18 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
     Parent, Child = (aliased(Languoid, name=n) for n in ('parent', 'child'))
 
-    tree = Languoid.tree()
+    tree_1 = sa.select([Parent.id.label('parent_id'),
+                        Child.id.label('child_id')])\
+             .select_from(sa.outerjoin(Parent, Child, Parent.id == Child.parent_id))\
+             .cte('tree', recursive=True)
 
-    parent_child = tree.join(Child, Child.id == tree.c.child_id)\
-                   .outerjoin(Parent, Parent.id == tree.c.parent_id)
+    tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
+    tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
+
+    tree = tree_1.union_all(tree_2)
+
+    parent_child = tree.join(Parent, tree.c.parent_id == Parent.id)\
+                   .outerjoin(Child, tree.c.child_id == Child.id)
 
     select_pairs = select([Parent.id.label('parent_id'),
                            Child.id.label('child_id')], bind=bind)\
@@ -611,7 +619,8 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     if child_level is not None:
         if child_level not in LEVEL:
             raise ValueError(f'invalid child_level: {child_level!r}')
-        select_pairs.append_whereclause(Child.level == child_level)
+        select_pairs.append_whereclause(sa.or_(Child.level == None,
+                                               Child.level == child_level))
 
     rows = select_pairs.execute()
 

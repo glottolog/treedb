@@ -1,5 +1,7 @@
 # test_queries.py
 
+import itertools
+
 import pytest
 
 QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
@@ -128,14 +130,17 @@ def test_print_languoid_stats(capsys, treedb):
         assert out == expected
 
 
-@pytest.mark.parametrize('kwargs, expected_first', [
+@pytest.mark.parametrize('kwargs, expected_head', [
     ({'parent_level': 'top', 'child_level': 'language'},
-     ('abkh1242', ['abaz1241', 'abkh1244',
-                               'adyg1241', 'kaba1278',
-                               'ubyk1235'])),
+     [('abin1243', []),
+      ('abis1238', []),
+      ('abkh1242', ['abaz1241', 'abkh1244',
+                                'adyg1241', 'kaba1278',
+                                'ubyk1235']),
+      ('adai1235', [])]),
 ])
-def test_iterdescendants(treedb, kwargs, expected_first):
+def test_iterdescendants(treedb, kwargs, expected_head):
     pairs = treedb.iterdescendants(**kwargs)
-    first = next(pairs)
+    head = list(itertools.islice(pairs, len(expected_head)))
 
-    assert first == expected_first
+    assert head == expected_head
