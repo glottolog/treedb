@@ -26,7 +26,11 @@ log = logging.getLogger(__name__)
 def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
                 windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
-    log.info('start generating raw records from %r', bind)
+    try:
+        dbapi_conn = bind.connection.connection
+    except AttributeError:
+        dbapi_conn = None
+    log.info('start generating raw records from %r', dbapi_conn or bind)
 
     select_files = sa.select([File.path])
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
