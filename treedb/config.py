@@ -47,7 +47,7 @@ class ConfigParser(configparser.ConfigParser):
         if found:
             log.debug('%s().read() config file(s): %r', cls.__name__, found)
         elif required:
-            ValueError(f'config file not found: {path!r}')
+            raise ValueError(f'config file not found: {path!r}')
         else:
             log.debug('no config file(s) found')
         return inst
@@ -70,8 +70,8 @@ def configure(config_path=CONFIG, *, engine=NOT_SET, root=NOT_SET,
     config_path = _tools.path_from_filename(config_path)
     log.debug('load config file %r', config_path)
     cfg = ConfigParser.from_file(config_path,
-                                  required=True,
-                                  default_repo_root=default_repo_root)
+                                 required=True,
+                                 default_repo_root=default_repo_root)
 
     log.info('configure logging from %r', config_path)
     logging_.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
