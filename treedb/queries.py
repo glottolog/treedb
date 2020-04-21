@@ -24,7 +24,8 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      languoid_macroarea,
                      languoid_country, Country,
                      Link, Source, SourceProvider, Timespan, Bibfile, Bibitem,
-                     Altname, AltnameProvider, Trigger, Identifier,
+                     Altname, AltnameProvider, Trigger,
+                     Identifier, IdentifierSite,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
@@ -191,9 +192,12 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     triggers = [select([group_concat(t.c.trigger).label('triggers_' + f)])
                 .label('triggers_' + f) for f, t in triggers.items()]
 
-    idents = {s: aliased(Identifier, name='ident_' + s) for s in sorted(IDENTIFIER_SITE)}
+    idents = {s: (aliased(Identifier, name='ident_' + s),
+                  aliased(IdentifierSite, name='ident_' + s + '_site'))
+              for s in sorted(IDENTIFIER_SITE)}
 
-    identifiers = [i.identifier.label('identifier_' + s) for s, i in idents.items()]
+    identifiers = [i.identifier.label('identifier_' + s)
+                   for s, (i, _) in idents.items()]
 
     def crefs(kind):
         ref = aliased(ClassificationRef, name='cr_' + kind)
@@ -272,9 +276,10 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
         ], bind=bind)
 
     froms = Languoid.__table__
-    for s, i in idents.items():
-        froms = froms.outerjoin(i, sa.and_(i.site == s,
-                                           i.languoid_id == Languoid.id))
+    for s, (i, is_) in idents.items():
+        froms = froms.outerjoin(sa.join(i, is_, i.site_id == is_.id),
+                                sa.and_(is_.name == s,
+                                        i.languoid_id == Languoid.id))
     froms = froms.outerjoin(subc, sa.and_(subc.kind == 'sub',
                                           subc.languoid_id == Languoid.id))\
             .outerjoin(famc, sa.and_(famc.kind == 'family',
@@ -404,11 +409,12 @@ def get_json_query(*, ordered='id', load_json=True,
                        '{}').label('triggers')]).as_scalar()
 
     identifier = select([
-        sa.func.nullif(group_object(Identifier.site,
+        sa.func.nullif(group_object(IdentifierSite.name.label('site'),
                                     Identifier.identifier),
                        '{}').label('identifier')
         ]).where(Identifier.languoid_id == Languoid.id)\
         .correlate(Languoid)\
+        .where(Identifier.site_id == IdentifierSite.id)\
         .as_scalar()
 
     classification_comment = select([

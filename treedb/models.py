@@ -127,7 +127,7 @@ class Languoid(Model):
                             back_populates='languoid')
 
     identifiers = relationship('Identifier',
-                               order_by='Identifier.site',
+                               order_by='Identifier.site_id',
                                back_populates='languoid')
 
     subclassificationcomment = relationship('ClassificationComment', uselist=False,
@@ -631,7 +631,7 @@ class Identifier(Model):
     __tablename__ = 'identifier'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    site = Column(Enum(*sorted(IDENTIFIER_SITE)), primary_key=True)
+    site_id = Column(ForeignKey('identifiersite.id'), primary_key=True)
 
     identifier = Column(Text, CheckConstraint("identifier != ''"), nullable=False)
 
@@ -640,11 +640,30 @@ class Identifier(Model):
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
-                f' site={self.site!r}'
+                f' site_id={self.site_id!r}'
                 f' identifier={self.identifier!r}>')
 
     languoid = relationship('Languoid', innerjoin=True,
                              back_populates='identifiers')
+
+    site = relationship('IdentifierSite', innerjoin=True,
+                        back_populates='identifiers')
+
+
+class IdentifierSite(Model):
+
+    __tablename__ = 'identifiersite'
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(Text, Enum(*sorted(IDENTIFIER_SITE)), nullable=False,
+                  unique=True)
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' name={self.name!r}')
+
+    identifiers = relationship('Identifier', back_populates='site')
 
 
 class ClassificationComment(Model):

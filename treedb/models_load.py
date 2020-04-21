@@ -12,7 +12,7 @@ from .models import (MACROAREA, CLASSIFICATION,
                      Source, SourceProvider,
                      Bibfile, Bibitem,
                      Altname, AltnameProvider,
-                     Trigger, Identifier,
+                     Trigger, Identifier, IdentifierSite,
                      ClassificationComment, ClassificationRef,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
@@ -103,7 +103,20 @@ def load(languoids, conn):
     altnameprovider_ids = AltnameProviderMap()
     
     insert_trigger = insert(Trigger, bind=conn).execute
+
     insert_ident = insert(Identifier, bind=conn).execute
+    insert_identsite = insert(IdentifierSite, bind=conn).execute
+
+    class IdentifierSiteMap(dict):
+
+        def __missing__(self, name):
+            log.debug('insert new identifier site: %r', name)
+            id, = insert_identsite(name=name).inserted_primary_key
+            self[name] = id
+            return id
+
+    identifiersite_ids = IdentifierSiteMap()
+
     insert_comment = insert(ClassificationComment, bind=conn).execute
     insert_ref = insert(ClassificationRef, bind=conn).execute
 
@@ -195,7 +208,9 @@ def load(languoids, conn):
                             for i, t in enumerate(triggers, 1)])
 
         if identifier is not None:
-            insert_ident([dict(languoid_id=lid, site=site, identifier=i)
+            insert_ident([dict(languoid_id=lid,
+                               site_id=identifiersite_ids[site],
+                               identifier=i)
                           for site, i in identifier.items()])
 
         if classification is not None:
