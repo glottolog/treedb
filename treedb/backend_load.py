@@ -105,15 +105,15 @@ def load(filename=ENGINE, repo_root=None, *,
 
     @contextlib.contextmanager
     def begin(bind=engine):
-        log.debug('begin transaction on %r', bind)
         with bind.begin() as conn:
+            log.debug('begin transaction on %r', conn.connection.connection)
             conn.execute('PRAGMA synchronous = OFF')
             conn.execute('PRAGMA journal_mode = MEMORY')
             conn = conn.execution_options(compiled_cache={})
 
             yield conn
 
-        log.debug('end transaction on %r', bind)
+        log.debug('end transaction on %r', conn.connection.connection)
 
     log.debug('start load timer')
     start = time.time()
