@@ -24,7 +24,7 @@ setup(
         'sqlalchemy>=1.0.14',
     ],
     extras_require={
-        'dev': ['flake8', 'pep8-naming', 'wheel', 'twine'],
+        'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],
         'test': ['pytest>=5.2', 'pytest-cov'],
         'pretty': ['sqlparse>=0.3'],
         'pandas': ['pandas'],
