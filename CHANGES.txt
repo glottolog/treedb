@@ -2,10 +2,17 @@ Changelog
 =========
 
 
-Version 1.1.1 (in development)
-------------------------------
+Version 1.2
+-----------
 
+Normalize providers and sites into lookup tables.
 
+Fix exception when config file is not found.
+
+Improve logging: log sqlite3.Connection to identify in-memory databases,
+debug log package location.
+
+Improve tests.
 
 
 Version 1.1

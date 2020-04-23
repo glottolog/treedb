@@ -68,7 +68,7 @@ __all__ = ['ENGINE', 'ROOT',
            'engine', 'root']
 
 __title__ = 'treedb'
-__version__ = '1.1.1.dev0'
+__version__ = '1.2'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
