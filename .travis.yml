@@ -15,6 +15,6 @@ jobs:
     - python: 3.7
       env: FLAGS=--glottolog-tag=master
 install: pip install .[test,pretty,pandas] codecov
-script: ./run-tests.py --loglevel-debug $FLAGS
+script: ./run-tests.py --installed --loglevel-debug $FLAGS
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
 after_success: codecov
