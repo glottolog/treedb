@@ -55,10 +55,10 @@ def load(languoids, conn):
     class SourceProviderMap(dict):
 
         def __missing__(self, name):
-                log.debug('insert new source provider: %r', name)
-                id, = insert_sourceprovider(name=name).inserted_primary_key
-                self[name] = id
-                return id
+            log.debug('insert new source provider: %r', name)
+            id, = insert_sourceprovider(name=name).inserted_primary_key
+            self[name] = id
+            return id
 
     sourceprovider_ids = SourceProviderMap()
 
@@ -101,7 +101,7 @@ def load(languoids, conn):
             return id
 
     altnameprovider_ids = AltnameProviderMap()
-    
+
     insert_trigger = insert(Trigger, bind=conn).execute
 
     insert_ident = insert(Identifier, bind=conn).execute

@@ -168,7 +168,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                         .label('sources_glottolog')
 
     altnames = {p: (aliased(Altname, name='altname_' + p),
-                    aliased(AltnameProvider, name='altname_'+ p + '_provider'))
+                    aliased(AltnameProvider, name='altname_' + p + '_provider'))
                 for p in sorted(ALTNAME_PROVIDER)}
 
     altnames = {p: select([a.printf()])
