@@ -25,4 +25,8 @@ if 'idlelib' in sys.modules:
 if platform.system() == 'Windows':
     ARGS.append('--pdb')
 
+if '--installed' in sys.argv[1:]:
+    sys.argv[1:] = [a for a in sys.argv[1:] if a != '--installed']
+    sys.path.pop(0)
+
 sys.exit(pytest.main(ARGS + sys.argv[1:]))
