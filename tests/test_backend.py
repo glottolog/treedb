@@ -1,5 +1,6 @@
 # test_backend.py
 
+import re
 import sys
 
 import pytest
@@ -39,6 +40,10 @@ def test_print_query_sql(capsys, query, pretty, expected):
 
     if expected is None:
         assert out.strip()
+    elif pretty and _treedb.backend.sqlparse is None:
+        norm_out, norm_exp = (re.sub(r'\s{1,}', r' ', s).strip()
+                              for s in (out, expected))
+        assert norm_out == norm_exp
     else:
         assert out == expected
 

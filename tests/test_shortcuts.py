@@ -11,5 +11,8 @@ def test_pd_read_sql(treedb):
 
     df = treedb.pd_read_sql(query, index_col='id')
 
-    assert not df.empty
-    df.info()
+    if treedb.shortcuts.PANDAS is None:
+        assert df is None
+    else:
+        assert not df.empty
+        df.info()
