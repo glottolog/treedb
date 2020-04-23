@@ -60,8 +60,10 @@ def reset_logging():
 
 
 def log_version():
-    from . import __version__
-    log.info('%s version: %s', __package__, __version__)
+    import treedb
+
+    log.info('%s version: %s', __package__, treedb.__version__)
+    log.debug('%r', treedb)
 
 
 def set_capture_warnings(value=True):
