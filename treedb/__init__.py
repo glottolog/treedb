@@ -38,7 +38,7 @@ from .checks import check
 
 from .queries import (print_rows, write_csv, hash_csv,
                       get_query,
-                      write_json_query_csv, get_json_query,
+                      write_json_query_csv, write_json_lines, get_json_query,
                       print_languoid_stats,
                       iterdescendants)
 
@@ -60,7 +60,7 @@ __all__ = ['ENGINE', 'ROOT',
            'check',
            'print_rows', 'write_csv', 'hash_csv',
            'get_query',
-           'write_json_query_csv', 'get_json_query',
+           'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats',
            'iterdescendants',
            'count', 'select', 'text',

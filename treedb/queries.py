@@ -1,9 +1,12 @@
 # queries.py - batteries-included sqlalchemy queries for sqlite3 db
 
+import contextlib
 import functools
 import hashlib
-import logging
+import io
 import itertools
+import logging
+import sys
 import warnings
 
 import sqlalchemy as sa
@@ -33,9 +36,11 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
 
 __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query',
-           'write_json_query_csv', 'get_json_query',
+           'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats', 'get_stats_query',
            'iterdescendants']
+
+NOT_SET = object()
 
 
 log = logging.getLogger(__name__)
@@ -313,13 +318,40 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
         suffix = f'.languoids-json_query{suffix}.csv.gz'
         filename = bind.file_with_suffix(suffix).name
 
-    query = get_json_query(ordered=ordered, load_json=raw, bind=bind)
+    query = get_json_query(ordered=ordered, as_rows=True, load_json=raw,
+                           bind=bind)
+
     return write_csv(query, filename=filename)
 
 
-@_views.register_view('path_json', load_json=False)
-def get_json_query(*, ordered='id', load_json=True,
-                   path_label='path', json_label='json', bind=ENGINE):
+def write_json_lines(filename=NOT_SET, bind=ENGINE, _encoding='utf-8'):
+    if filename is NOT_SET:
+        result = bind.file_with_suffix('.languoids.jsonl')
+        open_func = functools.partial(result.open, 'wt', encoding=_encoding)
+    elif hasattr(filename, 'write'):
+        result = None
+        open_func = lambda: contextlib.nullcontext(filename)
+    elif filename is None:
+        result = None
+        wrapper = io.TextIOWrapper(sys.stdout.buffer, encoding=_encoding)
+        open_func = lambda: contextlib.nullcontext(wrapper)
+    else:
+        result = _tools.path_from_filename(filename)
+        open_func = functools.partial(result.open, 'wt', encoding=_encoding)
+
+    query = get_json_query(ordered='id', as_rows=False, load_json=False, 
+                           languoid_label='languoid', bind=bind)
+
+    with open_func() as f:
+        for path_languoid, in query.execute():
+            print(path_languoid, file=f)
+
+    return result
+
+
+@_views.register_view('path_json', as_rows=True, load_json=False)
+def get_json_query(*, ordered='id', as_rows=True, load_json=True,
+                   path_label='path', languoid_label='json', bind=ENGINE):
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
@@ -486,8 +518,6 @@ def get_json_query(*, ordered='id', load_json=True,
                      .correlate(Languoid)\
                      .as_scalar()
 
-    path = Languoid.path()
-
     languoid = json_object('id', Languoid.id,
                            'parent_id', Languoid.parent_id,
                            'level', Languoid.level,
@@ -509,16 +539,30 @@ def get_json_query(*, ordered='id', load_json=True,
                            'hh_ethnologue_comment', hh_ethnologue_comment,
                            'iso_retirement', iso_retirement)
 
-    if load_json:
-        languoid = sa.type_coerce(languoid, sa.types.JSON)
+    if as_rows:
+        path = Languoid.path()
 
-    select_languoid = select([path.label(path_label),
-                              languoid.label(json_label)],
-                             bind=bind).select_from(Languoid)
+        if load_json:
+            languoid = sa.type_coerce(languoid, sa.types.JSON)
 
-    _apply_ordered(select_languoid, path, ordered=ordered)
+        columns = [path.label(path_label),
+                   languoid.label(languoid_label)]
+    else:
+        path = Languoid.path_json()
 
-    return select_languoid
+        path_json = json_object(path_label, path,
+                                languoid_label, languoid)
+
+        if load_json:
+            path_json = sa.type_coerce(path_json, sa.types.JSON)
+
+        columns = [path_json]
+
+    select_json = select(columns, bind=bind).select_from(Languoid)
+
+    _apply_ordered(select_json, path, ordered=ordered)
+
+    return select_json
 
 
 def print_languoid_stats(*, bind=ENGINE):
