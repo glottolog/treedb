@@ -40,8 +40,6 @@ __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'print_languoid_stats', 'get_stats_query',
            'iterdescendants']
 
-NOT_SET = object()
-
 
 log = logging.getLogger(__name__)
 
@@ -324,20 +322,32 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
     return write_csv(query, filename=filename)
 
 
-def write_json_lines(filename=NOT_SET, bind=ENGINE, _encoding='utf-8'):
-    if filename is NOT_SET:
-        result = bind.file_with_suffix('.languoids.jsonl')
-        open_func = functools.partial(result.open, 'wt', encoding=_encoding)
+def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
+    r"""Write languoids as newline delimited JSON.
+
+    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
+    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
+    """
+    open_kwargs = {'encoding': _encoding}
+
+    path = fobj = None
+    if filename is None:
+        path = bind.file_with_suffix('.languoids.jsonl')
+    elif filename is sys.stdout:
+        fobj = io.TextIOWrapper(sys.stdout.buffer, **open_kwargs)
     elif hasattr(filename, 'write'):
-        result = None
-        open_func = lambda: contextlib.nullcontext(filename)
-    elif filename is None:
-        result = None
-        wrapper = io.TextIOWrapper(sys.stdout.buffer, encoding=_encoding)
-        open_func = lambda: contextlib.nullcontext(wrapper)
+        fobj = filename
     else:
-        result = _tools.path_from_filename(filename)
-        open_func = functools.partial(result.open, 'wt', encoding=_encoding)
+        path = _tools.path_from_filename(filename)
+
+    if path is None:
+        open_func = lambda: contextlib.nullcontext(fobj)
+        result = fobj
+    else:
+        open_func = functools.partial(path.open, 'wt', **open_kwargs)
+        result = path
+
+    assert result is not None
 
     query = get_json_query(ordered='id', as_rows=False, load_json=False, 
                            languoid_label='languoid', bind=bind)
