@@ -352,9 +352,12 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
     query = get_json_query(ordered='id', as_rows=False, load_json=False, 
                            languoid_label='languoid', bind=bind)
 
+    rows = query.execute()
+
     with open_func() as f:
-        for path_languoid, in query.execute():
-            print(path_languoid, file=f)
+        write = functools.partial(print, file=f)
+        for path_languoid, in rows:
+            write(path_languoid)
 
     return result
 
@@ -673,7 +676,8 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
                    .outerjoin(Child, tree.c.child_id == Child.id)
 
     select_pairs = select([Parent.id.label('parent_id'),
-                           Child.id.label('child_id')], bind=bind)\
+                           Child.id.label('child_id')],
+                          bind=bind)\
                    .select_from(parent_child)\
                    .order_by('parent_id', 'child_id')
 
