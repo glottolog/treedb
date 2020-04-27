@@ -90,6 +90,7 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
 
     ENGINE.file = filename
     log.info('sqlite version: %s', ENGINE.dialect.dbapi.sqlite_version)
+    log.info('sqlalchemy version: %s', sa.__version__)
     return ENGINE
 
 
