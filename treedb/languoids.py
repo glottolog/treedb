@@ -213,7 +213,7 @@ def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
                                              r'(?P<lang>[a-z]{2,3})'
                                              r'\]'
                                          r')?').fullmatch):
-    return _match(s).groupdict('')
+    return _match(s).groupdict()
 
 
 def formataltname(value):

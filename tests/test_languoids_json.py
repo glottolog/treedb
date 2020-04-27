@@ -6,12 +6,12 @@ import pytest
 
 PREFIX = 'path_json:id:sha256:'
 
-CHECKSUM = {'v4.1': ('ba2569945c4542f388554b51b98e4fc8'
-                     'd063cb76602be4994b627af7c4400e72'),
-            'v4.2': ('f80029881d8e93b5b843e6f572dfb7c8'
-                     '870098c35294fb7c6693874f35f30a2d'),
-            'v4.2.1': ('1e1254feb7ebaefd0a3c45de3eca1943'
-                       '49203403468c0561b65d283777b18ff5')}
+CHECKSUM = {'v4.1': ('c1381233b0ffdb216083dfc3aa84eb27'
+                     'ddb3f51578d52f2bfaf1771055f435a8'),
+            'v4.2': ('4b34fc6ceda6a3af906ed02499ba5e52a'
+                     '39b9f6fa4526d39ab0c8053f3bc305d'),
+            'v4.2.1': ('1b85081a5fc1ddedf91f7099524a12c0'
+                       'd8941d6ccf3ff9feb889aec46b863e43')}
 
 MB = 2**20
 

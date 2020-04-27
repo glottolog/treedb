@@ -197,9 +197,19 @@ def load(languoids, conn):
         if altnames is not None:
             for provider, names in altnames.items():
                 provider_id = altnameprovider_ids[provider]
-                insert_altname([dict(languoid_id=lid,
-                                     provider_id=provider_id, **n)
-                                for n in names])
+                half, full = groups = ([], [])
+                for n in names:
+                    r = dict(languoid_id=lid, provider_id=provider_id, **n)
+                    if 'lang' not in r:
+                        half.append(r)
+                    elif not r['lang']:  # lang = r.get('lang') or server_default
+                        r.pop('lang')
+                        half.append(r)
+                    else:
+                        full.append(r)
+                for rows in groups:
+                    if rows:
+                        insert_altname(rows)
 
         if triggers is not None:
             insert_trigger([{'languoid_id': lid, 'field': field,

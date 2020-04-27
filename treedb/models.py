@@ -561,7 +561,8 @@ class Altname(Model):
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
     provider_id = Column(ForeignKey('altnameprovider.id'), primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), primary_key=True)
-    lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'), primary_key=True)
+    lang = Column(String(3), CheckConstraint('length(lang) IN (0, 2, 3)'),
+                  server_default='', primary_key=True)
 
     __table_args__ = {'info': {'without_rowid': True}}
 
@@ -581,15 +582,16 @@ class Altname(Model):
 
     @classmethod
     def printf(cls, *, label='printf'):
-        return sa.case([(cls.lang == '', cls.name)],
-                       else_=sa.func.printf('%s [%s]', cls.name,
-                                                       cls.lang)
-                       ).label(label)
+        full = sa.func.printf('%s [%s]', cls.name, cls.lang)
+        return sa.case([(cls.lang == '', cls.name)], else_=full).label(label)
 
     @classmethod
     def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('name', cls.name,
-                                   'lang', cls.lang).label(label)
+        half = sa.func.json_object('name', cls.name,
+                                   'lang', None)
+        full = sa.func.json_object('name', cls.name,
+                                   'lang', cls.lang)
+        return sa.case([(cls.lang == '', half)], else_=full).label(label)
 
 
 class AltnameProvider(Model):
