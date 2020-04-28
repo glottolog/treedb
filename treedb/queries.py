@@ -328,7 +328,7 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
     $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
     | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
 
-    $ jq "del(recurse | select(. == null or (arrays and length == 0)))" treedb.languoids.jsonl
+    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     open_kwargs = {'encoding': _encoding}
 
