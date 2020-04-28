@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 1.3 (in development)
-----------------------------
+Version 1.3
+-----------
 
+Add ``treedb.write_json_lines()``.
 
+Use ``lang=None`` outside of the database (checksum change).
 
 
 Version 1.2
