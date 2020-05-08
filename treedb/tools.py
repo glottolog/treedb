@@ -51,6 +51,7 @@ def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
     top = path_from_filename(top)
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
+
     log.debug('recursive depth-first scandir on %r', top)
     log.debug('sortkey: %r', sortkey)
 
@@ -60,13 +61,16 @@ def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
         root = stack.pop()
         if verbose:
             print(root)
+
         dentries = sorted(os.scandir(root), key=sortkey)
+
         dirs = []
         for d in dentries:
             if d.is_dir():
                 dirs.append(d.path)
             else:
                 yield d
+
         stack.extend(reversed(dirs))
 
 
@@ -103,9 +107,8 @@ def sha256sum(file, *, raw=False, autocompress=True):
     return result
 
 
-def update_hash(hash_, file, *, chunksize=2**16):  # 64 kB
-    read = functools.partial(file.read, chunksize)
-    for chunk in iter(read, b''):
+def update_hash(hash_, file, *, chunksize=2**16):  # 64 KiB
+    for chunk in iter(functools.partial(file.read, chunksize), b''):
         hash_.update(chunk)
 
 

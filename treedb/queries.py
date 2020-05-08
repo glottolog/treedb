@@ -357,9 +357,9 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
     rows = query.execute()
 
     with open_func() as f:
-        write = functools.partial(print, file=f)
+        write_line = functools.partial(print, file=f)
         for path_languoid, in rows:
-            write(path_languoid)
+            write_line(path_languoid)
 
     return result
 

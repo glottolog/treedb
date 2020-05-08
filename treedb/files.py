@@ -50,11 +50,9 @@ class ConfigParser(configparser.ConfigParser):
 
     _newline = '\r\n'
 
-    _init_defaults = {
-        'delimiters': ('=',),
-        'comment_prefixes': ('#',),
-        'interpolation': None,
-    }
+    _init_defaults = {'delimiters': ('=',),
+                      'comment_prefixes': ('#',),
+                      'interpolation': None}
 
     @classmethod
     def from_file(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
