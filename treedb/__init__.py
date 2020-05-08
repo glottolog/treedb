@@ -4,7 +4,7 @@
 
 CONFIG = 'treedb.ini'
 
-DEFAULT_ROOT = '.'
+DEFAULT_ROOT = './glottolog/'
 
 from . import proxies as _proxies
 
@@ -78,7 +78,7 @@ __copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
 engine = set_engine(None, title=__title__)
 
 
-# default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog/repo_root, or cwd
+# default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog:repo_root, or ./glottolog
 root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT',
                                  config_path=CONFIG,
                                  fallback=DEFAULT_ROOT))

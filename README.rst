@@ -58,7 +58,7 @@ Clone the Glottolog `master repo`_ :
 
     $ git clone https://github.com/glottolog/glottolog.git
 
-Note: ``treedb`` expects to find it under ``./glottolog/`` by default (i.e. in
+Note: ``treedb`` expects to find it under ``./glottolog/`` by default (i.e. under
 the current directory), use ``treedb.set_root()`` to point it to a different
 path.
 
