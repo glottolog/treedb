@@ -356,7 +356,7 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
 
     assert result is not None
 
-    query = get_json_query(ordered='id', as_rows=False, load_json=False, 
+    query = get_json_query(ordered='id', as_rows=False, load_json=False,
                            languoid_label='languoid', bind=bind)
 
     rows = query.execute()

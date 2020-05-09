@@ -66,7 +66,7 @@ def test_checksum_equivalence(treedb, kwargs):
     for kw, r in results:
         if kw.get('file_order', False):
             if kw.get('file_means_path', True):
-                ordered =  'path'
+                ordered = 'path'
             else:
                 ordered = 'file'
         else:

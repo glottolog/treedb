@@ -24,6 +24,7 @@ def test_pd_read_json_lines(treedb):
     except ImportError:
         pass
     else:
+        assert pandas
         pytest.skip('TODO: check memory usage')
 
     df = treedb.shortcuts.pd_read_json_lines()
