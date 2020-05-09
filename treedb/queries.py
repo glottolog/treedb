@@ -1,6 +1,5 @@
 # queries.py - batteries-included sqlalchemy queries for sqlite3 db
 
-import contextlib
 import functools
 import hashlib
 import io
@@ -15,7 +14,8 @@ from sqlalchemy.orm import aliased
 
 import csv23
 
-from . import (tools as _tools,
+from . import (_compat,
+               tools as _tools,
                views as _views)
 
 from . import ENGINE
@@ -344,7 +344,7 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
 
     if path is None:
         log.info('write json lines into: %r', fobj)
-        open_func = lambda: contextlib.nullcontext(fobj)
+        open_func = lambda: _compat.nullcontext(fobj)
         result = fobj
     else:
         log.info('write json lines: %r', path)
