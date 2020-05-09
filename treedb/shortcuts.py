@@ -32,12 +32,13 @@ text = functools.partial(sa.text, bind=ENGINE)
 def _import_pandas():
     global PANDAS
 
-    try:
-        import pandas as PANDAS
-    except ImportError as e:
-        warnings.warn(f'failed to import pandas: {e}')
-    else:
-        log.info('pandas version: %s', PANDAS.__version__)
+    if PANDAS is None:
+        try:
+            import pandas as PANDAS
+        except ImportError as e:
+            warnings.warn(f'failed to import pandas: {e}')
+        else:
+            log.info('pandas version: %s', PANDAS.__version__)
 
 
 def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
