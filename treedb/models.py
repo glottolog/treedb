@@ -226,6 +226,26 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
+    def parent_child(cls):
+        Parent, Child = (aliased(cls, name=n) for n in ('parent', 'child'))
+
+        tree_1 = sa.select([Parent.id.label('parent_id'),
+                            Child.id.label('child_id')])\
+                 .select_from(sa.outerjoin(Parent, Child,
+                                           Parent.id == Child.parent_id))\
+                 .cte('tree', recursive=True)
+
+        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
+        tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
+
+        tree = tree_1.union_all(tree_2)
+
+        parent_child = tree.join(Parent, tree.c.parent_id == Parent.id)\
+                       .outerjoin(Child, tree.c.child_id == Child.id)
+
+        return Parent, Child, parent_child
+
+    @classmethod
     def root_child(cls, include_self=True, innerjoin=True):
         Root, Child = (sa.orm.aliased(cls, name=n) for n in ('root', 'child'))
 
