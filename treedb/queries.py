@@ -626,7 +626,9 @@ def get_stats_query(*, bind=ENGINE):
 
         return select_nrows
 
-    Root, Child, root_child = Languoid.root_child()
+    Root, Child, root_child = Languoid.parent_descendant(include_self=True,
+                                                         innerjoin=True,
+                                                         root_only=True)
 
     language_count = functools.partial(languoid_count,
                                        cls=Child, fromclause=root_child,
@@ -667,7 +669,7 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    Parent, Child, parent_child = Languoid.parent_child()
+    Parent, Child, parent_child = Languoid.parent_descendant()
 
     select_pairs = select([Parent.id.label('parent_id'),
                            Child.id.label('child_id')],

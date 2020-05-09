@@ -226,52 +226,45 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def parent_child(cls):
-        Parent, Child = (aliased(cls, name=n) for n in ('parent', 'child'))
+    def parent_descendant(cls, *, include_self=False, innerjoin=False, root_only=False):
+        Parent = aliased(cls, name='root' if root_only else 'parent')
+        Child = aliased(cls, name='child')
 
-        tree_1 = sa.select([Parent.id.label('parent_id'),
-                            Child.id.label('child_id')])\
-                 .select_from(sa.outerjoin(Parent, Child,
-                                           Parent.id == Child.parent_id))\
-                 .cte('tree', recursive=True)
+        tree_1 = sa.select([Parent.id.label('parent_id')])
 
-        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
-        tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
+        if include_self:
+            tree_1_child = Parent
+        else:
+            tree_1_child = Child
+            tree_1.append_from(sa.outerjoin(Parent, Child,
+                                            Parent.id == Child.parent_id))
 
-        tree = tree_1.union_all(tree_2)
+        tree_1.append_column(tree_1_child.id.label('child_id'))
 
-        parent_child = tree.join(Parent, tree.c.parent_id == Parent.id)\
-                       .outerjoin(Child, tree.c.child_id == Child.id)
+        if root_only:
+            tree_1.append_whereclause(Parent.parent_id == None)
 
-        return Parent, Child, parent_child
-
-    @classmethod
-    def root_child(cls, include_self=True, innerjoin=True):
-        Root, Child = (sa.orm.aliased(cls, name=n) for n in ('root', 'child'))
-
-        if not include_self:
-            raise NotImplementedError
-
-        tree_1 = sa.select([Root.id.label('parent_id'),
-                            Root.id.label('child_id')])\
-                 .where(Root.parent_id == None)\
-                 .cte('tree', recursive=True)
+        tree_1 = tree_1.cte('tree', recursive=True)
 
         tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
         tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
 
         tree = tree_1.union_all(tree_2)
 
-        is_root = (tree.c.parent_id == Root.id)
+        is_parent = (tree.c.parent_id == Parent.id)
         is_child = (tree.c.child_id == Child.id)
 
         if innerjoin:
-            root_child = tree.join(Root, is_root).join(Child, is_child)
+            parent_child = tree.join(Parent, is_parent).join(Child, is_child)
         else:
-            tree_child = tree.join(Child, is_child)
-            root_child = sa.outerjoin(Root, tree_child, is_root)
+            if root_only:
+                tree_child = tree.join(Child, is_child)
+                parent_child = sa.outerjoin(Parent, tree_child, is_parent)
+            else:
+                parent_child = tree.join(Parent, is_parent)\
+                               .outerjoin(Child, is_child)
 
-        return Root, Child, root_child
+        return Parent, Child, parent_child
 
     @classmethod
     def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
