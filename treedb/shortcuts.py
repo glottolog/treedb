@@ -2,6 +2,7 @@
 
 import functools
 import io
+import logging
 import operator
 import warnings
 
@@ -14,6 +15,9 @@ __all__ = ['count', 'select', 'text',
            'pd_read_json_lines']
 
 PANDAS = None
+
+
+log = logging.getLogger(__name__)
 
 
 count = sa.func.count
@@ -32,6 +36,8 @@ def _import_pandas():
         import pandas as PANDAS
     except ImportError as e:
         warnings.warn(f'failed to import pandas: {e}')
+    else:
+        logging.info('pandas version: %s', pd.__version__) 
 
 
 def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
