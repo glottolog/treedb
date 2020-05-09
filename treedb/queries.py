@@ -343,11 +343,16 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
         path = _tools.path_from_filename(filename)
 
     if path is None:
+        log.info('write json lines into: %r', fobj)
         open_func = lambda: contextlib.nullcontext(fobj)
         result = fobj
     else:
+        log.info('write json lines: %r', path)
         open_func = functools.partial(path.open, 'wt', **open_kwargs)
         result = path
+        if path.exists():
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
 
     assert result is not None
 

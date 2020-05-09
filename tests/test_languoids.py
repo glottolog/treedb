@@ -7,35 +7,45 @@ import itertools
 
 def test_iterlanguoids(bare_treedb, n=100):
     pairs = bare_treedb.iterlanguoids()
-    first = list(itertools.islice(pairs, n))
 
-    assert first
-    assert len(first) == n
+    head = list(itertools.islice(pairs, n))
 
-    for p, l in first:
-        assert isinstance(p, tuple)
-        assert p
+    assert head
+    assert len(head) == n
 
-        assert isinstance(l, dict)
-        assert l
-        assert l['name']
+    for path, languoid in head:
+        assert isinstance(path, tuple)
+        assert all(isinstance(p, str) for p in path)
+        assert path
+        assert all(path)
+
+        assert isinstance(languoid, dict)
+        assert languoid
+        assert languoid['id']
+        assert languoid['parent_id'] is None or languoid['parent_id']
+        assert languoid['level'] in ('family', 'language', 'dialect')
+        assert languoid['name']
 
 
 def test_iterrecords(bare_treedb, n=100):
     languoids = bare_treedb.iterlanguoids()
     pairs = bare_treedb.languoids.iterrecords(languoids)
-    first = list(itertools.islice(pairs, n))
 
-    assert first
-    assert len(first) == n
+    head = list(itertools.islice(pairs, n))
 
-    for p, r in first:
-        assert isinstance(p, tuple)
-        assert p
+    assert head
+    assert len(head) == n
 
-        assert isinstance(r, dict)
-        assert r
-        assert r['core']['name']
+    for path, record in head:
+        assert isinstance(path, tuple)
+        assert all(isinstance(p, str) for p in path)
+        assert path
+        assert all(path)
+
+        assert isinstance(record, dict)
+        assert record
+        assert record['core']['level'] in ('family', 'language', 'dialect')
+        assert record['core']['name']
 
 
 @pytest.mark.skip('TODO: improve output on failiure')

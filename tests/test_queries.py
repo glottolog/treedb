@@ -1,6 +1,7 @@
 # test_queries.py
 
 import itertools
+import json
 
 import pytest
 
@@ -114,6 +115,46 @@ def test_write_json_query_csv(treedb, raw):
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 100 * MB
+
+
+def test_write_json_lines(capsys, treedb, n=100):
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+
+    path = treedb.write_json_lines()
+
+    assert path.name == f'treedb{suffix}.languoids.jsonl'
+    assert path.exists()
+    assert path.is_file()
+    assert 1 * MB <= path.stat().st_size <= 200 * MB
+
+    with path.open(encoding='utf-8') as f:
+        head = list(itertools.islice(f, n))
+
+        assert head
+        assert len(head) == n
+
+        for line in head:
+            item = json.loads(line)
+            assert isinstance(item, dict)
+            assert item
+
+            path = item['path']
+            assert isinstance(path, list)
+            assert all(isinstance(p, str) for p in path)
+            assert path
+            assert all(path)
+
+            languoid = item['languoid']
+            assert isinstance(languoid, dict)
+            assert languoid
+            assert languoid['id']
+            assert languoid['parent_id'] is None or languoid['parent_id']
+            assert languoid['level'] in ('family', 'language', 'dialect')
+            assert languoid['name']
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert not err
 
 
 def test_print_languoid_stats(capsys, treedb):
