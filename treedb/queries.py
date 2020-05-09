@@ -84,7 +84,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
 
     rows = bind.execute(query)
     header = rows.keys()
-    log.info('header: %r', header)
+    log.info('csv header: %r', header)
 
     return csv23.write_csv(filename, rows, header=header,
                            dialect=dialect, encoding=encoding,
@@ -109,7 +109,7 @@ def hash_rows(rows, *, header=None, name=None, raw=False,
     if name is None:
         name = 'sha256'
 
-    log.info('hash rows with %r, header: %r', name, header)
+    log.info('hash rows with %r, csv header: %r', name, header)
     result = hashlib.new(name)
     assert hasattr(result, 'hexdigest')
 

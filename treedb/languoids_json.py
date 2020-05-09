@@ -103,7 +103,7 @@ def _write_json_csv(bind_or_root=ENGINE, filename=None, *,
         path.unlink()
 
     header = ['path', 'json']
-    log.info('header: %r', header)
+    log.info('csv header: %r', header)
 
     rows = _json_rows(bind_or_root,
                       from_raw=from_raw,
@@ -147,7 +147,7 @@ def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
                       ordered=ordered, sort_keys=True)
 
     header = ['path', 'json']
-    log.info('header: %r', header)
+    log.info('csv header: %r', header)
 
     hash_ = _queries.hash_rows(rows, header=header,
                                name=name, raw=True,
