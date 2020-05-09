@@ -18,9 +18,14 @@ def test_pd_read_sql(treedb):
         df.info()
 
 
-def test_pd_read_sql(treedb):
-    if treedb.shortcuts.PANDAS is not None:
-        pytest.skip('TODO: check memory usage')
+def test_pd_read_json_lines(treedb):
+    try:
+        import pandas
+    except ImportError:
+        pass
+    else:
+        pass
+        #pytest.skip('TODO: check memory usage')
 
     df = treedb.shortcuts.pd_read_json_lines()
 
