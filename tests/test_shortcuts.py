@@ -16,3 +16,16 @@ def test_pd_read_sql(treedb):
     else:
         assert not df.empty
         df.info()
+
+
+def test_pd_read_sql(treedb):
+    if treedb.shortcuts.PANDAS is not None:
+        pytest.skip('TODO: check memory usage')
+
+    df = treedb.shortcuts.pd_read_json_lines()
+
+    if treedb.shortcuts.PANDAS is None:
+        assert df is None
+    else:
+        assert not df.empty
+        df.info()
