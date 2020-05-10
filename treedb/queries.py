@@ -649,15 +649,12 @@ def get_stats_query(*, bind=ENGINE):
         yield languoid_count('dialects', level=DIALECT)
 
         yield language_count('Spoken L1 Languages')\
-              .where(sa.or_(Root.name == None,
-                            Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,))))
+              .where(Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
 
         for name in SPECIAL_FAMILIES:
             yield language_count(name).where(Root.name == name)
 
-        # TODO: the following does not work with literal_binds
-        #       .where(Root.name.is_distinct_from(BOOKKEEPING))
-        yield language_count('All').where(Root.name.op('IS NOT')(BOOKKEEPING))
+        yield language_count('All').where(Root.name != BOOKKEEPING)
 
         yield language_count(BOOKKEEPING).where(Root.name == BOOKKEEPING)
 
