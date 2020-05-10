@@ -279,9 +279,9 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def treeclosure(cls, *, from_parent=False, innerjoin=False,
-                    child_root=None, parent_root=None,
-                    with_steps=False, with_terminal=False):
+    def node_relative(cls, *, from_parent=False, innerjoin=False,
+                      child_root=None, parent_root=None,
+                      with_steps=False, with_terminal=False):
         tree = cls._tree(from_parent=from_parent, innerjoin=innerjoin,
                          child_root=child_root, parent_root=parent_root,
                          with_steps=with_steps, with_terminal=with_terminal)
@@ -312,10 +312,16 @@ class Languoid(Model):
         return Node, Relative, tree, node_relative
 
     @classmethod
+    def child_ancestor(cls, *, innerjoin=False):
+        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,
+                                                           innerjoin=innerjoin)
+        return Child, Parent, _, child_parent
+
+    @classmethod
     def parent_descendant(cls, *, innerjoin=False, parent_root=None):
-        Parent, Child, _, parent_child = cls.treeclosure(from_parent=True,
-                                                         innerjoin=innerjoin,
-                                                         parent_root=parent_root)
+        Parent, Child, _, parent_child = cls.node_relative(from_parent=True,
+                                                           innerjoin=innerjoin,
+                                                           parent_root=parent_root)
         return Parent, Child, parent_child
 
     @classmethod
