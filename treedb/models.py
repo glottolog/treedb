@@ -301,20 +301,15 @@ class Languoid(Model):
         is_node = (tree.c[node_label] == Node.id)
         is_relative = (tree.c[relative_label] == Relative.id)
 
-        if innerjoin or not parent_root:
-            node_tree = tree.join(Node, is_node)
-            node_relative = node_tree.join(Relative, is_relative,
-                                           isouter=not innerjoin)
-        else:
-            tree_relative = tree.join(Relative, is_relative)
-            node_relative = sa.outerjoin(Node, tree_relative, is_relative)
+        node_relative = tree.join(Node, is_node)\
+                        .join(Relative, is_relative,
+                              isouter=not innerjoin)
 
         return Node, Relative, tree, node_relative
 
     @classmethod
     def child_ancestor(cls, *, innerjoin=False):
-        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,
-                                                           innerjoin=innerjoin)
+        Child, Parent, _, child_parent = cls.node_relative(innerjoin=innerjoin)
         return Child, Parent, _, child_parent
 
     @classmethod
