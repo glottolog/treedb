@@ -165,7 +165,7 @@ class Languoid(Model):
         
     @classmethod
     def _tree(cls, *, from_parent=False, innerjoin=False,
-              child_root=None, parent_root=None,
+              child_root=None, parent_root=None, node_level=None,
               with_steps=False, with_terminal=False):
         if innerjoin not in (False, True, 'reflexive'):
             raise ValueError(f'invalid innerjoin: {innerjoin!r}')
@@ -213,6 +213,11 @@ class Languoid(Model):
         if parent_root is not None:
             tree_1.append_whereclause(Parent.parent_id == None if parent_root else
                                       Parent.parent_id != None)
+
+        if node_level is not None:
+            if node_level not in LEVEL:
+                raise ValueError(f'invalid node_level: {node_level!r}')
+            tree_1.append_whereclause(Node.level == node_level)
 
         tree_1 = tree_1.cte('tree', recursive=True)
 
@@ -280,10 +285,11 @@ class Languoid(Model):
 
     @classmethod
     def node_relative(cls, *, from_parent=False, innerjoin=False,
-                      child_root=None, parent_root=None,
+                      child_root=None, parent_root=None, node_level=None,
                       with_steps=False, with_terminal=False):
         tree = cls._tree(from_parent=from_parent, innerjoin=innerjoin,
                          child_root=child_root, parent_root=parent_root,
+                         node_level=node_level,
                          with_steps=with_steps, with_terminal=with_terminal)
 
         Child, Parent = cls._aliased_child_parent(child_root=child_root,
@@ -308,15 +314,19 @@ class Languoid(Model):
         return Node, Relative, tree, node_relative
 
     @classmethod
-    def child_ancestor(cls, *, innerjoin=False):
-        Child, Parent, _, child_parent = cls.node_relative(innerjoin=innerjoin)
+    def child_ancestor(cls, *, innerjoin=False, child_level=None):
+        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,
+                                                           innerjoin=innerjoin,
+                                                           node_level=child_level)
         return Child, Parent, _, child_parent
 
     @classmethod
-    def parent_descendant(cls, *, innerjoin=False, parent_root=None):
+    def parent_descendant(cls, *, innerjoin=False,
+                          parent_root=None, parent_level=None):
         Parent, Child, _, parent_child = cls.node_relative(from_parent=True,
                                                            innerjoin=innerjoin,
-                                                           parent_root=parent_root)
+                                                           parent_root=parent_root,
+                                                           node_level=parent_level)
         return Parent, Child, parent_child
 
     @classmethod

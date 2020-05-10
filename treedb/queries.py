@@ -668,21 +668,25 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
-    Parent, Child, parent_child = Languoid.parent_descendant()
+    parent_root = False
+    if parent_level is None:
+        pass
+    elif parent_level == 'top':
+        parent_root = True
+        parent_level = None
+    elif parent_level in LEVEL:
+        pass
+    else:
+        raise ValueError(f'invalid parent_level: {parent_level!r}')
+
+    Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,
+                                                             parent_level=parent_level)
 
     select_pairs = select([Parent.id.label('parent_id'),
                            Child.id.label('child_id')],
                           bind=bind)\
                    .select_from(parent_child)\
                    .order_by('parent_id', 'child_id')
-
-    if parent_level is not None:
-        if parent_level == 'top':
-            select_pairs.append_whereclause(Parent.parent_id == None)
-        elif parent_level in LEVEL:
-            select_pairs.append_whereclause(Parent.level == parent_level)
-        else:
-            raise ValueError(f'invalid parent_level: {parent_level!r}')
 
     if child_level is not None:
         if child_level not in LEVEL:
