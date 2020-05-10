@@ -626,9 +626,8 @@ def get_stats_query(*, bind=ENGINE):
 
         return select_nrows
 
-    Root, Child, root_child = Languoid.parent_descendant(include_self=True,
-                                                         innerjoin=True,
-                                                         root_only=True)
+    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',
+                                                         parent_root=True)
 
     language_count = functools.partial(languoid_count,
                                        cls=Child, fromclause=root_child,

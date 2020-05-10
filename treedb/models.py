@@ -155,48 +155,101 @@ class Languoid(Model):
                                   back_populates='languoid')
 
     @classmethod
-    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
-        Child, Parent = (aliased(cls, name=n) for n in ('child', 'parent'))
+    def _aliased_child_parent(cls, child_root=False, parent_root=False):
+        if child_root and parent_root:
+            raise ValueError('child_root and parent_root are mutually exclusive')
 
-        tree_1 = sa.select([Child.id.label('child_id')])
+        Child = aliased(cls, name='root' if child_root else 'child')
+        Parent = aliased(cls, name='root' if parent_root else 'parent')
+        return Child, Parent
+        
+    @classmethod
+    def _tree(cls, *, from_parent=False, innerjoin=False,
+              child_root=None, parent_root=None,
+              with_steps=False, with_terminal=False):
+        if innerjoin not in (False, True, 'reflexive'):
+            raise ValueError(f'invalid innerjoin: {innerjoin!r}')
 
-        if include_self:
-            tree_1_parent = Child
+        Child, Parent = cls._aliased_child_parent(child_root=child_root,
+                                                  parent_root=parent_root)
+
+        if from_parent:
+            Node, Relative = Parent, Child
+            node_label, relative_label = 'parent_id', 'child_id'
+            join_source, join_target = Node.id, Relative.parent_id
+            recurse_relative = Relative.id
         else:
-            tree_1_parent = Parent
-            tree_1.append_from(sa.join(Child, Parent,
-                                       Child.parent_id == Parent.id))
+            Node, Relative = Child, Parent
+            node_label, relative_label = 'child_id', 'parent_id'
+            join_source, join_target = Node.parent_id, Relative.id
+            recurse_relative = Relative.parent_id
 
-        tree_1.append_column(tree_1_parent.id.label('parent_id'))
+        tree_1 = sa.select([Node.id.label(node_label)])
+
+        if innerjoin == 'reflexive':
+            tree_1_relative = Node
+        else:
+            tree_1_relative = Relative
+            tree_1.append_from(sa.join(Node, Relative,
+                                       join_source == join_target,
+                                       isouter=not innerjoin))
+
+        tree_1.append_column(tree_1_relative.id.label(relative_label))
 
         if with_steps:
-            steps = 0 if include_self else 1
+            steps = 0 if innerjoin == 'reflexive' else 1
             tree_1.append_column(sa.literal(steps).label('steps'))
 
         if with_terminal:
-            terminal = sa.type_coerce(tree_1_parent.parent_id == None,
-                                      sa.Boolean)
+            if from_parent:
+                raise NotImplementedError
+            tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
+            terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
             tree_1.append_column(terminal.label('terminal'))
+
+        if child_root is not None:
+            tree_1.append_whereclause(Child.parent_id == None if child_root else
+                                      Child.parent_id != None)
+        if parent_root is not None:
+            tree_1.append_whereclause(Parent.parent_id == None if parent_root else
+                                      Parent.parent_id != None)
 
         tree_1 = tree_1.cte('tree', recursive=True)
 
-        tree_2 = sa.select([tree_1.c.child_id, Parent.parent_id])
-        tree_2.append_from(tree_1.join(Parent,
-                                       sa.and_(tree_1.c.parent_id == Parent.id,
-                                               Parent.parent_id != None)))
+        tree_2 = sa.select([tree_1.c[node_label],
+                            recurse_relative.label(relative_label)])
+
+        tree_2_onclause = (tree_1.c[relative_label] == join_target)
+        if not from_parent:
+            tree_2_onclause = sa.and_(tree_2_onclause, recurse_relative != None)
+
+        tree_2_fromclause = tree_1.join(Relative, tree_2_onclause)
 
         if with_steps:
             tree_2.append_column((tree_1.c.steps + 1).label('steps'))
 
         if with_terminal:
-            Granny = aliased(Languoid, name='grandparent')
+            GrandRelative = aliased(cls, name='grand' + ('child'
+                                                         if from_parent else
+                                                         'parent'))
+            if from_parent:
+                raise NotImplementedError
+            tree_2.append_column((GrandRelative.parent_id == None).label('terminal'))
+            tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
+                                                            Relative.parent_id
+                                                            == GrandRelative.id)
 
-            tree_2.append_column((Granny.parent_id == None).label('terminal'))
-            fromclause = tree_2.froms[-1].outerjoin(Granny,
-                                                    Parent.parent_id == Granny.id)
-            tree_2 = tree_2.select_from(fromclause)
+        tree_2.append_from(tree_2_fromclause)
 
-        return tree_1.union_all(tree_2)
+        tree = tree_1.union_all(tree_2)
+
+        return tree
+
+    @classmethod
+    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
+        return cls._tree(from_parent=False,
+                         innerjoin='reflexive' if include_self else True,
+                         with_steps=with_steps, with_terminal=with_terminal)
 
     @classmethod
     def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
@@ -226,44 +279,43 @@ class Languoid(Model):
         return sa.select([path]).label(label)
 
     @classmethod
-    def parent_descendant(cls, *, include_self=False, innerjoin=False, root_only=False):
-        Parent = aliased(cls, name='root' if root_only else 'parent')
-        Child = aliased(cls, name='child')
+    def treeclosure(cls, *, from_parent=False, innerjoin=False,
+                    child_root=None, parent_root=None,
+                    with_steps=False, with_terminal=False):
+        tree = cls._tree(from_parent=from_parent, innerjoin=innerjoin,
+                         child_root=child_root, parent_root=parent_root,
+                         with_steps=with_steps, with_terminal=with_terminal)
 
-        tree_1 = sa.select([Parent.id.label('parent_id')])
+        Child, Parent = cls._aliased_child_parent(child_root=child_root,
+                                                  parent_root=parent_root)
 
-        if include_self:
-            tree_1_child = Parent
+        if from_parent:
+            Node, Relative = Parent, Child
+            node_label, relative_label = 'parent_id', 'child_id'
         else:
-            tree_1_child = Child
-            tree_1.append_from(sa.outerjoin(Parent, Child,
-                                            Parent.id == Child.parent_id))
+            Node, Relative = Child, Parent
+            node_label, relative_label = 'child_id', 'parent_id'
 
-        tree_1.append_column(tree_1_child.id.label('child_id'))
+        del Child, Parent
 
-        if root_only:
-            tree_1.append_whereclause(Parent.parent_id == None)
+        is_node = (tree.c[node_label] == Node.id)
+        is_relative = (tree.c[relative_label] == Relative.id)
 
-        tree_1 = tree_1.cte('tree', recursive=True)
-
-        tree_2 = sa.select([tree_1.c.parent_id, Child.id.label('child_id')])
-        tree_2.append_from(tree_1.join(Child, tree_1.c.child_id == Child.parent_id))
-
-        tree = tree_1.union_all(tree_2)
-
-        is_parent = (tree.c.parent_id == Parent.id)
-        is_child = (tree.c.child_id == Child.id)
-
-        if innerjoin:
-            parent_child = tree.join(Parent, is_parent).join(Child, is_child)
+        if innerjoin or not parent_root:
+            node_tree = tree.join(Node, is_node)
+            node_relative = node_tree.join(Relative, is_relative,
+                                           isouter=not innerjoin)
         else:
-            if root_only:
-                tree_child = tree.join(Child, is_child)
-                parent_child = sa.outerjoin(Parent, tree_child, is_parent)
-            else:
-                parent_child = tree.join(Parent, is_parent)\
-                               .outerjoin(Child, is_child)
+            tree_relative = tree.join(Relative, is_relative)
+            node_relative = sa.outerjoin(Node, tree_relative, is_relative)
 
+        return Node, Relative, tree, node_relative
+
+    @classmethod
+    def parent_descendant(cls, *, innerjoin=False, parent_root=None):
+        Parent, Child, _, parent_child = cls.treeclosure(from_parent=True,
+                                                         innerjoin=innerjoin,
+                                                         parent_root=parent_root)
         return Parent, Child, parent_child
 
     @classmethod
