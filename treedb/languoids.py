@@ -22,10 +22,10 @@ DATE_FORMAT = '%Y-%m-%d'
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
-ISO_8601_INTERVAL = re.compile(r'(?P<start_bce>-?)'
+ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
                                r'(?P<start_date>\d{1,4}-\d{2}-\d{2})'
                                r'/'
-                               r'(?P<end_bce>-?)'
+                               r'(?P<end_sign>[+-]?)'
                                r'(?P<end_date>\d{1,4}-\d{2}-\d{2})',
                                flags=re.ASCII)
 
@@ -95,35 +95,44 @@ def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
         return None
 
     dates = ma.group('start_date', 'end_date')
-    if fix_year:  # FIXME: https://en.wikipedia.org/wiki/ISO_8601#Years
-        def iterdates(dates):
-            for d in dates:
-                year, sep, rest = d.partition('-')
-                assert all([year, sep, rest])
-                year = f'{int(year):04d}'
-                yield f'{year}{sep}{rest}'
+    if fix_year:
+        def fix_date(d, year_tmpl='{:04d}'):
+            year, sep, rest = d.partition('-')
+            assert year and sep and rest
+            year = year_tmpl.format(int(year))
+            return f'{year}{sep}{rest}'
 
-        dates = list(iterdates(dates))
+        dates = list(map(fix_date, dates))
 
     start, end = (datetime.datetime.strptime(d, date_format).date()
                   for d in dates)
 
-    return {'start_year': -start.year if ma.group('start_bce') else start.year,
+    start_sign = -1 if ma.group('start_sign') == '-' else 1
+    end_sign = -1 if ma.group('end_sign') == '-' else 1
+
+    return {'start_year': start.year * start_sign,
             'start_month': start.month,
             'start_day': start.day,
-            'end_year': -end.year if ma.group('end_bce') else end.year,
+            'end_year': end.year * end_sign,
             'end_month': end.month,
             'end_day': end.day}
 
 
-def format_interval(value, adapt_year=True):
+def format_interval(value, year_tmpl='{: 05d}'):
     if value is None:
         return None
 
-    context = dict(value, year_format='d' if adapt_year else '04d')
+    # https://en.wikipedia.org/wiki/ISO_8601#Years
+    assert -9999 <= value['start_year'] <= 9999
+    assert -9999 <= value['end_year'] <= 9999
 
-    return ('{start_year:{year_format}}-{start_month:02d}-{start_day:02d}'
-            '/{end_year:{year_format}}-{end_month:02d}-{end_day:02d}').format_map(context)
+    context = dict(value,
+                   start_year=year_tmpl.format(value.pop('start_year')).strip(),
+                   end_year=year_tmpl.format(value.pop('end_year')).strip())
+
+    return ('{start_year}-{start_month:02d}-{start_day:02d}'
+            '/'
+            '{end_year}-{end_month:02d}-{end_day:02d}').format_map(context)
 
 
 def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
