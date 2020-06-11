@@ -162,7 +162,7 @@ class Languoid(Model):
         Child = aliased(cls, name='root' if child_root else 'child')
         Parent = aliased(cls, name='root' if parent_root else 'parent')
         return Child, Parent
-        
+
     @classmethod
     def _tree(cls, *, from_parent=False, innerjoin=False,
               child_root=None, parent_root=None, node_level=None,

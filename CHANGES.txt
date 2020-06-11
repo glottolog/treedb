@@ -2,10 +2,17 @@ Changelog
 =========
 
 
-Version 1.3.2 (in development)
-------------------------------
+Version 1.3.2
+-------------
 
+Format timespan years with 4 digits.
 
+Refactor recursive tree queries to improve code sharing.
+
+Simplify stats query and ``iterdescendants()`` query.
+
+Stats.ipynb: fix n_descendants query, add count to min/max boxes, plot more
+frequency distributions.
 
 
 Version 1.3.1
