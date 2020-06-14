@@ -6,6 +6,7 @@ import functools
 import gzip
 import logging
 import re
+import sqlite3
 import warnings
 import zipfile
 
@@ -100,6 +101,9 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
 @sa.event.listens_for(sa.engine.Engine, 'connect')
 def sqlite_engine_connect(dbapi_conn, connection_record):
     """Activate sqlite3 forein key checks, enable REGEXP operator."""
+    if not isinstance(dbapi_conn, sqlite3.Connection):
+        return
+
     log.debug('engine connect (enable foreign keys and regexp operator)')
 
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
