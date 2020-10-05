@@ -36,7 +36,8 @@ def test_write_json_csv(treedb):
     if expected is None:
         pass
     else:
-        assert treedb.tools.sha256sum(path) == expected
+        shasum = treedb.tools.sha256sum(path)
+        assert shasum == expected
 
 
 def test_checksum(treedb):
@@ -48,7 +49,7 @@ def test_checksum(treedb):
         assert result.startswith(PREFIX)
         assert len(result) - len(PREFIX) == 64
     else:
-        assert treedb.checksum() == PREFIX + expected
+        assert result == PREFIX + expected
 
 
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',

@@ -89,7 +89,8 @@ def test_write_csv(treedb):
     if expected is None:
         pass
     else:
-        assert treedb.tools.sha256sum(path) == expected
+        shasum = treedb.tools.sha256sum(path)
+        assert shasum == expected
 
 
 def test_hash_csv(treedb):
