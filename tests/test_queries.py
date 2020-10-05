@@ -10,7 +10,10 @@ QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
               'v4.2': ('0623ea039d105309ccda567541c5fa8d'
                        'eba44c542d89169bff5df2e50eb8cbcf'),
               'v4.2.1': ('25222b4feb2d89b4edaeecc546280a05'
-                         '9ae6ba69da961d56ee4a387ba3b81fc0')}
+                         '9ae6ba69da961d56ee4a387ba3b81fc0'),
+              'v4.3-treedb-fixes':
+                      ('bf8af9e4840642f4622cec41bf3156af'
+                       'ac75317740ff0eef1ac75ec1998d4f78')}
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -49,6 +52,25 @@ STATS = {'v4.1': '''\
     10 Speech Register
  8,122 All
    393 Bookkeeping
+''',
+        'v4.3-treedb-fixes': '''\
+25,439 languoids
+   244 families
+   181 isolates
+   425 roots
+ 8,516 languages
+ 4,265 subfamilies
+12,414 dialects
+ 7,606 Spoken L1 Languages
+   196 Sign Language
+   123 Unclassifiable
+    81 Pidgin
+    67 Unattested
+    29 Artificial Language
+    12 Mixed Language
+    10 Speech Register
+ 8,124 All
+   392 Bookkeeping
 '''}
 
 STATS['v4.2'] = STATS['v4.2.1']

@@ -22,14 +22,25 @@ CHECKSUM = {('v4.1', False): ('strong:sha256:'
                                 '0dbdb897384b7ac57456ba12b6206a71'),
             ('v4.2.1', True): ('weak:sha256:'
                                '9cf661e51d8cd6d8ef1f5e93dbbf4612'
-                               'a8a7e06712c56747d7a280b2d83f503b')}
+                               'a8a7e06712c56747d7a280b2d83f503b'),
+            ('v4.3-treedb-fixes', False):
+                ('strong:sha256:'
+                 'db13f74ed52884084ab38b9693d42a58'
+                 '9ff4ebc033ef1ed62b6463f44ea9320b'),
+            ('v4.3-treedb-fixes', True):
+                ('weak:sha256:'
+                 '1f48d9a546fb99cab53eb171806d6a16'
+                 'c5d9affc9c6f49d615692fdbd636c58c')}
 
 RAW_CSV_SHA256 = {'v4.1': ('963163852e7f4ee34b516bc459bdbb90'
                            '8f2f4aab64bda58087a1a23a731921fd'),
                   'v4.2': ('e2ac065f5ce73af2165eb401831b53e0'
                            '494d8b25c4aa360fef879322b46f5f72'),
                   'v4.2.1': ('ab9d4339f3c0fa3acb0faf0f7306dc54'
-                             '09640ecd46e451de9a76445519f5157e')}
+                             '09640ecd46e451de9a76445519f5157e'),
+                  'v4.3-treedb-fixes':
+                          ('1ef6923a94d19c708fd0e7ae87b6ee24'
+                           'c69d1d82fa9f81b16eaa5067e61ab1b6')}
 
 MB = 2**20
 
