@@ -17,7 +17,7 @@ import warnings
 
 ENCODING = 'utf-8'
 
-PROGRESS_AFTER = 2_500
+PROGRESS_AFTER = 5_000
 
 __all__ = ['next_count',
            'groupby_attrgetter',
