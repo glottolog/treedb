@@ -276,13 +276,15 @@ class Languoid(Model):
                            .where(tree.c.child_id == cls.id)\
                            .correlate(cls)\
                            .order_by(tree.c.steps if bottomup
-                                     else tree.c.steps.desc())
+                                     else tree.c.steps.desc())\
+                           .alias()
 
         return select_path_part
 
     @classmethod
     def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
-        squery = cls._path_part(include_self=include_self, bottomup=bottomup, _tree=_tree)
+        squery = cls._path_part(include_self=include_self, bottomup=bottomup,
+                                _tree=_tree)
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
         return sa.select([path]).label(label)
 
