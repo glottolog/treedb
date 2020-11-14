@@ -95,7 +95,8 @@ class Languoid(Model):
 
     parent = relationship('Languoid', remote_side=[id])
 
-    children = relationship('Languoid', remote_side=[parent_id], order_by=id)
+    children = relationship('Languoid', remote_side=[parent_id], order_by=id,
+                            viewonly=True)
 
     macroareas = relationship('Macroarea',
                               secondary='languoid_macroarea',
@@ -131,16 +132,24 @@ class Languoid(Model):
                                back_populates='languoid')
 
     subclassificationcomment = relationship('ClassificationComment', uselist=False,
-        primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id, ClassificationComment.kind == 'sub')")
+        primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id,"
+                    " ClassificationComment.kind == 'sub')",
+        viewonly=True)
 
     subclassificationrefs = relationship('ClassificationRef', order_by='ClassificationRef.ord',
-        primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id, ClassificationRef.kind == 'sub')")
+        primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id,"
+                    "ClassificationRef.kind == 'sub')",
+        viewonly=True)
 
     familyclassificationcomment = relationship('ClassificationComment', uselist=False,
-        primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id, ClassificationComment.kind == 'family')")
+        primaryjoin="and_(ClassificationComment.languoid_id == Languoid.id,"
+                    " ClassificationComment.kind == 'family')",
+        viewonly=True)
 
     familyclassificationrefs = relationship('ClassificationRef', order_by='ClassificationRef.ord',
-        primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id, ClassificationRef.kind == 'family')")
+        primaryjoin="and_(ClassificationRef.languoid_id == Languoid.id,"
+                    "ClassificationRef.kind == 'family')",
+        viewonly=True)
 
     endangerment = relationship('Endangerment',
                                 uselist=False,
