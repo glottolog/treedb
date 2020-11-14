@@ -21,7 +21,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'csv23~=0.3',
-        'sqlalchemy>=1.0.14',
+        'sqlalchemy~=1.3',
     ],
     extras_require={
         'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],
