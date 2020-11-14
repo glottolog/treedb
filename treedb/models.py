@@ -217,16 +217,16 @@ class Languoid(Model):
             tree_1.append_column(terminal.label('terminal'))
 
         if child_root is not None:
-            tree_1.append_whereclause(Child.parent_id == None if child_root else
-                                      Child.parent_id != None)
+            tree_1 = tree_1.where(Child.parent_id == None if child_root else
+                                  Child.parent_id != None)
         if parent_root is not None:
-            tree_1.append_whereclause(Parent.parent_id == None if parent_root else
-                                      Parent.parent_id != None)
+            tree_1 = tree_1.where(Parent.parent_id == None if parent_root else
+                                  Parent.parent_id != None)
 
         if node_level is not None:
             if node_level not in LEVEL:
                 raise ValueError(f'invalid node_level: {node_level!r}')
-            tree_1.append_whereclause(Node.level == node_level)
+            tree_1 = tree_1.where(Node.level == node_level)
 
         tree_1 = tree_1.cte('tree', recursive=True)
 

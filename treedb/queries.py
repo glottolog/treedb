@@ -618,11 +618,11 @@ def get_stats_query(*, bind=ENGINE):
         select_nrows = select([kind, n]).select_from(fromclause)
 
         if level is not None:
-            select_nrows.append_whereclause(cls.level == level)
+            select_nrows = select_nrows.where(cls.level == level)
 
         if is_root is not None:
             cond = (cls.parent == None) if is_root else (cls.parent != None)
-            select_nrows.append_whereclause(cond)
+            select_nrows = select_nrows.where(cond)
 
         return select_nrows
 
@@ -688,8 +688,8 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     if child_level is not None:
         if child_level not in LEVEL:
             raise ValueError(f'invalid child_level: {child_level!r}')
-        select_pairs.append_whereclause(sa.or_(Child.level == None,
-                                               Child.level == child_level))
+        select_pairs = select_pairs.where(sa.or_(Child.level == None,
+                                                 Child.level == child_level))
 
     rows = select_pairs.execute()
 

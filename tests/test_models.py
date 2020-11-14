@@ -38,10 +38,10 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     select_tree = tree.select(bind=treedb.ENGINE)
 
     if child_id is not None:
-        select_tree.append_whereclause(tree.c.child_id == child_id)
+        select_tree = select_tree.where(tree.c.child_id == child_id)
 
     if parent_id is not None:
-        select_tree.append_whereclause(tree.c.parent_id == parent_id)
+        select_tree = select_tree.where(tree.c.parent_id == parent_id)
 
     result = select_tree.execute().fetchall()
 

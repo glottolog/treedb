@@ -57,7 +57,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
     select_values.append_order_by(value_key, 'section', Value.line, 'option')
 
     if skip_unknown:
-        select_values.append_whereclause(Option.is_lines != None)
+        select_values = select_values.where(Option.is_lines != None)
 
     groupby = (('file_id',), ('section',), ('option', 'is_lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
