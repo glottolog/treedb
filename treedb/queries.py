@@ -292,7 +292,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             .outerjoin(EthnologueComment)\
             .outerjoin(IsoRetirement)
 
-    select_languoid.append_from(froms)
+    select_languoid = select_languoid.select_from(froms)
 
     _apply_ordered(select_languoid, path, ordered=ordered)
 

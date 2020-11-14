@@ -199,9 +199,9 @@ class Languoid(Model):
             tree_1_relative = Node
         else:
             tree_1_relative = Relative
-            tree_1.append_from(sa.join(Node, Relative,
-                                       join_source == join_target,
-                                       isouter=not innerjoin))
+            tree_1 = tree_1.select_from(sa.join(Node, Relative,
+                                                join_source == join_target,
+                                                isouter=not innerjoin))
 
         tree_1.append_column(tree_1_relative.id.label(relative_label))
 
@@ -253,7 +253,7 @@ class Languoid(Model):
                                                             Relative.parent_id
                                                             == GrandRelative.id)
 
-        tree_2.append_from(tree_2_fromclause)
+        tree_2 = tree_2.select_from(tree_2_fromclause)
 
         tree = tree_1.union_all(tree_2)
 

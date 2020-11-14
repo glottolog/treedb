@@ -53,7 +53,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
     log.info('ordered: %r', ordered)
 
     select_files.append_order_by(key_column)
-    select_values.append_from(values_from)
+    select_values = select_values.select_from(values_from)
     select_values.append_order_by(value_key, 'section', Value.line, 'option')
 
     if skip_unknown:
