@@ -55,7 +55,7 @@ def checksum(*, weak=False, name=None,
             order.append(Value.value)
         else:
             order.append(Value.line)
-        select_rows.append_order_by(*order)
+        select_rows = select_rows.order_by(*order)
 
     else:
         select_rows = sa.select([File.path, File.sha256]).order_by('path')

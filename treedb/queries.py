@@ -294,20 +294,21 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
 
     select_languoid = select_languoid.select_from(froms)
 
-    _apply_ordered(select_languoid, path, ordered=ordered)
+    select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
 
     return select_languoid
 
 
-def _apply_ordered(select_languoid, path, *, ordered):
+def _ordered_by(select_languoid, path, *, ordered):
     if ordered is False:
         pass
     elif ordered in (True, 'id'):
-        select_languoid.append_order_by(Languoid.id)
+        select_languoid = select_languoid.order_by(Languoid.id)
     elif ordered == 'path':
-        select_languoid.append_order_by(path)
+        select_languoid = select_languoid.order_by(path)
     else:
         raise ValueError(f'ordered={ordered!r} not implemented')
+    return select_languoid
 
 
 def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
@@ -580,7 +581,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
     select_json = select(columns, bind=bind).select_from(Languoid)
 
-    _apply_ordered(select_json, path, ordered=ordered)
+    select_json = _ordered_by(select_json, path, ordered=ordered)
 
     return select_json
 
