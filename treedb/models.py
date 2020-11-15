@@ -217,11 +217,12 @@ class Languoid:
 
         if innerjoin == 'reflexive':
             tree_1_relative = Node
+            tree_1_fromclause = Node
         else:
             tree_1_relative = Relative
-            tree_1 = tree_1.join_from(Node, Relative,
-                                      join_source == join_target,
-                                      isouter=not innerjoin)
+            tree_1_fromclause = sa.join(Node, Relative,
+                                        join_source == join_target,
+                                        isouter=not innerjoin)
 
         tree_1 = tree_1.add_columns(tree_1_relative.id.label(relative_label))
 
@@ -230,11 +231,21 @@ class Languoid:
             tree_1 = tree_1.add_columns(sa.literal(steps).label('steps'))
 
         if with_terminal:
+            GrandRelative = aliased(cls, name='grand' + ('child'
+                                                         if from_parent else
+                                                         'parent'))
             if from_parent:  # pragma: no cover
-                raise NotImplementedError
-            tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
-            terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
+                terminal = sa.type_coerce(GrandRelative.id == None, sa.Boolean)
+                tree_1_fromclause = tree_1_fromclause.outerjoin(GrandRelative,
+                                                                tree_1_relative.id
+                                                                == GrandRelative.parent_id)
+                tree_1 = tree_1.where(Node.parent_id == None)
+            else:
+                tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
+                terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
             tree_1 = tree_1.add_columns(terminal.label('terminal'))
+
+        tree_1 = tree_1.select_from(tree_1_fromclause)
 
         if child_root is not None:
             tree_1 = tree_1.where(Child.parent_id == None if child_root else
@@ -263,15 +274,17 @@ class Languoid:
             tree_2 = tree_2.add_columns((tree_1.c.steps + 1).label('steps'))
 
         if with_terminal:
-            GrandRelative = aliased(cls, name='grand' + ('child'
-                                                         if from_parent else
-                                                         'parent'))
             if from_parent:  # pragma: no cover
-                raise NotImplementedError
-            tree_2 = tree_2.add_columns((GrandRelative.parent_id == None).label('terminal'))
-            tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
-                                                            Relative.parent_id
-                                                            == GrandRelative.id)
+                tree_2 = tree_2.add_columns((GrandRelative.id == None).label('terminal'))
+                tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
+                                                                Relative.id
+                                                                == GrandRelative.parent_id)
+                tree_2 = tree_2.where(~tree_1.c.terminal)
+            else:
+                tree_2 = tree_2.add_columns((GrandRelative.parent_id == None).label('terminal'))
+                tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
+                                                                Relative.parent_id
+                                                                == GrandRelative.id)
 
         tree_2 = tree_2.select_from(tree_2_fromclause)
 
