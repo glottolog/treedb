@@ -67,7 +67,7 @@ class Languoid(Model):
     name = Column(String, CheckConstraint("name != ''"),
                   nullable=False, unique=True)
 
-    level = Column(Enum(*LEVEL), nullable=False)
+    level = Column(Enum(*LEVEL, create_constraint=True), nullable=False)
 
     parent_id = Column(ForeignKey('languoid.id',
                                   deferrable=True, initially='DEFERRED'),
@@ -372,7 +372,8 @@ class Macroarea(Model):
 
     __tablename__ = 'macroarea'
 
-    name = Column(Enum(*sorted(MACROAREA)), primary_key=True)
+    name = Column(Enum(*sorted(MACROAREA), create_constraint=True),
+                  primary_key=True)
 
     __table_args__ = {'info': {'without_rowid': True}}
 
@@ -447,7 +448,7 @@ class Link(Model):
     url = Column(Text, CheckConstraint("url != ''"), nullable=False)
 
     title = Column(Text, CheckConstraint("title != ''"))
-    scheme = Column(Text, Enum(*sorted(LINK_SCHEME)))
+    scheme = Column(Text, Enum(*sorted(LINK_SCHEME), create_constraint=True))
 
     __table_args__ = (UniqueConstraint(languoid_id, url),
                       CheckConstraint("substr(url, 1, length(scheme) + 3)"
@@ -585,8 +586,8 @@ class SourceProvider(Model):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(Text, Enum(*sorted(SOURCE_PROVIDER)), nullable=False,
-                  unique=True)
+    name = Column(Text, Enum(*sorted(SOURCE_PROVIDER), create_constraint=True),
+                  nullable=False, unique=True)
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -687,8 +688,8 @@ class AltnameProvider(Model):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(Text, Enum(*sorted(ALTNAME_PROVIDER)), nullable=False,
-                  unique=True)
+    name = Column(Text, Enum(*sorted(ALTNAME_PROVIDER), create_constraint=True),
+                  nullable=False, unique=True)
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -702,7 +703,8 @@ class Trigger(Model):
     __tablename__ = 'trigger'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    field = Column(Enum(*sorted(TRIGGER_FIELD)), primary_key=True)
+    field = Column(Enum(*sorted(TRIGGER_FIELD), create_constraint=True),
+                   primary_key=True)
     trigger = Column(Text, CheckConstraint("trigger != ''"), primary_key=True)
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
@@ -751,8 +753,8 @@ class IdentifierSite(Model):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(Text, Enum(*sorted(IDENTIFIER_SITE)), nullable=False,
-                  unique=True)
+    name = Column(Text, Enum(*sorted(IDENTIFIER_SITE), create_constraint=True),
+                  nullable=False, unique=True)
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
@@ -766,7 +768,8 @@ class ClassificationComment(Model):
     __tablename__ = 'classificationcomment'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
+    kind = Column(Enum(*sorted(CLASSIFICATION_KIND), create_constraint=True),
+                  primary_key=True)
 
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
@@ -786,7 +789,8 @@ class ClassificationRef(Model):
     __tablename__ = 'classificationref'
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
-    kind = Column(Enum(*sorted(CLASSIFICATION_KIND)), primary_key=True)
+    kind = Column(Enum(*sorted(CLASSIFICATION_KIND), create_constraint=True),
+                  primary_key=True)
     bibitem_id = Column(ForeignKey('bibitem.id'), primary_key=True)
 
     ord = Column(Integer, CheckConstraint('ord >= 1'), nullable=False)
@@ -828,7 +832,8 @@ class Endangerment(Model):
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    status = Column(Enum(*ENDANGERMENT_STATUS), nullable=False)
+    status = Column(Enum(*ENDANGERMENT_STATUS, create_constraint=True),
+                    nullable=False)
 
     source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
     date = Column(DateTime, nullable=False)
@@ -905,7 +910,8 @@ class EthnologueComment(Model):
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
     isohid = Column(Text, CheckConstraint('length(isohid) >= 3'), nullable=False)
-    comment_type = Column(Enum(*sorted(EL_COMMENT_TYPE)), nullable=False)
+    comment_type = Column(Enum(*sorted(EL_COMMENT_TYPE), create_constraint=True),
+                          nullable=False)
     ethnologue_versions = Column(Text, CheckConstraint('length(ethnologue_versions) >= 3'), nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
@@ -945,7 +951,8 @@ class IsoRetirement(Model):
     change_request = Column(String(8), CheckConstraint("change_request LIKE '____-___' "))
 
     effective = Column(Date, nullable=False)
-    reason = Column(Enum(*sorted(ISORETIREMENT_REASON)), nullable=False)
+    reason = Column(Enum(*sorted(ISORETIREMENT_REASON), create_constraint=True),
+                    nullable=False)
 
     remedy = Column(Text, CheckConstraint("remedy != ''"))
     comment = Column(Text, CheckConstraint("comment != ''"))

@@ -157,9 +157,9 @@ class Dataset(Model):
 
     git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
     git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
-    clean = sa.Column(sa.Boolean, nullable=False)
+    clean = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
-    exclude_raw = sa.Column(sa.Boolean, nullable=False)
+    exclude_raw = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
     @classmethod
     def get_dataset(cls, *, bind, strict, fallback=None):

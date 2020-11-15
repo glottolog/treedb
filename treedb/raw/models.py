@@ -47,7 +47,7 @@ class Option(Model):
     section = Column(Text, CheckConstraint("section != ''"), nullable=False)
     option = Column(Text, CheckConstraint("option != ''"), nullable=False)
 
-    is_lines = Column(Boolean)
+    is_lines = Column(Boolean(create_constraint=True))
 
     __table_args__ = (UniqueConstraint(section, option),)
 
