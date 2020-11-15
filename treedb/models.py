@@ -277,7 +277,7 @@ class Languoid(Model):
                            .correlate(cls)\
                            .order_by(tree.c.steps if bottomup
                                      else tree.c.steps.desc())\
-                           .alias()
+                           .alias('parent_path')
 
         return select_path_part
 

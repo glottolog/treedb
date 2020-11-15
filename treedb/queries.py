@@ -132,7 +132,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
                  .correlate(Languoid)\
                  .order_by('macroarea_name')\
-                 .alias()
+                 .alias('lang_ma')
 
     macroareas = select([group_concat(macroareas.c.macroarea_name)
                          .label('macroareas')]).label('macroareas')
@@ -141,7 +141,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                 .where(languoid_country.c.languoid_id == Languoid.id)\
                 .correlate(Languoid)\
                 .order_by('country_id')\
-                .alias()
+                .alias('lang_country')
 
     countries = select([group_concat(countries.c.country_id).label('countries')])\
                 .label('countries')
@@ -150,7 +150,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
             .order_by(Link.ord)\
-            .alias()
+            .alias('lang_link')
 
     links = select([group_concat(links.c.printf).label('links')])\
             .label('links')
@@ -168,7 +168,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                         .where(source_gl.bibitem_id == s_bibitem.id)\
                         .where(s_bibitem.bibfile_id == s_bibfile.id)\
                         .order_by(s_bibfile.name, s_bibitem.bibkey)\
-                        .alias()
+                        .alias('lang_source_glottolog')
 
     sources_glottolog = select([group_concat(sources_glottolog.c.printf)
                                 .label('sources_glottolog')])\
@@ -184,7 +184,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                    .where(a.provider_id == ap.id)
                    .where(ap.name == p)
                    .order_by(a.name, a.lang)
-                   .alias()
+                   .alias('lang_altname_' + p)
                 for p, (a, ap) in altnames.items()}
 
     altnames = [select([group_concat(a.c.printf).label('altnames_' + p)])
@@ -197,7 +197,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                    .where(t.languoid_id == Languoid.id)
                    .correlate(Languoid)
                    .order_by(t.ord)
-                   .alias()
+                   .alias(f'lang_trigger_{f}')
                 for f, t in triggers.items()}
 
     triggers = [select([group_concat(t.c.trigger).label('triggers_' + f)])
@@ -222,7 +222,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                .where(ref.bibitem_id == r_bibitem.id)\
                .where(r_bibitem.bibfile_id == r_bibfile.id)\
                .order_by(ref.ord)\
-               .alias()
+               .alias('lang_cref_' + kind)
 
         label = f'classification_{kind}refs'
         return select([group_concat(refs.c.printf).label(label)]).label(label)
@@ -239,7 +239,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                                .where(IsoRetirementChangeTo.languoid_id == Languoid.id)\
                                .correlate(Languoid)\
                                .order_by(IsoRetirementChangeTo.ord)\
-                               .alias()
+                               .alias('lang_irct')
 
     iso_retirement_change_to = select([group_concat(iso_retirement_change_to.c.code)
                                        .label('iso_retirement_change_to')])\
@@ -391,7 +391,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
                  .correlate(Languoid)\
                  .order_by('macroarea_name')\
-                 .alias()
+                 .alias('lang_ma')
 
     macroareas = select([group_array(macroareas.c.macroarea_name)
                          .label('macroareas')]).as_scalar()
@@ -401,7 +401,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                 .where(languoid_country.c.languoid_id == Languoid.id)\
                 .correlate(Languoid)\
                 .order_by(Country.printf())\
-                .alias()
+                .alias('lang_country')
 
     countries = select([group_array(sa.func.json(countries.c.jsonf))
                         .label('countries')]).as_scalar()
@@ -410,7 +410,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
             .order_by(Link.ord)\
-            .alias()
+            .alias('lang_link')
 
     links = select([group_array(links.c.jsonf).label('links')]).as_scalar()
 
@@ -430,13 +430,13 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
              .where(Source.bibitem_id == s_bibitem.id)\
              .where(s_bibitem.bibfile_id == s_bibfile.id)\
              .order_by(s_provider.name, s_bibfile.name, s_bibitem.bibkey)\
-             .alias()
+             .alias('lang_source')
 
     sources = select([
             sources.c.provider.label('key'),
             group_array(sa.func.json(sources.c.jsonf)).label('value'),
         ]).group_by(sources.c.provider)\
-        .alias()
+        .alias('lang_sources')
 
     sources = select([
         sa.func.nullif(group_object(sources.c.key,
@@ -450,13 +450,13 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                .correlate(Languoid)\
                .where(Altname.provider_id == a_provider.id)\
                .order_by(a_provider.name, Altname.printf())\
-               .alias()
+               .alias('lang_altname')
 
     altnames = select([
             altnames.c.provider.label('key'),
             group_array(sa.func.json(altnames.c.jsonf)).label('value'),
         ]).group_by(altnames.c.provider)\
-        .alias()
+        .alias('lang_altnames')
 
     altnames = select([
         sa.func.nullif(group_object(altnames.c.key,
@@ -468,12 +468,12 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                .where(Trigger.languoid_id == Languoid.id)\
                .correlate(Languoid)\
                .order_by('field', Trigger.ord)\
-               .alias()
+               .alias('lang_trigger')
 
     triggers = select([triggers.c.field.label('key'),
                        group_array(triggers.c.trigger).label('value')])\
                .group_by(triggers.c.field)\
-               .alias()
+               .alias('lang_triggers')
 
     triggers = select([
         sa.func.nullif(group_object(triggers.c.key,
@@ -507,7 +507,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
         .where(ClassificationRef.bibitem_id == cr_bibitem.id)\
         .where(cr_bibitem.bibfile_id == cr_bibfile.id)\
         .order_by(ClassificationRef.kind, ClassificationRef.ord)\
-        .alias()
+        .alias('lang_cref')
 
     classification_refs = select([
             classification_refs.c.key,
@@ -516,7 +516,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
     classification = classification_comment\
                      .union_all(classification_refs)\
-                     .alias()
+                     .alias('lang_classifciation')
 
     classification = select([
         sa.func.nullif(group_object(classification.c.key,
@@ -550,7 +550,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                 .where(irct.languoid_id == IsoRetirement.languoid_id)\
                 .correlate(IsoRetirement)\
                 .order_by(irct.ord)\
-                .alias()
+                .alias('lang_irct')
 
     change_to = select([group_array(change_to.c.code)
                         .label('change_to')]).as_scalar()
