@@ -5,7 +5,15 @@ Changelog
 Version 1.3.4 (in development)
 ------------------------------
 
+Pin sqlalchemy dependency to version ``1.3.*``.
 
+Add explicit ``.alias()`` or ``.as_scalar()`` to implicit subqueries.
+
+Decrease progress logging verbosity.
+
+Add test checksums for Glottolog v4.3-treedb-fixes.
+
+Improve test reporting, update test environment.
 
 
 Version 1.3.3
