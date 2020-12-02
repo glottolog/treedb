@@ -6,6 +6,8 @@ import logging
 import re
 import warnings
 
+import pycountry
+
 from . import tools as _tools
 
 from . import ENGINE, ROOT
@@ -135,16 +137,25 @@ def format_interval(value, year_tmpl='{: 05d}'):
             '{end_year}-{end_month:02d}-{end_day:02d}').format_map(context)
 
 
-def splitcountry(name, *, _match=re.compile(r'(?P<name>.+?)'
-                                            r' '
-                                            r'\('
-                                            r'(?P<id>[^)]+)'
-                                            r'\)').fullmatch):
-    return _match(name).groupdict()
+def splitcountry(name, *, _match=re.compile(r'(?P<id_only>[A-Z]{2})'
+                                            r'|'
+                                            r'(?:'
+                                                r'(?P<name>.+?)'
+                                                r' '
+                                                r'\('
+                                                r'(?P<id>[^)]+)'
+                                                r'\)'
+                                            r')').fullmatch):
+    groups = _match(name).groupdict()
+    id_only = groups.pop('id_only')
+    if id_only:
+        country = pycountry.countries.get(alpha_2=id_only)
+        return {'id': id_only, 'name': country.name}
+    return groups
 
 
-def formatcountry(value):
-    return '{name} ({id})'.format_map(value)
+def formatcountry(value, minimal=True):
+    return ('{name} ({id})' if not minimal else '{id}').format_map(value)
 
 
 def splitlink(markdown, *, _match=re.compile(r'\['

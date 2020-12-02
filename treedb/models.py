@@ -419,8 +419,9 @@ class Country(Model):
                              back_populates='countries')
 
     @classmethod
-    def printf(cls, *, label='printf'):
-        return sa.func.printf('%s (%s)', cls.name, cls.id)
+    def printf(cls, *, label='printf', minimal=True):
+        return (sa.func.printf('%s (%s)', cls.name, cls.id)
+                if not minimal else cls.id).label(label)
 
     @classmethod
     def jsonf(cls, *, label='jsonf'):
