@@ -1,8 +1,7 @@
 # _compat.py - Python 3.6 compatibility backports
 
-import sys
-
 import datetime
+import sys
 
 __all__ = ['nullcontext',
            'datetime_fromisoformat']

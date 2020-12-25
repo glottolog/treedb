@@ -7,12 +7,9 @@ import logging
 
 import sqlalchemy as sa
 
-from .. import (tools as _tools,
-                backend as _backend)
-
-
 from .. import ENGINE
-
+from .. import backend as _backend
+from .. import tools as _tools
 from .models import File, Option, Value
 
 __all__ = ['iterrecords']

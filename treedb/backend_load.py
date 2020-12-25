@@ -9,13 +9,11 @@ import warnings
 
 import sqlalchemy as sa
 
-from . import (tools as _tools,
-               files as _files,
-               views as _views)
-
-from .backend import set_engine, Model, Dataset, Producer
-
 from . import ENGINE, ROOT
+from .backend import set_engine, Model, Dataset, Producer
+from . import files as _files
+from . import tools as _tools
+from . import views as _views
 
 __all__ = ['load']
 

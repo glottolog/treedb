@@ -4,10 +4,9 @@ import logging
 
 import sqlalchemy as sa
 
-from .. import (tools as _tools,
-                files as _files,
-                fields as _fields)
-
+from .. import fields as _fields
+from .. import files as _files
+from .. import tools as _tools
 from .models import File, Option, Value
 
 __all__ = ['load']

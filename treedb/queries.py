@@ -14,12 +14,9 @@ from sqlalchemy.orm import aliased
 
 import csv23
 
-from . import (_compat,
-               tools as _tools,
-               views as _views)
+from . import _compat
 
 from . import ENGINE
-
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -33,6 +30,8 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
+from . import tools as _tools
+from . import views as _views
 
 __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query',

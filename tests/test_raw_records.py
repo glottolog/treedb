@@ -1,8 +1,8 @@
 # test_raw_records.py
 
-import pytest
-
 import itertools
+
+import pytest
 
 
 pytestmark = pytest.FLAGS.skip_exclude_raw

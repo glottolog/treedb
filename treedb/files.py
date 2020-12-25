@@ -3,10 +3,9 @@
 import configparser
 import logging
 
-from . import (tools as _tools,
-               fields as _fields)
-
 from . import ROOT
+from . import fields as _fields
+from . import tools as _tools
 
 __all__ = ['set_root', 'get_repo_root',
            'iterfiles',

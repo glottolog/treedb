@@ -8,13 +8,10 @@ import csv23
 import sqlalchemy as sa
 
 from .. import ENGINE, ROOT
-
-from .. import (tools as _tools,
-                files as _files,
-                queries as _queries)
-
+from .. import files as _files
+from .. import queries as _queries
+from .. import tools as _tools
 from . import records as _records
-
 from .models import File, Option, Value
 
 __all__ = ['print_stats',

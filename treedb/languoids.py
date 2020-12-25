@@ -8,9 +8,8 @@ import warnings
 
 import pycountry
 
-from . import tools as _tools
-
 from . import ENGINE, ROOT
+from . import tools as _tools
 
 __all__ = ['iterlanguoids',
            'compare_with_files', 'compare',

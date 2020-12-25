@@ -8,12 +8,12 @@ import warnings
 
 import csv23
 
-from . import (_compat,
-               tools as _tools,
-               queries as _queries,
-               languoids as _languoids)
+from . import _compat
 
 from . import ENGINE, ROOT
+from . import languoids as _languoids
+from . import queries as _queries
+from . import tools as _tools
 
 __all__ = ['iterlanguoids',
            'write_json_csv',

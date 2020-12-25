@@ -2,10 +2,9 @@
 
 import logging
 
-from . import (tools as _tools,
-               files as _files)
-
 from . import ROOT
+from . import files as _files
+from . import tools as _tools
 
 __all__ = ['checkout_or_clone']
 

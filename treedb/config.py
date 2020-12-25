@@ -4,9 +4,8 @@ import configparser
 import logging
 import os
 
-from . import tools as _tools
-
 from . import CONFIG, DEFAULT_ROOT
+from . import tools as _tools
 
 __all__ = ['get_default_root',
            'configure']

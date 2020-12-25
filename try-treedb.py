@@ -2,7 +2,6 @@
 # try-treedb.py - usage examples
 
 import treedb
-
 from treedb import Languoid, select
 
 treedb.configure()

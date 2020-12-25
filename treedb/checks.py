@@ -7,13 +7,11 @@ import logging
 import sqlalchemy as sa
 import sqlalchemy.orm
 
+from . import ENGINE
 from .backend import Session, Dataset
-
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname, AltnameProvider)
-
-from . import ENGINE
 
 __all__ = ['check']
 
