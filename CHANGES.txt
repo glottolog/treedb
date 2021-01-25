@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 1.4.1 (in development)
-------------------------------
+Version 1.4.1
+-------------
 
-
+Add workaround for https://bugs.python.org/issue18199.
 
 
 Version 1.4

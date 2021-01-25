@@ -68,10 +68,10 @@ __all__ = ['ENGINE', 'ROOT',
            'engine', 'root']
 
 __title__ = 'treedb'
-__version__ = '1.4.1.dev0'
+__version__ = '1.4.1'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
-__copyright__ = 'Copyright (c) 2017-2020 Sebastian Bank'
+__copyright__ = 'Copyright (c) 2017-2021 Sebastian Bank'
 
 
 # default engine: in-memory database
