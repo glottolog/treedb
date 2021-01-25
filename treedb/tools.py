@@ -52,6 +52,9 @@ def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
 
+    if platform.platform().startswith('Windows-'):
+        top = pathlib.Path(fr'\\?\{top}')
+
     log.debug('recursive depth-first scandir on %r', top)
     log.debug('sortkey: %r', sortkey)
 
