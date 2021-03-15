@@ -140,8 +140,7 @@ def print_schema(metadata=Model.metadata, *, engine=ENGINE):
     def print_sql(sql):
         print(sql.compile(dialect=engine.dialect))
 
-    mock_engine = sa.create_engine(engine.url, strategy='mock',
-                                   executor=print_sql)
+    mock_engine = sa.create_mock_engine(engine.url, executor=print_sql)
 
     metadata.create_all(mock_engine, checkfirst=False)
 
@@ -322,7 +321,7 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
 
             log.info('export table %r', table.name)
             rows = table.select(bind=conn).execute()
-            header = rows.keys()
+            header = list(rows.keys())
 
             date_time = datetime.datetime.now().timetuple()[:6]
             info = zipfile.ZipInfo(f'{table.name}.csv', date_time=date_time)

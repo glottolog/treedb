@@ -203,18 +203,18 @@ class Languoid(Model):
                                                 join_source == join_target,
                                                 isouter=not innerjoin))
 
-        tree_1.append_column(tree_1_relative.id.label(relative_label))
+        tree_1 = tree_1.add_columns(tree_1_relative.id.label(relative_label))
 
         if with_steps:
             steps = 0 if innerjoin == 'reflexive' else 1
-            tree_1.append_column(sa.literal(steps).label('steps'))
+            tree_1 = tree_1.add_columns(sa.literal(steps).label('steps'))
 
         if with_terminal:
             if from_parent:
                 raise NotImplementedError
             tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
             terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
-            tree_1.append_column(terminal.label('terminal'))
+            tree_1 = tree_1.add_columns(terminal.label('terminal'))
 
         if child_root is not None:
             tree_1 = tree_1.where(Child.parent_id == None if child_root else
@@ -240,7 +240,7 @@ class Languoid(Model):
         tree_2_fromclause = tree_1.join(Relative, tree_2_onclause)
 
         if with_steps:
-            tree_2.append_column((tree_1.c.steps + 1).label('steps'))
+            tree_2 = tree_2.add_columns((tree_1.c.steps + 1).label('steps'))
 
         if with_terminal:
             GrandRelative = aliased(cls, name='grand' + ('child'
@@ -248,7 +248,7 @@ class Languoid(Model):
                                                          'parent'))
             if from_parent:
                 raise NotImplementedError
-            tree_2.append_column((GrandRelative.parent_id == None).label('terminal'))
+            tree_2 = tree_2.add_columns((GrandRelative.parent_id == None).label('terminal'))
             tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
                                                             Relative.parent_id
                                                             == GrandRelative.id)

@@ -127,7 +127,7 @@ def clean_name(session):
     """Glottolog names lack problematic characters."""
     gl = session.query(AltnameProvider.id)\
          .filter_by(name='glottolog')\
-         .as_scalar()
+         .scalar_subquery()
 
     def cond(col):
         yield col.startswith(' ')
@@ -191,7 +191,7 @@ def family_languages(session):
                    .select_from(Child).filter_by(level=LANGUAGE)
                    .join(tree, Child.id == tree.c.child_id)
                    .filter_by(parent_id=Languoid.id)
-                   .as_scalar() < 2)
+                   .scalar_subquery() < 2)
 
 
 @check

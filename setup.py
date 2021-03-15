@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='treedb',
-    version='1.4.2.dev0',
+    version='1.5.dev0',
     author='Sebastian Bank',
     author_email='sebastian.bank@uni-leipzig.de',
     description='Glottolog languoid tree as SQLite database',
@@ -24,7 +24,7 @@ setup(
     install_requires=[
         'csv23~=0.3',
         'pycountry==20.7.3',  # date-based versioning scheme
-        'sqlalchemy~=1.3',
+        'sqlalchemy~=1.4',
     ],
     extras_require={
         'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],

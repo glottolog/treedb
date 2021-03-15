@@ -82,7 +82,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
         print(query)
 
     rows = bind.execute(query)
-    header = rows.keys()
+    header = list(rows.keys())
     log.info('csv header: %r', header)
 
     return csv23.write_csv(filename, rows, header=header,
@@ -97,7 +97,7 @@ def hash_csv(query=None, *,
         query = get_query(bind=bind)
 
     rows = bind.execute(query)
-    header = rows.keys()
+    header = list(rows.keys())
 
     return hash_rows(rows, header=header, name=name, raw=raw,
                      dialect=dialect, encoding=encoding)
@@ -393,7 +393,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                  .alias('lang_ma')
 
     macroareas = select([group_array(macroareas.c.macroarea_name)
-                         .label('macroareas')]).as_scalar()
+                         .label('macroareas')]).scalar_subquery()
 
     countries = select([Country.jsonf()])\
                 .select_from(languoid_country.join(Country))\
@@ -403,7 +403,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                 .alias('lang_country')
 
     countries = select([group_array(sa.func.json(countries.c.jsonf))
-                        .label('countries')]).as_scalar()
+                        .label('countries')]).scalar_subquery()
 
     links = select([Link.jsonf()])\
             .where(Link.languoid_id == Languoid.id)\
@@ -411,11 +411,11 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
             .order_by(Link.ord)\
             .alias('lang_link')
 
-    links = select([group_array(links.c.jsonf).label('links')]).as_scalar()
+    links = select([group_array(links.c.jsonf).label('links')]).scalar_subquery()
 
     timespan = select([Timespan.jsonf()])\
                .where(Timespan.languoid_id == Languoid.id)\
-               .as_scalar()
+               .scalar_subquery()
 
     s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
@@ -440,7 +440,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     sources = select([
         sa.func.nullif(group_object(sources.c.key,
                                     sa.func.json(sources.c.value)),
-                       '{}').label('sources')]).as_scalar()
+                       '{}').label('sources')]).scalar_subquery()
 
     a_provider = aliased(AltnameProvider, name='altname_provider')
     altnames = select([a_provider.name.label('provider'),
@@ -460,7 +460,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     altnames = select([
         sa.func.nullif(group_object(altnames.c.key,
                                     sa.func.json(altnames.c.value)),
-                       '{}').label('altnames')]).as_scalar()
+                       '{}').label('altnames')]).scalar_subquery()
 
     triggers = select([Trigger.field,
                        Trigger.trigger])\
@@ -477,7 +477,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     triggers = select([
         sa.func.nullif(group_object(triggers.c.key,
                                     triggers.c.value),
-                       '{}').label('triggers')]).as_scalar()
+                       '{}').label('triggers')]).scalar_subquery()
 
     identifier = select([
         sa.func.nullif(group_object(IdentifierSite.name.label('site'),
@@ -486,14 +486,14 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
         ]).where(Identifier.languoid_id == Languoid.id)\
         .correlate(Languoid)\
         .where(Identifier.site_id == IdentifierSite.id)\
-        .as_scalar()
+        .scalar_subquery()
 
     classification_comment = select([
             ClassificationComment.kind.label('key'),
             ClassificationComment.comment.label('value'),
         ]).where(ClassificationComment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .as_scalar()
+        .scalar_subquery()
 
     cr_bibfile = aliased(Bibfile, name='bibfile_cr')
     cr_bibitem = aliased(Bibitem, name='bibitem_cr')
@@ -522,7 +522,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                                     classification.c.value),
                        '{}').label('classification')])\
                       .select_from(classification)\
-                      .as_scalar()
+                      .scalar_subquery()
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
@@ -534,14 +534,14 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                      .outerjoin(sa.join(e_bibitem, e_bibfile)))\
         .where(Endangerment.languoid_id == Languoid.id)\
         .correlate(Languoid)\
-        .as_scalar()
+        .scalar_subquery()
 
     hh_ethnologue_comment = select([EthnologueComment
                                     .jsonf(label='hh_ethnologue_comment')])\
                             .where(EthnologueComment.languoid_id
                                    == Languoid.id)\
                             .correlate(Languoid)\
-                            .as_scalar()
+                            .scalar_subquery()
 
     irct = aliased(IsoRetirementChangeTo, name='irct')
 
@@ -552,14 +552,14 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                 .alias('lang_irct')
 
     change_to = select([group_array(change_to.c.code)
-                        .label('change_to')]).as_scalar()
+                        .label('change_to')]).scalar_subquery()
 
     iso_retirement = select([IsoRetirement.jsonf(change_to=change_to,
                                                  optional=True,
                                                  label='iso_retirement')])\
                      .where(IsoRetirement.languoid_id == Languoid.id)\
                      .correlate(Languoid)\
-                     .as_scalar()
+                     .scalar_subquery()
 
     languoid = json_object('id', Languoid.id,
                            'parent_id', Languoid.parent_id,

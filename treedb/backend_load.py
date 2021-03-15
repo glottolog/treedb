@@ -108,7 +108,6 @@ def load(filename=ENGINE, repo_root=None, *,
             log.debug('begin transaction on %r', dbapi_conn)
             conn.execute('PRAGMA synchronous = OFF')
             conn.execute('PRAGMA journal_mode = MEMORY')
-            conn = conn.execution_options(compiled_cache={})
 
             yield conn
 
