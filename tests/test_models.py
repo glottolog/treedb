@@ -35,7 +35,7 @@ EXCLUSIVE = {'with_steps': True, 'with_terminal': True}
 def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     tree = treedb.Languoid.tree(**kwargs)
 
-    select_tree = tree.select(bind=treedb.ENGINE)
+    select_tree = tree.select()
 
     if child_id is not None:
         select_tree = select_tree.where(tree.c.child_id == child_id)
@@ -43,6 +43,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     if parent_id is not None:
         select_tree = select_tree.where(tree.c.parent_id == parent_id)
 
-    result = select_tree.execute().fetchall()
+    with treedb.connect() as conn:
+        result = conn.execute(select_tree).all()
 
     assert result == expected

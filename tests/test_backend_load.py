@@ -4,7 +4,7 @@ import itertools
 
 
 def test_load(treedb, n=100):
-    pairs = treedb.iterlanguoids(treedb.ENGINE)
+    pairs = treedb.iterlanguoids(treedb.engine)
 
     head = list(itertools.islice(pairs, n))
 

@@ -3,6 +3,8 @@
 import re
 import sys
 
+import sqlalchemy as sa
+
 import pytest
 
 import treedb as _treedb
@@ -11,24 +13,24 @@ MB = 2**20
 
 
 @pytest.mark.parametrize('query, pretty, expected', [
-    (_treedb.select([_treedb.Languoid]), False, ('SELECT languoid.id,'
-                                                 ' languoid.name,'
-                                                 ' languoid.level,'
-                                                 ' languoid.parent_id,'
-                                                 ' languoid.hid,'
-                                                 ' languoid.iso639_3,'
-                                                 ' languoid.latitude,'
-                                                 ' languoid.longitude \n'
-                                                 'FROM languoid\n')),
-    (_treedb.select([_treedb.Languoid]), True, ('SELECT languoid.id,\n'
-                                                '       languoid.name,\n'
-                                                '       languoid.level,\n'
-                                                '       languoid.parent_id,\n'
-                                                '       languoid.hid,\n'
-                                                '       languoid.iso639_3,\n'
-                                                '       languoid.latitude,\n'
-                                                '       languoid.longitude\n'
-                                                'FROM languoid\n')),
+    (sa.select(_treedb.Languoid), False, ('SELECT languoid.id,'
+                                          ' languoid.name,'
+                                          ' languoid.level,'
+                                          ' languoid.parent_id,'
+                                          ' languoid.hid,'
+                                          ' languoid.iso639_3,'
+                                          ' languoid.latitude,'
+                                          ' languoid.longitude \n'
+                                          'FROM languoid\n')),
+    (sa.select(_treedb.Languoid), True, ('SELECT languoid.id,\n'
+                                         '       languoid.name,\n'
+                                         '       languoid.level,\n'
+                                         '       languoid.parent_id,\n'
+                                         '       languoid.hid,\n'
+                                         '       languoid.iso639_3,\n'
+                                         '       languoid.latitude,\n'
+                                         '       languoid.longitude\n'
+                                         'FROM languoid\n')),
     (None, False, None),
     (None, True, None)
 ])
@@ -59,7 +61,7 @@ def test_print_schema(capsys):
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason='requires Python 3.7+')
 def test_backup(treedb):
-    path = treedb.ENGINE.file_with_suffix('.backup.sqlite3')
+    path = treedb.engine.file_with_suffix('.backup.sqlite3')
 
     engine = treedb.backup(path.name)
 
@@ -68,7 +70,7 @@ def test_backup(treedb):
     assert path.is_file()
     assert 10 * MB <= path.stat().st_size <= 200 * MB
 
-    engine = treedb.ENGINE.__class__(engine)  # SQLiteEngineProxy
+    engine = treedb.engine.__class__(engine)  # SQLiteEngineProxy
 
     assert engine.file_exists()
 
@@ -81,7 +83,7 @@ def test_backup(treedb):
 
 
 def test_dump_sql(treedb):
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.dump_sql()
 
@@ -92,7 +94,7 @@ def test_dump_sql(treedb):
 
 
 def test_export(treedb):
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.export()
 

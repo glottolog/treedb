@@ -9,7 +9,7 @@ pytestmark = pytest.FLAGS.skip_exclude_raw
 
 
 def test_iterlanguoids_from_raw(treedb, n=501):
-    pairs = treedb.iterlanguoids(treedb.ENGINE, from_raw=True)
+    pairs = treedb.iterlanguoids(treedb.engine, from_raw=True)
 
     head = list(itertools.islice(pairs, n))
 

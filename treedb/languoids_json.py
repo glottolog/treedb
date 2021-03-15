@@ -28,24 +28,24 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
     log.info('select languoids from json query')
     log.info('ordered: %r', ordered)
 
-    query = _queries.get_json_query(bind=bind,
-                                    ordered=ordered,
+    query = _queries.get_json_query(ordered=ordered,
                                     load_json=True)
 
     json_datetime = _compat.datetime_fromisoformat
 
-    n = 0
-    for n, (path, item) in enumerate(query.execute(), 1):
-        endangerment = item['endangerment']
-        if endangerment is not None:
-            endangerment['date'] = json_datetime(endangerment['date'])
-        if not item.get('timespan'):
-            item.pop('timespan', None)
+    with bind.connect() as conn:
+        n = 0
+        for n, (path, item) in enumerate(bind.execute(query), 1):
+            endangerment = item['endangerment']
+            if endangerment is not None:
+                endangerment['date'] = json_datetime(endangerment['date'])
+            if not item.get('timespan'):
+                item.pop('timespan', None)
 
-        yield tuple(path.split('/')), item
+            yield tuple(path.split('/')), item
 
-        if not (n % progress_after):
-            log.info('%s languoids fetched', f'{n:_d}')
+            if not (n % progress_after):
+                log.info('%s languoids fetched', f'{n:_d}')
 
     log.info('%s languoids total', f'{n:_d}')
 

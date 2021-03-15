@@ -66,6 +66,12 @@ class EngineProxy(Proxy, sa.engine.Engine):
     def __init__(self, engine=None):
         self.engine = engine
 
+    def connect(self, **kwargs):
+        return self.engine.connect(**kwargs)
+
+    def scalar(self, query):
+        return self.engine.scalar(query)
+
     def dispose(self):
         if self._delegate is not None:
             log.debug('dispose %s.%r', self._delegate.__module__, self._delegate)

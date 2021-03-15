@@ -23,29 +23,29 @@ __all__ = ['print_stats',
 log = logging.getLogger(__name__)
 
 
-def print_stats(*, bind=ENGINE):
+def print_stats():
     log.info('fetch statistics')
 
-    select_nvalues = sa.select([
-            Option.section, Option.option, sa.func.count().label('n'),
-        ])\
-        .select_from(sa.join(Option, Value))\
-        .group_by(Option.section, Option.option)\
-        .order_by('section', sa.desc('n'))
+    select_nvalues = sa.select(Option.section, Option.option,
+                               sa.func.count().label('n'))\
+                     .select_from(sa.join(Option, Value))\
+                     .group_by(Option.section, Option.option)\
+                     .order_by('section', sa.desc('n'))
 
     template = '{section:<22} {option:<22} {n:,}'
-    _queries.print_rows(select_nvalues, format_=template, bind=bind)
+    _queries.print_rows(select_nvalues, format_=template)
 
 
 def checksum(*, weak=False, name=None,
-             dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
 
     if weak:
-        select_rows = sa.select([
-                File.path, Option.section, Option.option, Value.value,
-            ]).select_from(sa.join(File, Value).join(Option))\
+        select_rows = sa.select(File.path,
+                                Option.section, Option.option,
+                                Value.value)\
+                      .select_from(sa.join(File, Value).join(Option))\
 
         order = ['path', 'section', 'option']
         if weak == 'unordered':
@@ -55,20 +55,20 @@ def checksum(*, weak=False, name=None,
         select_rows = select_rows.order_by(*order)
 
     else:
-        select_rows = sa.select([File.path, File.sha256]).order_by('path')
+        select_rows = sa.select(File.path, File.sha256).order_by('path')
 
     hash_ = _queries.hash_csv(select_rows, raw=True, name=name,
-                               dialect=dialect, encoding=encoding, bind=bind)
+                               dialect=dialect, encoding=encoding)
 
     logging.debug('%s: %r', hash_.name, hash_.hexdigest())
     return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
 
 
 def write_raw_csv(filename=None, *,
-                  dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
+                  dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
-        filename = bind.file_with_suffix('.raw.csv.gz').name
+        filename = ENGINE.file_with_suffix('.raw.csv.gz').name
     else:
         filename = _tools.path_from_filename(filename)
 
@@ -77,17 +77,18 @@ def write_raw_csv(filename=None, *,
         warnings.warn(f'deltete present file: {path!r}')
         path.unlink()
 
-    select_values = sa.select([
-            File.path, Option.section, Option.option, Value.line, Value.value,
-        ]).select_from(sa.join(File, Value).join(Option))\
-        .order_by('path', 'section', 'option', 'line')
+    select_values = sa.select(File.path,
+                              Option.section, Option.option,
+                              Value.line, Value.value)\
+                    .select_from(sa.join(File, Value).join(Option))\
+                    .order_by('path', 'section', 'option', 'line')
 
     return _queries.write_csv(select_values, filename,
-                              dialect=dialect, encoding=encoding, bind=bind)
+                              dialect=dialect, encoding=encoding)
 
 
 def write_files(root=ROOT, *, replace=False,
-                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
+                progress_after=_tools.PROGRESS_AFTER):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write from raw records to tree')
 

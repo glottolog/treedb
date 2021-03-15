@@ -33,7 +33,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
 from . import tools as _tools
 from . import views as _views
 
-__all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
+__all__ = ['iterrows', 'print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats', 'get_stats_query',
@@ -43,9 +43,15 @@ __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
 log = logging.getLogger(__name__)
 
 
+def iterrows(query, *, bind=ENGINE):
+    with bind.connect() as conn:
+        result = conn.execute(query)
+        yield from result
+
+
 def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
     if query is None:
-        query = get_query(bind=bind)
+        query = get_query()
 
     if not isinstance(query, sa.sql.base.Executable):
         rows = iter(query)
@@ -66,7 +72,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     """Write get_query() example query (or given query) to CSV, return filename."""
     if query is None:
-        query = get_query(bind=bind)
+        query = get_query()
 
     if filename is None:
         filename = bind.file_with_suffix('.query.csv').name
@@ -81,26 +87,29 @@ def write_csv(query=None, filename=None, *, verbose=False,
     if verbose:
         print(query)
 
-    rows = bind.execute(query)
-    header = list(rows.keys())
-    log.info('csv header: %r', header)
+    with bind.connect() as conn:
+        rows = conn.execute(query)
 
-    return csv23.write_csv(filename, rows, header=header,
-                           dialect=dialect, encoding=encoding,
-                           autocompress=True)
+        header = list(rows.keys())
+        log.info('csv header: %r', header)
+
+        return csv23.write_csv(filename, rows, header=header,
+                               dialect=dialect, encoding=encoding,
+                               autocompress=True)
+
 
 
 def hash_csv(query=None, *,
              raw=False, name=None,
              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
     if query is None:
-        query = get_query(bind=bind)
+        query = get_query()
 
-    rows = bind.execute(query)
-    header = list(rows.keys())
-
-    return hash_rows(rows, header=header, name=name, raw=raw,
-                     dialect=dialect, encoding=encoding)
+    with bind.connect() as conn:
+        rows = conn.execute(query)
+        header = list(rows.keys())
+        return hash_rows(rows, header=header, name=name, raw=raw,
+                         dialect=dialect, encoding=encoding)
 
 
 def hash_rows(rows, *, header=None, name=None, raw=False,
@@ -121,37 +130,38 @@ def hash_rows(rows, *, header=None, name=None, raw=False,
 
 
 @_views.register_view('example')
-def get_query(*, ordered='id', separator=', ', bind=ENGINE):
+def get_query(*, ordered='id', separator=', '):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)
 
     path, family, language = Languoid.path_family_language()
 
-    macroareas = select([languoid_macroarea.c.macroarea_name])\
+    macroareas = select(languoid_macroarea.c.macroarea_name)\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
                  .correlate(Languoid)\
                  .order_by('macroarea_name')\
                  .alias('lang_ma')
 
-    macroareas = select([group_concat(macroareas.c.macroarea_name)
-                         .label('macroareas')]).label('macroareas')
+    macroareas = select(group_concat(macroareas.c.macroarea_name)
+                         .label('macroareas'))\
+                 .label('macroareas')
 
-    countries = select([languoid_country.c.country_id])\
+    countries = select(languoid_country.c.country_id)\
                 .where(languoid_country.c.languoid_id == Languoid.id)\
                 .correlate(Languoid)\
                 .order_by('country_id')\
                 .alias('lang_country')
 
-    countries = select([group_concat(countries.c.country_id).label('countries')])\
+    countries = select(group_concat(countries.c.country_id).label('countries'))\
                 .label('countries')
 
-    links = select([Link.printf()])\
+    links = select(Link.printf())\
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
             .order_by(Link.ord)\
             .alias('lang_link')
 
-    links = select([group_concat(links.c.printf).label('links')])\
+    links = select(group_concat(links.c.printf).label('links'))\
             .label('links')
 
     source_gl = aliased(Source, name='source_glottolog')
@@ -159,7 +169,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
-    sources_glottolog = select([source_gl.printf(s_bibfile, s_bibitem)])\
+    sources_glottolog = select(source_gl.printf(s_bibfile, s_bibitem))\
                         .where(source_gl.languoid_id == Languoid.id)\
                         .correlate(Languoid)\
                         .where(source_gl.provider_id == s_provider.id)\
@@ -169,15 +179,15 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                         .order_by(s_bibfile.name, s_bibitem.bibkey)\
                         .alias('lang_source_glottolog')
 
-    sources_glottolog = select([group_concat(sources_glottolog.c.printf)
-                                .label('sources_glottolog')])\
+    sources_glottolog = select(group_concat(sources_glottolog.c.printf)
+                                .label('sources_glottolog'))\
                         .label('sources_glottolog')
 
     altnames = {p: (aliased(Altname, name='altname_' + p),
                     aliased(AltnameProvider, name='altname_' + p + '_provider'))
                 for p in sorted(ALTNAME_PROVIDER)}
 
-    altnames = {p: select([a.printf()])
+    altnames = {p: select(a.printf())
                    .where(a.languoid_id == Languoid.id)
                    .correlate(Languoid)
                    .where(a.provider_id == ap.id)
@@ -186,12 +196,12 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                    .alias('lang_altname_' + p)
                 for p, (a, ap) in altnames.items()}
 
-    altnames = [select([group_concat(a.c.printf).label('altnames_' + p)])
+    altnames = [select(group_concat(a.c.printf).label('altnames_' + p))
                 .label('altnames_' + p) for p, a in altnames.items()]
 
     triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
-    triggers = {f: select([t.trigger])
+    triggers = {f: select(t.trigger)
                    .where(t.field == f)
                    .where(t.languoid_id == Languoid.id)
                    .correlate(Languoid)
@@ -199,7 +209,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                    .alias(f'lang_trigger_{f}')
                 for f, t in triggers.items()}
 
-    triggers = [select([group_concat(t.c.trigger).label('triggers_' + f)])
+    triggers = [select(group_concat(t.c.trigger).label('triggers_' + f))
                 .label('triggers_' + f) for f, t in triggers.items()]
 
     idents = {s: (aliased(Identifier, name='ident_' + s),
@@ -214,7 +224,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
         r_bibfile = aliased(Bibfile, name='bibfile_cr_' + kind)
         r_bibitem = aliased(Bibitem, name='bibitem_cr_' + kind)
 
-        refs = select([ref.printf(r_bibfile, r_bibitem)])\
+        refs = select(ref.printf(r_bibfile, r_bibitem))\
                .where(ref.kind == kind)\
                .where(ref.languoid_id == Languoid.id)\
                .correlate(Languoid)\
@@ -224,7 +234,7 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
                .alias('lang_cref_' + kind)
 
         label = f'classification_{kind}refs'
-        return select([group_concat(refs.c.printf).label(label)]).label(label)
+        return select(group_concat(refs.c.printf).label(label)).label(label)
 
     classification_subrefs, classification_familyrefs = map(crefs, ('sub', 'family'))
 
@@ -234,14 +244,14 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     endangerment_source = EndangermentSource.printf(e_bibfile, e_bibitem)\
                           .label('endangerment_source')
 
-    iso_retirement_change_to = select([IsoRetirementChangeTo.code])\
+    iso_retirement_change_to = select(IsoRetirementChangeTo.code)\
                                .where(IsoRetirementChangeTo.languoid_id == Languoid.id)\
                                .correlate(Languoid)\
                                .order_by(IsoRetirementChangeTo.ord)\
                                .alias('lang_irct')
 
-    iso_retirement_change_to = select([group_concat(iso_retirement_change_to.c.code)
-                                       .label('iso_retirement_change_to')])\
+    iso_retirement_change_to = select(group_concat(iso_retirement_change_to.c.code)
+                                       .label('iso_retirement_change_to'))\
                                .label('iso_retirement_change_to')
 
     def get_cols(model, label='{name}', ignore='id'):
@@ -260,32 +270,31 @@ def get_query(*, ordered='id', separator=', ', bind=ENGINE):
     classification = [classification_sub, classification_subrefs,
                       classification_family, classification_familyrefs]
 
-    select_languoid = select([
-            Languoid.id,
-            Languoid.name,
-            Languoid.level,
-            Languoid.parent_id,
-            path.label('path'),
-            family.label('family_id'),
-            language.label('dialect_language_id'),
-            Languoid.hid,
-            Languoid.iso639_3,
-            Languoid.latitude,
-            Languoid.longitude,
-            macroareas,
-            countries,
-            links,
-            sources_glottolog,
-            ] + altnames
-            + triggers
-            + identifiers
-            + classification
-            + get_cols(Endangerment, label='endangerment_{name}') + [
-            endangerment_source,
-            ] + get_cols(EthnologueComment, label='elcomment_{name}')
-            + get_cols(IsoRetirement, label='iso_retirement_{name}') + [
-            iso_retirement_change_to,
-        ], bind=bind)
+    select_languoid = select(
+        Languoid.id,
+        Languoid.name,
+        Languoid.level,
+        Languoid.parent_id,
+        path.label('path'),
+        family.label('family_id'),
+        language.label('dialect_language_id'),
+        Languoid.hid,
+        Languoid.iso639_3,
+        Languoid.latitude,
+        Languoid.longitude,
+        macroareas,
+        countries,
+        links,
+        sources_glottolog,
+        *altnames
+        + triggers
+        + identifiers
+        + classification
+        + get_cols(Endangerment, label='endangerment_{name}')
+        + [endangerment_source]
+        + get_cols(EthnologueComment, label='elcomment_{name}')
+        + get_cols(IsoRetirement, label='iso_retirement_{name}')
+        + [iso_retirement_change_to])
 
     froms = Languoid.__table__
     for s, (i, is_) in idents.items():
@@ -326,10 +335,9 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
         suffix = f'.languoids-json_query{suffix}.csv.gz'
         filename = bind.file_with_suffix(suffix).name
 
-    query = get_json_query(ordered=ordered, as_rows=True, load_json=raw,
-                           bind=bind)
+    query = get_json_query(ordered=ordered, as_rows=True, load_json=raw)
 
-    return write_csv(query, filename=filename)
+    return write_csv(query, filename=filename, bind=bind)
 
 
 def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
@@ -367,53 +375,57 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
     assert result is not None
 
     query = get_json_query(ordered='id', as_rows=False, load_json=False,
-                           languoid_label='languoid', bind=bind)
+                           languoid_label='languoid')
 
-    rows = query.execute()
+    with bind.connect() as conn:
+        rows = bind.execute(query)
 
-    with open_func() as f:
-        write_line = functools.partial(print, file=f)
-        for path_languoid, in rows:
-            write_line(path_languoid)
+        with open_func() as f:
+            write_line = functools.partial(print, file=f)
+            for path_languoid, in rows:
+                write_line(path_languoid)
 
     return result
 
 
 @_views.register_view('path_json', as_rows=True, load_json=False)
 def get_json_query(*, ordered='id', as_rows=True, load_json=True,
-                   path_label='path', languoid_label='json', bind=ENGINE):
+                   path_label='path', languoid_label='json'):
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
 
-    macroareas = select([languoid_macroarea.c.macroarea_name])\
+    macroareas = select(languoid_macroarea.c.macroarea_name)\
                  .where(languoid_macroarea.c.languoid_id == Languoid.id)\
                  .correlate(Languoid)\
                  .order_by('macroarea_name')\
                  .alias('lang_ma')
 
-    macroareas = select([group_array(macroareas.c.macroarea_name)
-                         .label('macroareas')]).scalar_subquery()
+    macroareas = select(group_array(macroareas.c.macroarea_name)
+                        .label('macroareas'))\
+                 .scalar_subquery()
 
-    countries = select([Country.jsonf()])\
+    countries = select(Country.jsonf())\
                 .select_from(languoid_country.join(Country))\
                 .where(languoid_country.c.languoid_id == Languoid.id)\
                 .correlate(Languoid)\
                 .order_by(Country.printf())\
                 .alias('lang_country')
 
-    countries = select([group_array(sa.func.json(countries.c.jsonf))
-                        .label('countries')]).scalar_subquery()
+    countries = select(group_array(sa.func.json(countries.c.jsonf))
+                        .label('countries'))\
+                .scalar_subquery()
 
-    links = select([Link.jsonf()])\
+    links = select(Link.jsonf())\
             .where(Link.languoid_id == Languoid.id)\
             .correlate(Languoid)\
             .order_by(Link.ord)\
             .alias('lang_link')
 
-    links = select([group_array(links.c.jsonf).label('links')]).scalar_subquery()
+    links = select(group_array(links.c.jsonf).label('links'))\
+            .scalar_subquery()
 
-    timespan = select([Timespan.jsonf()])\
+    timespan = select(Timespan.jsonf())\
                .where(Timespan.languoid_id == Languoid.id)\
                .scalar_subquery()
 
@@ -421,8 +433,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
-    sources = select([s_provider.name.label('provider'),
-                      Source.jsonf(s_bibfile, s_bibitem)])\
+    sources = select(s_provider.name.label('provider'),
+                     Source.jsonf(s_bibfile, s_bibitem))\
              .where(Source.languoid_id == Languoid.id)\
              .correlate(Languoid)\
              .where(Source.provider_id == s_provider.id)\
@@ -431,113 +443,106 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
              .order_by(s_provider.name, s_bibfile.name, s_bibitem.bibkey)\
              .alias('lang_source')
 
-    sources = select([
-            sources.c.provider.label('key'),
-            group_array(sa.func.json(sources.c.jsonf)).label('value'),
-        ]).group_by(sources.c.provider)\
-        .alias('lang_sources')
+    sources = select(sources.c.provider.label('key'),
+                    group_array(sa.func.json(sources.c.jsonf)).label('value'))\
+              .group_by(sources.c.provider)\
+              .alias('lang_sources')
 
-    sources = select([
-        sa.func.nullif(group_object(sources.c.key,
-                                    sa.func.json(sources.c.value)),
-                       '{}').label('sources')]).scalar_subquery()
+    sources = select(sa.func.nullif(group_object(sources.c.key,
+                                    sa.func.json(sources.c.value)), '{}')
+                     .label('sources'))\
+              .scalar_subquery()
 
     a_provider = aliased(AltnameProvider, name='altname_provider')
-    altnames = select([a_provider.name.label('provider'),
-                       Altname.jsonf()])\
+    altnames = select(a_provider.name.label('provider'), Altname.jsonf())\
                .where(Altname.languoid_id == Languoid.id)\
                .correlate(Languoid)\
                .where(Altname.provider_id == a_provider.id)\
                .order_by(a_provider.name, Altname.printf())\
                .alias('lang_altname')
 
-    altnames = select([
-            altnames.c.provider.label('key'),
-            group_array(sa.func.json(altnames.c.jsonf)).label('value'),
-        ]).group_by(altnames.c.provider)\
-        .alias('lang_altnames')
+    altnames = select(altnames.c.provider.label('key'),
+                      group_array(sa.func.json(altnames.c.jsonf))
+                      .label('value'))\
+               .group_by(altnames.c.provider)\
+               .alias('lang_altnames')
 
-    altnames = select([
-        sa.func.nullif(group_object(altnames.c.key,
-                                    sa.func.json(altnames.c.value)),
-                       '{}').label('altnames')]).scalar_subquery()
+    altnames = select(sa.func.nullif(group_object(altnames.c.key,
+                                     sa.func.json(altnames.c.value)), '{}')
+                      .label('altnames'))\
+               .scalar_subquery()
 
-    triggers = select([Trigger.field,
-                       Trigger.trigger])\
+    triggers = select(Trigger.field, Trigger.trigger)\
                .where(Trigger.languoid_id == Languoid.id)\
                .correlate(Languoid)\
                .order_by('field', Trigger.ord)\
                .alias('lang_trigger')
 
-    triggers = select([triggers.c.field.label('key'),
-                       group_array(triggers.c.trigger).label('value')])\
+    triggers = select(triggers.c.field.label('key'),
+                      group_array(triggers.c.trigger).label('value'))\
                .group_by(triggers.c.field)\
                .alias('lang_triggers')
 
-    triggers = select([
-        sa.func.nullif(group_object(triggers.c.key,
-                                    triggers.c.value),
-                       '{}').label('triggers')]).scalar_subquery()
+    triggers = select(sa.func.nullif(group_object(triggers.c.key,
+                                                  triggers.c.value),
+                                     '{}').label('triggers'))\
+               .scalar_subquery()
 
-    identifier = select([
-        sa.func.nullif(group_object(IdentifierSite.name.label('site'),
-                                    Identifier.identifier),
-                       '{}').label('identifier')
-        ]).where(Identifier.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .where(Identifier.site_id == IdentifierSite.id)\
-        .scalar_subquery()
+    identifier = select(sa.func.nullif(group_object(IdentifierSite.name.label('site'),
+                                                    Identifier.identifier),
+                                       '{}').label('identifier'))\
+                .where(Identifier.languoid_id == Languoid.id)\
+                .correlate(Languoid)\
+                .where(Identifier.site_id == IdentifierSite.id)\
+                .scalar_subquery()
 
-    classification_comment = select([
-            ClassificationComment.kind.label('key'),
-            ClassificationComment.comment.label('value'),
-        ]).where(ClassificationComment.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .scalar_subquery()
+    classification_comment = select(ClassificationComment.kind.label('key'),
+                                    ClassificationComment.comment.label('value'))\
+                             .where(ClassificationComment.languoid_id == Languoid.id)\
+                             .correlate(Languoid)\
+                             .scalar_subquery()
 
     cr_bibfile = aliased(Bibfile, name='bibfile_cr')
     cr_bibitem = aliased(Bibitem, name='bibitem_cr')
 
-    classification_refs = select([
-            (ClassificationRef.kind + 'refs').label('key'),
-            ClassificationRef.jsonf(cr_bibfile, cr_bibitem),
-        ]).where(ClassificationRef.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .where(ClassificationRef.bibitem_id == cr_bibitem.id)\
-        .where(cr_bibitem.bibfile_id == cr_bibfile.id)\
-        .order_by(ClassificationRef.kind, ClassificationRef.ord)\
-        .alias('lang_cref')
+    classification_refs = select((ClassificationRef.kind + 'refs').label('key'),
+                                 ClassificationRef.jsonf(cr_bibfile, cr_bibitem))\
+                          .where(ClassificationRef.languoid_id == Languoid.id)\
+                          .correlate(Languoid)\
+                          .where(ClassificationRef.bibitem_id == cr_bibitem.id)\
+                          .where(cr_bibitem.bibfile_id == cr_bibfile.id)\
+                          .order_by(ClassificationRef.kind, ClassificationRef.ord)\
+                          .alias('lang_cref')
 
-    classification_refs = select([
-            classification_refs.c.key,
-            group_array(sa.func.json(classification_refs.c.jsonf)).label('value'),
-        ]).group_by(classification_refs.c.key)\
+    classification_refs = select(classification_refs.c.key,
+                                 group_array(sa.func.json(classification_refs.c.jsonf))
+                                 .label('value'))\
+                          .group_by(classification_refs.c.key)
 
     classification = classification_comment\
                      .union_all(classification_refs)\
                      .alias('lang_classifciation')
 
-    classification = select([
-        sa.func.nullif(group_object(classification.c.key,
-                                    classification.c.value),
-                       '{}').label('classification')])\
-                      .select_from(classification)\
-                      .scalar_subquery()
+    classification = select(sa.func.nullif(group_object(classification.c.key,
+                                                        classification.c.value),
+                                           '{}').label('classification'))\
+                     .select_from(classification)\
+                     .scalar_subquery()
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
-    endangerment = select([Endangerment.jsonf(EndangermentSource,
-                                              e_bibfile, e_bibitem,
-                                              label='endangerment')])\
-        .select_from(sa.join(Endangerment, EndangermentSource)
-                     .outerjoin(sa.join(e_bibitem, e_bibfile)))\
-        .where(Endangerment.languoid_id == Languoid.id)\
-        .correlate(Languoid)\
-        .scalar_subquery()
+    endangerment = select(Endangerment.jsonf(EndangermentSource,
+                                             e_bibfile, e_bibitem,
+                                             label='endangerment'))\
+                   .select_from(sa.join(Endangerment, EndangermentSource)
+                                .outerjoin(sa.join(e_bibitem, e_bibfile)))\
+                   .where(Endangerment.languoid_id == Languoid.id)\
+                   .correlate(Languoid)\
+                   .scalar_subquery()
 
-    hh_ethnologue_comment = select([EthnologueComment
-                                    .jsonf(label='hh_ethnologue_comment')])\
+    hh_ethnologue_comment = select(EthnologueComment
+                                   .jsonf(label='hh_ethnologue_comment'))\
                             .where(EthnologueComment.languoid_id
                                    == Languoid.id)\
                             .correlate(Languoid)\
@@ -545,18 +550,18 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
     irct = aliased(IsoRetirementChangeTo, name='irct')
 
-    change_to = select([irct.code])\
+    change_to = select(irct.code)\
                 .where(irct.languoid_id == IsoRetirement.languoid_id)\
                 .correlate(IsoRetirement)\
                 .order_by(irct.ord)\
                 .alias('lang_irct')
 
-    change_to = select([group_array(change_to.c.code)
-                        .label('change_to')]).scalar_subquery()
+    change_to = select(group_array(change_to.c.code).label('change_to'))\
+                .scalar_subquery()
 
-    iso_retirement = select([IsoRetirement.jsonf(change_to=change_to,
-                                                 optional=True,
-                                                 label='iso_retirement')])\
+    iso_retirement = select(IsoRetirement.jsonf(change_to=change_to,
+                                                optional=True,
+                                                label='iso_retirement'))\
                      .where(IsoRetirement.languoid_id == Languoid.id)\
                      .correlate(Languoid)\
                      .scalar_subquery()
@@ -601,7 +606,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
         columns = [path_json]
 
-    select_json = select(columns, bind=bind).select_from(Languoid)
+    select_json = select(*columns).select_from(Languoid)
 
     select_json = _ordered_by(select_json, path, ordered=ordered)
 
@@ -609,36 +614,37 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
 
 def print_languoid_stats(*, bind=ENGINE):
-    select_stats = get_stats_query(bind=bind)
-    rows, counts = itertools.tee(select_stats.execute())
+    select_stats = get_stats_query()
+    with bind.connect() as conn:
+        rows, counts = itertools.tee(bind.execute(select_stats))
 
-    print_rows(rows, format_='{n:6,d} {kind}', bind=bind)
+        print_rows(rows, format_='{n:6,d} {kind}', bind=bind)
 
-    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
-            ('roots', ('families', 'isolates')),
-            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
-            ('languages', ('All', BOOKKEEPING))]
+        sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
+                ('roots', ('families', 'isolates')),
+                ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
+                ('languages', ('All', BOOKKEEPING))]
 
-    counts = dict(counts)
-    for total, parts in sums:
-        values = [counts[p] for p in parts]
-        parts_sum = sum(values)
-        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
-        log.debug('verify %s == %d %s', term, counts[total], total)
-        if counts[total] != parts_sum:  # pragma: no cover
-            warnings.warn(f'{term} = {parts_sum:,d}'
-                          f' (expected {counts[total]:,d} {total})')
+        counts = dict(counts)
+        for total, parts in sums:
+            values = [counts[p] for p in parts]
+            parts_sum = sum(values)
+            term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+            log.debug('verify %s == %d %s', term, counts[total], total)
+            if counts[total] != parts_sum:  # pragma: no cover
+                warnings.warn(f'{term} = {parts_sum:,d}'
+                              f' (expected {counts[total]:,d} {total})')
 
 
 @_views.register_view('stats')
-def get_stats_query(*, bind=ENGINE):
+def get_stats_query():
     # cf. https://glottolog.org/glottolog/glottologinformation
 
     def languoid_count(kind, cls=Languoid, fromclause=Languoid,
                        level=None, is_root=None):
-        kind = sa.literal(kind).label('kind')
-        n = sa.func.count().label('n')
-        select_nrows = select([kind, n]).select_from(fromclause)
+        select_nrows = select(sa.literal(kind).label('kind'),
+                              sa.func.count().label('n'))\
+                       .select_from(fromclause)
 
         if level is not None:
             select_nrows = select_nrows.where(cls.level == level)
@@ -681,7 +687,7 @@ def get_stats_query(*, bind=ENGINE):
 
         yield language_count(BOOKKEEPING).where(Root.name == BOOKKEEPING)
 
-    return sa.union_all(*iterselects(), bind=bind)
+    return sa.union_all(*iterselects())
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
@@ -702,9 +708,8 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
     Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,
                                                              parent_level=parent_level)
 
-    select_pairs = select([Parent.id.label('parent_id'),
-                           Child.id.label('child_id')],
-                          bind=bind)\
+    select_pairs = select(Parent.id.label('parent_id'),
+                           Child.id.label('child_id'))\
                    .select_from(parent_child)\
                    .order_by('parent_id', 'child_id')
 
@@ -714,12 +719,13 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
         select_pairs = select_pairs.where(sa.or_(Child.level == None,
                                                  Child.level == child_level))
 
-    rows = select_pairs.execute()
+    with bind.connect() as conn:
+        rows = conn.execute(select_pairs)
 
-    for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
-        _, c = next(grp)
-        if c is None:
-            descendants = []
-        else:
-            descendants = [c] + [c for _, c in grp]
-        yield parent_id, descendants
+        for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
+            _, c = next(grp)
+            if c is None:
+                descendants = []
+            else:
+                descendants = [c] + [c for _, c in grp]
+            yield parent_id, descendants

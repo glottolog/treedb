@@ -36,14 +36,13 @@ from .models import LEVEL, Languoid
 
 from .checks import check
 
-from .queries import (print_rows, write_csv, hash_csv,
+from .queries import (iterrows, print_rows, write_csv, hash_csv,
                       get_query,
                       write_json_query_csv, write_json_lines, get_json_query,
                       print_languoid_stats,
                       iterdescendants)
 
-from .shortcuts import (count, select, text,
-                        pd_read_sql)
+from .shortcuts import pd_read_sql
 
 __all__ = ['ENGINE', 'ROOT',
            'configure', 'configure_logging',
@@ -58,14 +57,13 @@ __all__ = ['ENGINE', 'ROOT',
            'write_json_csv', 'checksum',
            'LEVEL', 'Languoid',
            'check',
-           'print_rows', 'write_csv', 'hash_csv',
+           'iterrows', 'print_rows', 'write_csv', 'hash_csv',
            'get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats',
            'iterdescendants',
-           'count', 'select', 'text',
            'pd_read_sql',
-           'engine', 'root']
+           'engine', 'root', 'connect', 'scalar', 'execute']
 
 __title__ = 'treedb'
 __version__ = '1.5.dev0'
@@ -82,3 +80,13 @@ engine = set_engine(None, title=__title__)
 root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT',
                                  config_path=CONFIG,
                                  fallback=DEFAULT_ROOT))
+
+
+connect = engine.connect
+
+
+scalar = engine.scalar
+
+
+def execute(*args, **kwargs):
+    return engine.execute(*args, **kwargs)

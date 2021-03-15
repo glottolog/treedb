@@ -3,6 +3,7 @@
 import itertools
 import json
 
+import sqlalchemy as sa
 import pytest
 
 QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
@@ -79,7 +80,7 @@ MB = 2**20
 
 
 def test_print_rows(capsys, treedb):
-    query = treedb.select([treedb.Languoid])\
+    query = sa.select(treedb.Languoid)\
             .where(treedb.Languoid.iso639_3 == 'bsa')
 
     format_ = '{id}: {name} ({level}) [{iso639_3}]'
@@ -92,7 +93,7 @@ def test_print_rows(capsys, treedb):
     assert out == '''\
 SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.hid, languoid.iso639_3, languoid.latitude, languoid.longitude 
 FROM languoid 
-WHERE languoid.iso639_3 = ?
+WHERE languoid.iso639_3 = :iso639_3_1
 abin1243: Abinomn (language) [bsa]
 '''
 

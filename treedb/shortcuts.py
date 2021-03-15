@@ -1,32 +1,19 @@
-# shortcuts.py - sqlalchemy and pandas convenience short-cut functions
+# shortcuts.py - pandas convenience short-cut functions
 
-import functools
 import io
 import logging
 import operator
 import warnings
 
-import sqlalchemy as sa
-
 from . import ENGINE
 
-__all__ = ['count', 'select', 'text',
-           'pd_read_sql',
+__all__ = ['pd_read_sql',
            'pd_read_json_lines']
 
 PANDAS = None
 
 
 log = logging.getLogger(__name__)
-
-
-count = sa.func.count
-
-
-select = functools.partial(sa.select, bind=ENGINE)
-
-
-text = functools.partial(sa.text, bind=ENGINE)
 
 
 def _import_pandas():
@@ -50,7 +37,7 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
     if sql is None:
         from . import queries
 
-        sql = queries.get_query(bind=con)
+        sql = queries.get_query()
 
     return PANDAS.read_sql_query(sql, *args, con=con, **kwargs)
 

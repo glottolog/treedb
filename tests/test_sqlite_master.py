@@ -20,7 +20,8 @@ def test_print_table_sql(capsys, treedb, table, expected):
 
 def test_select_tables_nrows(treedb):
     query = treedb.select_tables_nrows()
-    rows = query.execute().fetchall()
+    with treedb.connect() as conn:
+        rows = conn.execute(query).all()
 
     assert rows
 
@@ -35,6 +36,7 @@ def test_select_tables_nrows(treedb):
 
 def test_select_views(treedb):
     query = treedb.sqlite_master.select_views()
-    names = [n for n, in query.execute()]
+    with treedb.connect() as conn:
+        names = [n for n, in conn.execute(query)]
 
     assert names == ['example', 'path_json', 'stats']

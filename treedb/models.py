@@ -193,7 +193,7 @@ class Languoid(Model):
             join_source, join_target = Node.parent_id, Relative.id
             recurse_relative = Relative.parent_id
 
-        tree_1 = sa.select([Node.id.label(node_label)])
+        tree_1 = sa.select(Node.id.label(node_label))
 
         if innerjoin == 'reflexive':
             tree_1_relative = Node
@@ -230,8 +230,8 @@ class Languoid(Model):
 
         tree_1 = tree_1.cte('tree', recursive=True)
 
-        tree_2 = sa.select([tree_1.c[node_label],
-                            recurse_relative.label(relative_label)])
+        tree_2 = sa.select(tree_1.c[node_label],
+                           recurse_relative.label(relative_label))
 
         tree_2_onclause = (tree_1.c[relative_label] == join_target)
         if not from_parent:
@@ -272,7 +272,7 @@ class Languoid(Model):
         else:
             tree = _tree
 
-        select_path_part = sa.select([tree.c.parent_id.label(label)])\
+        select_path_part = sa.select(tree.c.parent_id.label(label))\
                            .where(tree.c.child_id == cls.id)\
                            .correlate(cls)\
                            .order_by(tree.c.steps if bottomup
@@ -286,13 +286,13 @@ class Languoid(Model):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup,
                                 _tree=_tree)
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
-        return sa.select([path]).label(label)
+        return sa.select(path).label(label)
 
     @classmethod
     def path_json(cls, *, label='path'):
         squery = cls._path_part(include_self=True, bottomup=False)
         path = sa.func.json_group_array(squery.c.path_part).label(label)
-        return sa.select([path]).label(label)
+        return sa.select(path).label(label)
 
     @classmethod
     def node_relative(cls, *, from_parent=False, innerjoin=False,
@@ -347,7 +347,7 @@ class Languoid(Model):
 
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
-        family = sa.select([tree.c.parent_id])\
+        family = sa.select(tree.c.parent_id)\
                  .where(tree.c.child_id == cls.id)\
                  .correlate(cls)\
                  .where(tree.c.steps > 0)\
@@ -356,7 +356,7 @@ class Languoid(Model):
 
         Ancestor = aliased(Languoid, name='ancestor')
 
-        language = sa.select([tree.c.parent_id])\
+        language = sa.select(tree.c.parent_id)\
                    .where(tree.c.child_id == cls.id)\
                    .correlate(cls)\
                    .where(cls.level == DIALECT)\

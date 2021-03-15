@@ -29,10 +29,10 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
         dbapi_conn = None
     log.info('start generating raw records from %r', dbapi_conn or bind)
 
-    select_files = sa.select([File.path])
+    select_files = sa.select(File.path)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
-    select_values = sa.select([Value.file_id, Option.section, Option.option,
-                               Option.is_lines, Value.value])
+    select_values = sa.select(Value.file_id, Option.section, Option.option,
+                               Option.is_lines, Value.value)
 
     values_from = sa.join(Value, Option)
 
@@ -63,16 +63,14 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
 
     n = 0
     with bind.connect() as conn:
-        select_files.bind = conn
-        select_values.bind = conn
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
                 where = _backend.expression_compile(in_slice(key_column))
                 log.debug('fetch rows %r', where.string)
 
-            files = select_files.where(in_slice(key_column)).execute().fetchall()
+            files = conn.execute(select_files.where(in_slice(key_column))).all()
             # single thread: no isolation level concerns
-            values = select_values.where(in_slice(value_key)).execute().fetchall()
+            values = conn.execute(select_values.where(in_slice(value_key))).all()
             # join in-memory by file_id total order index
             path_values = zip(files, groupby_file(values))
 
@@ -121,27 +119,29 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
 
 def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
-    select_all_keys = sa.select([key_column.label('key'),
-                                 sa.func.row_number().over(order_by=key_column)
-                                 .label('row_num')]).alias('key_ord')
+    row_num  = sa.func.row_number().over(order_by=key_column).label('row_num')
+    select_all_keys = sa.select(key_column.label('key'), row_num)\
+                      .alias('key_ord')
 
-    select_keys = sa.select([select_all_keys.c.key], bind=bind)\
+    select_keys = sa.select(select_all_keys.c.key)\
                   .where((select_all_keys.c.row_num % size) == 0)
 
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
-    with contextlib.closing(select_keys.execute()) as cursor:
-        for k, in cursor:
-            yield k
+    with bind.connect() as conn,\
+         contextlib.closing(conn.execute(select_keys)) as cursor:
+            for k, in cursor:
+                yield k
 
 
 def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
-    select_keys = sa.select([key_column.label('key')], bind=bind)\
+    select_keys = sa.select(key_column.label('key'))\
                   .order_by(key_column)
 
     log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
-    with contextlib.closing(select_keys.execute()) as cursor:
-        for keys in iter(functools.partial(cursor.fetchmany, size), []):
-            last, = keys[-1]
-            yield last
+    with bind.connect() as conn:
+        with contextlib.closing(conn.execute(select_keys)) as cursor:
+            for keys in iter(functools.partial(cursor.fetchmany, size), []):
+                last, = keys[-1]
+                yield last

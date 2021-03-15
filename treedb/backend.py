@@ -166,7 +166,8 @@ class Dataset(Model):
         log.debug('read %r from %r', table, bind)
 
         try:
-            result, = sa.select([cls], bind=bind).execute()
+            with bind.connect() as conn:
+                result, = conn.execute(sa.select(cls))
         except sa.exc.OperationalError as e:
             if 'no such table' in e.orig.args[0]:
                 pass
@@ -211,7 +212,8 @@ class Producer(Model):
 
     @classmethod
     def get_producer(cls, *, bind):
-        result, = sa.select([cls], bind=bind).execute()
+        with bind.connect() as conn:
+            result, = conn.execute(sa.select(cls))
         return result
 
     @classmethod
@@ -320,7 +322,7 @@ def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
                 continue
 
             log.info('export table %r', table.name)
-            rows = table.select(bind=conn).execute()
+            rows = conn.execute(table.select())
             header = list(rows.keys())
 
             date_time = datetime.datetime.now().timetuple()[:6]

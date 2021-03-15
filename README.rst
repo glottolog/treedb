@@ -136,14 +136,15 @@ Execute a simple query with ``sqlalchemy`` core and write it to a CSV file:
 
 .. code:: python
 
-    >>> treedb.write_csv(treedb.select([treedb.Languoid]), filename='languoids.csv')
+    >>> import sqlalchemy as sa
+    >>> treedb.write_csv(sa.select(treedb.Languoid), filename='languoids.csv')
     ...Path('languoids.csv')
 
 Get one row from the ``languoid`` table via `sqlalchemy` core:
 
 .. code:: python
 
-    >>> treedb.select([treedb.Languoid]).execute().first()
+    >>> next(treedb.iterrows(sa.select(treedb.Languoid)))
     ('abin1243', 'language', 'Abinomn', None, 'bsa', 'bsa', -2.92281, 138.891)
 
 Get one ``Languoid`` model instance via ``sqlalchemy`` orm:
