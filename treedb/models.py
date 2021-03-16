@@ -474,8 +474,8 @@ class Link:
 
     @classmethod
     def printf(cls, *, label='printf'):
-        return sa.case([(cls.title != None,
-                         sa.func.printf('[%s](%s)', cls.title, cls.url))],
+        return sa.case((cls.title != None,
+                        sa.func.printf('[%s](%s)', cls.title, cls.url)),
                        else_=cls.url).label(label)
 
     @classmethod
@@ -563,18 +563,18 @@ class Source:
 
     @classmethod
     def printf(cls, bibfile, bibitem, *, label='printf'):
-        return sa.case([(sa.and_(cls.pages != None, cls.trigger != None),
-                         sa.func.printf('**%s:%s**:%s<trigger "%s">',
-                                        bibfile.name, bibitem.bibkey,
-                                        cls.pages, cls.trigger)),
-                        (cls.pages != None,
-                         sa.func.printf('**%s:%s**:%s', bibfile.name,
-                                                        bibitem.bibkey,
-                                                        cls.pages)),
-                        (cls.trigger != None,
-                         sa.func.printf('**%s:%s**<trigger "%s">',
-                                        bibfile.name, bibitem.bibkey,
-                                        cls.trigger))],
+        return sa.case((sa.and_(cls.pages != None, cls.trigger != None),
+                        sa.func.printf('**%s:%s**:%s<trigger "%s">',
+                                       bibfile.name, bibitem.bibkey,
+                                       cls.pages, cls.trigger)),
+                       (cls.pages != None,
+                        sa.func.printf('**%s:%s**:%s', bibfile.name,
+                                                       bibitem.bibkey,
+                                                       cls.pages)),
+                       (cls.trigger != None,
+                        sa.func.printf('**%s:%s**<trigger "%s">',
+                                       bibfile.name, bibitem.bibkey,
+                                       cls.trigger)),
                        else_=sa.func.printf('**%s:%s**', bibfile.name,
                                                          bibitem.bibkey)
                        ).label(label)
@@ -682,7 +682,7 @@ class Altname:
     @classmethod
     def printf(cls, *, label='printf'):
         full = sa.func.printf('%s [%s]', cls.name, cls.lang)
-        return sa.case([(cls.lang == '', cls.name)], else_=full).label(label)
+        return sa.case((cls.lang == '', cls.name), else_=full).label(label)
 
     @classmethod
     def jsonf(cls, *, label='jsonf'):
@@ -690,7 +690,7 @@ class Altname:
                                    'lang', None)
         full = sa.func.json_object('name', cls.name,
                                    'lang', cls.lang)
-        return sa.case([(cls.lang == '', half)], else_=full).label(label)
+        return sa.case((cls.lang == '', half), else_=full).label(label)
 
 
 @registry.mapped
@@ -831,7 +831,7 @@ class ClassificationRef:
 
     @classmethod
     def printf(cls, bibfile, bibitem, *, label='printf'):
-        return sa.func.printf(sa.case([(cls.pages != None, '**%s:%s**:%s')],
+        return sa.func.printf(sa.case((cls.pages != None, '**%s:%s**:%s'),
                                       else_='**%s:%s**'),
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
@@ -916,7 +916,7 @@ class EndangermentSource:
 
     @classmethod
     def printf(cls, bibfile, bibitem, *, label='printf'):
-        return sa.case([(cls.bibitem_id == None, cls.name)],
+        return sa.case((cls.bibitem_id == None, cls.name),
                        else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
                                                             bibitem.bibkey,
                                                             cls.pages)).label(label)
@@ -955,7 +955,7 @@ class EthnologueComment:
                                       'ethnologue_versions', cls.ethnologue_versions,
                                       'comment', cls.comment)
         if optional:
-            return sa.case([(cls.languoid_id == None, None)], else_=mapping).label(label)
+            return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
         return mapping.label(label)
 
 
@@ -1014,7 +1014,7 @@ class IsoRetirement:
                                       'remedy', cls.remedy,
                                       'comment', cls.comment)
         if optional:
-            return sa.case([(cls.languoid_id == None, None)], else_=mapping).label(label)
+            return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
         return mapping.label(label)
 
 
