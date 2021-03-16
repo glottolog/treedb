@@ -8,7 +8,7 @@ from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
 
 from sqlalchemy.orm import relationship, aliased
 
-from .backend import Model
+from .backend import registry
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -58,7 +58,8 @@ EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
 
 
-class Languoid(Model):
+@registry.mapped
+class Languoid:
 
     __tablename__ = 'languoid'
 
@@ -368,7 +369,8 @@ class Languoid(Model):
         return path, family, language
 
 
-class Macroarea(Model):
+@registry.mapped
+class Macroarea:
 
     __tablename__ = 'macroarea'
 
@@ -387,7 +389,7 @@ class Macroarea(Model):
                              back_populates='macroareas')
 
 
-languoid_macroarea = Table('languoid_macroarea', Model.metadata,
+languoid_macroarea = Table('languoid_macroarea', registry.metadata,
                            Column('languoid_id',
                                   ForeignKey('languoid.id'),
                                   primary_key=True),
@@ -397,7 +399,8 @@ languoid_macroarea = Table('languoid_macroarea', Model.metadata,
                            info={'without_rowid': True})
 
 
-class Country(Model):
+@registry.mapped
+class Country:
 
     __tablename__ = 'country'
 
@@ -429,7 +432,7 @@ class Country(Model):
                                    'name', cls.name).label(label)
 
 
-languoid_country = Table('languoid_country', Model.metadata,
+languoid_country = Table('languoid_country', registry.metadata,
                          Column('languoid_id',
                                 ForeignKey('languoid.id'),
                                 primary_key=True),
@@ -439,7 +442,8 @@ languoid_country = Table('languoid_country', Model.metadata,
                          info={'without_rowid': True})
 
 
-class Link(Model):
+@registry.mapped
+class Link:
 
     __tablename__ = 'link'
 
@@ -481,7 +485,8 @@ class Link(Model):
                                    'title', cls.title).label(label)
 
 
-class Timespan(Model):
+@registry.mapped
+class Timespan:
 
     __tablename__ = 'timespan'
 
@@ -524,7 +529,8 @@ class Timespan(Model):
                                    'end_day', cls.end_day).label(label)
 
 
-class Source(Model):
+@registry.mapped
+class Source:
 
     __tablename__ = 'source'
 
@@ -581,7 +587,8 @@ class Source(Model):
                                    'trigger', cls.trigger).label(label)
 
 
-class SourceProvider(Model):
+@registry.mapped
+class SourceProvider:
 
     __tablename__ = 'sourceprovider'
 
@@ -597,7 +604,8 @@ class SourceProvider(Model):
     sources = relationship('Source', back_populates='provider')
 
 
-class Bibfile(Model):
+@registry.mapped
+class Bibfile:
 
     __tablename__ = 'bibfile'
 
@@ -614,7 +622,8 @@ class Bibfile(Model):
     bibitems = relationship('Bibitem', back_populates='bibfile')
 
 
-class Bibitem(Model):
+@registry.mapped
+class Bibitem:
 
     __tablename__ = 'bibitem'
 
@@ -643,7 +652,8 @@ class Bibitem(Model):
                                        back_populates='bibitem')
 
 
-class Altname(Model):
+@registry.mapped
+class Altname:
 
     __tablename__ = 'altname'
 
@@ -683,7 +693,8 @@ class Altname(Model):
         return sa.case([(cls.lang == '', half)], else_=full).label(label)
 
 
-class AltnameProvider(Model):
+@registry.mapped
+class AltnameProvider:
 
     __tablename__ = 'altnameprovider'
 
@@ -699,7 +710,8 @@ class AltnameProvider(Model):
     altnames = relationship('Altname', back_populates='provider')
 
 
-class Trigger(Model):
+@registry.mapped
+class Trigger:
 
     __tablename__ = 'trigger'
 
@@ -724,7 +736,8 @@ class Trigger(Model):
                             back_populates='triggers')
 
 
-class Identifier(Model):
+@registry.mapped
+class Identifier:
 
     __tablename__ = 'identifier'
 
@@ -748,7 +761,8 @@ class Identifier(Model):
                         back_populates='identifiers')
 
 
-class IdentifierSite(Model):
+@registry.mapped
+class IdentifierSite:
 
     __tablename__ = 'identifiersite'
 
@@ -764,7 +778,8 @@ class IdentifierSite(Model):
     identifiers = relationship('Identifier', back_populates='site')
 
 
-class ClassificationComment(Model):
+@registry.mapped
+class ClassificationComment:
 
     __tablename__ = 'classificationcomment'
 
@@ -785,7 +800,8 @@ class ClassificationComment(Model):
     languoid = relationship('Languoid', innerjoin=True)
 
 
-class ClassificationRef(Model):
+@registry.mapped
+class ClassificationRef:
 
     __tablename__ = 'classificationref'
 
@@ -827,7 +843,8 @@ class ClassificationRef(Model):
                                    'trigger', None).label(label)
 
 
-class Endangerment(Model):
+@registry.mapped
+class Endangerment:
 
     __tablename__ = 'endangerment'
 
@@ -869,7 +886,8 @@ class Endangerment(Model):
                                    'comment', cls.comment).label(label)
 
 
-class EndangermentSource(Model):
+@registry.mapped
+class EndangermentSource:
 
     __tablename__ = 'endangerment_source'
 
@@ -904,7 +922,8 @@ class EndangermentSource(Model):
                                                             cls.pages)).label(label)
 
 
-class EthnologueComment(Model):
+@registry.mapped
+class EthnologueComment:
 
     __tablename__ = 'ethnologuecomment'
 
@@ -940,7 +959,8 @@ class EthnologueComment(Model):
         return mapping.label(label)
 
 
-class IsoRetirement(Model):
+@registry.mapped
+class IsoRetirement:
 
     __tablename__ = 'isoretirement'
 
@@ -998,7 +1018,8 @@ class IsoRetirement(Model):
         return mapping.label(label)
 
 
-class IsoRetirementChangeTo(Model):
+@registry.mapped
+class IsoRetirementChangeTo:
 
     __tablename__ = 'isoretirement_changeto'
 

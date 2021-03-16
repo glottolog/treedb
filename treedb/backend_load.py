@@ -10,7 +10,7 @@ import warnings
 import sqlalchemy as sa
 
 from . import ENGINE, ROOT
-from .backend import set_engine, Model, Dataset, Producer
+from .backend import set_engine, registry, Dataset, Producer
 from . import files as _files
 from . import tools as _tools
 from . import views as _views
@@ -27,7 +27,7 @@ def load(filename=ENGINE, repo_root=None, *,
          exclude_raw=False, from_raw=None,
          exclude_views=False,
          force_rebuild=False,
-         metadata=Model.metadata):
+         metadata=registry.metadata):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)

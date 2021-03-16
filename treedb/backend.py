@@ -28,7 +28,7 @@ from . import ENGINE
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'set_engine',
-           'Model', 'print_schema',
+           'registry', 'print_schema',
            'Dataset', 'Producer',
            'Session',
            'backup', 'dump_sql', 'export']
@@ -123,10 +123,10 @@ def compile(element, compiler, **kwargs):
     return text
 
 
-Model = sa.orm.declarative_base()
+registry = sa.orm.registry()
 
 
-def print_schema(metadata=Model.metadata, *, engine=ENGINE):
+def print_schema(metadata=registry.metadata, *, engine=ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql):
         print(sql.compile(dialect=engine.dialect))
@@ -136,7 +136,8 @@ def print_schema(metadata=Model.metadata, *, engine=ENGINE):
     metadata.create_all(mock_engine, checkfirst=False)
 
 
-class Dataset(Model):
+@registry.mapped
+class Dataset:
     """Git commit loaded into the database."""
 
     __tablename__ = '__dataset__'
@@ -188,7 +189,8 @@ class Dataset(Model):
         log.info('%s.git_commit: %r', name, params['git_commit'])
 
 
-class Producer(Model):
+@registry.mapped
+class Producer:
     """Name and version of the package that created a __dataset__."""
 
     __tablename__ = '__producer__'
@@ -284,7 +286,7 @@ def dump_sql(filename=None, *, progress_after=100_000,
     return path
 
 
-def export(filename=None, *, exclude_raw=False, metadata=Model.metadata,
+def export(filename=None, *, exclude_raw=False, metadata=registry.metadata,
            dialect=csv23.DIALECT, encoding=csv23.ENCODING, engine=ENGINE):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')

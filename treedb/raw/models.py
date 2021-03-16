@@ -5,14 +5,15 @@ import sqlalchemy as sa
 from sqlalchemy import (Column, Integer, String, Text, Boolean,
                         ForeignKey, CheckConstraint, UniqueConstraint)
 
-from ..backend import Model
+from ..backend import registry
 
 __all__ = ['File', 'Option', 'Value']
 
 PREFIX = '_'
 
 
-class File(Model):
+@registry.mapped
+class File:
     """Forward-slash-joined ids from the root to each item."""
 
     __tablename__ = f'{PREFIX}file'
@@ -37,7 +38,8 @@ class File(Model):
         return ((sa.func.length(cls.path) + 1) / 9).label(label)
 
 
-class Option(Model):
+@registry.mapped
+class Option:
     """Unique (section, option) key of the values with lines config."""
 
     __tablename__ = f'{PREFIX}option'
@@ -52,7 +54,8 @@ class Option(Model):
     __table_args__ = (UniqueConstraint(section, option),)
 
 
-class Value(Model):
+@registry.mapped
+class Value:
     """Item value as (path, section, option, line, value) combination."""
 
     __tablename__ = f'{PREFIX}value'
