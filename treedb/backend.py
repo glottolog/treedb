@@ -15,7 +15,6 @@ import csv23
 import sqlalchemy as sa
 import sqlalchemy.orm
 import sqlalchemy.ext.compiler
-import sqlalchemy.ext.declarative
 
 try:
     import sqlparse
@@ -132,7 +131,7 @@ def compile(element, compiler, **kwargs):
     return text
 
 
-Model = sa.ext.declarative.declarative_base()
+Model = sa.orm.declarative_base()
 
 
 def print_schema(metadata=Model.metadata, *, engine=ENGINE):
