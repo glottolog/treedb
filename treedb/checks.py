@@ -103,7 +103,7 @@ def docformat(func):
 def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
     """Glottocodes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.id.op('REGEXP')(pattern))
+           .filter(~Languoid.id.regexp_match(pattern))
 
 
 @check
@@ -111,7 +111,7 @@ def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
 def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
     """Iso codes match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.iso639_3.op('REGEXP')(pattern))
+           .filter(~Languoid.iso639_3.regexp_match(pattern))
 
 
 @check
@@ -119,7 +119,7 @@ def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
 def valid_hid(session, *, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
     """Hids match {pattern!r}."""
     return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.hid.op('REGEXP')(pattern))
+           .filter(~Languoid.hid.regexp_match(pattern))
 
 
 @check
@@ -132,7 +132,7 @@ def clean_name(session):
     def cond(col):
         yield col.startswith(' ')
         yield col.endswith(' ')
-        yield col.op('REGEXP')('[`_*:\xa4\xab\xb6\xbc]')  # \xa4.. common in mojibake
+        yield col.regexp_match('[`_*:\xa4\xab\xb6\xbc]')  # \xa4.. common in mojibake
 
     match_gl = Languoid.altnames\
                .any(sa.or_(*cond(Altname.name)), provider_id=gl)

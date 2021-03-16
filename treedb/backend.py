@@ -99,24 +99,16 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
 
 @sa.event.listens_for(sa.engine.Engine, 'connect')
 def sqlite_engine_connect(dbapi_conn, connection_record):
-    """Activate sqlite3 forein key checks, enable REGEXP operator."""
+    """Activate sqlite3 forein key checks."""
     if not isinstance(dbapi_conn, sqlite3.Connection):
         return
 
-    log.debug('engine connect (enable foreign keys and regexp operator)')
+    log.debug('engine connect (enable foreign keys)')
 
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
         cursor.execute('PRAGMA foreign_keys = ON')
 
-    dbapi_conn.create_function('regexp', 2, _regexp)
     log.debug('conn: %r', dbapi_conn)
-
-
-def _regexp(pattern, value):
-    """Implement the REGEXP operator for sqlite3."""
-    if value is None:
-        return None
-    return re.search(pattern, value) is not None
 
 
 @sa.ext.compiler.compiles(sa.schema.CreateTable)
