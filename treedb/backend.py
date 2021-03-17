@@ -31,7 +31,6 @@ __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'connect', 'scalar', 'iterrows',
            'registry', 'print_schema',
            'Dataset', 'Producer',
-           'Session',
            'backup', 'dump_sql', 'export']
 
 
@@ -238,9 +237,6 @@ class Producer:
         name = cls.__tablename__
         log.info('%s.name: %s', name, params['name'])
         log.info('%s.version: %s', name, params['version'])
-
-
-Session = sa.orm.sessionmaker(bind=ENGINE)
 
 
 def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):

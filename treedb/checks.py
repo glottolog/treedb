@@ -7,8 +7,9 @@ import logging
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import ENGINE
-from .backend import Session, Dataset
+from . import (ENGINE,
+               Session)
+from .backend import Dataset
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname, AltnameProvider)
