@@ -5,7 +5,7 @@ import sqlalchemy as sa
 
 import treedb
 
-treedb.configure()
+treedb.configure(log_sql=None)
 
 print(next(treedb.iterlanguoids()))
 
