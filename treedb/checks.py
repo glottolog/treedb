@@ -29,12 +29,20 @@ def check(func=None, *, bind=ENGINE):
             check.registered = [func]
         return func
 
+    with bind.connect() as conn:
+        exclude_raw = conn.scalar(sa.select(Dataset.exclude_raw))
+
     passed = True
     for func in check.registered:
         with Session(bind=bind) as session:
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
             check_cls = type(f'{func.__name__}Check', (Check,), ns)
-            check_inst = check_cls(session)
+
+            if func.__name__ == 'no_empty_files' and not exclude_raw:
+                kwargs = {'exclude_raw': exclude_raw}
+            else:
+                kwargs = {}
+            check_inst = check_cls(session, **kwargs)
 
             log.debug('validate %r', func.__name__)
             check_passed = check_inst.validate()
@@ -49,21 +57,23 @@ class Check(object):
 
     detail = True
 
-    def __init__(self, session):
+    def __init__(self, session, **kwargs):
         self.session = session
-        self.query = self.invalid_query(session)
+        self.query = self.invalid_query(**kwargs)
 
-    def invalid_query(self, session):  # pragma: no cover
+    def invalid_query(self, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
     def validate(self):
-        self.invalid_count = self.query.count()
+        with self.session as session:
+            query = sa.select(sa.func.count()).select_from(self.query)
+            self.invalid_count = session.execute(query).scalar()
         log.debug('invalid count: %d', self.invalid_count)
         print(self)
 
         if self.invalid_count:
             if self.detail:
-                self.invalid = self.query.all()
+                self.invalid = session.execute(self.query).all()
                 self.show_detail(self.invalid, self.invalid_count)
             return False
         else:
@@ -95,32 +105,34 @@ def docformat(func):
 
 @check
 @docformat
-def valid_glottocode(session, *, pattern=r'^[a-z0-9]{4}\d{4}$'):
+def valid_glottocode(*, pattern=r'^[a-z0-9]{4}\d{4}$'):
     """Glottocodes match {pattern!r}."""
-    return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.id.regexp_match(pattern))
-
+    return sa.select(Languoid)\
+           .where(~Languoid.id.regexp_match(pattern))\
+           .order_by('id')
 
 @check
 @docformat
-def valid_iso639_3(session, *, pattern=r'^[a-z]{3}$'):
+def valid_iso639_3(*, pattern=r'^[a-z]{3}$'):
     """Iso codes match {pattern!r}."""
-    return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.iso639_3.regexp_match(pattern))
+    return sa.select(Languoid)\
+           .where(~Languoid.iso639_3.regexp_match(pattern))\
+           .order_by('id')
 
 
 @check
 @docformat
-def valid_hid(session, *, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
+def valid_hid(*, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
     """Hids match {pattern!r}."""
-    return session.query(Languoid).order_by('id')\
-           .filter(~Languoid.hid.regexp_match(pattern))
+    return sa.select(Languoid)\
+           .where(~Languoid.hid.regexp_match(pattern))\
+           .order_by('id')
 
 
 @check
-def clean_name(session):
+def clean_name():
     """Glottolog names lack problematic characters."""
-    gl = session.query(AltnameProvider.id)\
+    gl = sa.select(AltnameProvider.id)\
          .filter_by(name='glottolog')\
          .scalar_subquery()
 
@@ -132,78 +144,94 @@ def clean_name(session):
     match_gl = Languoid.altnames\
                .any(sa.or_(*cond(Altname.name)), provider_id=gl)
 
-    return session.query(Languoid).order_by('id')\
-           .filter(sa.or_(match_gl, *cond(Languoid.name)))
+    return sa.select(Languoid)\
+           .where(sa.or_(match_gl, *cond(Languoid.name)))\
+           .order_by('id')
 
 
 @check
-def family_parent(session):
+def family_parent():
     """Parent of a family is a family."""
-    return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-           .join(Languoid.parent, aliased=True)\
-           .filter(Languoid.level != FAMILY)
+    parent = sa.orm.aliased(Languoid)
+    return sa.select(Languoid)\
+           .filter_by(level=FAMILY)\
+           .order_by('id')\
+           .join(Languoid.parent.of_type(parent))\
+           .where(parent.level != FAMILY)
 
 
 @check
-def language_parent(session):
+def language_parent():
     """Parent of a language is a family."""
-    return session.query(Languoid).filter_by(level=LANGUAGE).order_by('id')\
-           .join(Languoid.parent, aliased=True)\
-           .filter(Languoid.level != FAMILY)
+    parent = sa.orm.aliased(Languoid)
+    return sa.select(Languoid)\
+           .filter_by(level=LANGUAGE)\
+           .order_by('id')\
+           .join(Languoid.parent.of_type(parent))\
+           .where(parent.level != FAMILY)
 
 
 @check
-def dialect_parent(session):
+def dialect_parent():
     """Parent of a dialect is a language or dialect."""
-    return session.query(Languoid).filter_by(level=DIALECT).order_by('id')\
-           .join(Languoid.parent, aliased=True)\
-           .filter(Languoid.level.notin_([LANGUAGE, DIALECT]))
+    parent = sa.orm.aliased(Languoid)
+    return sa.select(Languoid)\
+           .filter_by(level=DIALECT)\
+           .order_by('id')\
+           .join(Languoid.parent.of_type(parent))\
+           .where(parent.level.notin_([LANGUAGE, DIALECT]))
 
 
 @check
-def family_children(session):
+def family_children():
     """Family has at least one subfamily or language."""
-    return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-           .filter(~Languoid.children.any(Languoid.level.in_([FAMILY,
-                                                              LANGUAGE])))
+    return sa.select(Languoid)\
+           .filter_by(level=FAMILY)\
+           .order_by('id')\
+           .where(~Languoid.children.any(Languoid.level.in_([FAMILY,
+                                                             LANGUAGE])))
 
 
 @check
-def family_languages(session):
+def family_languages():
     """Family has at least two languages (except 'Unclassified ...')."""
     Family, Child = (sa.orm.aliased(Languoid, name=n) for n in ('family', 'child'))
 
     tree = Languoid.tree(include_self=False, with_terminal=True)
 
-    return session.query(Languoid).filter_by(level=FAMILY).order_by('id')\
-           .filter(~Languoid.name.startswith('Unclassified '))\
-           .filter(~session.query(Family).filter_by(level=FAMILY)
-                   .filter(Family.name.in_(SPECIAL_FAMILIES))
-                   .join(tree, Family.id == tree.c.parent_id)
-                   .filter_by(child_id=Languoid.id, terminal=True)
-                   .exists())\
-           .filter(session.query(sa.func.count())
-                   .select_from(Child).filter_by(level=LANGUAGE)
-                   .join(tree, Child.id == tree.c.child_id)
-                   .filter_by(parent_id=Languoid.id)
-                   .scalar_subquery() < 2)
+    return sa.select(Languoid)\
+           .filter_by(level=FAMILY)\
+           .order_by('id')\
+           .where(~Languoid.name.startswith('Unclassified '))\
+           .where(~sa.select(Family)\
+                  .filter_by(level=FAMILY)\
+                  .where(Family.name.in_(SPECIAL_FAMILIES))
+                  .join(tree, Family.id == tree.c.parent_id)
+                  .filter_by(child_id=Languoid.id, terminal=True)
+                  .exists())\
+           .where(sa.select(sa.func.count())
+                  .select_from(Child)\
+                  .filter_by(level=LANGUAGE)\
+                  .join(tree, Child.id == tree.c.child_id)
+                  .filter_by(parent_id=Languoid.id)
+                  .scalar_subquery() < 2)
 
 
 @check
-def bookkeeping_no_children(session):
+def bookkeeping_no_children():
     """Bookkeeping languoids lack children (book1242 is flat)."""
-    return session.query(Languoid).order_by('id')\
-           .filter(Languoid.parent.has(name=BOOKKEEPING))\
-           .filter(Languoid.children.any())
+    return sa.select(Languoid)\
+           .order_by('id')\
+           .where(Languoid.parent.has(name=BOOKKEEPING))\
+           .where(Languoid.children.any())
 
 
 @check
-def no_empty_files(session):
-    exclude_raw = session.query(Dataset.exclude_raw).scalar()
+def no_empty_files(*, exclude_raw):
     if exclude_raw:  # pragma: no cover
-        return session.query(sa.true()).filter(sa.false())
+        return pytest.skip('skipped from exclude_raw=True')
 
     from .raw import File, Value
 
-    return session.query(File)\
-           .filter(~sa.exists().where(Value.file_id == File.id))
+    return sa.select(File)\
+           .where(~sa.exists().where(Value.file_id == File.id))
