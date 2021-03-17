@@ -63,8 +63,13 @@ class PathProxy(Proxy):
 
 class EngineProxy(Proxy, sa.engine.Engine):
 
-    def __init__(self, engine=None):
+    def __init__(self, engine=None, *, future):
         self.engine = engine
+        self.future = future
+
+    def _create_engine(self, url):
+        log.debug('sqlalchemy.create_engine(%r)', url)
+        self.engine = sa.create_engine(url, future=self.future)
 
     def connect(self, **kwargs):
         return self.engine.connect(**kwargs)
@@ -100,8 +105,7 @@ class EngineProxy(Proxy, sa.engine.Engine):
 
     @url.setter
     def url(self, url):
-        log.debug('sqlalchemy.create_engine(%r)', url)
-        self.engine = sa.create_engine(url)
+        self._create_engine(url)
 
     def __repr__(self):
         if self.engine is None:

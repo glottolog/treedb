@@ -8,7 +8,7 @@ DEFAULT_ROOT = './glottolog/'
 
 from . import proxies as _proxies
 
-ENGINE = _proxies.SQLiteEngineProxy()
+ENGINE = _proxies.SQLiteEngineProxy(future=False)
 
 ROOT = _proxies.PathProxy()
 
