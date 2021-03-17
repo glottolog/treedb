@@ -71,7 +71,7 @@ class EngineProxy(Proxy, sa.engine.Engine):
         log.debug('sqlalchemy.create_engine(%r)', url)
         self.engine = sa.create_engine(url, future=self.future)
 
-    def connect(self, **kwargs):
+    def connect(self, close_with_result=False, **kwargs):
         return self.engine.connect(**kwargs)
 
     def scalar(self, query):

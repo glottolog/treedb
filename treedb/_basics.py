@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker as _sessionmaker
 
 from . import proxies as _proxies
 
-FUTURE = False
+FUTURE = True
 
 ENGINE = _proxies.SQLiteEngineProxy(future=FUTURE)
 
