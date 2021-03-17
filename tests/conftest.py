@@ -36,11 +36,14 @@ def pytest_addoption(parser):
     parser.addoption('--loglevel-debug', action='store_true',
                      help='pass loglevel=DEBUG to treedb.configure()')
 
+    parser.addoption('--log-sql', action='store_true',
+                     help='pass log_sql=True to treedb.configure()')
+
 
 def pytest_configure(config):
     options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
                'rebuild', 'force_rebuild', 'exclude_raw',
-               'loglevel_debug')
+               'loglevel_debug', 'log_sql')
 
     FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
 
@@ -65,6 +68,9 @@ def bare_treedb():
 
     if pytest.FLAGS.loglevel_debug:
         kwargs['loglevel'] = 'DEBUG'
+
+    if pytest.FLAGS.log_sql:
+        kwargs['log_sql'] = True
 
     bare_treedb.configure(**kwargs)
 
