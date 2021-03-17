@@ -28,6 +28,7 @@ from . import ENGINE
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'set_engine',
+           'connect', 'scalar', 'iterrows',
            'registry', 'print_schema',
            'Dataset', 'Producer',
            'Session',
@@ -111,6 +112,27 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
     log.debug('conn: %r', dbapi_conn)
 
 
+def connect(engine_or_conn=ENGINE):
+    if isinstance(engine_or_conn, sa.engine.base.Connection):
+        return _tools.nullcontext(engine_or_conn)
+
+    return engine_or_conn.connect()
+
+
+def scalar(statement, *args, **kwargs):
+    return ENGINE.scalar(statement, *args, **kwargs)
+
+
+def iterrows(query, *, mappings=False, bind=ENGINE):
+    with connect(bind) as conn:
+        result = conn.execute(query)
+
+        if mappings:
+            result = result.mappings()
+
+        yield from result
+
+
 @sa.ext.compiler.compiles(sa.schema.CreateTable)
 def compile(element, compiler, **kwargs):
     """Append sqlite3 WITHOUT_ROWID to CREATE_TABLE if configured.
@@ -158,24 +180,23 @@ class Dataset:
         log.debug('read %r from %r', table, bind)
 
         try:
-            with bind.connect() as conn:
-                result, = conn.execute(sa.select(cls))
+            result, = iterrows(sa.select(cls), mappings=True, bind=bind)
         except sa.exc.OperationalError as e:
             if 'no such table' in e.orig.args[0]:
                 pass
             else:
                 log.exception('error selecting %r', table)
                 if strict:
-                    raise RuntimeError('failed to select %r from %r', table, bind)
+                    raise RuntimeError('failed to select %r from %r', table, bind) from e
             return fallback
         except ValueError as e:
             log.exception('error selecting %r', table)
             if 'not enough values to unpack' in e.args[0] and not strict:
                 return fallback
-            raise RuntimeError('failed to select %r from %r', table, bind)
-        except Exception:  # pragma: no cover
+            raise RuntimeError('failed to select %r from %r', table, bind) from e
+        except Exception as e:  # pragma: no cover
             log.exception('error selecting %r', table)
-            raise RuntimeError('failed to select %r from %r', table, bind)
+            raise RuntimeError('failed to select %r from %r', table, bind) from e
         else:
             return result
 
@@ -205,8 +226,7 @@ class Producer:
 
     @classmethod
     def get_producer(cls, *, bind):
-        with bind.connect() as conn:
-            result, = conn.execute(sa.select(cls))
+        result, = iterrows(sa.select(cls), mappings=True, bind=bind)
         return result
 
     @classmethod
@@ -307,7 +327,7 @@ def export(filename=None, *, exclude_raw=False, metadata=registry.metadata,
     skip = {'_file', '_option', '_value'} if exclude_raw else {}
 
     log.info('write %r', filename)
-    with engine.connect() as conn,\
+    with connect(engine) as conn,\
          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in sorted_tables:
             if table.name in skip:

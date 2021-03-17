@@ -11,6 +11,7 @@ import csv23
 from . import _compat
 
 from . import ENGINE, ROOT
+from . import backend as _backend
 from . import languoids as _languoids
 from . import queries as _queries
 from . import tools as _tools
@@ -33,19 +34,20 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
 
     json_datetime = _compat.datetime_fromisoformat
 
-    with bind.connect() as conn:
-        n = 0
-        for n, (path, item) in enumerate(bind.execute(query), 1):
-            endangerment = item['endangerment']
-            if endangerment is not None:
-                endangerment['date'] = json_datetime(endangerment['date'])
-            if not item.get('timespan'):
-                item.pop('timespan', None)
+    rows = _backend.iterrows(query, bind=bind)
 
-            yield tuple(path.split('/')), item
+    n = 0
+    for n, (path, item) in enumerate(rows, 1):
+        endangerment = item['endangerment']
+        if endangerment is not None:
+            endangerment['date'] = json_datetime(endangerment['date'])
+        if not item.get('timespan'):
+            item.pop('timespan', None)
 
-            if not (n % progress_after):
-                log.info('%s languoids fetched', f'{n:_d}')
+        yield tuple(path.split('/')), item
+
+        if not (n % progress_after):
+            log.info('%s languoids fetched', f'{n:_d}')
 
     log.info('%s languoids total', f'{n:_d}')
 

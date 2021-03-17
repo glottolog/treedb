@@ -29,20 +29,14 @@ def check(func=None, *, bind=ENGINE):
         return func
 
     passed = True
-    with bind.connect() as conn:
-        for func in check.registered:
+    for func in check.registered:
+        with Session(bind=bind) as session:
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
             check_cls = type(f'{func.__name__}Check', (Check,), ns)
-
-            session = Session(bind=conn)
-
             check_inst = check_cls(session)
 
-            try:
-                log.debug('validate %r', func.__name__)
-                check_passed = check_inst.validate()
-            finally:
-                session.close()
+            log.debug('validate %r', func.__name__)
+            check_passed = check_inst.validate()
 
             if not check_passed:
                 passed = False

@@ -17,6 +17,7 @@ import csv23
 from . import _compat
 
 from . import ENGINE
+from . import backend as _backend
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -33,7 +34,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
 from . import tools as _tools
 from . import views as _views
 
-__all__ = ['iterrows', 'print_rows', 'write_csv', 'hash_csv', 'hash_rows',
+__all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
            'get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats', 'get_stats_query',
@@ -43,23 +44,18 @@ __all__ = ['iterrows', 'print_rows', 'write_csv', 'hash_csv', 'hash_rows',
 log = logging.getLogger(__name__)
 
 
-def iterrows(query, *, bind=ENGINE):
-    with bind.connect() as conn:
-        result = conn.execute(query)
-        yield from result
-
-
 def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
     if query is None:
         query = get_query()
 
     if not isinstance(query, sa.sql.base.Executable):
+        # assume mappings
         rows = iter(query)
     else:
         if verbose:
             print(query)
 
-        rows = bind.execute(query)
+        rows = _backend.iterrows(query, mappings=True, bind=bind)
 
     if format_ is not None:
         rows = map(format_.format_map, rows)
@@ -87,13 +83,12 @@ def write_csv(query=None, filename=None, *, verbose=False,
     if verbose:
         print(query)
 
-    with bind.connect() as conn:
-        rows = conn.execute(query)
+    with _backend.connect(bind) as conn:
+        result = conn.execute(query)
 
-        header = list(rows.keys())
+        header = list(result.keys())
         log.info('csv header: %r', header)
-
-        return csv23.write_csv(filename, rows, header=header,
+        return csv23.write_csv(filename, result, header=header,
                                dialect=dialect, encoding=encoding,
                                autocompress=True)
 
@@ -105,10 +100,11 @@ def hash_csv(query=None, *,
     if query is None:
         query = get_query()
 
-    with bind.connect() as conn:
-        rows = conn.execute(query)
-        header = list(rows.keys())
-        return hash_rows(rows, header=header, name=name, raw=raw,
+    with _backend.connect(bind) as conn:
+        result = conn.execute(query)
+
+        header = list(result.keys())
+        return hash_rows(result, header=header, name=name, raw=raw,
                          dialect=dialect, encoding=encoding)
 
 
@@ -377,13 +373,12 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
     query = get_json_query(ordered='id', as_rows=False, load_json=False,
                            languoid_label='languoid')
 
-    with bind.connect() as conn:
-        rows = bind.execute(query)
+    rows = _backend.iterrows(query, bind=bind)
 
-        with open_func() as f:
-            write_line = functools.partial(print, file=f)
-            for path_languoid, in rows:
-                write_line(path_languoid)
+    with open_func() as f:
+        write_line = functools.partial(print, file=f)
+        for path_languoid, in rows:
+            write_line(path_languoid)
 
     return result
 
@@ -614,26 +609,25 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
 
 def print_languoid_stats(*, bind=ENGINE):
-    select_stats = get_stats_query()
-    with bind.connect() as conn:
-        rows, counts = itertools.tee(bind.execute(select_stats))
+    rows = _backend.iterrows(get_stats_query(), mappings=True, bind=bind)
+    rows, counts = itertools.tee(rows)
 
-        print_rows(rows, format_='{n:6,d} {kind}', bind=bind)
+    print_rows(rows, format_='{n:6,d} {kind}', bind=None)
 
-        sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
-                ('roots', ('families', 'isolates')),
-                ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
-                ('languages', ('All', BOOKKEEPING))]
+    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
+            ('roots', ('families', 'isolates')),
+            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
+            ('languages', ('All', BOOKKEEPING))]
 
-        counts = dict(counts)
-        for total, parts in sums:
-            values = [counts[p] for p in parts]
-            parts_sum = sum(values)
-            term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
-            log.debug('verify %s == %d %s', term, counts[total], total)
-            if counts[total] != parts_sum:  # pragma: no cover
-                warnings.warn(f'{term} = {parts_sum:,d}'
-                              f' (expected {counts[total]:,d} {total})')
+    counts = {c['kind']: c['n'] for c in counts}
+    for total, parts in sums:
+        values = [counts[p] for p in parts]
+        parts_sum = sum(values)
+        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+        log.debug('verify %s == %d %s', term, counts[total], total)
+        if counts[total] != parts_sum:  # pragma: no cover
+            warnings.warn(f'{term} = {parts_sum:,d}'
+                          f' (expected {counts[total]:,d} {total})')
 
 
 @_views.register_view('stats')
@@ -719,13 +713,12 @@ def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
         select_pairs = select_pairs.where(sa.or_(Child.level == None,
                                                  Child.level == child_level))
 
-    with bind.connect() as conn:
-        rows = conn.execute(select_pairs)
+    rows = _backend.iterrows(select_pairs, bind=bind)
 
-        for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
-            _, c = next(grp)
-            if c is None:
-                descendants = []
-            else:
-                descendants = [c] + [c for _, c in grp]
-            yield parent_id, descendants
+    for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
+        _, c = next(grp)
+        if c is None:
+            descendants = []
+        else:
+            descendants = [c] + [c for _, c in grp]
+        yield parent_id, descendants

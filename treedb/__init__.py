@@ -23,6 +23,7 @@ from .files import set_root, iterfiles
 from .languoids import iterlanguoids, compare_with_files, write_files
 
 from .backend import (print_query_sql, set_engine, print_schema,
+                      connect, scalar, iterrows,
                       Dataset, Producer, Session,
                       backup, dump_sql, export)
 
@@ -36,7 +37,7 @@ from .models import LEVEL, Languoid
 
 from .checks import check
 
-from .queries import (iterrows, print_rows, write_csv, hash_csv,
+from .queries import (print_rows, write_csv, hash_csv,
                       get_query,
                       write_json_query_csv, write_json_lines, get_json_query,
                       print_languoid_stats,
@@ -50,6 +51,7 @@ __all__ = ['ENGINE', 'ROOT',
            'set_root', 'iterfiles',
            'iterlanguoids', 'compare_with_files', 'write_files',
            'print_query_sql', 'set_engine', 'print_schema',
+           'connect', 'scalar', 'iterrows',
            'Dataset', 'Producer', 'Session',
            'backup', 'dump_sql', 'export',
            'load',
@@ -57,7 +59,7 @@ __all__ = ['ENGINE', 'ROOT',
            'write_json_csv', 'checksum',
            'LEVEL', 'Languoid',
            'check',
-           'iterrows', 'print_rows', 'write_csv', 'hash_csv',
+           'print_rows', 'write_csv', 'hash_csv',
            'get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats',
@@ -80,13 +82,3 @@ engine = set_engine(None, title=__title__)
 root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT',
                                  config_path=CONFIG,
                                  fallback=DEFAULT_ROOT))
-
-
-connect = engine.connect
-
-
-scalar = engine.scalar
-
-
-def execute(*args, **kwargs):
-    return engine.execute(*args, **kwargs)

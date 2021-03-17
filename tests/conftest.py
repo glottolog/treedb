@@ -1,10 +1,14 @@
 # conftest.py - pytest command-line flags and fixtures
 
+import os
 import types
 
 import pytest
 
 GLOTTOLOG_TAG = 'v4.3-treedb-fixes'
+
+
+os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 
 def pytest_addoption(parser):

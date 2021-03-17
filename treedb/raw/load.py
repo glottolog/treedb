@@ -1,5 +1,6 @@
 # load.py
 
+import functools
 import logging
 
 import sqlalchemy as sa
@@ -18,9 +19,9 @@ log = logging.getLogger(__name__)
 class Options(dict):
     """Insert optons on demand and cache id and lines config."""
 
-    def __init__(self, items=(), *, insert=None):
+    def __init__(self, items=(), *, conn, model):
         super().__init__(items)
-        self.insert = insert
+        self.insert = functools.partial(conn.execute, sa.insert(model))
 
     def __missing__(self, key):
         log.debug('insert option %r', key)
@@ -28,8 +29,9 @@ class Options(dict):
         section, option = key
         is_lines = _fields.is_lines(section, option)
 
-        id_, = self.insert(section=section, option=option,
-                           is_lines=is_lines).inserted_primary_key
+        params = {'section': section, 'option': option,
+                  'is_lines': is_lines}
+        id_, = self.insert(params).inserted_primary_key
 
         self[key] = result = (id_, is_lines)
         return result
@@ -50,12 +52,9 @@ def itervalues(cfg, file_id, options):
 
 
 def load(root, conn):
-    insert_file = sa.insert(File, bind=conn).execute
-
-    options = Options(insert=sa.insert(Option, bind=conn).execute)
-
-    insert_value = sa.insert(Value, bind=conn).execute
-
+    insert_file = functools.partial(conn.execute, sa.insert(File))
+    options = Options(conn=conn, model=Option)
+    insert_value = functools.partial(conn.execute, sa.insert(Value))
     for path_tuple, dentry, cfg in _files.iterfiles(root):
         sha256 = _tools.sha256sum(dentry.path, raw=True).hexdigest()
         file_params = {'glottocode': path_tuple[-1],
@@ -65,4 +64,5 @@ def load(root, conn):
         file_id, = insert_file(file_params).inserted_primary_key
 
         value_params = list(itervalues(cfg, file_id, options))
+
         insert_value(value_params)

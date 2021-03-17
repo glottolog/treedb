@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # try-treedb.py - usage examples
 
+import sqlalchemy as sa
+
 import treedb
-from treedb import Languoid, select
 
 treedb.configure()
 
@@ -13,7 +14,7 @@ engine = treedb.load()
 # run sanity checks
 treedb.check()
 
-treedb.print_rows(select([Languoid]).order_by('id').limit(5))
+treedb.print_rows(sa.select([treedb.Languoid]).order_by('id').limit(5))
 
 query = treedb.get_query()  # big example query containing 'everything'
 

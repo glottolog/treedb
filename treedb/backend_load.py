@@ -89,9 +89,9 @@ def load(filename=ENGINE, repo_root=None, *,
         from . import raw
 
     if ds is not None and not rebuild:
-        Dataset.log_dataset(dict(ds))
+        Dataset.log_dataset(ds)
         pdc = Producer.get_producer(bind=engine)
-        Producer.log_producer(dict(pdc))
+        Producer.log_producer(pdc)
         return engine
 
     log.debug('import module %s.models_load', __package__)
@@ -106,8 +106,8 @@ def load(filename=ENGINE, repo_root=None, *,
         with bind.begin() as conn:
             dbapi_conn = conn.connection.connection
             log.debug('begin transaction on %r', dbapi_conn)
-            conn.execute('PRAGMA synchronous = OFF')
-            conn.execute('PRAGMA journal_mode = MEMORY')
+            conn.execute(sa.text('PRAGMA synchronous = OFF'))
+            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
 
             yield conn
 
@@ -119,7 +119,7 @@ def load(filename=ENGINE, repo_root=None, *,
     log.info('create %d tables from %r', len(metadata.tables), metadata)
     with begin() as conn:
         log.debug('set application_id = %r', application_id)
-        conn.execute(f'PRAGMA application_id = {application_id:d}')
+        conn.execute(sa.text(f'PRAGMA application_id = {application_id:d}'))
 
         log.debug('run create_all')
         metadata.create_all(bind=conn)
@@ -148,7 +148,7 @@ def load(filename=ENGINE, repo_root=None, *,
     log.info('write %r', Producer.__tablename__)
     Producer.log_producer(producer)
     with begin() as conn:
-        sa.insert(Producer, bind=conn).execute(producer)
+        conn.execute(sa.insert(Producer), producer)
 
     if not exclude_raw:
         log.info('load raw')
@@ -174,7 +174,7 @@ def load(filename=ENGINE, repo_root=None, *,
     log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
     with begin() as conn:
         log.debug('dataset: %r', dataset)
-        sa.insert(Dataset, bind=conn).execute(dataset)
+        conn.execute(sa.insert(Dataset), dataset)
 
     walltime = datetime.timedelta(seconds=time.time() - start)
     log.debug('load timer stopped')
