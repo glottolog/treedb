@@ -110,7 +110,14 @@ def test_checksum_equivalence(treedb, kwargs):
     then lobbest thou thy Holy Hand Grenade of Antioch towards thy foe,
     who, being naughty in My sight, shall snuff it.
     """
-    results = [(kw, treedb.checksum(**kw)) for kw in kwargs]
+    def iterchecksums(kwargs):
+        for kw in kwargs:
+            if kw.get('source') == 'raw' and pytest.FLAGS.exclude_raw:
+                pytest.skip('skipped by --exclude-raw')
+                continue
+            yield kw, treedb.checksum(**kw)
+
+    results = list(iterchecksums(kwargs))
 
     for kw, r in results:
         if kw.get('file_order', False):
