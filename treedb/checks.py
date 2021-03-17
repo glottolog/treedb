@@ -4,6 +4,7 @@ import inspect
 import itertools
 import logging
 
+import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm
 
@@ -38,7 +39,7 @@ def check(func=None, *, bind=ENGINE):
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
             check_cls = type(f'{func.__name__}Check', (Check,), ns)
 
-            if func.__name__ == 'no_empty_files' and not exclude_raw:
+            if func.__name__ == 'no_empty_files':
                 kwargs = {'exclude_raw': exclude_raw}
             else:
                 kwargs = {}
@@ -229,7 +230,8 @@ def bookkeeping_no_children():
 @check
 def no_empty_files(*, exclude_raw):
     if exclude_raw:  # pragma: no cover
-        return pytest.skip('skipped from exclude_raw=True')
+        pytest.skip('skipped from exclude_raw=True')
+        return sa.select(sa.true()).where(sa.false())
 
     from .raw import File, Value
 
