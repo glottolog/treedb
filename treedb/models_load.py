@@ -161,7 +161,6 @@ def load(languoids, conn):
                           for c in countries])
 
         if links:
-
             conn.execute(sa.insert(Link),
                          [dict(languoid_id=lid, ord=i, **link)
                           for i, link in enumerate(links, 1)])
