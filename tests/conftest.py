@@ -12,6 +12,9 @@ os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 
 def pytest_addoption(parser):
+    parser.addoption('--skip-slow', action='store_true',
+                     help='skip tests that are marked as slow')
+
     parser.addoption('--file-engine', action='store_true',
                      help='use configured file engine instead of in-memory db')
 
@@ -46,6 +49,9 @@ def pytest_configure(config):
                                                        '--exclude-raw')
 
     pytest.FLAGS = FLAGS
+
+    pytest.skip_slow = pytest.mark.skipif(config.getoption('--skip-slow'),
+                                          reason='skipped by --skip-slow flag')
 
 
 @pytest.fixture(scope='session')
