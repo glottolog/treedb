@@ -114,9 +114,13 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
 
 def connect(engine_or_conn=ENGINE):
     if isinstance(engine_or_conn, sa.engine.base.Connection):
+        log.debug('nested connect (no-op): %r', engine_or_conn)
         return _tools.nullcontext(engine_or_conn)
 
-    return engine_or_conn.connect()
+    log.debug('engine connect: %r', engine_or_conn)
+    conn = engine_or_conn.connect()
+    log.debug('conn: %r', conn)
+    return conn
 
 
 def scalar(statement, *args, **kwargs):
