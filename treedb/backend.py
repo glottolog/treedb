@@ -103,12 +103,12 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
     if not isinstance(dbapi_conn, sqlite3.Connection):
         return
 
-    log.debug('engine connect (enable foreign keys)')
+    log.debug('connect sqlalchemy.engine.Engine: enable foreign keys')
 
     with contextlib.closing(dbapi_conn.cursor()) as cursor:
         cursor.execute('PRAGMA foreign_keys = ON')
 
-    log.debug('conn: %r', dbapi_conn)
+    log.debug('dbapi_conn: %r', dbapi_conn)
 
 
 def connect(engine_or_conn=ENGINE):
