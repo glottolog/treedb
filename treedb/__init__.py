@@ -6,7 +6,8 @@ CONFIG = 'treedb.ini'
 
 DEFAULT_ROOT = './glottolog/'
 
-from ._basics import ENGINE, ROOT, SESSION as Session
+from ._basics import (ENGINE, ROOT, REGISTRY,
+                      SESSION as Session)
 
 from .config import configure, get_default_root
 
@@ -20,8 +21,9 @@ from .languoids import iterlanguoids, compare_with_files, write_files
 
 from .backend import (print_query_sql, set_engine, print_schema,
                       connect, scalar, iterrows,
-                      Dataset, Producer,
                       backup, dump_sql, export)
+
+from .backend_models import Dataset, Producer
 
 from .backend_load import load
 
@@ -41,15 +43,15 @@ from .queries import (print_rows, write_csv, hash_csv,
 
 from .shortcuts import pd_read_sql
 
-__all__ = ['ENGINE', 'ROOT', 'Session',
+__all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'configure', 'configure_logging',
            'checkout_or_clone',
            'set_root', 'iterfiles',
            'iterlanguoids', 'compare_with_files', 'write_files',
            'print_query_sql', 'set_engine', 'print_schema',
            'connect', 'scalar', 'iterrows',
-           'Dataset', 'Producer',
            'backup', 'dump_sql', 'export',
+           'Dataset', 'Producer',
            'load',
            'print_table_sql', 'select_tables_nrows',
            'write_json_csv', 'checksum',
@@ -61,8 +63,7 @@ __all__ = ['ENGINE', 'ROOT', 'Session',
            'print_languoid_stats',
            'iterdescendants',
            'pd_read_sql',
-           'engine', 'root',
-           'connect', 'scalar', 'execute']
+           'engine', 'root']
 
 __title__ = 'treedb'
 __version__ = '1.5.dev0'

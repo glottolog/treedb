@@ -9,8 +9,10 @@ import warnings
 
 import sqlalchemy as sa
 
-from . import ENGINE, ROOT
-from .backend import set_engine, registry, Dataset, Producer
+from . import (ENGINE, ROOT,
+               REGISTRY  as registry)
+from .backend import set_engine
+from .backend_models import Dataset, Producer
 from . import files as _files
 from . import tools as _tools
 from . import views as _views
@@ -74,7 +76,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.info('use present %r', engine)
 
     if not exclude_views:
-        log.info('prepare %d views', len(_views.REGISTRY))
+        log.info('prepare %d views', len(_views.VIEW_REGISTRY))
 
     try:
         _views.create_all_views(clear=exclude_views)

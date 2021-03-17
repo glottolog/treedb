@@ -13,7 +13,6 @@ import zipfile
 import csv23
 
 import sqlalchemy as sa
-import sqlalchemy.orm
 import sqlalchemy.ext.compiler
 
 try:
@@ -24,13 +23,13 @@ except ImportError:  # pragma: no cover
 from . import (tools as _tools,
                proxies as _proxies)
 
-from . import ENGINE
+from . import (ENGINE,
+               REGISTRY as registry)
 
 __all__ = ['print_query_sql', 'get_query_sql', 'expression_compile',
            'set_engine',
            'connect', 'scalar', 'iterrows',
            'registry', 'print_schema',
-           'Dataset', 'Producer',
            'backup', 'dump_sql', 'export']
 
 
@@ -149,9 +148,6 @@ def compile(element, compiler, **kwargs):
     return text
 
 
-registry = sa.orm.registry()
-
-
 def print_schema(metadata=registry.metadata, *, engine=ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql):
@@ -160,84 +156,6 @@ def print_schema(metadata=registry.metadata, *, engine=ENGINE):
     mock_engine = sa.create_mock_engine(engine.url, executor=print_sql)
 
     metadata.create_all(mock_engine, checkfirst=False)
-
-
-@registry.mapped
-class Dataset:
-    """Git commit loaded into the database."""
-
-    __tablename__ = '__dataset__'
-
-    id = sa.Column(sa.Integer, sa.CheckConstraint('id = 1'), primary_key=True)
-
-    title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"), nullable=False)
-
-    git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
-    git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
-    clean = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
-
-    exclude_raw = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
-
-    @classmethod
-    def get_dataset(cls, *, bind, strict, fallback=None):
-        table = cls.__tablename__
-        log.debug('read %r from %r', table, bind)
-
-        try:
-            result, = iterrows(sa.select(cls), mappings=True, bind=bind)
-        except sa.exc.OperationalError as e:
-            if 'no such table' in e.orig.args[0]:
-                pass
-            else:
-                log.exception('error selecting %r', table)
-                if strict:
-                    raise RuntimeError('failed to select %r from %r', table, bind) from e
-            return fallback
-        except ValueError as e:
-            log.exception('error selecting %r', table)
-            if 'not enough values to unpack' in e.args[0] and not strict:
-                return fallback
-            raise RuntimeError('failed to select %r from %r', table, bind) from e
-        except Exception as e:  # pragma: no cover
-            log.exception('error selecting %r', table)
-            raise RuntimeError('failed to select %r from %r', table, bind) from e
-        else:
-            return result
-
-    @classmethod
-    def log_dataset(cls, params):
-        name = cls.__tablename__
-        log.info('git describe %(git_describe)r clean: %(clean)r', params)
-        if not params['clean']:
-            warnings.warn(f'{name} not clean')  # pragma: no cover
-        log.debug('%s.title: %r', name, params['title'])
-        log.info('%s.git_commit: %r', name, params['git_commit'])
-
-
-@registry.mapped
-class Producer:
-    """Name and version of the package that created a __dataset__."""
-
-    __tablename__ = '__producer__'
-
-    id = sa.Column(sa.Integer, sa.CheckConstraint('id = 1'), primary_key=True)
-
-    name = sa.Column(sa.Text, sa.CheckConstraint("name != ''"),
-                     unique=True, nullable=False)
-
-    version = sa.Column(sa.Text, sa.CheckConstraint("version != ''"),
-                        nullable=False)
-
-    @classmethod
-    def get_producer(cls, *, bind):
-        result, = iterrows(sa.select(cls), mappings=True, bind=bind)
-        return result
-
-    @classmethod
-    def log_producer(cls, params):
-        name = cls.__tablename__
-        log.info('%s.name: %s', name, params['name'])
-        log.info('%s.version: %s', name, params['version'])
 
 
 def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
