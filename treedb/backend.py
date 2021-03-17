@@ -122,8 +122,9 @@ def connect(engine_or_conn=ENGINE):
     return conn
 
 
-def scalar(statement, *args, **kwargs):
-    return ENGINE.scalar(statement, *args, **kwargs)
+def scalar(statement, *args, bind=ENGINE, **kwargs):
+    with connect(bind) as conn:
+        return conn.scalar(statement, *args, **kwargs)
 
 
 def iterrows(query, *, mappings=False, bind=ENGINE):
