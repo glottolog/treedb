@@ -65,7 +65,7 @@ def get_dataset(engine, *, exclude_raw, force_rebuild):
 
         if dataset is None:
             warnings.warn(f'force delete {engine.file!r}')
-        elif ds.exclude_raw != bool(exclude_raw):
+        elif dataset.exclude_raw != bool(exclude_raw):
             dataset = None
             log.warning('rebuild needed from exclude_raw mismatch')
 
