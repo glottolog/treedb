@@ -25,6 +25,42 @@ __all__ = ['load']
 log = logging.getLogger(__name__)
 
 
+class ModelMap(dict):
+
+    model = None
+
+    @staticmethod
+    def key_to_params(key):
+        return {'name': key}
+
+    def __init__(self, items=(),
+                 *, conn,
+                 model=None, key_to_params=None,
+                 log_insert=True):
+        super().__init__(items)
+
+        if model is not None:
+            self.model = model
+
+        if key_to_params is not None:
+            self.key_to_params = key_to_params
+
+        self.log_insert = log_insert
+
+        self.insert = functools.partial(conn.execute, sa.insert(self.model))
+
+
+    def __missing__(self, key):
+        if self.log_insert:
+            log.debug('insert new %s: %r', self.model.__tablename__, key)
+        params = self.key_to_params(key)
+
+        pk, = self.insert(params).inserted_primary_key
+
+        self[key] = pk
+        return pk
+
+
 def load(languoids, conn):
     insert_lang = functools.partial(conn.execute, sa.insert(Languoid))
 
@@ -41,88 +77,44 @@ def load(languoids, conn):
                 _seen[id_] = name
                 yield c
 
-    class SourceProviderMap(dict):
+    sourceprovider_ids = ModelMap(conn=conn, model=SourceProvider)
 
-        insert = functools.partial(conn.execute, sa.insert(SourceProvider))
+    bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
-        def __missing__(self, name):
-            log.debug('insert new source provider: %r', name)
-            id, = self.insert({'name': name}).inserted_primary_key
-            self[name] = id
-            return id
+    class BibitemMap(ModelMap):
 
-    sourceprovider_ids = SourceProviderMap()
+        model = Bibitem
 
-    class BibfileMap(dict):
-
-        insert = functools.partial(conn.execute, sa.insert(Bibfile))
-
-        def __missing__(self, name):
-            log.debug('insert new bibfile: %r', name)
-            id, = self.insert({'name': name}).inserted_primary_key
-            self[name] = id
-            return id
-
-    bibfile_ids = BibfileMap()
-
-    class BibitemMap(dict):
-
-        insert = functools.partial(conn.execute, sa.insert(Bibitem))
-
-        def __missing__(self, key):
+        @staticmethod
+        def key_to_params(key):
             bibfile_name, bibkey = key
-            id, = self.insert({'bibfile_id': bibfile_ids[bibfile_name],
-                               'bibkey': bibkey}).inserted_primary_key
-            self[key] = id
-            return id
+            return {'bibfile_id': bibfile_ids[bibfile_name], 'bibkey': bibkey}
 
         def pop_params(self, params):
             return self[params.pop('bibfile'), params.pop('bibkey')]
 
-    bibitem_ids = BibitemMap()
+    bibitem_ids = BibitemMap(conn=conn, log_insert=False)
 
-    class AltnameProviderMap(dict):
+    altnameprovider_ids = ModelMap(conn=conn, model=AltnameProvider)
 
-        insert = functools.partial(conn.execute, sa.insert(AltnameProvider))
+    identifiersite_ids = ModelMap(conn=conn, model=IdentifierSite)
 
-        def __missing__(self, name):
-            log.debug('insert new altname provider: %r', name)
-            id, = self.insert({'name': name}).inserted_primary_key
-            self[name] = id
-            return id
+    class EndangermentSourceMap(ModelMap):
 
-    altnameprovider_ids = AltnameProviderMap()
+        model = EndangermentSource
 
-    class IdentifierSiteMap(dict):
-
-        insert = functools.partial(conn.execute, sa.insert(IdentifierSite))
-
-        def __missing__(self, name):
-            log.debug('insert new identifier site: %r', name)
-            id, = self.insert({'name': name}).inserted_primary_key
-            self[name] = id
-            return id
-
-    identifiersite_ids = IdentifierSiteMap()
-
-    class EndangermentSourceMap(dict):
-
-        insert = functools.partial(conn.execute, sa.insert(EndangermentSource))
+        @staticmethod
+        def key_to_params(key):
+            params = dict(key)
+            if params.get('bibfile') is not None:
+                params['bibitem_id'] = bibitem_ids.pop_params(params)
+            return params
 
         @staticmethod
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
-        def __missing__(self, key):
-            params = dict(key)
-            if params.get('bibfile') is not None:
-                params['bibitem_id'] = bibitem_ids.pop_params(params)
-            log.debug('insert new endangerment_source: %r', params)
-            id, = self.insert(params).inserted_primary_key
-            self[key] = id
-            return id
-
-    es_ids = EndangermentSourceMap()
+    es_ids = EndangermentSourceMap(conn=conn) 
 
     for _, l in languoids:
         lid = l['id']

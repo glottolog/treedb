@@ -20,21 +20,22 @@ log = logging.getLogger(__name__)
 class Options(dict):
     """Insert optons on demand and cache id and lines config."""
 
-    def __init__(self, items=(), *, conn, model):
+    model = Option
+
+    def __init__(self, items=(), *, conn):
         super().__init__(items)
-        self.insert = functools.partial(conn.execute, sa.insert(model))
+        self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
     def __missing__(self, key):
         log.debug('insert option %r', key)
-
         section, option = key
         is_lines = _fields.is_lines(section, option)
 
-        params = {'section': section, 'option': option,
-                  'is_lines': is_lines}
-        id_, = self.insert(params).inserted_primary_key
+        params = {'section': section, 'option': option, 'is_lines': is_lines}
 
-        self[key] = result = (id_, is_lines)
+        pk, = self.insert(params).inserted_primary_key
+
+        self[key] = result = (pk, is_lines)
         return result
 
 
@@ -55,7 +56,7 @@ def itervalues(cfg, file_id, options):
 def load(root, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
 
-    options = Options(conn=conn, model=Option)
+    options = Options(conn=conn)
 
     insert_value = functools.partial(conn.execute, sa.insert(Value))
 
