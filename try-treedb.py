@@ -5,7 +5,7 @@ import sqlalchemy as sa
 
 import treedb
 
-treedb.configure(log_sql=None)
+treedb.configure(log_sql=True)
 
 print(next(treedb.iterlanguoids()))
 
@@ -14,7 +14,7 @@ engine = treedb.load()
 # run sanity checks
 treedb.check()
 
-treedb.print_rows(sa.select([treedb.Languoid]).order_by('id').limit(5))
+treedb.print_rows(sa.select(treedb.Languoid).order_by('id').limit(5))
 
 query = treedb.get_query()  # big example query containing 'everything'
 
