@@ -411,7 +411,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                  .scalar_subquery()
 
     countries = select(Country.jsonf())\
-                .select_from(languoid_country.join(Country))\
+                .join_from(languoid_country, Country)\
                 .where(languoid_country.c.languoid_id == Languoid.id)\
                 .correlate(Languoid)\
                 .order_by(Country.printf())\
@@ -548,8 +548,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     endangerment = select(Endangerment.jsonf(EndangermentSource,
                                              e_bibfile, e_bibitem,
                                              label='endangerment'))\
-                   .select_from(sa.join(Endangerment, EndangermentSource)
-                                .outerjoin(sa.join(e_bibitem, e_bibfile)))\
+                   .join_from(Endangerment, EndangermentSource)\
+                   .outerjoin(sa.join(e_bibitem, e_bibfile))\
                    .where(Endangerment.languoid_id == Languoid.id)\
                    .correlate(Languoid)\
                    .scalar_subquery()

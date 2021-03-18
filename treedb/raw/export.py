@@ -40,7 +40,7 @@ def write_raw_csv(filename=None, *,
     select_values = sa.select(File.path,
                               Option.section, Option.option,
                               Value.line, Value.value)\
-                    .select_from(sa.join(File, Value).join(Option))\
+                    .join_from(File, Value).join(Option)\
                     .order_by('path', 'section', 'option', 'line')
 
     return _queries.write_csv(select_values, filename,

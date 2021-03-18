@@ -25,7 +25,7 @@ def checksum(*, weak=False, name=None,
         select_rows = sa.select(File.path,
                                 Option.section, Option.option,
                                 Value.value)\
-                      .select_from(sa.join(File, Value).join(Option))\
+                      .join_from(File, Value).join(Option)\
 
         order = ['path', 'section', 'option']
         if weak == 'unordered':

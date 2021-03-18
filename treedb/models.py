@@ -200,9 +200,9 @@ class Languoid:
             tree_1_relative = Node
         else:
             tree_1_relative = Relative
-            tree_1 = tree_1.select_from(sa.join(Node, Relative,
-                                                join_source == join_target,
-                                                isouter=not innerjoin))
+            tree_1 = tree_1.join_from(Node, Relative,
+                                      join_source == join_target,
+                                      isouter=not innerjoin)
 
         tree_1 = tree_1.add_columns(tree_1_relative.id.label(relative_label))
 

@@ -19,7 +19,7 @@ def print_stats():
 
     select_nvalues = sa.select(Option.section, Option.option,
                                sa.func.count().label('n'))\
-                     .select_from(sa.join(Option, Value))\
+                     .join_from(Option, Value)\
                      .group_by(Option.section, Option.option)\
                      .order_by('section', sa.desc('n'))
 
