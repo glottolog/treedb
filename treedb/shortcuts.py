@@ -7,6 +7,8 @@ import warnings
 
 from . import ENGINE
 
+from . import backend as _backend
+
 __all__ = ['pd_read_sql',
            'pd_read_json_lines']
 
@@ -39,7 +41,8 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
 
         sql = queries.get_query()
 
-    return PANDAS.read_sql_query(sql, *args, con=con, **kwargs)
+    with _backend.connect(con) as conn:
+        return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 
 def pd_read_json_lines(bind=ENGINE, **kwargs):
