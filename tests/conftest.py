@@ -86,3 +86,10 @@ def treedb(bare_treedb):
                      exclude_raw=pytest.FLAGS.exclude_raw)
     treedb = bare_treedb
     return treedb
+
+
+@pytest.fixture(scope='session')
+def treedb_raw(treedb):
+    import treedb.raw
+
+    return treedb.raw
