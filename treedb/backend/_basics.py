@@ -85,13 +85,13 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
     return ENGINE
 
 
-def connect(engine_or_conn=ENGINE):
-    if isinstance(engine_or_conn, sa.engine.base.Connection):
-        log.debug('nested connect (no-op): %r', engine_or_conn)
-        return _tools.nullcontext(engine_or_conn)
+def connect(bind=ENGINE):
+    if isinstance(bind, sa.engine.base.Connection):
+        log.debug('nested connect (no-op): %r', bind)
+        return _tools.nullcontext(bind)
 
-    log.debug('engine connect: %r', engine_or_conn)
-    conn = engine_or_conn.connect()
+    log.debug('engine connect: %r', bind)
+    conn = bind.connect()
     log.debug('conn: %r', conn)
     return conn
 

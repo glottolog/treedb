@@ -83,29 +83,13 @@ def load(filename=ENGINE, repo_root=None, *,
         pdc = Producer.get_producer(bind=engine)
         Producer.log_producer(pdc)
     else:
-        dataset = _load(metadata, engine=engine, root=root, 
+        dataset = _load(metadata, bind=engine, root=root,
                         from_raw=from_raw, exclude_raw=exclude_raw,
                         exclude_views=exclude_views)
         log.info('database loaded')
         Dataset.log_dataset(dataset)
 
     return engine
-
-
-@contextlib.contextmanager
-def begin(*, bind, pragma_bulk_insert=True):
-    """Enter transaction: log boundaries, apply insert optimization, return connection."""
-    with bind.begin() as conn:
-        dbapi_conn = conn.connection.connection
-        log.debug('begin transaction on %r', dbapi_conn)
-
-        if pragma_bulk_insert:
-            conn.execute(sa.text('PRAGMA synchronous = OFF'))
-            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
-
-        yield conn
-
-    log.debug('end transaction on %r', dbapi_conn)
 
 
 def create_tables(metadata, *, conn, exclude_raw, exclude_views):
@@ -137,12 +121,28 @@ def create_tables(metadata, *, conn, exclude_raw, exclude_views):
     metadata.create_all(bind=conn)
 
 
-def _load(metadata, *, engine, root, from_raw, exclude_raw, exclude_views):
+@contextlib.contextmanager
+def begin(*, bind, pragma_bulk_insert=True):
+    """Enter transaction: log boundaries, apply insert optimization, return connection."""
+    with _backend.connect(bind) as conn, conn.begin():
+        dbapi_conn = conn.connection.connection
+        log.debug('begin transaction on %r', dbapi_conn)
+
+        if pragma_bulk_insert:
+            conn.execute(sa.text('PRAGMA synchronous = OFF'))
+            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
+
+        yield conn
+
+    log.debug('end transaction on %r', dbapi_conn)
+
+
+def _load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     log.debug('start load timer')
     start = time.time()
 
     log.info('create %d tables from %r', len(metadata.tables), metadata)
-    with begin(bind=engine) as conn:
+    with begin(bind=bind) as conn:
         create_tables(metadata, conn=conn, exclude_raw=exclude_raw, exclude_views=exclude_views)
 
     log.info('record git commit in %r', root)
@@ -150,23 +150,23 @@ def _load(metadata, *, engine, root, from_raw, exclude_raw, exclude_views):
     Dataset.log_dataset(dataset)
 
     log.info('write %r', Producer.__tablename__)
-    with begin(bind=engine) as conn:
+    with begin(bind=bind) as conn:
         write_producer(conn, name=__package__.partition('.')[0])
 
     if not exclude_raw:
         log.info('load raw')
-        with begin(bind=engine) as conn:
+        with begin(bind=bind) as conn:
             load_raw(conn, root=root)
 
     if not (from_raw or exclude_raw):  # pragma: no cover
         warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.info('load languoids')
-    with begin(bind=engine) as conn:
+    with begin(bind=bind) as conn:
         load_languoids(conn, root=root, from_raw=from_raw)
 
     log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
-    with begin(bind=engine) as conn:
+    with begin(bind=bind) as conn:
         write_dataset(conn, dataset=dataset)
 
     walltime = datetime.timedelta(seconds=time.time() - start)
