@@ -96,22 +96,22 @@ def load(filename=ENGINE, repo_root=None, *,
         if engine.file_size():
             warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
-    else:
-        log.info('use present %r', engine)
 
-    if dataset is None or rebuild:
         dataset = _load(metadata,
                         bind=engine,
                         root=root,
                         from_raw=from_raw,
                         exclude_raw=exclude_raw,
                         exclude_views=exclude_views)
+
         log.info('database loaded')
         Dataset.log_dataset(dataset)
     else:
-        Dataset.log_dataset(ds)
-        pdc = Producer.get_producer(bind=engine)
-        Producer.log_producer(pdc)
+        log.info('use present %r', engine)
+        Dataset.log_dataset(dataset)
+
+    pdc = Producer.get_producer(bind=engine)
+    Producer.log_producer(pdc)
 
     return engine
 
