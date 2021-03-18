@@ -48,7 +48,7 @@ def get_from_raw(from_raw, *, exclude_raw):
     return from_raw
 
 
-def get_engine(filename_or_engine):
+def get_engine(filename_or_engine, *, require):
     if hasattr(filename_or_engine, 'execute'):
         return filename_or_engine
     return _backend.set_engine(filename_or_engine, require=require)
@@ -85,7 +85,7 @@ def main(filename=ENGINE, repo_root=None, *,
 
     from_raw = get_from_raw(from_raw, exclude_raw=exclude_raw)
 
-    engine = get_engine(filename)
+    engine = get_engine(filename, require=require)
 
     dataset = get_dataset(engine,
                           exclude_raw=exclude_raw,
