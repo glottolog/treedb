@@ -17,6 +17,8 @@ ARGS = ['-s',
         #'--force-rebuild',
         #'--exclude-raw',
         #'--loglevel-debug',
+        #'--log-sql',
+        #'-W', 'error',
         ]
 
 if 'idlelib' in sys.modules:
