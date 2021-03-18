@@ -312,8 +312,8 @@ def get_query(*, ordered='id', separator=', '):
                                                subc.languoid_id == Languoid.id))\
                       .outerjoin(famc, sa.and_(famc.kind == 'family',
                                                famc.languoid_id == Languoid.id))\
-                      .outerjoin(sa.join(Endangerment, EndangermentSource)
-                                 .outerjoin(sa.join(e_bibitem, e_bibfile)))\
+                      .outerjoin(sa.join(Endangerment, EndangermentSource))\
+                      .outerjoin(sa.join(e_bibitem, e_bibfile))\
                       .outerjoin(EthnologueComment)\
                       .outerjoin(IsoRetirement)
 
