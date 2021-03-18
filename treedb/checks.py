@@ -68,9 +68,12 @@ class Check(object):
         raise NotImplementedError
 
     def validate(self):
+        query = sa.select(sa.func.count())\
+                .select_from(self.query.subquery())
+
         with self.session as session:
-            query = sa.select(sa.func.count()).select_from(self.query)
             self.invalid_count = session.execute(query).scalar()
+
         log.debug('invalid count: %d', self.invalid_count)
         print(self)
 
