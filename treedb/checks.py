@@ -114,6 +114,7 @@ def valid_glottocode(*, pattern=r'^[a-z0-9]{4}\d{4}$'):
            .where(~Languoid.id.regexp_match(pattern))\
            .order_by('id')
 
+
 @check
 @docformat
 def valid_iso639_3(*, pattern=r'^[a-z]{3}$'):
@@ -206,15 +207,15 @@ def family_languages():
            .filter_by(level=FAMILY)\
            .order_by('id')\
            .where(~Languoid.name.startswith('Unclassified '))\
-           .where(~sa.select(Family)\
-                  .filter_by(level=FAMILY)\
+           .where(~sa.select(Family)
+                  .filter_by(level=FAMILY)
                   .where(Family.name.in_(SPECIAL_FAMILIES))
                   .join(tree, Family.id == tree.c.parent_id)
                   .filter_by(child_id=Languoid.id, terminal=True)
                   .exists())\
            .where(sa.select(sa.func.count())
-                  .select_from(Child)\
-                  .filter_by(level=LANGUAGE)\
+                  .select_from(Child)
+                  .filter_by(level=LANGUAGE)
                   .join(tree, Child.id == tree.c.child_id)
                   .filter_by(parent_id=Languoid.id)
                   .scalar_subquery() < 2)

@@ -9,5 +9,5 @@ from ._basics import set_engine, connect, scalar, iterrows, expression_compile
 
 __all__ = ['sqlparse',
            'set_engine', 'connect',
-           'scalar', 'iterrows', 
+           'scalar', 'iterrows',
            'expression_compile']

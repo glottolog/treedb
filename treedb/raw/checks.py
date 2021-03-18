@@ -6,8 +6,6 @@ import csv23
 
 import sqlalchemy as sa
 
-from .. import ENGINE, ROOT
-
 from .. import queries as _queries
 
 from .models import File, Option, Value

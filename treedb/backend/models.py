@@ -5,8 +5,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .. import (ENGINE,
-                REGISTRY as registry)
+from .. import REGISTRY as registry
 
 from . import iterrows
 

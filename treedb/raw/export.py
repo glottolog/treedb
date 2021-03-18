@@ -47,7 +47,9 @@ def write_raw_csv(filename=None, *,
                               dialect=dialect, encoding=encoding)
 
 
-def write_files(root=ROOT, *, replace=False,
+def write_files(root=ROOT, *,
+                bind=ENGINE,
+                replace=False,
                 progress_after=_tools.PROGRESS_AFTER):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write from raw records to tree')

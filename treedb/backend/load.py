@@ -10,7 +10,7 @@ import warnings
 import sqlalchemy as sa
 
 from .. import (ENGINE, ROOT,
-                REGISTRY  as registry)
+                REGISTRY as registry)
 
 from .. import files as _files
 from .. import tools as _tools

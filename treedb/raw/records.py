@@ -121,7 +121,7 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
 
 def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
-    row_num  = sa.func.row_number().over(order_by=key_column).label('row_num')
+    row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_all_keys = sa.select(key_column.label('key'), row_num)\
                       .alias('key_ord')
 

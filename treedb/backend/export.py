@@ -16,7 +16,7 @@ from .. import ENGINE, REGISTRY
 
 from .. import tools as _tools
 
-from . import connect
+from . import set_engine, connect
 
 __all__ = ['backup',
            'dump_sql',

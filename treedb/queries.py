@@ -94,7 +94,6 @@ def write_csv(query=None, filename=None, *, verbose=False,
                                autocompress=True)
 
 
-
 def hash_csv(query=None, *,
              raw=False, name=None,
              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):

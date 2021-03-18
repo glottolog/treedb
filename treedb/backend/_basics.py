@@ -17,9 +17,9 @@ from .. import tools as _tools
 from . import sqlparse
 
 __all__ = ['set_engine',
-           'connect'
+           'connect',
            'scalar',
-           'iterrows',]
+           'iterrows']
 
 
 log = logging.getLogger(__name__)
