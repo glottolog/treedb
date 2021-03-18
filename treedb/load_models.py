@@ -38,13 +38,10 @@ class ModelMap(dict):
                  model=None, key_to_params=None,
                  log_insert=True):
         super().__init__(items)
-
         if model is not None:
             self.model = model
-
         if key_to_params is not None:
             self.key_to_params = key_to_params
-
         self.log_insert = log_insert
 
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
