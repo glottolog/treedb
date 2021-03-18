@@ -130,10 +130,11 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
+
     with _backend.connect(bind) as conn,\
          contextlib.closing(conn.execute(select_keys)) as cursor:
-            for k, in cursor:
-                yield k
+        for k, in cursor:
+            yield k
 
 
 # Python 3.6 compat
@@ -143,8 +144,9 @@ def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
     log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
-    with _backend.connect(bind) as conn:
-        with contextlib.closing(conn.execute(select_keys)) as cursor:
-            for keys in iter(functools.partial(cursor.fetchmany, size), []):
-                last, = keys[-1]
-                yield last
+
+    with _backend.connect(bind) as conn,\
+         contextlib.closing(conn.execute(select_keys)) as cursor:
+        for keys in iter(functools.partial(cursor.fetchmany, size), []):
+            last, = keys[-1]
+            yield last
