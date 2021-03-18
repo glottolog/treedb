@@ -54,14 +54,18 @@ def itervalues(cfg, file_id, options):
 
 def load(root, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
+
     options = Options(conn=conn, model=Option)
+
     insert_value = functools.partial(conn.execute, sa.insert(Value))
+
     for path_tuple, dentry, cfg in _files.iterfiles(root):
-        sha256 = _tools.sha256sum(dentry.path, raw=True).hexdigest()
+        sha256 = _tools.sha256sum(dentry.path, raw=True)
+
         file_params = {'glottocode': path_tuple[-1],
                        'path': '/'.join(path_tuple),
                        'size': dentry.stat().st_size,
-                       'sha256': sha256}
+                       'sha256': sha256.hexdigest()}
         file_id, = insert_file(file_params).inserted_primary_key
 
         value_params = list(itervalues(cfg, file_id, options))
