@@ -5,6 +5,10 @@ from sqlalchemy.orm import (registry as _registry,
 
 from . import proxies as _proxies
 
+CONFIG = 'treedb.ini'
+
+DEFAULT_ROOT = './glottolog/'
+
 FUTURE = True
 
 ENGINE = _proxies.SQLiteEngineProxy(future=FUTURE)
@@ -15,4 +19,7 @@ REGISTRY = _registry()
 
 SESSION = _sessionmaker(bind=ENGINE, future=FUTURE)
 
-__all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'SESSION']
+__all__ = ['CONFIG', 'DEFAULT_ROOT',
+           'ENGINE', 'ROOT',
+           'REGISTRY',
+           'SESSION']

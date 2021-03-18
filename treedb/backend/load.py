@@ -20,7 +20,7 @@ from .. import backend as _backend
 
 from .models import Dataset, Producer
 
-__all__ = ['load']
+__all__ = ['main']
 
 
 log = logging.getLogger(__name__)
@@ -72,10 +72,11 @@ def get_dataset(engine, *, exclude_raw, force_rebuild):
     return dataset
 
 
-def load(filename=ENGINE, repo_root=None, *,
+def main(filename=ENGINE, repo_root=None, *,
          treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
-         exclude_raw=False, from_raw=None,
+         from_raw=None,
+         exclude_raw=False,
          exclude_views=False,
          force_rebuild=False,
          metadata=registry.metadata):
@@ -97,12 +98,12 @@ def load(filename=ENGINE, repo_root=None, *,
             warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
 
-        dataset = _load(metadata,
-                        bind=engine,
-                        root=root,
-                        from_raw=from_raw,
-                        exclude_raw=exclude_raw,
-                        exclude_views=exclude_views)
+        dataset = load(metadata,
+                       bind=engine,
+                       root=root,
+                       from_raw=from_raw,
+                       exclude_raw=exclude_raw,
+                       exclude_views=exclude_views)
 
         log.info('database loaded')
         Dataset.log_dataset(dataset)
@@ -161,7 +162,7 @@ def begin(*, bind, pragma_bulk_insert=True):
     log.debug('end transaction on %r', dbapi_conn)
 
 
-def _load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
+def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     log.debug('start load timer')
     start = time.time()
 

@@ -2,18 +2,15 @@
 
 """Load Glottolog lanuoid tree md.ini files into SQLite3 database."""
 
-CONFIG = 'treedb.ini'
-
-DEFAULT_ROOT = './glottolog/'
-
-from ._basics import (ENGINE, ROOT, REGISTRY,
+from ._basics import (CONFIG, DEFAULT_ROOT,
+                      ENGINE, ROOT, REGISTRY,
                       SESSION as Session)
 
 from .backend import set_engine, connect, scalar, iterrows
 
 from .backend.export import backup, dump_sql, csv_zipfile as export
 
-from .backend.load import load
+from .backend.load import main as load
 
 from .backend.models import Dataset, Producer
 
