@@ -6,7 +6,7 @@ import sqlalchemy as sa
 
 from .. import ENGINE, REGISTRY
 
-from . import sqlparse, expression_compile
+from .. import backend as _backend
 
 __all__ = ['print_schema',
            'print_query_sql',
@@ -39,9 +39,9 @@ def get_query_sql(query=None, *, literal_binds=True, pretty=False):
 
         query = queries.get_query()
 
-    compiled = expression_compile(query, literal_binds=literal_binds)
+    compiled = _backend.expression_compile(query, literal_binds=literal_binds)
     result = compiled.string
 
-    if pretty and sqlparse is not None:
-        result = sqlparse.format(result, reindent=True)
+    if pretty and _backend.sqlparse is not None:
+        result = _backend.sqlparse.format(result, reindent=True)
     return result

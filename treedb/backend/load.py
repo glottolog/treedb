@@ -16,7 +16,7 @@ from .. import files as _files
 from .. import tools as _tools
 from .. import views as _views
 
-from . import set_engine
+from .. import backend as _backend
 
 from .models import Dataset, Producer
 
@@ -53,7 +53,7 @@ def load(filename=ENGINE, repo_root=None, *,
     if hasattr(filename, 'execute'):
         engine = filename
     else:
-        engine = set_engine(filename, require=require)
+        engine = _backend.set_engine(filename, require=require)
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')

@@ -16,7 +16,7 @@ from .. import ENGINE, REGISTRY
 
 from .. import tools as _tools
 
-from . import set_engine, connect
+from .. import backend as _backend
 
 __all__ = ['backup',
            'dump_sql',
@@ -60,7 +60,7 @@ def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
 
     log.info('database backup complete')
     if as_new_engine:
-        set_engine(result)
+        _backend.set_engine(result)
     return result
 
 
@@ -114,7 +114,7 @@ def csv_zipfile(filename=None, *, exclude_raw=False, metadata=REGISTRY.metadata,
     skip = {'_file', '_option', '_value'} if exclude_raw else {}
 
     log.info('write %r', filename)
-    with connect(engine) as conn,\
+    with _backend.connect(engine) as conn,\
          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in sorted_tables:
             if table.name in skip:

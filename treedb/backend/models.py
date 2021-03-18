@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 from .. import REGISTRY as registry
 
-from . import iterrows
+from .. import backend as _backend
 
 __all__ = ['Dataset', 'Producer']
 
@@ -37,7 +37,7 @@ class Dataset:
         log.debug('read %r from %r', table, bind)
 
         try:
-            result, = iterrows(sa.select(cls), mappings=True, bind=bind)
+            result, = _backend.iterrows(sa.select(cls), mappings=True, bind=bind)
         except sa.exc.OperationalError as e:
             if 'no such table' in e.orig.args[0]:
                 pass
@@ -83,7 +83,7 @@ class Producer:
 
     @classmethod
     def get_producer(cls, *, bind):
-        result, = iterrows(sa.select(cls), mappings=True, bind=bind)
+        result, = _backend.iterrows(sa.select(cls), mappings=True, bind=bind)
         return result
 
     @classmethod
