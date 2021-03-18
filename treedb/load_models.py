@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 
 class ModelMap(dict):
+    """Insert model (derive params f/ key), add ``key -> primary_key`` to map."""
 
     model = None
 
@@ -79,6 +80,7 @@ def load(languoids, conn):
     bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
     class BibitemMap(ModelMap):
+        # using closure over bibfile_ids
 
         model = Bibitem
 
@@ -90,13 +92,14 @@ def load(languoids, conn):
         def pop_params(self, params):
             return self[params.pop('bibfile'), params.pop('bibkey')]
 
-    bibitem_ids = BibitemMap(conn=conn, log_insert=False)
+    bibitem_ids = BibitemMap(conn=conn, log_insert=False)  # silence bibitems
 
     altnameprovider_ids = ModelMap(conn=conn, model=AltnameProvider)
 
     identifiersite_ids = ModelMap(conn=conn, model=IdentifierSite)
 
     class EndangermentSourceMap(ModelMap):
+        # using closure over bibitem_ids
 
         model = EndangermentSource
 
