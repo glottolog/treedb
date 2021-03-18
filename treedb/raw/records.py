@@ -34,27 +34,25 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
     select_files = sa.select(File.path)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
     select_values = sa.select(Value.file_id, Option.section, Option.option,
-                               Option.is_lines, Value.value)
-
-    values_from = sa.join(Value, Option)
+                               Option.is_lines, Value.value)\
+                    .join_from(Value, Option)
 
     if ordered in (True, False, 'file'):
         key_column = File.id
         value_key = Value.file_id
-    elif ordered == 'id':
-        values_from = values_from.join(File)
-        key_column = value_key = File.glottocode
-    elif ordered == 'path':
-        values_from = values_from.join(File)
-        key_column = value_key = File.path
+    elif ordered in ('id', 'path'):
+        select_values = select_values.join(File)
+        key_column = File.glottocode if ordered == 'id' else File.path
+        value_key = key_column
     else:
         raise ValueError(f'ordered={ordered!r} not implememted')
     log.info('ordered: %r', ordered)
 
     select_files = select_files.order_by(key_column)
 
-    select_values = select_values.select_from(values_from)\
-                    .order_by(value_key, 'section', Value.line, 'option')
+    select_values = select_values\
+                    .order_by(value_key, 'section',
+                              Value.line, 'option')
 
     if skip_unknown:
         select_values = select_values.where(Option.is_lines != None)
