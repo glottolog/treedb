@@ -173,6 +173,7 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
                       exclude_views=exclude_views)
 
     log.info('record git commit in %r', root)
+    # pre-create dataset to added as final item marking completeness
     dataset = make_dataset(root, exclude_raw=exclude_raw)
     Dataset.log_dataset(dataset)
 
