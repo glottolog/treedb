@@ -298,23 +298,24 @@ def get_query(*, ordered='id', separator=', '):
         + [endangerment_source]
         + get_cols(EthnologueComment, label='elcomment_{name}')
         + get_cols(IsoRetirement, label='iso_retirement_{name}')
-        + [iso_retirement_change_to])
+        + [iso_retirement_change_to])\
+        .select_from(Languoid)
 
-    froms = Languoid.__table__
     for s, (i, is_) in idents.items():
-        froms = froms.outerjoin(sa.join(i, is_, i.site_id == is_.id),
-                                sa.and_(is_.name == s,
-                                        i.languoid_id == Languoid.id))
-    froms = froms.outerjoin(subc, sa.and_(subc.kind == 'sub',
-                                          subc.languoid_id == Languoid.id))\
-            .outerjoin(famc, sa.and_(famc.kind == 'family',
-                                     famc.languoid_id == Languoid.id))\
-            .outerjoin(sa.join(Endangerment, EndangermentSource)
-                       .outerjoin(sa.join(e_bibitem, e_bibfile)))\
-            .outerjoin(EthnologueComment)\
-            .outerjoin(IsoRetirement)
+        select_languoid = select_languoid\
+                          .outerjoin(sa.join(i, is_, i.site_id == is_.id),
+                                     sa.and_(is_.name == s,
+                                             i.languoid_id == Languoid.id))
 
-    select_languoid = select_languoid.select_from(froms)
+    select_languoid = select_languoid\
+                      .outerjoin(subc, sa.and_(subc.kind == 'sub',
+                                               subc.languoid_id == Languoid.id))\
+                      .outerjoin(famc, sa.and_(famc.kind == 'family',
+                                               famc.languoid_id == Languoid.id))\
+                      .outerjoin(sa.join(Endangerment, EndangermentSource)
+                                 .outerjoin(sa.join(e_bibitem, e_bibfile)))\
+                      .outerjoin(EthnologueComment)\
+                      .outerjoin(IsoRetirement)
 
     select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
 
