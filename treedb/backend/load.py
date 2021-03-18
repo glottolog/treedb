@@ -26,6 +26,52 @@ __all__ = ['load']
 log = logging.getLogger(__name__)
 
 
+def get_root(repo_root, *, default):
+    if repo_root is not None:
+        root = _files.set_root(repo_root, treepath=treepath)
+    else:
+        root = default
+
+    log.info('load database from %r', root)
+    if not root.exists():
+        log.error('root does not exist')
+        raise RuntimeError(f'tree root not found: {root!r}')
+    return root
+
+
+def get_from_raw(from_raw, *, exclude_raw):
+    if exclude_raw and from_raw:
+        log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
+        raise ValueError('exclude_raw and from_raw cannot both be True')
+    elif from_raw is None:
+        from_raw = not exclude_raw
+    return from_raw
+
+
+def get_engine(filename_or_engine):
+    if hasattr(filename_or_engine, 'execute'):
+        return filename_or_engine
+    return _backend.set_engine(filename_or_engine, require=require)
+
+
+def get_dataset(engine, *, exclude_raw, force_rebuild):
+    dataset = None
+
+    if engine.file is None:
+        log.warning('connected to a transient in-memory database')
+        dataset = Dataset.get_dataset(bind=engine, strict=True)
+    elif engine.file_size():
+        dataset = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
+
+        if dataset is None:
+            warnings.warn(f'force delete {engine.file!r}')
+        elif ds.exclude_raw != bool(exclude_raw):
+            dataset = None
+            log.warning('rebuild needed from exclude_raw mismatch')
+
+    return dataset
+
+
 def load(filename=ENGINE, repo_root=None, *,
          treepath=_files.TREE_IN_ROOT,
          require=False, rebuild=False,
@@ -34,43 +80,18 @@ def load(filename=ENGINE, repo_root=None, *,
          force_rebuild=False,
          metadata=registry.metadata):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
-    if repo_root is not None:
-        root = _files.set_root(repo_root, treepath=treepath)
-    else:
-        root = ROOT
+    root = get_root(repo_root, default=ROOT)
 
-    log.info('load database from %r', root)
-    if not root.exists():
-        log.error('root does not exist')
-        raise RuntimeError(f'tree root not found: {root!r}')
+    from_raw = get_from_raw(from_raw, exclude_raw=exclude_raw)
 
-    if exclude_raw and from_raw:
-        log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
-        raise ValueError('exclude_raw and from_raw cannot both be True')
-    elif from_raw is None:
-        from_raw = not exclude_raw
+    engine = get_engine(filename)
 
-    if hasattr(filename, 'execute'):
-        engine = filename
-    else:
-        engine = _backend.set_engine(filename, require=require)
+    dataset = get_dataset(engine,
+                          exclude_raw=exclude_raw,
+                          force_rebuild=force_rebuild)
 
-    if engine.file is None:
-        log.warning('connected to a transient in-memory database')
-
-        ds = Dataset.get_dataset(bind=engine, strict=True)
-    elif engine.file_size():
-        ds = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
-        if ds is None:
-            warnings.warn(f'force delete {engine.file!r}')
-        elif ds.exclude_raw != bool(exclude_raw):
-            ds = None
-            log.warning('rebuild needed from exclude_raw mismatch')
-    else:
-        ds = None
-
-    if ds is None or rebuild:
-        log.info('build new database' if ds is None else 'rebuild database')
+    if dataset is None or rebuild:
+        log.info('build new database' if dataset is None else 'rebuild database')
         engine.dispose()
         if engine.file_size():
             warnings.warn(f'delete present file: {engine.file!r}')
@@ -78,16 +99,19 @@ def load(filename=ENGINE, repo_root=None, *,
     else:
         log.info('use present %r', engine)
 
-    if ds is not None and not rebuild:
-        Dataset.log_dataset(ds)
-        pdc = Producer.get_producer(bind=engine)
-        Producer.log_producer(pdc)
-    else:
-        dataset = _load(metadata, bind=engine, root=root,
-                        from_raw=from_raw, exclude_raw=exclude_raw,
+    if dataset is None or rebuild:
+        dataset = _load(metadata,
+                        bind=engine,
+                        root=root,
+                        from_raw=from_raw,
+                        exclude_raw=exclude_raw,
                         exclude_views=exclude_views)
         log.info('database loaded')
         Dataset.log_dataset(dataset)
+    else:
+        Dataset.log_dataset(ds)
+        pdc = Producer.get_producer(bind=engine)
+        Producer.log_producer(pdc)
 
     return engine
 
@@ -143,7 +167,9 @@ def _load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
 
     log.info('create %d tables from %r', len(metadata.tables), metadata)
     with begin(bind=bind) as conn:
-        create_tables(metadata, conn=conn, exclude_raw=exclude_raw, exclude_views=exclude_views)
+        create_tables(metadata, conn=conn,
+                      exclude_raw=exclude_raw,
+                      exclude_views=exclude_views)
 
     log.info('record git commit in %r', root)
     dataset = make_dataset(root, exclude_raw=exclude_raw)
