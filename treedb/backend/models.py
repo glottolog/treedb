@@ -1,14 +1,14 @@
-# backend_models.py - dataset and producer metadata
+# models.py - dataset and producer metadata
 
 import logging
 import warnings
 
 import sqlalchemy as sa
 
-from . import (ENGINE,
-               REGISTRY as registry)
+from .. import (ENGINE,
+                REGISTRY as registry)
 
-from . import backend as _backend
+from . import iterrows
 
 __all__ = ['Dataset', 'Producer']
 
@@ -38,7 +38,7 @@ class Dataset:
         log.debug('read %r from %r', table, bind)
 
         try:
-            result, = _backend.iterrows(sa.select(cls), mappings=True, bind=bind)
+            result, = iterrows(sa.select(cls), mappings=True, bind=bind)
         except sa.exc.OperationalError as e:
             if 'no such table' in e.orig.args[0]:
                 pass
@@ -84,7 +84,7 @@ class Producer:
 
     @classmethod
     def get_producer(cls, *, bind):
-        result, = _backend.iterrows(sa.select(cls), mappings=True, bind=bind)
+        result, = iterrows(sa.select(cls), mappings=True, bind=bind)
         return result
 
     @classmethod

@@ -28,12 +28,12 @@ def register_view(name, **kwargs):
 def create_all_views(*, clear=False):
     log.debug('run create_view() for %d views in VIEW_REGISTRY', len(VIEW_REGISTRY))
 
-    from . import backend_views
+    from .backend import views as _views
 
     module = importlib.import_module(__name__)
 
     for name, func in VIEW_REGISTRY.items():
-        table = backend_views.view(name, selectable=func(), clear=clear)
+        table = _views.view(name, selectable=func(), clear=clear)
 
         present = hasattr(module, name)
         setattr(module, name, table)

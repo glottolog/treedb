@@ -2,11 +2,14 @@
 
 import sqlalchemy as sa
 
-from . import ENGINE
+from .. import ENGINE
 
 __all__ = ['print_table_sql',
-           'select_table_sql', 'select_table_nrows',
-           'select_tables_nrows', 'select_tables', 'select_views']
+           'select_table_sql',
+           'select_table_nrows',
+           'select_tables_nrows',
+           'select_tables',
+           'select_views']
 
 
 def get_table_name(model_or_table):

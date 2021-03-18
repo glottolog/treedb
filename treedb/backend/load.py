@@ -1,4 +1,4 @@
-# backend_load.py - load sqlite3 database
+# load.py - load sqlite3 database
 
 import contextlib
 import datetime
@@ -9,13 +9,16 @@ import warnings
 
 import sqlalchemy as sa
 
-from . import (ENGINE, ROOT,
-               REGISTRY  as registry)
-from .backend import set_engine
-from .backend_models import Dataset, Producer
-from . import files as _files
-from . import tools as _tools
-from . import views as _views
+from .. import (ENGINE, ROOT,
+                REGISTRY  as registry)
+
+from .. import files as _files
+from .. import tools as _tools
+from .. import views as _views
+
+from . import set_engine
+
+from .models import Dataset, Producer
 
 __all__ = ['load']
 
@@ -88,7 +91,7 @@ def load(filename=ENGINE, repo_root=None, *,
     if not exclude_raw:
         log.debug('import module %s.raw', __package__)
 
-        from . import raw
+        from .. import raw
 
     if ds is not None and not rebuild:
         Dataset.log_dataset(ds)
@@ -98,7 +101,7 @@ def load(filename=ENGINE, repo_root=None, *,
 
     log.debug('import module %s.models_load', __package__)
 
-    from . import models_load
+    from .. import models_load
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
@@ -144,7 +147,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.info('identified dataset')
         Dataset.log_dataset(dataset)
 
-    from . import __version__
+    from .. import __version__
 
     producer = {'name': __package__, 'version': __version__}
     log.info('write %r', Producer.__tablename__)
@@ -163,7 +166,7 @@ def load(filename=ENGINE, repo_root=None, *,
 
     log.debug('import module languoids')
 
-    from . import languoids
+    from .. import languoids
 
     log.info('load languoids')
     with begin() as conn:

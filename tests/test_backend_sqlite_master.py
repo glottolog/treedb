@@ -1,4 +1,4 @@
-# test_sqlite_master.py
+# test_backend_sqlite_master.py
 
 import re
 
@@ -35,7 +35,7 @@ def test_select_tables_nrows(treedb):
 
 
 def test_select_views(treedb):
-    query = treedb.sqlite_master.select_views()
+    query = treedb.backend.sqlite_master.select_views()
     with treedb.connect() as conn:
         names = [n for n, in conn.execute(query)]
 

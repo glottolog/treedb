@@ -5,6 +5,7 @@ import logging
 import os
 
 from . import CONFIG, DEFAULT_ROOT
+
 from . import tools as _tools
 
 __all__ = ['get_default_root',

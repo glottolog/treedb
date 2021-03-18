@@ -1,4 +1,4 @@
-# backend_views - limited sqlalchemy support for views
+# views.py - limited sqlalchemy support for views
 
 """Based on https://github.com/sqlalchemy/sqlalchemy/wiki/Views"""
 
@@ -7,7 +7,7 @@ import logging
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-from . import backend as _backend
+from .. import REGISTRY
 
 __all__ = ['view', 'make_table']
 
@@ -42,7 +42,7 @@ def compile_drop_view(element, compiler, **kwargs):
     return f'\nDROP VIEW {element.name}\n'
 
 
-@sa.event.listens_for(_backend.registry.metadata, 'after_create')
+@sa.event.listens_for(REGISTRY.metadata, 'after_create')
 def after_create(target, bind, **kwargs):
     for name, (create_view, _) in DDL.items():
         if create_view is not None:
@@ -50,7 +50,7 @@ def after_create(target, bind, **kwargs):
             create_view(target, bind)
 
 
-@sa.event.listens_for(_backend.registry.metadata, 'before_drop')
+@sa.event.listens_for(REGISTRY.metadata, 'before_drop')
 def before_drop(target, bind, **kwargs):
     for name, (_, drop_view) in DDL.items():
         if drop_view is not None:

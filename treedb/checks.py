@@ -10,7 +10,9 @@ import sqlalchemy.orm
 
 from . import (ENGINE,
                Session)
-from .backend_models import Dataset
+
+from .backend.models import Dataset
+
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname, AltnameProvider)
