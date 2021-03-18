@@ -17,8 +17,8 @@ __all__ = ['load']
 log = logging.getLogger(__name__)
 
 
-class Options(dict):
-    """Insert optons on demand and cache id and lines config."""
+class OptionMap(dict):
+    """Insert option on demand, add ``(section, option) -> (pk, is_lines)`` to map."""
 
     model = Option
 
@@ -27,7 +27,7 @@ class Options(dict):
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
     def __missing__(self, key):
-        log.debug('insert option %r', key)
+        log.debug('insert option: %r', key)
         section, option = key
         is_lines = _fields.is_lines(section, option)
 
@@ -39,11 +39,11 @@ class Options(dict):
         return result
 
 
-def itervalues(cfg, file_id, options):
+def itervalues(cfg, file_id, option_map):
     get_line = _tools.next_count(start=1)
     for section, sec in cfg.items():
         for option, value in sec.items():
-            option_id, is_lines = options[section, option]
+            option_id, is_lines = option_map[section, option]
             if is_lines:
                 for v in value.strip().splitlines():
                     yield {'file_id': file_id, 'option_id': option_id,
@@ -56,7 +56,7 @@ def itervalues(cfg, file_id, options):
 def load(root, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
 
-    options = Options(conn=conn)
+    option_id_is_lines = OptionMap(conn=conn)
 
     insert_value = functools.partial(conn.execute, sa.insert(Value))
 
@@ -69,6 +69,6 @@ def load(root, conn):
                        'sha256': sha256.hexdigest()}
         file_id, = insert_file(file_params).inserted_primary_key
 
-        value_params = list(itervalues(cfg, file_id, options))
+        value_params = list(itervalues(cfg, file_id, option_id_is_lines))
 
         insert_value(value_params)
