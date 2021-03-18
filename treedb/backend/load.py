@@ -149,7 +149,7 @@ def load(filename=ENGINE, repo_root=None, *,
 
     from .. import __version__
 
-    producer = {'name': __package__, 'version': __version__}
+    producer = {'name': __package__.partition('.')[0], 'version': __version__}
     log.info('write %r', Producer.__tablename__)
     Producer.log_producer(producer)
     with begin() as conn:
