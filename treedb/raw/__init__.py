@@ -1,6 +1,6 @@
 # treedb.raw - ini content as (path, section, option, line, value) rows
 
-from .load import load
+from .load_models import load
 
 from .models import File, Option, Value
 

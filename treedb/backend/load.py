@@ -99,9 +99,9 @@ def load(filename=ENGINE, repo_root=None, *,
         Producer.log_producer(pdc)
         return engine
 
-    log.debug('import module %s.models_load', __package__)
+    log.debug('import module %s.load_models', __package__)
 
-    from .. import models_load
+    from .. import load_models
 
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
@@ -174,7 +174,7 @@ def load(filename=ENGINE, repo_root=None, *,
         log.debug('root_or_bind: %r', root_or_bind)
 
         pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
-        models_load.load(pairs, conn)
+        load_models.load(pairs, conn)
 
     log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
     with begin() as conn:
