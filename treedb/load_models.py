@@ -41,10 +41,8 @@ class ModelMap(dict):
 
         if model is not None:
             self.model = model
-
         if key_to_params is not None:
             self.key_to_params = key_to_params
-
         self.log_insert = log_insert
 
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
@@ -59,6 +57,35 @@ class ModelMap(dict):
 
         self[key] = pk
         return pk
+
+
+class BibitemMap(ModelMap):
+
+    model = Bibitem
+
+    @staticmethod
+    def key_to_params(key):
+        bibfile_name, bibkey = key
+        return {'bibfile_id': bibfile_ids[bibfile_name], 'bibkey': bibkey}
+
+    def pop_params(self, params):
+        return self[params.pop('bibfile'), params.pop('bibkey')]
+
+
+class EndangermentSourceMap(ModelMap):
+
+    model = EndangermentSource
+
+    @staticmethod
+    def key_to_params(key):
+        params = dict(key)
+        if params.get('bibfile') is not None:
+            params['bibitem_id'] = bibitem_ids.pop_params(params)
+        return params
+
+    @staticmethod
+    def params_to_key(params):
+        return tuple(sorted(params.items()))
 
 
 def load(languoids, conn):
@@ -81,38 +108,11 @@ def load(languoids, conn):
 
     bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
-    class BibitemMap(ModelMap):
-
-        model = Bibitem
-
-        @staticmethod
-        def key_to_params(key):
-            bibfile_name, bibkey = key
-            return {'bibfile_id': bibfile_ids[bibfile_name], 'bibkey': bibkey}
-
-        def pop_params(self, params):
-            return self[params.pop('bibfile'), params.pop('bibkey')]
-
     bibitem_ids = BibitemMap(conn=conn, log_insert=False)
 
     altnameprovider_ids = ModelMap(conn=conn, model=AltnameProvider)
 
     identifiersite_ids = ModelMap(conn=conn, model=IdentifierSite)
-
-    class EndangermentSourceMap(ModelMap):
-
-        model = EndangermentSource
-
-        @staticmethod
-        def key_to_params(key):
-            params = dict(key)
-            if params.get('bibfile') is not None:
-                params['bibitem_id'] = bibitem_ids.pop_params(params)
-            return params
-
-        @staticmethod
-        def params_to_key(params):
-            return tuple(sorted(params.items()))
 
     es_ids = EndangermentSourceMap(conn=conn) 
 
