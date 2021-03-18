@@ -209,7 +209,7 @@ def make_dataset(root, *, exclude_raw):
         dataset = {'title': 'Glottolog treedb',
                    'git_commit': run(['git', 'rev-parse', 'HEAD']),
                    'git_describe': run(['git', 'describe', '--tags', '--always']),
-                   # neither changes in index nor untracked files
+                   # clean = neither changes in index nor untracked files
                    'clean': not run(['git', 'status', '--porcelain']),
                    'exclude_raw': exclude_raw}
     except Exception as e:  # pragma: no cover
