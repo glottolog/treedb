@@ -8,7 +8,7 @@ from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
 
 from sqlalchemy.orm import relationship, aliased
 
-from .backend import registry
+from . import REGISTRY as registry
 
 __all__ = ['LEVEL', 'Languoid']
 
