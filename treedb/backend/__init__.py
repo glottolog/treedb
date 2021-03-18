@@ -5,7 +5,9 @@ try:
 except ImportError:  # pragma: no cover
     sqlparse = None
 
-from ._basics import set_engine, scalar, iterrows, connect
+from ._basics import set_engine, connect, scalar, iterrows, expression_compile
 
 __all__ = ['sqlparse',
-           'set_engine', 'scalar', 'iterrows', 'connect']
+           'set_engine', 'connect',
+           'scalar', 'iterrows', 
+           'expression_compile']

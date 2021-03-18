@@ -387,6 +387,7 @@ def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
 @_views.register_view('path_json', as_rows=True, load_json=False)
 def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                    path_label='path', languoid_label='json'):
+    # Windows, Python < 3.9: https://www.sqlite.org/download.html
     json_object = sa.func.json_object
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object

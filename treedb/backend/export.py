@@ -14,9 +14,9 @@ import sqlalchemy as sa
 
 from .. import ENGINE, REGISTRY
 
-from . import connect
-
 from .. import tools as _tools
+
+from . import connect
 
 __all__ = ['backup',
            'dump_sql',
@@ -48,15 +48,15 @@ def backup(filename=None, *, pages=0, as_new_engine=False, engine=ENGINE):
     def progress(status, remaining, total):
         log.info('%d of %d pages copied', total - remaining, total)
 
-    with contextlib.closing(engine.raw_connection()) as source,\
-         contextlib.closing(result.raw_connection()) as dest:
-        log.debug('sqlite3.backup(%r)', dest.connection)
+    with contextlib.closing(engine.raw_connection()) as dbapi_source,\
+         contextlib.closing(result.raw_connection()) as dbapi_dest:
+        log.debug('sqlite3.backup(%r)', dbapi_dest.connection)
 
-        dest.execute('PRAGMA synchronous = OFF')
-        dest.execute('PRAGMA journal_mode = MEMORY')
+        dbapi_dest.execute('PRAGMA synchronous = OFF')
+        dbapi_dest.execute('PRAGMA journal_mode = MEMORY')
 
-        with dest.connection as dbapi_conn:
-            source.backup(dbapi_conn, pages=pages, progress=progress)
+        with dbapi_dest.connection as dbapi_conn:
+            dbapi_source.backup(dbapi_conn, pages=pages, progress=progress)
 
     log.info('database backup complete')
     if as_new_engine:
@@ -122,7 +122,7 @@ def csv_zipfile(filename=None, *, exclude_raw=False, metadata=REGISTRY.metadata,
                 continue
 
             log.info('export table %r', table.name)
-            rows = conn.execute(table.select())
+            rows = conn.execute(sa.select(table))
             header = list(rows.keys())
 
             date_time = datetime.datetime.now().timetuple()[:6]

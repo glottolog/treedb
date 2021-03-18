@@ -72,7 +72,7 @@ def view(name, selectable, *, clear=False):
 
 def make_table(selectable, *, name='view_table'):
     selectable = selectable.alias()
-    result = sa.table(name)
+    table = sa.table(name)
     for c in selectable.c:
-        c._make_proxy(result)
-    return result
+        c._make_proxy(table)
+    return table

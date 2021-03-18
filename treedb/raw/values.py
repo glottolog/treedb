@@ -8,10 +8,13 @@ import csv23
 import sqlalchemy as sa
 
 from .. import ENGINE, ROOT
+
 from .. import files as _files
 from .. import queries as _queries
 from .. import tools as _tools
+
 from . import records as _records
+
 from .models import File, Option, Value
 
 __all__ = ['print_stats',
@@ -55,7 +58,8 @@ def checksum(*, weak=False, name=None,
         select_rows = select_rows.order_by(*order)
 
     else:
-        select_rows = sa.select(File.path, File.sha256).order_by('path')
+        select_rows = sa.select(File.path, File.sha256)\
+                      .order_by('path')
 
     hash_ = _queries.hash_csv(select_rows, raw=True, name=name,
                                dialect=dialect, encoding=encoding)

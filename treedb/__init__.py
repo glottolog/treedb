@@ -9,7 +9,7 @@ DEFAULT_ROOT = './glottolog/'
 from ._basics import (ENGINE, ROOT, REGISTRY,
                       SESSION as Session)
 
-from .backend import set_engine, scalar, iterrows, connect
+from .backend import set_engine, connect, scalar, iterrows
 
 from .backend.export import backup, dump_sql, csv_zipfile as export
 
@@ -19,7 +19,7 @@ from .backend.models import Dataset, Producer
 
 from .backend.sqlite_master import print_table_sql, select_tables_nrows
 
-from .backend.tools import print_query_sql, print_schema
+from .backend.tools import print_schema, print_query_sql
 
 from .checks import check
 
@@ -46,12 +46,12 @@ from .queries import (print_rows, write_csv, hash_csv,
 from .shortcuts import pd_read_sql
 
 __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
-           'set_engine', 'scalar', 'iterrows', 'connect',
+           'set_engine', 'connect', 'scalar', 'iterrows',
            'backup', 'dump_sql', 'export',
            'load',
            'Dataset', 'Producer',
            'print_table_sql', 'select_tables_nrows',
-           'print_query_sql', 'print_schema',
+           'print_schema', 'print_query_sql',
            'check',
            'configure',
            'set_root', 'iterfiles',

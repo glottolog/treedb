@@ -10,7 +10,6 @@ import sqlalchemy as sa
 from .. import ENGINE
 
 from .. import backend as _backend
-from ..backend import tools as _backend_tools
 from .. import tools as _tools
 
 from .models import File, Option, Value
@@ -68,7 +67,7 @@ def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
     with _backend.connect(bind) as conn:
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
-                where = _backend_tools.expression_compile(in_slice(key_column))
+                where = _backend.expression_compile(in_slice(key_column))
                 log.debug('fetch rows %r', where.string)
 
             files = conn.execute(select_files.where(in_slice(key_column))).all()
@@ -137,6 +136,7 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
                 yield k
 
 
+# Python 3.6 compat
 def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     select_keys = sa.select(key_column.label('key'))\
                   .order_by(key_column)
