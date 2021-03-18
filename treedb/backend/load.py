@@ -78,6 +78,46 @@ def load(filename=ENGINE, repo_root=None, *,
     else:
         log.info('use present %r', engine)
 
+    if ds is not None and not rebuild:
+        Dataset.log_dataset(ds)
+        pdc = Producer.get_producer(bind=engine)
+        Producer.log_producer(pdc)
+    else:
+        dataset = _load(metadata, engine=engine, root=root, 
+                        from_raw=from_raw, exclude_raw=exclude_raw,
+                        exclude_views=exclude_views)
+        log.info('database loaded')
+        Dataset.log_dataset(dataset)
+
+    return engine
+
+
+@contextlib.contextmanager
+def begin(*, bind, pragma_bulk_insert=True):
+    """Enter transaction: log boundaries, apply insert optimization, return connection."""
+    with bind.begin() as conn:
+        dbapi_conn = conn.connection.connection
+        log.debug('begin transaction on %r', dbapi_conn)
+
+        if pragma_bulk_insert:
+            conn.execute(sa.text('PRAGMA synchronous = OFF'))
+            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
+
+        yield conn
+
+    log.debug('end transaction on %r', dbapi_conn)
+
+
+def create_tables(metadata, *, conn, exclude_raw, exclude_views):
+    # import here to register models for create_all()
+    log.debug('import module %s.models', __package__)
+    from .. import models
+
+    if not exclude_raw:
+        log.debug('import module %s.raw', __package__)
+
+        from .. import raw
+
     if not exclude_views:
         log.info('prepare %d views', len(_views.VIEW_REGISTRY))
 
@@ -87,49 +127,55 @@ def load(filename=ENGINE, repo_root=None, *,
         log.exception('error running %s.views.create_all_views(clear=%r)',
                       __package__, exclude_views)
 
-    # import here to register models for create_all()
-    if not exclude_raw:
-        log.debug('import module %s.raw', __package__)
-
-        from .. import raw
-
-    if ds is not None and not rebuild:
-        Dataset.log_dataset(ds)
-        pdc = Producer.get_producer(bind=engine)
-        Producer.log_producer(pdc)
-        return engine
-
-    log.debug('import module %s.load_models', __package__)
-
-    from .. import load_models
-
     application_id = sum(ord(c) for c in Dataset.__tablename__)
     assert application_id == 1122 == 0x462
 
-    @contextlib.contextmanager
-    def begin(bind=engine):
-        with bind.begin() as conn:
-            dbapi_conn = conn.connection.connection
-            log.debug('begin transaction on %r', dbapi_conn)
-            conn.execute(sa.text('PRAGMA synchronous = OFF'))
-            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
+    log.debug('set application_id = %r', application_id)
+    conn.execute(sa.text(f'PRAGMA application_id = {application_id:d}'))
 
-            yield conn
+    log.debug('run create_all')
+    metadata.create_all(bind=conn)
 
-        log.debug('end transaction on %r', dbapi_conn)
 
+def _load(metadata, *, engine, root, from_raw, exclude_raw, exclude_views):
     log.debug('start load timer')
     start = time.time()
 
     log.info('create %d tables from %r', len(metadata.tables), metadata)
-    with begin() as conn:
-        log.debug('set application_id = %r', application_id)
-        conn.execute(sa.text(f'PRAGMA application_id = {application_id:d}'))
-
-        log.debug('run create_all')
-        metadata.create_all(bind=conn)
+    with begin(bind=engine) as conn:
+        create_tables(metadata, conn=conn, exclude_raw=exclude_raw, exclude_views=exclude_views)
 
     log.info('record git commit in %r', root)
+    dataset = make_dataset(root, exclude_raw=exclude_raw)
+    Dataset.log_dataset(dataset)
+
+    log.info('write %r', Producer.__tablename__)
+    with begin(bind=engine) as conn:
+        write_producer(conn, name=__package__.partition('.')[0])
+
+    if not exclude_raw:
+        log.info('load raw')
+        with begin(bind=engine) as conn:
+            load_raw(conn, root=root)
+
+    if not (from_raw or exclude_raw):  # pragma: no cover
+        warnings.warn('2 tree reads required (use compare_with_files() to verify)')
+
+    log.info('load languoids')
+    with begin(bind=engine) as conn:
+        load_languoids(conn, root=root, from_raw=from_raw)
+
+    log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
+    with begin(bind=engine) as conn:
+        write_dataset(conn, dataset=dataset)
+
+    walltime = datetime.timedelta(seconds=time.time() - start)
+    log.debug('load timer stopped')
+    print(walltime)
+    return dataset
+
+
+def make_dataset(root, *, exclude_raw):
     run = functools.partial(_tools.run, cwd=str(root), check=True,
                             capture_output=True, unpack=True)
 
@@ -140,51 +186,45 @@ def load(filename=ENGINE, repo_root=None, *,
                    # neither changes in index nor untracked files
                    'clean': not run(['git', 'status', '--porcelain']),
                    'exclude_raw': exclude_raw}
-    except Exception:  # pragma: no cover
+    except Exception as e:  # pragma: no cover
         log.exception('error running git command in %r', str(root))
-        raise
+        raise RuntimeError(f'failed to get info for dataset: {e}') from e
     else:
         log.info('identified dataset')
-        Dataset.log_dataset(dataset)
+        return dataset
 
+
+def write_producer(conn, *, name):
     from .. import __version__
 
-    producer = {'name': __package__.partition('.')[0], 'version': __version__}
-    log.info('write %r', Producer.__tablename__)
-    Producer.log_producer(producer)
-    with begin() as conn:
-        conn.execute(sa.insert(Producer), producer)
+    params = {'name': name, 'version': __version__}
+    Producer.log_producer(params)
+    conn.execute(sa.insert(Producer), params)
 
-    if not exclude_raw:
-        log.info('load raw')
-        with begin() as conn:
-            log.debug('root: %r', root)
-            raw.load(root, conn)
 
-    if not (from_raw or exclude_raw):  # pragma: no cover
-        warnings.warn('2 tree reads required (use compare_with_files() to verify)')
+def load_raw(conn, *, root):
+    from .. import raw
 
+    log.debug('root: %r', root)
+    raw.load(root, conn)
+
+
+def load_languoids(conn, *, root, from_raw):
     log.debug('import module languoids')
 
     from .. import languoids
 
-    log.info('load languoids')
-    with begin() as conn:
-        root_or_bind = conn if from_raw else root
-        log.debug('root_or_bind: %r', root_or_bind)
+    log.debug('import module %s.load_models', __package__)
 
-        pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
-        load_models.load(pairs, conn)
+    from .. import load_models
 
-    log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
-    with begin() as conn:
-        log.debug('dataset: %r', dataset)
-        conn.execute(sa.insert(Dataset), dataset)
+    root_or_bind = conn if from_raw else root
+    log.debug('root_or_bind: %r', root_or_bind)
 
-    walltime = datetime.timedelta(seconds=time.time() - start)
-    log.debug('load timer stopped')
+    pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
+    load_models.load(pairs, conn)
 
-    log.info('database loaded')
-    Dataset.log_dataset(dataset)
-    print(walltime)
-    return engine
+
+def write_dataset(conn, *, dataset):
+    log.debug('dataset: %r', dataset)
+    conn.execute(sa.insert(Dataset), dataset)
