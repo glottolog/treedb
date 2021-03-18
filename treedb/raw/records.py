@@ -132,9 +132,8 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
               size, str(key_column.expression))
 
     with _backend.connect(bind) as conn,\
-         contextlib.closing(conn.execute(select_keys)) as cursor:
-        for k, in cursor:
-            yield k
+         contextlib.closing(conn.execute(select_keys)) as result:
+        yield from result.scalars()
 
 
 # Python 3.6 compat
