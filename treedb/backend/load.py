@@ -231,26 +231,30 @@ def write_producer(conn, *, name):
 
 
 def load_raw(conn, *, root):
-    from .. import raw
+    log.debug('import target module %s.raw.import_models', __package__)
+
+    from ..raw import import_models
 
     log.debug('root: %r', root)
-    raw.load(root, conn=conn)
+
+    import_models.main(root, conn=conn)
 
 
 def load_languoids(conn, *, root, from_raw):
-    log.debug('import module languoids')
+    log.debug('import source module %s.languoids', __package__)
 
     from .. import languoids
 
-    log.debug('import module %s.load_models', __package__)
+    log.debug('import target module %s.import_models', __package__)
 
-    from .. import load_models
+    from .. import import_models
 
     root_or_bind = conn if from_raw else root
     log.debug('root_or_bind: %r', root_or_bind)
 
     pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
-    load_models.load(pairs, conn=conn)
+
+    import_models.main(pairs, conn=conn)
 
 
 def write_dataset(conn, *, dataset):

@@ -1,4 +1,4 @@
-# load_models.py
+# import_models.py
 
 import functools
 import logging
@@ -11,7 +11,7 @@ from .. import files as _files
 
 from .models import File, Option, Value
 
-__all__ = ['load']
+__all__ = ['main']
 
 
 log = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ def itervalues(cfg, file_id, option_map):
                        'line': get_line(), 'value': value}
 
 
-def load(root, conn):
+def main(root, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
 
     option_id_is_lines = OptionMap(conn=conn)

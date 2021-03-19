@@ -1,4 +1,4 @@
-# load_models.py
+# import_models.py
 
 import functools
 import logging
@@ -19,7 +19,7 @@ from .models import (MACROAREA, CLASSIFICATION,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
-__all__ = ['load']
+__all__ = ['main']
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class ModelMap(dict):
         return pk
 
 
-def load(languoids, *, conn):
+def main(languoids, *, conn):
     macroareas = sorted(MACROAREA)
     log.debug('insert macroareas: %r', macroareas)
     conn.execute(sa.insert(Macroarea), [{'name': n} for n in macroareas])
