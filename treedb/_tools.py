@@ -1,4 +1,4 @@
-# tools.py - generic re-useable self-contained helpers
+# _tools.py - generic re-useable self-contained helpers
 
 import builtins
 import bz2
@@ -20,6 +20,10 @@ ENCODING = 'utf-8'
 
 PROGRESS_AFTER = 5_000
 
+SUFFIX_OPEN_MODULE = {'.bz2': bz2,
+                      '.gz': gzip,
+                      '.xz': lzma}
+
 __all__ = ['next_count',
            'groupby_attrgetter',
            'iterfiles',
@@ -27,10 +31,6 @@ __all__ = ['next_count',
            'sha256sum',
            'run',
            'Ordering']
-
-SUFFIX_OPEN_MODULE = {'.bz2': bz2,
-                      '.gz': gzip,
-                      '.xz': lzma}
 
 
 log = logging.getLogger(__name__)
