@@ -5,6 +5,8 @@ Changelog
 Version 1.5 (in development)
 ----------------------------
 
+Rename ``treedb.export()`` to ``treedb.csv_zipfile()``.
+
 Update SQLAlchemy to 1.4.
 
 

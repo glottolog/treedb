@@ -114,7 +114,7 @@ Export into a ZIP file containing one CSV file per database table:
 
 .. code:: python
 
-    >>> treedb.export()
+    >>> treedb.csv_zipfile()
     ...Path('treedb.zip')
 
 Execute the example query and write it into a CSV file with one row per languoid:

@@ -45,10 +45,10 @@ def test_dump_sql(treedb):
 
 
 @pytest.skip_slow
-def test_export(treedb):
+def test_csv_zipfilet(treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
 
-    path = treedb.export()
+    path = treedb.csv_zipfile()
 
     assert path.name == f'treedb{suffix}.zip'
     assert path.exists()

@@ -8,7 +8,7 @@ from ._basics import (CONFIG, DEFAULT_ROOT,
 
 from .backend import set_engine, connect, scalar, iterrows
 
-from .backend.export import (backup, dump_sql, csv_zipfile as export,
+from .backend.export import (backup, dump_sql, csv_zipfile,
                              print_rows, write_csv, hash_csv)
 
 from .backend.load import main as load
@@ -46,7 +46,7 @@ from .shortcuts import pd_read_sql
 
 __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'set_engine', 'connect', 'scalar', 'iterrows',
-           'backup', 'dump_sql', 'export',
+           'backup', 'dump_sql', 'csv_zipfile',
            'print_rows', 'write_csv', 'hash_csv',
            'load',
            'Dataset', 'Producer',
