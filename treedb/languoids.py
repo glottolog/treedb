@@ -44,10 +44,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         if not from_raw:
             from . import export
 
-            yield from export.fetch_languoids(bind,
-                                              ordered=ordered,
-                                              progress_after=progress_after)
-            return
+            return export.fetch_languoids(bind,
+                                          ordered=ordered,
+                                          progress_after=progress_after)
 
         log.info('extract languoids from raw records')
 
@@ -56,9 +55,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         if ordered is True:  # insert languoids in id order if available
             ordered = 'id'
 
-        iterfiles = raw.fetch_records(bind=bind,
-                                      ordered=ordered,
-                                      progress_after=progress_after)
+        records = raw.fetch_records(bind=bind,
+                                    ordered=ordered,
+                                    progress_after=progress_after)
     else:
         log.info('extract languoids from files')
         root = root_or_bind
@@ -72,13 +71,17 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         from . import files
 
         iterfiles = files.iterfiles(root, progress_after=progress_after)
-        iterfiles = ((pt, cfg) for pt, _, cfg in iterfiles)
+        records = ((pt, cfg) for pt, _, cfg in iterfiles)
 
+    return languoids_from_records(records, from_raw=from_raw)
+
+
+def languoids_from_records(records, *, from_raw):
     n = 0
-    for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
+    for n, (path_tuple, cfg) in enumerate(records, 1):
         languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
         yield path_tuple, languoid
-    log.info('%s languoids extracted', f'{n:_d}')
+    log.info('%s languoids extracted from records', f'{n:_d}')
 
 
 def records_from_languoids(languoids):
