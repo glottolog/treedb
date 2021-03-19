@@ -266,8 +266,9 @@ def make_record(languoid):
     hh_ethnologue_comment = languoid.get('hh_ethnologue_comment') or {}
 
     iso_retirement = languoid.get('iso_retirement')
-    if iso_retirement and False:  # FIXME
-        iso_retirement['effective'] = format_date(iso_retirement['effective'])
+    if iso_retirement:
+        if False:  # FIXME
+            iso_retirement['effective'] = format_date(iso_retirement['effective'])
     else:
         iso_retirement = {}
 
