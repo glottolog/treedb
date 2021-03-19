@@ -27,7 +27,8 @@ __all__ = ['print_languoid_stats',
            'write_json_csv',
            'write_json_query_csv',
            'write_json_lines',
-           'iterlanguoids']
+           'iterlanguoids',
+           'write_files',]
 
 
 log = logging.getLogger(__name__)
@@ -253,3 +254,19 @@ def iterlanguoids(bind=ENGINE, *, ordered='id',
             log.info('%s languoids fetched', f'{n:_d}')
 
     log.info('%s languoids total', f'{n:_d}')
+
+
+def write_files(root=ROOT, *, replace=False,
+                from_raw=False,
+                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
+    log.info('write from tables to tree')
+
+    from . import files
+
+    languoids = _languoids.iterlanguoids(bind,
+                                         from_raw=from_raw,
+                                         ordered='path')
+    records = _languoids.iterrecords(languoids)
+
+    return files.write_files(records, root=root, replace=replace,
+                             progress_after=progress_after)

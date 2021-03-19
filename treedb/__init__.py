@@ -39,7 +39,8 @@ from .export import (print_languoid_stats,
                      checksum,
                      write_json_csv,
                      write_json_query_csv,
-                     write_json_lines)
+                     write_json_lines,
+                     write_files)
 
 from .files import (set_root,
                     iterfiles)
@@ -47,8 +48,7 @@ from .files import (set_root,
 from .glottolog import checkout_or_clone
 
 from .languoids import (iterlanguoids,
-                        compare_with_files,
-                        write_files)
+                        compare_with_files)
 
 from .logging_ import configure_logging
 
