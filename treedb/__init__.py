@@ -11,7 +11,9 @@ from .backend import (set_engine,
                       scalar,
                       iterrows)
 
-from .backend.export import (backup,
+from .backend.export import (print_schema,
+                             print_query_sql,
+                             backup,
                              dump_sql,
                              csv_zipfile,
                              print_rows,
@@ -20,15 +22,13 @@ from .backend.export import (backup,
 
 from .backend.load import main as load
 
-from .backend.models import Dataset, Producer
+from .backend.models import (Dataset,
+                             Producer)
 
 from .backend.sqlite_master import (print_table_sql,
                                     select_tables_nrows)
 
 from .backend.views import TABLES as views
-
-from .backend.tools import (print_schema,
-                            print_query_sql)
 
 from .checks import (check,
                      compare_with_files)
@@ -52,7 +52,8 @@ from .languoids import iterlanguoids
 
 from .logging_ import configure_logging
 
-from .models import LEVEL, Languoid
+from .models import (LEVEL,
+                     Languoid)
 
 from .queries import (get_query,
                       get_json_query,
