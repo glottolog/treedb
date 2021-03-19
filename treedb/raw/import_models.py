@@ -39,7 +39,7 @@ class OptionMap(dict):
         return result
 
 
-def itervalues(cfg, file_id, option_map):
+def itervalues(cfg, file_id, *, option_map):
     get_line = _tools.next_count(start=1)
     for section, sec in cfg.items():
         for option, value in sec.items():
@@ -53,7 +53,7 @@ def itervalues(cfg, file_id, option_map):
                        'line': get_line(), 'value': value}
 
 
-def main(root, conn):
+def main(root, *, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
 
     option_id_is_lines = OptionMap(conn=conn)
@@ -69,6 +69,6 @@ def main(root, conn):
                        'sha256': sha256.hexdigest()}
         file_id, = insert_file(file_params).inserted_primary_key
 
-        value_params = list(itervalues(cfg, file_id, option_id_is_lines))
+        value_params = list(itervalues(cfg, file_id, option_map=option_id_is_lines))
 
         insert_value(value_params)
