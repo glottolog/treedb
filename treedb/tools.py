@@ -21,7 +21,6 @@ ENCODING = 'utf-8'
 PROGRESS_AFTER = 5_000
 
 __all__ = ['next_count',
-           'nullcontext',
            'groupby_attrgetter',
            'iterfiles',
            'path_from_filename',
@@ -40,11 +39,6 @@ log = logging.getLogger(__name__)
 def next_count(start=0, step=1):
     count = itertools.count(start, step)
     return functools.partial(next, count)
-
-
-@contextlib.contextmanager
-def nullcontext(enter_result=None):  # Python 3.6 compat
-    yield enter_result
 
 
 def groupby_attrgetter(*attrnames):

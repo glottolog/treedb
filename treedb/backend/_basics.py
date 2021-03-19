@@ -11,6 +11,7 @@ import sqlalchemy.ext.compiler
 
 from .. import ENGINE
 
+from .. import _compat
 from .. import proxies as _proxies
 from .. import tools as _tools
 
@@ -88,7 +89,7 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
 def connect(bind=ENGINE):
     if isinstance(bind, sa.engine.base.Connection):
         log.debug('nested connect (no-op): %r', bind)
-        return _tools.nullcontext(bind)
+        return _compat.nullcontext(bind)
 
     log.debug('engine connect: %r', bind)
     conn = bind.connect()
