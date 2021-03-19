@@ -29,7 +29,8 @@ sqlite_temp_master = sa.table('sqlite_temp_master',
                               sa.column('sql', sa.Text))
 
 
-def print_table_sql(model_or_table, *, include_nrows=True, flush=True):
+def print_table_sql(model_or_table, *, include_nrows=True,
+                    file=None, flush=True):
     """Print CREATE TABLE for the given table and its number of rows."""
     with ENGINE.connect() as conn:
         result = conn.execute(select_table_sql(model_or_table))
@@ -41,9 +42,9 @@ def print_table_sql(model_or_table, *, include_nrows=True, flush=True):
         else:
             nrows = None
 
-    print(sql, flush=flush)
+    print(sql, file=file, flush=flush)
     if nrows is not None:
-        print(nrows, flush=flush)
+        print(nrows, file=file, flush=flush)
 
 
 def _get_table_name(model_or_table):

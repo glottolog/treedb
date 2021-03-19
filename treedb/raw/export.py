@@ -26,7 +26,7 @@ __all__ = ['print_stats',
 log = logging.getLogger(__name__)
 
 
-def print_stats():
+def print_stats(*, file=None):
     log.info('fetch statistics')
 
     select_nvalues = sa.select(Option.section, Option.option,
@@ -37,7 +37,9 @@ def print_stats():
 
     template = '{section:<22} {option:<22} {n:,}'
 
-    _export.print_rows(select_nvalues, format_=template)
+    _export.print_rows(select_nvalues,
+                       format_=template,
+                       file=file)
 
 
 def checksum(*, weak=False, name=None,
