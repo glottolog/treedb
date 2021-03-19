@@ -13,7 +13,7 @@ from .. import ENGINE
 
 from .. import _compat
 from .. import _proxies
-from .. import tools as _tools
+from .. import _tools
 
 from . import sqlparse
 

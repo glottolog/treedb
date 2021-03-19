@@ -6,7 +6,7 @@ import itertools
 import logging
 import warnings
 
-from . import tools as _tools
+from . import _tools
 
 __all__ = ['is_lines',
            'sorted_sections',

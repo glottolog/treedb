@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 from .. import ENGINE, REGISTRY
 
-from .. import tools as _tools
+from .. import _tools
 
 from .. import backend as _backend
 

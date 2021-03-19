@@ -5,8 +5,8 @@ import logging
 
 from . import ROOT
 
+from . import _tools
 from . import fields as _fields
-from . import tools as _tools
 
 __all__ = ['set_root', 'get_repo_root',
            'iterfiles',

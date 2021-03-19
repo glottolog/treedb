@@ -4,8 +4,8 @@ import logging
 
 from . import ROOT
 
+from . import _tools
 from . import files as _files
-from . import tools as _tools
 
 __all__ = ['checkout_or_clone']
 

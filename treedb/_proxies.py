@@ -5,7 +5,7 @@ import logging
 
 import sqlalchemy as sa
 
-from . import tools as _tools
+from . import _tools
 
 __all__ = ['PathProxy', 'SQLiteEngineProxy']
 

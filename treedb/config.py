@@ -6,7 +6,7 @@ import os
 
 from . import CONFIG, DEFAULT_ROOT
 
-from . import tools as _tools
+from . import _tools
 
 __all__ = ['get_default_root',
            'configure']

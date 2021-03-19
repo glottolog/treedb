@@ -15,6 +15,7 @@ from . import _compat
 
 from . import ENGINE
 
+from . import _tools
 from . import backend as _backend
 from .backend import export as _export
 from .backend import views as _views
@@ -31,7 +32,6 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      Endangerment, EndangermentSource,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
-from . import tools as _tools
 
 __all__ = ['get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',

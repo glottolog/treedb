@@ -12,11 +12,11 @@ from . import _compat
 
 from . import ENGINE, ROOT
 
+from . import _tools
 from . import backend as _backend
 from .backend import export as _export
 from . import languoids as _languoids
 from . import queries as _queries
-from . import tools as _tools
 
 __all__ = ['iterlanguoids',
            'write_json_csv',

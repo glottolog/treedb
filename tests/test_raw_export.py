@@ -34,5 +34,5 @@ def test_write_raw_csv(treedb_raw):
     if expected is None:
         pass
     else:
-        shasum = treedb.tools.sha256sum(path)
+        shasum = treedb._tools.sha256sum(path)
         assert shasum == expected
