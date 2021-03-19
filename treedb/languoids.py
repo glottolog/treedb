@@ -117,17 +117,170 @@ def iterrecords(languoids):
         yield path, record
 
 
-def get_float(mapping, key, format_=FLOAT_FORMAT):
-    result = mapping.get(key)
-    if result is not None:
-        result = float(format_ % float(result))
-    return result
+def make_languoid(path_tuple, cfg, *, from_raw):
+    _make_lines = make_lines_raw if from_raw else make_lines
+
+    core = cfg['core']
+
+    languoid = {'id': path_tuple[-1],
+                'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
+                'level': core['level'],
+                'name': core['name'],
+                'hid': core.get('hid'),
+                'iso639_3': core.get('iso639-3'),
+                'latitude': get_float(core, 'latitude'),
+                'longitude': get_float(core, 'longitude'),
+                'macroareas': _make_lines(core.get('macroareas')),
+                'countries': [splitcountry(c)
+                              for c in _make_lines(core.get('countries'))],
+                'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+                'sources': None,
+                'altnames': None,
+                'triggers': None,
+                'identifier': None,
+                'classification': None,
+                'endangerment': None,
+                'hh_ethnologue_comment': None,
+                'iso_retirement': None}
+
+    # 'timespan' key is optional for backwards compat
+    timespan = core.get('timespan')
+    if timespan:
+        languoid['timespan'] = make_interval(timespan)
+
+    if 'sources' in cfg:
+        sources = skip_empty({
+            provider: [splitsource(p) for p in _make_lines(sources)]
+            for provider, sources in cfg['sources'].items()
+        })
+        if sources:
+            languoid['sources'] = sources
+
+    if 'altnames' in cfg:
+        altnames = {
+            provider: [splitaltname(a) for a in _make_lines(altnames)]
+            for provider, altnames in cfg['altnames'].items()
+        }
+        if altnames:
+            languoid['altnames'] = altnames
+
+    if 'triggers' in cfg:
+        triggers = {
+            field: _make_lines(triggers)
+            for field, triggers in cfg['triggers'].items()
+        }
+        if triggers:
+            languoid['triggers'] = triggers
+
+    if 'identifier' in cfg:
+        # FIXME: semicolon-separated (wals)?
+        identifier = dict(cfg['identifier'])
+        if identifier:
+            languoid['identifier'] = identifier
+
+    if 'classification' in cfg:
+        classification = skip_empty({
+            c: list(map(splitsource, _make_lines(classifications)))
+               if c.endswith('refs') else
+               classifications
+            for c, classifications in cfg['classification'].items()
+        })
+        if classification:
+            languoid['classification'] = classification
+
+    if 'endangerment' in cfg:
+        sct = cfg['endangerment']
+        languoid['endangerment'] = {'status': sct['status'],
+                                    'source': splitsource(sct['source'],
+                                                          endangerment=True),
+                                    'date': make_datetime(sct['date']),
+                                    'comment': sct['comment']}
+
+    if 'hh_ethnologue_comment' in cfg:
+        sct = cfg['hh_ethnologue_comment']
+        languoid['hh_ethnologue_comment'] = {'isohid': sct['isohid'],
+                                             'comment_type': sct['comment_type'],
+                                             'ethnologue_versions': sct['ethnologue_versions'],
+                                             'comment': sct['comment']}
+
+    if 'iso_retirement' in cfg:
+        sct = cfg['iso_retirement']
+        languoid['iso_retirement'] = {'code': sct['code'],
+                                      'name': sct['name'],
+                                      'change_request': sct.get('change_request'),
+                                      'effective': make_date(sct['effective']),
+                                      'reason': sct['reason'],
+                                      'change_to': _make_lines(sct.get('change_to')),
+                                      'remedy': sct.get('remedy'),
+                                      'comment': sct.get('comment')}
+
+    return languoid
 
 
-def format_float(value, format_=FLOAT_FORMAT):
-    if value is None:
-        return None
-    return str(float(format_ % value))
+def make_record(languoid):
+    core = {'name': languoid['name'],
+            'hid': languoid['hid'],
+            'level': languoid['level'],
+            'iso639-3': languoid['iso639_3'],
+            'latitude': format_float(languoid['latitude']),
+            'longitude': format_float(languoid['longitude']),
+            'macroareas': languoid['macroareas'],
+            'countries': list(map(formatcountry, languoid['countries'])),
+            'links': list(map(formatlink, languoid['links'])),
+            'timespan': format_interval(languoid.get('timespan'))}
+
+    record = {'core': core}
+
+    sources = languoid.get('sources')
+    if sources:
+        sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
+    else:
+        sources = {}
+
+    altnames = languoid.get('altnames')
+    if altnames:
+        altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
+    else:
+        altnames = {}
+
+    triggers = languoid.get('triggers') or {}
+
+    identifier = languoid.get('identifier') or {}
+
+    classification = languoid['classification']
+    if classification:
+        classification.update({k: list(map(formatsource, classification[k]))
+                               for k in ('subrefs', 'familyrefs')
+                               if k in classification})
+    else:
+        classification = {}
+        
+    endangerment = languoid.get('endangerment')
+    if endangerment:
+        endangerment.update(source=formatsource(endangerment['source'],
+                                                endangerment=True),
+                            date=format_datetime(endangerment['date']))
+    else:
+        endangerment = {}
+
+    hh_ethnologue_comment = languoid.get('hh_ethnologue_comment') or {}
+
+    iso_retirement = languoid.get('iso_retirement')
+    if iso_retirement and False:  # FIXME
+        iso_retirement['effective'] = format_date(iso_retirement['effective'])
+    else:
+        iso_retirement = {}
+
+    record.update(sources=sources,
+                  altnames=altnames,
+                  triggers=triggers,
+                  identifier=identifier,
+                  classification=classification,
+                  endangerment=endangerment,
+                  hh_ethnologue_comment=hh_ethnologue_comment,
+                  iso_retirement=iso_retirement)
+
+    return record
 
 
 def make_lines(value):
@@ -144,6 +297,19 @@ def make_lines_raw(value):
 
 def skip_empty(mapping):
     return {k: v for k, v in mapping.items() if v}
+
+
+def get_float(mapping, key, format_=FLOAT_FORMAT):
+    result = mapping.get(key)
+    if result is not None:
+        result = float(format_ % float(result))
+    return result
+
+
+def format_float(value, format_=FLOAT_FORMAT):
+    if value is None:
+        return None
+    return str(float(format_ % value))
 
 
 def make_date(value, *, format_=DATE_FORMAT):
@@ -322,169 +488,3 @@ def formataltname(value):
     if value.get('lang') in ('', None):
         return value['name']
     return '{name} [{lang}]'.format_map(value)
-
-
-def make_languoid(path_tuple, cfg, *, from_raw):
-    _make_lines = make_lines_raw if from_raw else make_lines
-
-    core = cfg['core']
-
-    languoid = {'id': path_tuple[-1],
-                'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
-                'level': core['level'],
-                'name': core['name'],
-                'hid': core.get('hid'),
-                'iso639_3': core.get('iso639-3'),
-                'latitude': get_float(core, 'latitude'),
-                'longitude': get_float(core, 'longitude'),
-                'macroareas': _make_lines(core.get('macroareas')),
-                'countries': [splitcountry(c)
-                              for c in _make_lines(core.get('countries'))],
-                'links': [splitlink(c) for c in _make_lines(core.get('links'))],
-                'sources': None,
-                'altnames': None,
-                'triggers': None,
-                'identifier': None,
-                'classification': None,
-                'endangerment': None,
-                'hh_ethnologue_comment': None,
-                'iso_retirement': None}
-
-    # 'timespan' key is optional for backwards compat
-    timespan = core.get('timespan')
-    if timespan:
-        languoid['timespan'] = make_interval(timespan)
-
-    if 'sources' in cfg:
-        sources = skip_empty({
-            provider: [splitsource(p) for p in _make_lines(sources)]
-            for provider, sources in cfg['sources'].items()
-        })
-        if sources:
-            languoid['sources'] = sources
-
-    if 'altnames' in cfg:
-        altnames = {
-            provider: [splitaltname(a) for a in _make_lines(altnames)]
-            for provider, altnames in cfg['altnames'].items()
-        }
-        if altnames:
-            languoid['altnames'] = altnames
-
-    if 'triggers' in cfg:
-        triggers = {
-            field: _make_lines(triggers)
-            for field, triggers in cfg['triggers'].items()
-        }
-        if triggers:
-            languoid['triggers'] = triggers
-
-    if 'identifier' in cfg:
-        # FIXME: semicolon-separated (wals)?
-        identifier = dict(cfg['identifier'])
-        if identifier:
-            languoid['identifier'] = identifier
-
-    if 'classification' in cfg:
-        classification = skip_empty({
-            c: list(map(splitsource, _make_lines(classifications)))
-               if c.endswith('refs') else
-               classifications
-            for c, classifications in cfg['classification'].items()
-        })
-        if classification:
-            languoid['classification'] = classification
-
-    if 'endangerment' in cfg:
-        sct = cfg['endangerment']
-        languoid['endangerment'] = {'status': sct['status'],
-                                    'source': splitsource(sct['source'],
-                                                          endangerment=True),
-                                    'date': make_datetime(sct['date']),
-                                    'comment': sct['comment']}
-
-    if 'hh_ethnologue_comment' in cfg:
-        sct = cfg['hh_ethnologue_comment']
-        languoid['hh_ethnologue_comment'] = {'isohid': sct['isohid'],
-                                             'comment_type': sct['comment_type'],
-                                             'ethnologue_versions': sct['ethnologue_versions'],
-                                             'comment': sct['comment']}
-
-    if 'iso_retirement' in cfg:
-        sct = cfg['iso_retirement']
-        languoid['iso_retirement'] = {'code': sct['code'],
-                                      'name': sct['name'],
-                                      'change_request': sct.get('change_request'),
-                                      'effective': make_date(sct['effective']),
-                                      'reason': sct['reason'],
-                                      'change_to': _make_lines(sct.get('change_to')),
-                                      'remedy': sct.get('remedy'),
-                                      'comment': sct.get('comment')}
-
-    return languoid
-
-
-def make_record(languoid):
-    core = {'name': languoid['name'],
-            'hid': languoid['hid'],
-            'level': languoid['level'],
-            'iso639-3': languoid['iso639_3'],
-            'latitude': format_float(languoid['latitude']),
-            'longitude': format_float(languoid['longitude']),
-            'macroareas': languoid['macroareas'],
-            'countries': list(map(formatcountry, languoid['countries'])),
-            'links': list(map(formatlink, languoid['links'])),
-            'timespan': format_interval(languoid.get('timespan'))}
-
-    record = {'core': core}
-
-    sources = languoid.get('sources')
-    if sources:
-        sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
-    else:
-        sources = {}
-
-    altnames = languoid.get('altnames')
-    if altnames:
-        altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
-    else:
-        altnames = {}
-
-    triggers = languoid.get('triggers') or {}
-
-    identifier = languoid.get('identifier') or {}
-
-    classification = languoid['classification']
-    if classification:
-        classification.update({k: list(map(formatsource, classification[k]))
-                               for k in ('subrefs', 'familyrefs')
-                               if k in classification})
-    else:
-        classification = {}
-        
-    endangerment = languoid.get('endangerment')
-    if endangerment:
-        endangerment.update(source=formatsource(endangerment['source'],
-                                                endangerment=True),
-                            date=format_datetime(endangerment['date']))
-    else:
-        endangerment = {}
-
-    hh_ethnologue_comment = languoid.get('hh_ethnologue_comment') or {}
-
-    iso_retirement = languoid.get('iso_retirement')
-    if iso_retirement and False:  # FIXME
-        iso_retirement['effective'] = format_date(iso_retirement['effective'])
-    else:
-        iso_retirement = {}
-
-    record.update(sources=sources,
-                  altnames=altnames,
-                  triggers=triggers,
-                  identifier=identifier,
-                  classification=classification,
-                  endangerment=endangerment,
-                  hh_ethnologue_comment=hh_ethnologue_comment,
-                  iso_retirement=iso_retirement)
-
-    return record
