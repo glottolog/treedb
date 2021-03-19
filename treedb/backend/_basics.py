@@ -12,7 +12,7 @@ import sqlalchemy.ext.compiler
 from .. import ENGINE
 
 from .. import _compat
-from .. import proxies as _proxies
+from .. import _proxies
 from .. import tools as _tools
 
 from . import sqlparse
