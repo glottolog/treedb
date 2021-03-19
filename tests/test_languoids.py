@@ -27,9 +27,9 @@ def test_iterlanguoids(bare_treedb, n=100):
         assert languoid['name']
 
 
-def test_iterrecords(bare_treedb, n=100):
+def test_records_from_languoids(bare_treedb, n=100):
     languoids = bare_treedb.iterlanguoids()
-    pairs = bare_treedb.languoids.iterrecords(languoids)
+    pairs = bare_treedb.languoids.records_from_languoids(languoids)
 
     head = list(itertools.islice(pairs, n))
 

@@ -99,7 +99,7 @@ def write_files(root=ROOT, *,
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write from raw records to tree')
 
-    records = _records.iterrecords(bind=bind)
+    records = _records.fetch_records(bind=bind)
 
     return _files.write_files(records, root=root, replace=replace,
                               progress_after=progress_after)

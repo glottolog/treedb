@@ -27,7 +27,7 @@ __all__ = ['print_languoid_stats',
            'write_json_csv',
            'write_json_query_csv',
            'write_json_lines',
-           'iterlanguoids',
+           'fetch_languoids',
            'write_files',]
 
 
@@ -228,9 +228,9 @@ def write_json_lines(filename=None, *,
     return result
 
 
-def iterlanguoids(bind=ENGINE, *, ordered='id',
-                  progress_after=_tools.PROGRESS_AFTER):
-    log.info('select languoids from json query')
+def fetch_languoids(bind=ENGINE, *, ordered='id',
+                    progress_after=_tools.PROGRESS_AFTER):
+    log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
     query = _queries.get_json_query(ordered=ordered,
@@ -266,7 +266,7 @@ def write_files(root=ROOT, *, replace=False,
     languoids = _languoids.iterlanguoids(bind,
                                          from_raw=from_raw,
                                          ordered='path')
-    records = _languoids.iterrecords(languoids)
+    records = _languoids.records_from_languoids(languoids)
 
     return files.write_files(records, root=root, replace=replace,
                              progress_after=progress_after)

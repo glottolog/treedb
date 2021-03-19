@@ -7,11 +7,11 @@ from .export import (print_stats,
 
 from .models import File, Option, Value
 
-from .records import iterrecords
+from .records import fetch_records
 
 __all__ = ['checksum',
            'print_stats',
            'write_raw_csv',
            'write_files',
            'File', 'Option', 'Value',
-           'iterrecords']
+           'fetch_records']

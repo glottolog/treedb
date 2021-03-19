@@ -14,7 +14,7 @@ from .. import backend as _backend
 
 from .models import File, Option, Value
 
-__all__ = ['iterrecords']
+__all__ = ['fetch_records']
 
 WINDOWSIZE = 500
 
@@ -22,8 +22,8 @@ WINDOWSIZE = 500
 log = logging.getLogger(__name__)
 
 
-def iterrecords(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
-                windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
+def fetch_records(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
+                  windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.connection

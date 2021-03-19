@@ -101,6 +101,24 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
+def records_from_files(triples):
+    for path_tuple, _, cfg in triples:
+        d = {s: dict(m) for s, m in cfg.items() if s != 'DEFAULT'}
+        yield path_tuple, d
+
+
+def roundtrip(root=ROOT, *, verbose=False,
+              progress_after=_tools.PROGRESS_AFTER):
+    """Do a load/save cycle with all config files."""
+    triples = iterfiles(root,
+                        progress_after=progress_after)
+                        
+    records = records_from_files(triples)
+    return write_files(records, root,
+                       replace=False,
+                       progress_after=progress_after)
+
+
 def write_files(records, *, root=ROOT, replace=False,
                 progress_after=_tools.PROGRESS_AFTER, basename=BASENAME):
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
@@ -213,16 +231,3 @@ def write_files(records, *, root=ROOT, replace=False,
 
     log.info(f'%s {basename} files written total', f'{files_written:_d}')
     return files_written
-
-
-def roundtrip(root=ROOT, *, verbose=False):
-    """Do a load/save cycle with all config files."""
-    triples = iterfiles(root)
-
-    def _iterpairs(triples):
-        for path_tuple, _, cfg in triples:
-            d = {s: dict(m) for s, m in cfg.items() if s != 'DEFAULT'}
-            yield path_tuple, d
-
-    pairs = _iterpairs(triples)
-    return write_files(pairs, root, assume_changed=True, verbose=verbose)

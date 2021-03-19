@@ -12,7 +12,7 @@ from . import ROOT
 from . import _tools
 
 __all__ = ['iterlanguoids',
-           'iterreccords']
+           'records_from_languoids']
 
 FLOAT_DIGITS = 12
 
@@ -44,9 +44,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         if not from_raw:
             from . import export
 
-            yield from export.iterlanguoids(bind,
-                                            ordered=ordered,
-                                            progress_after=progress_after)
+            yield from export.fetch_languoids(bind,
+                                              ordered=ordered,
+                                              progress_after=progress_after)
             return
 
         log.info('extract languoids from raw records')
@@ -56,9 +56,9 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         if ordered is True:  # insert languoids in id order if available
             ordered = 'id'
 
-        iterfiles = raw.iterrecords(bind=bind,
-                                    ordered=ordered,
-                                    progress_after=progress_after)
+        iterfiles = raw.fetch_records(bind=bind,
+                                      ordered=ordered,
+                                      progress_after=progress_after)
     else:
         log.info('extract languoids from files')
         root = root_or_bind
@@ -81,7 +81,7 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
     log.info('%s languoids extracted', f'{n:_d}')
 
 
-def iterrecords(languoids):
+def records_from_languoids(languoids):
     for path, l in languoids:
         record = make_record(l)
         yield path, record

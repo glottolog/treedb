@@ -27,5 +27,5 @@ if df is not None:
 #treedb.files.roundtrip()
 
 #import treedb.raw
-#print(next(treeedb.raw.iterrecords()))
+#print(next(treedb.raw.fetch_records()))
 #treedb.raw.write_files()
