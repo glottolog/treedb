@@ -44,11 +44,11 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         bind = root_or_bind
 
         if not from_raw:
-            from . import languoids_json
+            from . import export
 
-            yield from languoids_json.iterlanguoids(bind,
-                                                    ordered=ordered,
-                                                    progress_after=progress_after)
+            yield from export.iterlanguoids(bind,
+                                            ordered=ordered,
+                                            progress_after=progress_after)
             return
 
         log.info('extract languoids from raw records')

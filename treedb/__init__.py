@@ -25,13 +25,13 @@ from .checks import check
 
 from .config import configure, get_default_root
 
+from .export import write_json_csv, checksum
+
 from .files import set_root, iterfiles
 
 from .glottolog import checkout_or_clone
 
 from .languoids import iterlanguoids, compare_with_files, write_files
-
-from .languoids_json import write_json_csv, checksum
 
 from .logging_ import configure_logging
 
@@ -55,10 +55,10 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'print_schema', 'print_query_sql',
            'check',
            'configure',
+           'write_json_csv', 'checksum',
            'set_root', 'iterfiles',
            'checkout_or_clone',
            'iterlanguoids', 'compare_with_files', 'write_files',
-           'write_json_csv', 'checksum',
            'configure_logging',
            'LEVEL', 'Languoid',
            'print_languoid_stats',

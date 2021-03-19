@@ -1,4 +1,4 @@
-# test_languoids_json.py
+# test_export.py
 
 import itertools
 
