@@ -268,9 +268,6 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         iterfiles = raw.iterrecords(bind=bind,
                                     ordered=ordered,
                                     progress_after=progress_after)
-
-        _make_lines = make_lines_raw
-
     else:
         log.info('extract languoids from files')
         root = root_or_bind
@@ -286,110 +283,114 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         iterfiles = files.iterfiles(root, progress_after=progress_after)
         iterfiles = ((pt, cfg) for pt, _, cfg in iterfiles)
 
-        _make_lines = make_lines
-
     n = 0
     for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
-        sources = None
-        if 'sources' in cfg:
-            sources = skip_empty({
-                provider: [splitsource(p) for p in _make_lines(sources)]
-                for provider, sources in cfg['sources'].items()
-            }) or None
+        languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
+        yield path_tuple, languoid
+    log.info('%s languoids extracted', f'{n:_d}')
 
-        altnames = None
-        if 'altnames' in cfg:
-            altnames = {
-                provider: [splitaltname(a) for a in _make_lines(altnames)]
-                for provider, altnames in cfg['altnames'].items()
-            } or None
 
-        triggers = None
-        if 'triggers' in cfg:
-            triggers = {
-                field: _make_lines(triggers)
-                for field, triggers in cfg['triggers'].items()
-            } or None
+def make_languoid(path_tuple, cfg, *, from_raw):
+    _make_lines = make_lines_raw if from_raw else make_lines
 
-        identifier = None
-        if 'identifier' in cfg:
-            # FIXME: semicolon-separated (wals)?
-            identifier = dict(cfg['identifier']) or None
+    sources = None
+    if 'sources' in cfg:
+        sources = skip_empty({
+            provider: [splitsource(p) for p in _make_lines(sources)]
+            for provider, sources in cfg['sources'].items()
+        }) or None
 
-        classification = None
-        if 'classification' in cfg:
-            classification = skip_empty({
-                c: list(map(splitsource, _make_lines(classifications)))
-                   if c.endswith('refs') else
-                   classifications
-                for c, classifications in cfg['classification'].items()
-            }) or None
+    altnames = None
+    if 'altnames' in cfg:
+        altnames = {
+            provider: [splitaltname(a) for a in _make_lines(altnames)]
+            for provider, altnames in cfg['altnames'].items()
+        } or None
 
-        endangerment = None
-        if 'endangerment' in cfg:
-            sct = cfg['endangerment']
-            endangerment = {
-                'status': sct['status'],
-                'source': splitsource(sct['source'], endangerment=True),
-                'date': make_datetime(sct['date']),
-                'comment': sct['comment'],
-            }
+    triggers = None
+    if 'triggers' in cfg:
+        triggers = {
+            field: _make_lines(triggers)
+            for field, triggers in cfg['triggers'].items()
+        } or None
 
-        hh_ethnologue_comment = None
-        if 'hh_ethnologue_comment' in cfg:
-            sct = cfg['hh_ethnologue_comment']
-            hh_ethnologue_comment = {
-                'isohid': sct['isohid'],
-                'comment_type': sct['comment_type'],
-                'ethnologue_versions': sct['ethnologue_versions'],
-                'comment': sct['comment'],
-            }
+    identifier = None
+    if 'identifier' in cfg:
+        # FIXME: semicolon-separated (wals)?
+        identifier = dict(cfg['identifier']) or None
 
-        iso_retirement = None
-        if 'iso_retirement' in cfg:
-            sct = cfg['iso_retirement']
-            iso_retirement = {
-                'code': sct['code'],
-                'name': sct['name'],
-                'change_request': sct.get('change_request'),
-                'effective': make_date(sct['effective']),
-                'reason': sct['reason'],
-                'change_to': _make_lines(sct.get('change_to')),
-                'remedy': sct.get('remedy'),
-                'comment': sct.get('comment'),
-            }
+    classification = None
+    if 'classification' in cfg:
+        classification = skip_empty({
+            c: list(map(splitsource, _make_lines(classifications)))
+               if c.endswith('refs') else
+               classifications
+            for c, classifications in cfg['classification'].items()
+        }) or None
 
-        core = cfg['core']
-
-        item = {
-            'id': path_tuple[-1],
-            'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
-            'level': core['level'],
-            'name': core['name'],
-            'hid': core.get('hid'),
-            'iso639_3': core.get('iso639-3'),
-            'latitude': get_float(core, 'latitude'),
-            'longitude': get_float(core, 'longitude'),
-            'macroareas': _make_lines(core.get('macroareas')),
-            'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
-            'links': [splitlink(c) for c in _make_lines(core.get('links'))],
-            'sources': sources,
-            'altnames': altnames,
-            'triggers': triggers,
-            'identifier': identifier,
-            'classification': classification,
-            'endangerment': endangerment,
-            'hh_ethnologue_comment': hh_ethnologue_comment,
-            'iso_retirement': iso_retirement,
+    endangerment = None
+    if 'endangerment' in cfg:
+        sct = cfg['endangerment']
+        endangerment = {
+            'status': sct['status'],
+            'source': splitsource(sct['source'], endangerment=True),
+            'date': make_datetime(sct['date']),
+            'comment': sct['comment'],
         }
 
-        timespan = core.get('timespan')
-        if timespan:
-            item['timespan'] = make_interval(timespan)
+    hh_ethnologue_comment = None
+    if 'hh_ethnologue_comment' in cfg:
+        sct = cfg['hh_ethnologue_comment']
+        hh_ethnologue_comment = {
+            'isohid': sct['isohid'],
+            'comment_type': sct['comment_type'],
+            'ethnologue_versions': sct['ethnologue_versions'],
+            'comment': sct['comment'],
+        }
 
-        yield path_tuple, item
+    iso_retirement = None
+    if 'iso_retirement' in cfg:
+        sct = cfg['iso_retirement']
+        iso_retirement = {
+            'code': sct['code'],
+            'name': sct['name'],
+            'change_request': sct.get('change_request'),
+            'effective': make_date(sct['effective']),
+            'reason': sct['reason'],
+            'change_to': _make_lines(sct.get('change_to')),
+            'remedy': sct.get('remedy'),
+            'comment': sct.get('comment'),
+        }
 
-    log.info('%s languoids extracted', f'{n:_d}')
+    core = cfg['core']
+
+    item = {
+        'id': path_tuple[-1],
+        'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
+        'level': core['level'],
+        'name': core['name'],
+        'hid': core.get('hid'),
+        'iso639_3': core.get('iso639-3'),
+        'latitude': get_float(core, 'latitude'),
+        'longitude': get_float(core, 'longitude'),
+        'macroareas': _make_lines(core.get('macroareas')),
+        'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
+        'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+        'sources': sources,
+        'altnames': altnames,
+        'triggers': triggers,
+        'identifier': identifier,
+        'classification': classification,
+        'endangerment': endangerment,
+        'hh_ethnologue_comment': hh_ethnologue_comment,
+        'iso_retirement': iso_retirement,
+    }
+
+    timespan = core.get('timespan')
+    if timespan:
+        item['timespan'] = make_interval(timespan)
+
+    return item
 
 
 def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
