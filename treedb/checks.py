@@ -42,7 +42,6 @@ def check(func=None, *, bind=ENGINE):
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
             check_cls = type(f'{func.__name__}Check', (Check,), ns)
 
-
             kwargs = ({'exclude_raw': exclude_raw}
                       if func.__name__ == 'no_empty_files' else {})
 

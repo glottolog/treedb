@@ -16,7 +16,7 @@ from .. import files as _files
 
 from .. import backend as _backend
 
-from . import models  as _models
+from . import models as _models
 from . import views as _views
 
 __all__ = ['main']

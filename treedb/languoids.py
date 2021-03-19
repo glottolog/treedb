@@ -254,7 +254,7 @@ def make_record(languoid):
                                if k in classification})
     else:
         classification = {}
-        
+
     endangerment = languoid.get('endangerment')
     if endangerment:
         endangerment.update(source=formatsource(endangerment['source'],
