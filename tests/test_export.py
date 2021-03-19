@@ -1,6 +1,7 @@
 # test_export.py
 
 import itertools
+import json
 
 import pytest
 
@@ -19,10 +20,16 @@ CHECKSUM = {'v4.1': ('d09dd920871bdaaecad609922bd29b90'
 MB = 2**20
 
 
-def pairwise(iterable):
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
+def test_checksum(treedb):
+    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+
+    result = treedb.checksum()
+
+    if expected is None:
+        assert result.startswith(PREFIX)
+        assert len(result) - len(PREFIX) == 64
+    else:
+        assert result == PREFIX + expected
 
 
 def test_write_json_csv(treedb):
@@ -43,16 +50,58 @@ def test_write_json_csv(treedb):
         assert shasum == expected
 
 
-def test_checksum(treedb):
-    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+@pytest.mark.parametrize('raw', [False, True])
+def test_write_json_query_csv(treedb, raw):
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    raw_suffix = '_raw' if raw else ''
 
-    result = treedb.checksum()
+    path = treedb.write_json_query_csv(raw=raw)
 
-    if expected is None:
-        assert result.startswith(PREFIX)
-        assert len(result) - len(PREFIX) == 64
-    else:
-        assert result == PREFIX + expected
+    assert path.name == (f'treedb{suffix}'
+                         f'.languoids-json_query{raw_suffix}.csv.gz')
+    assert path.exists()
+    assert path.is_file()
+    assert 1 * MB <= path.stat().st_size <= 100 * MB
+
+
+def test_write_json_lines(capsys, treedb, n=100):
+    suffix = '-memory' if treedb.ENGINE.file is None else ''
+
+    path = treedb.write_json_lines()
+
+    assert path.name == f'treedb{suffix}.languoids.jsonl'
+    assert path.exists()
+    assert path.is_file()
+    assert 1 * MB <= path.stat().st_size <= 200 * MB
+
+    with path.open(encoding='utf-8') as f:
+        head = list(itertools.islice(f, n))
+
+        assert head
+        assert len(head) == n
+
+        for line in head:
+            item = json.loads(line)
+            assert isinstance(item, dict)
+            assert item
+
+            path = item['path']
+            assert isinstance(path, list)
+            assert all(isinstance(p, str) for p in path)
+            assert path
+            assert all(path)
+
+            languoid = item['languoid']
+            assert isinstance(languoid, dict)
+            assert languoid
+            assert languoid['id']
+            assert languoid['parent_id'] is None or languoid['parent_id']
+            assert languoid['level'] in ('family', 'language', 'dialect')
+            assert languoid['name']
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert not err
 
 
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
@@ -138,3 +187,9 @@ def test_checksum_equivalence(treedb, kwargs):
 
     for (c, cur), (n, nxt) in pairwise(results):
         assert cur[-64:] == nxt[-64:], f'checksum(**{c!r}) == checksum(**{n!r})'
+
+
+def pairwise(iterable):
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)

@@ -6,40 +6,56 @@ from ._basics import (CONFIG, DEFAULT_ROOT,
                       ENGINE, ROOT, REGISTRY,
                       SESSION as Session)
 
-from .backend import set_engine, connect, scalar, iterrows
+from .backend import (set_engine,
+                      connect,
+                      scalar,
+                      iterrows)
 
-from .backend.export import (backup, dump_sql, csv_zipfile,
-                             print_rows, write_csv, hash_csv)
+from .backend.export import (backup,
+                             dump_sql,
+                             csv_zipfile,
+                             print_rows,
+                             write_csv,
+                             hash_csv)
 
 from .backend.load import main as load
 
 from .backend.models import Dataset, Producer
 
-from .backend.sqlite_master import print_table_sql, select_tables_nrows
+from .backend.sqlite_master import (print_table_sql,
+                                    select_tables_nrows)
 
 from .backend.views import TABLES as views
 
-from .backend.tools import print_schema, print_query_sql
+from .backend.tools import (print_schema,
+                            print_query_sql)
 
 from .checks import check
 
-from .config import configure, get_default_root
+from .config import (configure,
+                     get_default_root)
 
-from .export import checksum, write_json_csv
+from .export import (checksum,
+                     write_json_csv,
+                     write_json_query_csv,
+                     write_json_lines)
 
-from .files import set_root, iterfiles
+from .files import (set_root,
+                    iterfiles)
 
 from .glottolog import checkout_or_clone
 
-from .languoids import iterlanguoids, compare_with_files, write_files
+from .languoids import (iterlanguoids,
+                        compare_with_files,
+                        write_files)
 
 from .logging_ import configure_logging
 
 from .models import LEVEL, Languoid
 
 from .queries import (print_languoid_stats,
-                      get_query,  get_json_query,
-                      write_json_query_csv, write_json_lines,
+                      get_query,
+                      get_json_query,
                       iterdescendants)
 
 from .shortcuts import pd_read_sql
@@ -56,6 +72,7 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'check',
            'configure',
            'checksum', 'write_json_csv',
+           'write_json_query_csv', 'write_json_lines',
            'set_root', 'iterfiles',
            'checkout_or_clone',
            'iterlanguoids', 'compare_with_files', 'write_files',
@@ -63,7 +80,6 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'LEVEL', 'Languoid',
            'print_languoid_stats',
            'get_query', 'get_json_query',
-           'write_json_query_csv', 'write_json_lines',
            'iterdescendants',
            'pd_read_sql',
            'engine', 'root']

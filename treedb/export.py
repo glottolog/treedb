@@ -1,9 +1,11 @@
 # export.py - load languoids from tables and write json csv
 
 import functools
+import io
 import json
 import logging
 import operator
+import sys
 import warnings
 
 import csv23
@@ -18,7 +20,10 @@ from .backend import export as _export
 from . import languoids as _languoids
 from . import queries as _queries
 
-__all__ = ['checksum',  'write_json_csv',
+__all__ = ['checksum',
+           'write_json_csv',
+           'write_json_query_csv',
+           'write_json_lines',
            'iterlanguoids']
 
 
@@ -131,6 +136,70 @@ def _json_rows(bind_or_root=ENGINE, *,
 
     return (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
 
+
+def write_json_query_csv(filename=None, *,
+                         ordered='id', raw=False,
+                         bind=ENGINE):
+    if filename is None:
+        suffix = '_raw' if raw else ''
+        suffix = f'.languoids-json_query{suffix}.csv.gz'
+        filename = bind.file_with_suffix(suffix).name
+
+    query = _queries.get_json_query(ordered=ordered,
+                                    as_rows=True,
+                                    load_json=raw)
+
+    return _export.write_csv(query, filename=filename, bind=bind)
+
+
+def write_json_lines(filename=None, *,
+                     bind=ENGINE, _encoding='utf-8'):
+    r"""Write languoids as newline delimited JSON.
+
+    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
+    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
+
+    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
+    """
+    open_kwargs = {'encoding': _encoding}
+
+    path = fobj = None
+    if filename is None:
+        path = bind.file_with_suffix('.languoids.jsonl')
+    elif filename is sys.stdout:
+        fobj = io.TextIOWrapper(sys.stdout.buffer, **open_kwargs)
+    elif hasattr(filename, 'write'):
+        fobj = filename
+    else:
+        path = _tools.path_from_filename(filename)
+
+    if path is None:
+        log.info('write json lines into: %r', fobj)
+        open_func = lambda: _compat.nullcontext(fobj)
+        result = fobj
+    else:
+        log.info('write json lines: %r', path)
+        open_func = functools.partial(path.open, 'wt', **open_kwargs)
+        result = path
+        if path.exists():
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
+
+    assert result is not None
+
+    query = _queries.get_json_query(ordered='id',
+                                    as_rows=False,
+                                    load_json=False,
+                                    languoid_label='languoid')
+
+    rows = _backend.iterrows(query, bind=bind)
+
+    with open_func() as f:
+        write_line = functools.partial(print, file=f)
+        for path_languoid, in rows:
+            write_line(path_languoid)
+
+    return result
 
 
 def iterlanguoids(bind=ENGINE, *, ordered='id',
