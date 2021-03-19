@@ -25,7 +25,7 @@ from .checks import check
 
 from .config import configure, get_default_root
 
-from .export import write_json_csv, checksum
+from .export import checksum, write_json_csv
 
 from .files import set_root, iterfiles
 
@@ -55,7 +55,7 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'print_schema', 'print_query_sql',
            'check',
            'configure',
-           'write_json_csv', 'checksum',
+           'checksum', 'write_json_csv',
            'set_root', 'iterfiles',
            'checkout_or_clone',
            'iterlanguoids', 'compare_with_files', 'write_files',
