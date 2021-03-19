@@ -56,10 +56,10 @@ def _get_table_name(model_or_table):
 
 def select_table_sql(model_or_table):
     """Select CREATE_TABLE of the given table from sqlite_master."""
-    select = sa.select(sqlite_master.c.sql)\
-             .select_from(sqlite_master)\
-             .filter_by(type='table')\
-             .filter_by(name=sa.bindparam('table_name'))
+    select = (sa.select(sqlite_master.c.sql)
+              .select_from(sqlite_master)
+              .filter_by(type='table')
+              .filter_by(name=sa.bindparam('table_name')))
 
     if model_or_table is not None:
         table_name = _get_table_name(model_or_table)
@@ -70,8 +70,8 @@ def select_table_sql(model_or_table):
 def select_table_nrows(model_or_table, *, label='n_rows'):
     """Select the number of rows for the given table."""
     table_name = _get_table_name(model_or_table)
-    return sa.select(sa.func.count().label(label))\
-           .select_from(sa.table(table_name))
+    return (sa.select(sa.func.count().label(label))
+           .select_from(sa.table(table_name)))
 
 
 def select_tables_nrows(*, table_label='table_name', nrows_label='n_rows'):
@@ -91,16 +91,16 @@ def select_tables_nrows(*, table_label='table_name', nrows_label='n_rows'):
 
 def select_tables():
     """Select all table names from sqlite_master."""
-    return sa.select(sqlite_master.c.name)\
-           .select_from(sqlite_master)\
-           .filter_by(type='table')\
-           .where(~sqlite_master.c.name.like('sqlite_%'))\
-           .order_by('name')
+    return (sa.select(sqlite_master.c.name)
+            .select_from(sqlite_master)
+            .filter_by(type='table')
+            .where(~sqlite_master.c.name.like('sqlite_%'))
+            .order_by('name'))
 
 
 def select_views():
-    return sa.select(sqlite_master.c.name)\
-           .select_from(sqlite_master)\
-           .filter_by(type='view')\
-           .where(~sqlite_master.c.name.like('sqlite_%'))\
-           .order_by('name')
+    return (sa.select(sqlite_master.c.name)
+            .select_from(sqlite_master)
+            .filter_by(type='view')
+            .where(~sqlite_master.c.name.like('sqlite_%'))
+            .order_by('name'))

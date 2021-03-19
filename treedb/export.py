@@ -70,7 +70,7 @@ def write_json_csv(*, filename=None, sort_keys=True,
                            **kwargs)
 
 
-def _checksum(bind_or_root=ENGINE, *, name=None,  ordered='id',
+def _checksum(bind_or_root=ENGINE, *, name=None, ordered='id',
               from_raw=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING):
     log.info('calculate languoids json checksum')

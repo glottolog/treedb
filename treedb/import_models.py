@@ -47,7 +47,6 @@ class ModelMap(dict):
 
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
-
     def __missing__(self, key):
         if self.log_insert:
             log.debug('insert new %s: %r', self.model.__tablename__, key)
