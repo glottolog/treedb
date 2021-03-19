@@ -2,6 +2,7 @@
 
 import functools
 import io
+import itertools
 import json
 import logging
 import operator
@@ -18,9 +19,11 @@ from . import _tools
 from . import backend as _backend
 from .backend import export as _export
 from . import languoids as _languoids
+from .models import SPECIAL_FAMILIES, BOOKKEEPING
 from . import queries as _queries
 
-__all__ = ['checksum',
+__all__ = ['print_languoid_stats',
+           'checksum',
            'write_json_csv',
            'write_json_query_csv',
            'write_json_lines',
@@ -28,6 +31,28 @@ __all__ = ['checksum',
 
 
 log = logging.getLogger(__name__)
+
+
+def print_languoid_stats(*, bind=ENGINE):
+    rows = _backend.iterrows(_queries.get_stats_query(),
+                             mappings=True, bind=bind)
+    rows, counts = itertools.tee(rows)
+
+    _export.print_rows(rows, format_='{n:6,d} {kind}', bind=None)
+
+    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
+            ('roots', ('families', 'isolates')),
+            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
+            ('languages', ('All', BOOKKEEPING))]
+
+    counts = {c['kind']: c['n'] for c in counts}
+    for total, parts in sums:
+        values = [counts[p] for p in parts]
+        parts_sum = sum(values)
+        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+        log.debug('verify %s == %d %s', term, counts[total], total)
+        if counts[total] != parts_sum:  # pragma: no cover
+            warnings.warn(f'{term} = {parts_sum:,d}')
 
 
 def validate_source_kwargs(*, source, file_order, file_means_path):

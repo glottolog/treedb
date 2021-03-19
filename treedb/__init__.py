@@ -35,7 +35,8 @@ from .checks import check
 from .config import (configure,
                      get_default_root)
 
-from .export import (checksum,
+from .export import (print_languoid_stats,
+                     checksum,
                      write_json_csv,
                      write_json_query_csv,
                      write_json_lines)
@@ -53,8 +54,7 @@ from .logging_ import configure_logging
 
 from .models import LEVEL, Languoid
 
-from .queries import (print_languoid_stats,
-                      get_query,
+from .queries import (get_query,
                       get_json_query,
                       iterdescendants)
 
