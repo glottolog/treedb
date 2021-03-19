@@ -132,6 +132,19 @@ def get_query(*, ordered='id', separator=', '):
 
     path, family, language = Languoid.path_family_language()
 
+    select_languoid = select(Languoid.id,
+                             Languoid.name,
+                             Languoid.level,
+                             Languoid.parent_id,
+                             path.label('path'),
+                             family.label('family_id'),
+                             language.label('dialect_language_id'),
+                             Languoid.hid,
+                             Languoid.iso639_3,
+                             Languoid.latitude,
+                             Languoid.longitude)\
+                      .select_from(Languoid)
+
     macroareas = select(languoid_macroarea.c.macroarea_name)\
                  .select_from(languoid_macroarea)\
                  .filter_by(languoid_id=Languoid.id)\
@@ -143,6 +156,8 @@ def get_query(*, ordered='id', separator=', '):
                          .label('macroareas'))\
                  .label('macroareas')
 
+    select_languoid = select_languoid.add_columns(macroareas)
+
     countries = select(languoid_country.c.country_id)\
                 .select_from(languoid_country)\
                 .filter_by(languoid_id=Languoid.id)\
@@ -153,6 +168,8 @@ def get_query(*, ordered='id', separator=', '):
     countries = select(group_concat(countries.c.country_id).label('countries'))\
                 .label('countries')
 
+    select_languoid = select_languoid.add_columns(countries)
+
     links = select(Link.printf())\
             .select_from(Link)\
             .filter_by(languoid_id=Languoid.id)\
@@ -162,6 +179,8 @@ def get_query(*, ordered='id', separator=', '):
 
     links = select(group_concat(links.c.printf).label('links'))\
             .label('links')
+
+    select_languoid = select_languoid.add_columns(links)
 
     source_gl = aliased(Source, name='source_glottolog')
     s_provider = aliased(SourceProvider, name='source_provider')
@@ -183,6 +202,8 @@ def get_query(*, ordered='id', separator=', '):
                                 .label('sources_glottolog'))\
                         .label('sources_glottolog')
 
+    select_languoid = select_languoid.add_columns(sources_glottolog)
+
     altnames = {p: (aliased(Altname, name='altname_' + p),
                     aliased(AltnameProvider, name='altname_' + p + '_provider'))
                 for p in sorted(ALTNAME_PROVIDER)}
@@ -200,6 +221,8 @@ def get_query(*, ordered='id', separator=', '):
     altnames = [select(group_concat(a.c.printf).label('altnames_' + p))
                 .label('altnames_' + p) for p, a in altnames.items()]
 
+    select_languoid = select_languoid.add_columns(*altnames)
+
     triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
     triggers = {f: select(t.trigger)
@@ -214,12 +237,27 @@ def get_query(*, ordered='id', separator=', '):
     triggers = [select(group_concat(t.c.trigger).label('triggers_' + f))
                 .label('triggers_' + f) for f, t in triggers.items()]
 
+    select_languoid = select_languoid.add_columns(*triggers)
+
     idents = {s: (aliased(Identifier, name='ident_' + s),
                   aliased(IdentifierSite, name='ident_' + s + '_site'))
               for s in sorted(IDENTIFIER_SITE)}
 
     identifiers = [i.identifier.label('identifier_' + s)
                    for s, (i, _) in idents.items()]
+
+    select_languoid = select_languoid.add_columns(*identifiers)
+
+    for s, (i, is_) in idents.items():
+        select_languoid = select_languoid\
+                          .outerjoin(sa.join(i, is_, i.site_id == is_.id),
+                                     sa.and_(is_.name == s,
+                                             i.languoid_id == Languoid.id))
+
+    subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
+
+    classification_sub = subc.comment.label('classification_sub')
+    classification_family = famc.comment.label('classification_family')
 
     def crefs(kind):
         ref = aliased(ClassificationRef, name='cr_' + kind)
@@ -241,11 +279,46 @@ def get_query(*, ordered='id', separator=', '):
 
     classification_subrefs, classification_familyrefs = map(crefs, ('sub', 'family'))
 
+    select_languoid = select_languoid.add_columns(classification_sub,
+                                                  classification_subrefs,
+                                                  classification_family,
+                                                  classification_familyrefs)\
+                      .outerjoin(subc, sa.and_(subc.kind == 'sub',
+                                               subc.languoid_id == Languoid.id))\
+                      .outerjoin(famc, sa.and_(famc.kind == 'family',
+                                               famc.languoid_id == Languoid.id))\
+
+    def get_cols(model, label='{name}', ignore='id'):
+        cols = model.__table__.columns
+        if ignore:
+            ignore_suffix = '_' + ignore
+            cols = [c for c in cols if c.name != ignore
+                    and not c.name.endswith(ignore_suffix)]
+        return [c.label(label.format(name=c.name)) for c in cols]
+
+    select_languoid = select_languoid\
+                      .add_columns(*get_cols(Endangerment,
+                                             label='endangerment_{name}'))
+
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
     endangerment_source = EndangermentSource.printf(e_bibfile, e_bibitem)\
                           .label('endangerment_source')
+
+    select_languoid = select_languoid.add_columns(endangerment_source)\
+                      .outerjoin(sa.join(Endangerment, EndangermentSource))\
+                      .outerjoin(sa.join(e_bibitem, e_bibfile))
+
+    select_languoid = select_languoid\
+                      .add_columns(*get_cols(EthnologueComment,
+                                             label='elcomment_{name}'))\
+                      .outerjoin(EthnologueComment)
+
+    select_languoid = select_languoid\
+                      .add_columns(*get_cols(IsoRetirement,
+                                            label='iso_retirement_{name}'))\
+                      .outerjoin(IsoRetirement)
 
     iso_retirement_change_to = select(IsoRetirementChangeTo.code)\
                                .select_from(IsoRetirementChangeTo)\
@@ -258,64 +331,7 @@ def get_query(*, ordered='id', separator=', '):
                                        .label('iso_retirement_change_to'))\
                                .label('iso_retirement_change_to')
 
-    def get_cols(model, label='{name}', ignore='id'):
-        cols = model.__table__.columns
-        if ignore:
-            ignore_suffix = '_' + ignore
-            cols = [c for c in cols if c.name != ignore
-                    and not c.name.endswith(ignore_suffix)]
-        return [c.label(label.format(name=c.name)) for c in cols]
-
-    subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
-
-    classification_sub = subc.comment.label('classification_sub')
-    classification_family = famc.comment.label('classification_family')
-
-    classification = [classification_sub, classification_subrefs,
-                      classification_family, classification_familyrefs]
-
-    select_languoid = select(
-        Languoid.id,
-        Languoid.name,
-        Languoid.level,
-        Languoid.parent_id,
-        path.label('path'),
-        family.label('family_id'),
-        language.label('dialect_language_id'),
-        Languoid.hid,
-        Languoid.iso639_3,
-        Languoid.latitude,
-        Languoid.longitude,
-        macroareas,
-        countries,
-        links,
-        sources_glottolog,
-        *altnames
-        + triggers
-        + identifiers
-        + classification
-        + get_cols(Endangerment, label='endangerment_{name}')
-        + [endangerment_source]
-        + get_cols(EthnologueComment, label='elcomment_{name}')
-        + get_cols(IsoRetirement, label='iso_retirement_{name}')
-        + [iso_retirement_change_to])\
-        .select_from(Languoid)
-
-    for s, (i, is_) in idents.items():
-        select_languoid = select_languoid\
-                          .outerjoin(sa.join(i, is_, i.site_id == is_.id),
-                                     sa.and_(is_.name == s,
-                                             i.languoid_id == Languoid.id))
-
-    select_languoid = select_languoid\
-                      .outerjoin(subc, sa.and_(subc.kind == 'sub',
-                                               subc.languoid_id == Languoid.id))\
-                      .outerjoin(famc, sa.and_(famc.kind == 'family',
-                                               famc.languoid_id == Languoid.id))\
-                      .outerjoin(sa.join(Endangerment, EndangermentSource))\
-                      .outerjoin(sa.join(e_bibitem, e_bibfile))\
-                      .outerjoin(EthnologueComment)\
-                      .outerjoin(IsoRetirement)
+    select_languoid = select_languoid.add_columns(iso_retirement_change_to)
 
     select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
 
@@ -400,6 +416,15 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
 
+    languoid = {'id': Languoid.id,
+               'parent_id': Languoid.parent_id,
+               'level': Languoid.level,
+               'name': Languoid.name,
+               'hid': Languoid.hid,
+               'iso639_3': Languoid.iso639_3,
+               'latitude': Languoid.latitude,
+               'longitude': Languoid.longitude}
+
     macroareas = select(languoid_macroarea.c.macroarea_name)\
                  .select_from(languoid_macroarea)\
                  .filter_by(languoid_id=Languoid.id)\
@@ -410,6 +435,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     macroareas = select(group_array(macroareas.c.macroarea_name)
                         .label('macroareas'))\
                  .scalar_subquery()
+
+    languoid['macroareas'] = macroareas
 
     countries = select(Country.jsonf())\
                 .join_from(languoid_country, Country)\
@@ -422,6 +449,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                         .label('countries'))\
                 .scalar_subquery()
 
+    languoid['countries'] = countries
+
     links = select(Link.jsonf())\
             .select_from(Link)\
             .filter_by(languoid_id=Languoid.id)\
@@ -432,10 +461,14 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     links = select(group_array(links.c.jsonf).label('links'))\
             .scalar_subquery()
 
+    languoid['links'] = links
+
     timespan = select(Timespan.jsonf())\
                .select_from(Timespan)\
                .filter_by(languoid_id=Languoid.id)\
                .scalar_subquery()
+
+    languoid['timespan'] = timespan
 
     s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
@@ -462,6 +495,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                      .label('sources'))\
               .scalar_subquery()
 
+    languoid['sources'] = sources
+
     a_provider = aliased(AltnameProvider, name='altname_provider')
     altnames = select(a_provider.name.label('provider'), Altname.jsonf())\
                .select_from(Altname)\
@@ -482,6 +517,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                       .label('altnames'))\
                .scalar_subquery()
 
+    languoid['altnames'] = altnames
+
     triggers = select(Trigger.field, Trigger.trigger)\
                .select_from(Trigger)\
                .filter_by(languoid_id=Languoid.id)\
@@ -499,6 +536,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                                      '{}').label('triggers'))\
                .scalar_subquery()
 
+    languoid['triggers'] = triggers
+
     identifier = select(sa.func.nullif(group_object(IdentifierSite.name.label('site'),
                                                     Identifier.identifier),
                                        '{}').label('identifier'))\
@@ -507,6 +546,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                 .correlate(Languoid)\
                 .filter_by(site_id=IdentifierSite.id)\
                 .scalar_subquery()
+
+    languoid['identifier'] = identifier
 
     classification_comment = select(ClassificationComment.kind.label('key'),
                                     ClassificationComment.comment.label('value'))\
@@ -543,6 +584,8 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                      .select_from(classification)\
                      .scalar_subquery()
 
+    languoid['classification'] = classification
+
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
@@ -555,12 +598,16 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                    .correlate(Languoid)\
                    .scalar_subquery()
 
+    languoid['endangerment'] = endangerment
+
     hh_ethnologue_comment = select(EthnologueComment
                                    .jsonf(label='hh_ethnologue_comment'))\
                             .select_from(EthnologueComment)\
                             .filter_by(languoid_id=Languoid.id)\
                             .correlate(Languoid)\
                             .scalar_subquery()
+
+    languoid['hh_ethnologue_comment'] = hh_ethnologue_comment
 
     irct = aliased(IsoRetirementChangeTo, name='irct')
 
@@ -582,26 +629,9 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                      .correlate(Languoid)\
                      .scalar_subquery()
 
-    languoid = json_object('id', Languoid.id,
-                           'parent_id', Languoid.parent_id,
-                           'level', Languoid.level,
-                           'name', Languoid.name,
-                           'hid', Languoid.hid,
-                           'iso639_3', Languoid.iso639_3,
-                           'latitude', Languoid.latitude,
-                           'longitude', Languoid.longitude,
-                           'macroareas', macroareas,
-                           'countries', countries,
-                           'links', links,
-                           'timespan', timespan,
-                           'sources', sources,
-                           'altnames', altnames,
-                           'triggers', triggers,
-                           'identifier', identifier,
-                           'classification', classification,
-                           'endangerment', endangerment,
-                           'hh_ethnologue_comment', hh_ethnologue_comment,
-                           'iso_retirement', iso_retirement)
+    languoid['iso_retirement'] = iso_retirement
+
+    languoid = json_object(*(x for kv in languoid.items() for x in kv))
 
     if as_rows:
         path = Languoid.path()
