@@ -8,7 +8,7 @@ import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import (ENGINE,
+from . import (ENGINE, ROOT,
                Session)
 
 from .backend.models import Dataset
@@ -17,7 +17,8 @@ from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, Altname, AltnameProvider)
 
-__all__ = ['check']
+__all__ = ['check',
+           'compare_with_files']
 
 
 log = logging.getLogger(__name__)
@@ -246,3 +247,25 @@ def no_empty_files(*, exclude_raw):
     return sa.select(File)\
            .select_from(File)\
            .where(~sa.exists().where(Value.file_id == File.id))
+
+
+def compare_with_files(bind=ENGINE, *, from_raw=True, root=ROOT):
+    from . import languoids
+
+    def compare(left, right):
+        same = True
+        for l, r in itertools.zip_longest(left, right):
+            if l != r:
+                same = False
+                print('', '', l, '', r, '', '', sep='\n')
+
+        return same
+
+    languoids_from_files = languoids.iterlanguoids(root,
+                                                   ordered=True)
+    
+    languoids_from_bind = languoids.iterlanguoids(bind,
+                                                  from_raw=from_raw,
+                                                  ordered='path')
+
+    return compare(languoids_from_files, languoids_from_bind)

@@ -30,7 +30,8 @@ from .backend.views import TABLES as views
 from .backend.tools import (print_schema,
                             print_query_sql)
 
-from .checks import check
+from .checks import (check,
+                     compare_with_files)
 
 from .config import (configure,
                      get_default_root)
@@ -47,8 +48,7 @@ from .files import (set_root,
 
 from .glottolog import checkout_or_clone
 
-from .languoids import (iterlanguoids,
-                        compare_with_files)
+from .languoids import iterlanguoids
 
 from .logging_ import configure_logging
 
@@ -69,13 +69,13 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'print_table_sql', 'select_tables_nrows',
            'views',
            'print_schema', 'print_query_sql',
-           'check',
+           'check', 'compare_with_files',
            'configure',
            'checksum', 'write_json_csv',
            'write_json_query_csv', 'write_json_lines', 'write_files',
            'set_root', 'iterfiles',
            'checkout_or_clone',
-           'iterlanguoids', 'compare_with_files',
+           'iterlanguoids', 
            'configure_logging',
            'LEVEL', 'Languoid',
            'print_languoid_stats',

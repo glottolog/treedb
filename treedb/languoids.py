@@ -1,19 +1,18 @@
 # languoids.py - load languoids/tree/**/md.ini into dicts
 
 import datetime
-import itertools
 import logging
 import re
 import warnings
 
 import pycountry
 
-from . import ENGINE, ROOT
+from . import ROOT
 
 from . import _tools
 
 __all__ = ['iterlanguoids',
-           'compare_with_files']
+           'iterreccords']
 
 FLOAT_DIGITS = 12
 
@@ -80,21 +79,6 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
         yield path_tuple, languoid
     log.info('%s languoids extracted', f'{n:_d}')
-
-
-def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
-    return compare(iterlanguoids(root, ordered=True),
-                   iterlanguoids(bind, from_raw=from_raw, ordered='path'))
-
-
-def compare(left, right):
-    same = True
-    for l, r in itertools.zip_longest(left, right):
-        if l != r:
-            same = False
-            print('', '', l, '', r, '', '', sep='\n')
-
-    return same
 
 
 def iterrecords(languoids):
