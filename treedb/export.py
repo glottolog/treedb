@@ -34,12 +34,16 @@ __all__ = ['print_languoid_stats',
 log = logging.getLogger(__name__)
 
 
-def print_languoid_stats(*, bind=ENGINE):
+def print_languoid_stats(*, file=None,
+                         bind=ENGINE):
     rows = _backend.iterrows(_queries.get_stats_query(),
                              mappings=True, bind=bind)
     rows, counts = itertools.tee(rows)
 
-    _export.print_rows(rows, format_='{n:6,d} {kind}', bind=None)
+    _export.print_rows(rows,
+                       format_='{n:6,d} {kind}',
+                       file=file,
+                       bind=None)
 
     sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
             ('roots', ('families', 'isolates')),
