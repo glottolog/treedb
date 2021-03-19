@@ -21,6 +21,7 @@ from .backend import export as _export
 from . import languoids as _languoids
 from .models import SPECIAL_FAMILIES, BOOKKEEPING
 from . import queries as _queries
+from . import records as _records
 
 __all__ = ['print_languoid_stats',
            'checksum',
@@ -270,7 +271,7 @@ def write_files(root=ROOT, *, replace=False,
     languoids = _languoids.iterlanguoids(bind,
                                          from_raw=from_raw,
                                          ordered='path')
-    records = _languoids.records_from_languoids(languoids)
+    records = _records.records_from_languoids(languoids)
 
     return files.write_files(records, root=root, replace=replace,
                              progress_after=progress_after)
