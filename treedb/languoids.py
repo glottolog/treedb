@@ -13,7 +13,7 @@ from . import ENGINE, ROOT
 from . import tools as _tools
 
 __all__ = ['iterlanguoids',
-           'compare_with_files', 'compare',
+           'compare_with_files',
            'write_files']
 
 FLOAT_DIGITS = 12
@@ -81,6 +81,40 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
         languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
         yield path_tuple, languoid
     log.info('%s languoids extracted', f'{n:_d}')
+
+
+def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
+    return compare(iterlanguoids(root, ordered=True),
+                   iterlanguoids(bind, from_raw=from_raw, ordered='path'))
+
+
+def compare(left, right):
+    same = True
+    for l, r in itertools.zip_longest(left, right):
+        if l != r:
+            same = False
+            print('', '', l, '', r, '', '', sep='\n')
+
+    return same
+
+
+def write_files(root=ROOT, *, from_raw=False, replace=False,
+                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
+    log.info('write from tables to tree')
+
+    from . import files
+
+    languoids = iterlanguoids(bind, from_raw=from_raw, ordered='path')
+    records = iterrecords(languoids)
+
+    return files.write_files(records, root=root, replace=replace,
+                             progress_after=progress_after)
+
+
+def iterrecords(languoids):
+    for path, l in languoids:
+        record = make_record(l)
+        yield path, record
 
 
 def get_float(mapping, key, format_=FLOAT_FORMAT):
@@ -390,85 +424,67 @@ def make_languoid(path_tuple, cfg, *, from_raw):
     return languoid
 
 
-def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
-    return compare(iterlanguoids(root, ordered=True),
-                   iterlanguoids(bind, from_raw=from_raw, ordered='path'))
+def make_record(languoid):
+    core = {'name': languoid['name'],
+            'hid': languoid['hid'],
+            'level': languoid['level'],
+            'iso639-3': languoid['iso639_3'],
+            'latitude': format_float(languoid['latitude']),
+            'longitude': format_float(languoid['longitude']),
+            'macroareas': languoid['macroareas'],
+            'countries': list(map(formatcountry, languoid['countries'])),
+            'links': list(map(formatlink, languoid['links'])),
+            'timespan': format_interval(languoid.get('timespan'))}
 
+    record = {'core': core}
 
-def compare(left, right):
-    same = True
-    for l, r in itertools.zip_longest(left, right):
-        if l != r:
-            same = False
-            print('', '', l, '', r, '', '', sep='\n')
+    sources = languoid.get('sources')
+    if sources:
+        sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
+    else:
+        sources = {}
 
-    return same
+    altnames = languoid.get('altnames')
+    if altnames:
+        altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
+    else:
+        altnames = {}
 
+    triggers = languoid.get('triggers') or {}
 
-def iterrecords(languoids):
-    for p, l in languoids:
-        rec = {'name': l['name'],
-               'hid': l['hid'],
-               'level': l['level'],
-               'iso639-3': l['iso639_3'],
-               'latitude': format_float(l['latitude']),
-               'longitude': format_float(l['longitude']),
-               'macroareas': l['macroareas'],
-               'countries': list(map(formatcountry, l['countries'])),
-               'links': list(map(formatlink, l['links'])),
-               'timespan': format_interval(l.get('timespan'))}
-        rec = {'core': rec}
+    identifier = languoid.get('identifier') or {}
 
-        sources = l.get('sources') or {}
-        if sources:
-            sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
+    classification = languoid['classification']
+    if classification:
+        classification.update({k: list(map(formatsource, classification[k]))
+                               for k in ('subrefs', 'familyrefs')
+                               if k in classification})
+    else:
+        classification = {}
+        
+    endangerment = languoid.get('endangerment')
+    if endangerment:
+        endangerment.update(source=formatsource(endangerment['source'],
+                                                endangerment=True),
+                            date=format_datetime(endangerment['date']))
+    else:
+        endangerment = {}
 
-        altnames = l.get('altnames') or {}
-        if altnames:
-            altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
+    hh_ethnologue_comment = languoid.get('hh_ethnologue_comment') or {}
 
-        triggers = l.get('triggers') or {}
+    iso_retirement = languoid.get('iso_retirement')
+    if iso_retirement and False:  # FIXME
+        iso_retirement['effective'] = format_date(iso_retirement['effective'])
+    else:
+        iso_retirement = {}
 
-        identifier = l.get('identifier') or {}
+    record.update(sources=sources,
+                  altnames=altnames,
+                  triggers=triggers,
+                  identifier=identifier,
+                  classification=classification,
+                  endangerment=endangerment,
+                  hh_ethnologue_comment=hh_ethnologue_comment,
+                  iso_retirement=iso_retirement)
 
-        classification = l['classification'] or {}
-        if classification:
-            classification.update({k: list(map(formatsource, classification[k]))
-                                   for k in ('subrefs', 'familyrefs')
-                                   if k in classification})
-
-        endangerment = l.get('endangerment') or {}
-        if endangerment:
-            endangerment.update(source=formatsource(endangerment['source'],
-                                                    endangerment=True),
-                                date=format_datetime(endangerment['date']))
-
-        hh_ethnologue_comment = l.get('hh_ethnologue_comment') or {}
-
-        iso_retirement = l.get('iso_retirement') or {}
-        if iso_retirement and False:  # FIXME
-            iso_retirement['effective'] = format_date(iso_retirement['effective'])
-
-        rec.update(sources=sources,
-                   altnames=altnames,
-                   triggers=triggers,
-                   identifier=identifier,
-                   classification=classification,
-                   endangerment=endangerment,
-                   hh_ethnologue_comment=hh_ethnologue_comment,
-                   iso_retirement=iso_retirement)
-
-        yield p, rec
-
-
-def write_files(root=ROOT, *, from_raw=False, replace=False,
-                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
-    log.info('write from tables to tree')
-
-    from . import files
-
-    languoids = iterlanguoids(bind, from_raw=from_raw, ordered='path')
-    records = iterrecords(languoids)
-
-    return files.write_files(records, root=root, replace=replace,
-                             progress_after=progress_after)
+    return record
