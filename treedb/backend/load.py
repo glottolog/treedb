@@ -9,8 +9,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .. import (ENGINE, ROOT,
-                REGISTRY as registry)
+from .. import ENGINE, ROOT, REGISTRY
 
 from .. import _tools
 from .. import files as _files
@@ -73,18 +72,18 @@ def get_dataset(engine, *, exclude_raw, force_rebuild):
     return dataset
 
 
-def main(filename=ENGINE, repo_root=None, *,
-         treepath=_files.TREE_IN_ROOT,
-         require=False, rebuild=False,
+def main(filename=ENGINE, repo_root=None,
+         *, treepath=_files.TREE_IN_ROOT,
+         metadata=REGISTRY.metadata,
+         require=False,
+         rebuild=False,
          from_raw=None,
          exclude_raw=False,
          exclude_views=False,
-         force_rebuild=False,
-         metadata=registry.metadata):
+         force_rebuild=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
-    root = get_root(repo_root, default=ROOT)
-
-    from_raw = get_from_raw(from_raw, exclude_raw=exclude_raw)
+    kwargs = {'root': get_root(repo_root, default=ROOT),
+              'from_raw': get_from_raw(from_raw, exclude_raw=exclude_raw)}
 
     engine = get_engine(filename, require=require)
 
@@ -101,10 +100,9 @@ def main(filename=ENGINE, repo_root=None, *,
 
         dataset = load(metadata,
                        bind=engine,
-                       root=root,
-                       from_raw=from_raw,
                        exclude_raw=exclude_raw,
-                       exclude_views=exclude_views)
+                       exclude_views=exclude_views,
+                       **kwargs)
 
         log.info('database loaded')
     else:
@@ -184,14 +182,14 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     if not exclude_raw:
         log.info('load raw')
         with begin(bind=bind) as conn:
-            load_raw(conn, root=root)
+            import_raw(conn, root=root)
 
     if not (from_raw or exclude_raw):  # pragma: no cover
         warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.info('load languoids')
     with begin(bind=bind) as conn:
-        load_languoids(conn, root=root, from_raw=from_raw)
+        import_languoids(conn, root=root, from_raw=from_raw)
 
     log.info('write %r: %r', _models.Dataset.__tablename__, dataset['title'])
     with begin(bind=bind) as conn:
@@ -222,6 +220,11 @@ def make_dataset(root, *, exclude_raw):
         return dataset
 
 
+def write_dataset(conn, *, dataset):
+    log.debug('dataset: %r', dataset)
+    conn.execute(sa.insert(_models.Dataset), dataset)
+
+
 def write_producer(conn, *, name):
     from .. import __version__
 
@@ -230,7 +233,7 @@ def write_producer(conn, *, name):
     conn.execute(sa.insert(_models.Producer), params)
 
 
-def load_raw(conn, *, root):
+def import_raw(conn, *, root):
     log.debug('import target module %s.raw.import_models', __package__)
 
     from ..raw import import_models
@@ -240,7 +243,7 @@ def load_raw(conn, *, root):
     import_models.main(root, conn=conn)
 
 
-def load_languoids(conn, *, root, from_raw):
+def import_languoids(conn, *, root, from_raw):
     log.debug('import source module %s.languoids', __package__)
 
     from .. import languoids
@@ -255,8 +258,3 @@ def load_languoids(conn, *, root, from_raw):
     pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
 
     import_models.main(pairs, conn=conn)
-
-
-def write_dataset(conn, *, dataset):
-    log.debug('dataset: %r', dataset)
-    conn.execute(sa.insert(_models.Dataset), dataset)
