@@ -4,6 +4,7 @@ import contextlib
 import datetime
 import functools
 import gzip
+import hashlib
 import logging
 import warnings
 import zipfile
@@ -20,7 +21,9 @@ from .. import backend as _backend
 
 __all__ = ['backup',
            'dump_sql',
-           'csv_zipfile']
+           'csv_zipfile'
+           'print_rows',
+           'write_csv', 'hash_csv', 'hash_rows']
 
 
 log = logging.getLogger(__name__)
@@ -135,3 +138,89 @@ def csv_zipfile(filename=None, *, exclude_raw=False, metadata=REGISTRY.metadata,
 
     log.info('database exported')
     return _tools.path_from_filename(filename)
+
+
+def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
+    if query is None:
+        from .. import queries as _queries
+
+        query = _queries.get_query()
+
+    if not isinstance(query, sa.sql.base.Executable):
+        # assume mappings
+        rows = iter(query)
+    else:
+        if verbose:
+            print(query)
+
+        rows = _backend.iterrows(query, mappings=True, bind=bind)
+
+    if format_ is not None:
+        rows = map(format_.format_map, rows)
+
+    for r in rows:
+        print(r)
+
+
+def write_csv(query=None, filename=None, *, verbose=False,
+              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
+    """Write get_query() example query (or given query) to CSV, return filename."""
+    if query is None:
+        from .. import queries as _queries
+
+        query = _queries.get_query()
+
+    if filename is None:
+        filename = bind.file_with_suffix('.query.csv').name
+    filename = _tools.path_from_filename(filename)
+
+    log.info('write csv: %r', filename)
+    path = _tools.path_from_filename(filename)
+    if path.exists():
+        warnings.warn(f'delete present file: {path!r}')
+        path.unlink()
+
+    if verbose:
+        print(query)
+
+    with _backend.connect(bind) as conn:
+        result = conn.execute(query)
+
+        header = list(result.keys())
+        log.info('csv header: %r', header)
+        return csv23.write_csv(filename, result, header=header,
+                               dialect=dialect, encoding=encoding,
+                               autocompress=True)
+
+
+def hash_csv(query=None, *,
+             raw=False, name=None,
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
+    if query is None:
+        from .. import queries as _queries
+
+        query = _queries.get_query()
+
+    with _backend.connect(bind) as conn:
+        result = conn.execute(query)
+
+        header = list(result.keys())
+        return hash_rows(result, header=header, name=name, raw=raw,
+                         dialect=dialect, encoding=encoding)
+
+
+def hash_rows(rows, *, header=None, name=None, raw=False,
+              dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+    if name is None:
+        name = 'sha256'
+
+    log.info('hash rows with %r, csv header: %r', name, header)
+    result = hashlib.new(name)
+    assert hasattr(result, 'hexdigest')
+
+    csv23.write_csv(result, rows, header=header,
+                    dialect=dialect, encoding=encoding)
+
+    if not raw:
+        result = result.hexdigest()
+    return result

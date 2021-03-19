@@ -8,7 +8,8 @@ from ._basics import (CONFIG, DEFAULT_ROOT,
 
 from .backend import set_engine, connect, scalar, iterrows
 
-from .backend.export import backup, dump_sql, csv_zipfile as export
+from .backend.export import (backup, dump_sql, csv_zipfile as export,
+                             print_rows, write_csv, hash_csv)
 
 from .backend.load import main as load
 
@@ -34,10 +35,9 @@ from .logging_ import configure_logging
 
 from .models import LEVEL, Languoid
 
-from .queries import (print_rows, write_csv, hash_csv,
+from .queries import (print_languoid_stats,
                       get_query,
                       write_json_query_csv, write_json_lines, get_json_query,
-                      print_languoid_stats,
                       iterdescendants)
 
 from .shortcuts import pd_read_sql
@@ -45,6 +45,7 @@ from .shortcuts import pd_read_sql
 __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'set_engine', 'connect', 'scalar', 'iterrows',
            'backup', 'dump_sql', 'export',
+           'print_rows', 'write_csv', 'hash_csv',
            'load',
            'Dataset', 'Producer',
            'print_table_sql', 'select_tables_nrows',
@@ -57,10 +58,9 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'write_json_csv', 'checksum',
            'configure_logging',
            'LEVEL', 'Languoid',
-           'print_rows', 'write_csv', 'hash_csv',
+           'print_languoid_stats',
            'get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
-           'print_languoid_stats',
            'iterdescendants',
            'pd_read_sql',
            'engine', 'root']

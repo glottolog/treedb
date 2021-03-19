@@ -6,7 +6,7 @@ import csv23
 
 import sqlalchemy as sa
 
-from .. import queries as _queries
+from ..backend import export as _export
 
 from .models import File, Option, Value
 
@@ -38,7 +38,7 @@ def checksum(*, weak=False, name=None,
         select_rows = sa.select(File.path, File.sha256)\
                       .order_by('path')
 
-    hash_ = _queries.hash_csv(select_rows, raw=True, name=name,
+    hash_ = _export.hash_csv(select_rows, raw=True, name=name,
                                dialect=dialect, encoding=encoding)
 
     logging.debug('%s: %r', hash_.name, hash_.hexdigest())

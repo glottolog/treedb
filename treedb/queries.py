@@ -1,7 +1,6 @@
 # queries.py - batteries-included sqlalchemy queries for sqlite3 db
 
 import functools
-import hashlib
 import io
 import itertools
 import logging
@@ -12,13 +11,12 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-import csv23
-
 from . import _compat
 
 from . import ENGINE
 
 from . import backend as _backend
+from .backend import export as _export
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -35,8 +33,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
 from . import tools as _tools
 from . import views as _views
 
-__all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
-           'get_query',
+__all__ = ['get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',
            'print_languoid_stats', 'get_stats_query',
            'iterdescendants']
@@ -45,84 +42,80 @@ __all__ = ['print_rows', 'write_csv', 'hash_csv', 'hash_rows',
 log = logging.getLogger(__name__)
 
 
-def print_rows(query=None, *, format_=None, verbose=False, bind=ENGINE):
-    if query is None:
-        query = get_query()
+def print_languoid_stats(*, bind=ENGINE):
+    rows = _backend.iterrows(get_stats_query(), mappings=True, bind=bind)
+    rows, counts = itertools.tee(rows)
 
-    if not isinstance(query, sa.sql.base.Executable):
-        # assume mappings
-        rows = iter(query)
-    else:
-        if verbose:
-            print(query)
+    _export.print_rows(rows, format_='{n:6,d} {kind}', bind=None)
 
-        rows = _backend.iterrows(query, mappings=True, bind=bind)
+    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
+            ('roots', ('families', 'isolates')),
+            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
+            ('languages', ('All', BOOKKEEPING))]
 
-    if format_ is not None:
-        rows = map(format_.format_map, rows)
-
-    for r in rows:
-        print(r)
-
-
-def write_csv(query=None, filename=None, *, verbose=False,
-              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
-    """Write get_query() example query (or given query) to CSV, return filename."""
-    if query is None:
-        query = get_query()
-
-    if filename is None:
-        filename = bind.file_with_suffix('.query.csv').name
-    filename = _tools.path_from_filename(filename)
-
-    log.info('write csv: %r', filename)
-    path = _tools.path_from_filename(filename)
-    if path.exists():
-        warnings.warn(f'delete present file: {path!r}')
-        path.unlink()
-
-    if verbose:
-        print(query)
-
-    with _backend.connect(bind) as conn:
-        result = conn.execute(query)
-
-        header = list(result.keys())
-        log.info('csv header: %r', header)
-        return csv23.write_csv(filename, result, header=header,
-                               dialect=dialect, encoding=encoding,
-                               autocompress=True)
+    counts = {c['kind']: c['n'] for c in counts}
+    for total, parts in sums:
+        values = [counts[p] for p in parts]
+        parts_sum = sum(values)
+        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+        log.debug('verify %s == %d %s', term, counts[total], total)
+        if counts[total] != parts_sum:  # pragma: no cover
+            warnings.warn(f'{term} = {parts_sum:,d}'
+                          f' (expected {counts[total]:,d} {total})')
 
 
-def hash_csv(query=None, *,
-             raw=False, name=None,
-             dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
-    if query is None:
-        query = get_query()
+@_views.register_view('stats')
+def get_stats_query():
+    # cf. https://glottolog.org/glottolog/glottologinformation
 
-    with _backend.connect(bind) as conn:
-        result = conn.execute(query)
+    def languoid_count(kind, cls=Languoid, fromclause=Languoid,
+                       level=None, is_root=None):
+        select_nrows = select(sa.literal(kind).label('kind'),
+                              sa.func.count().label('n'))\
+                       .select_from(fromclause)
 
-        header = list(result.keys())
-        return hash_rows(result, header=header, name=name, raw=raw,
-                         dialect=dialect, encoding=encoding)
+        if level is not None:
+            select_nrows = select_nrows.where(cls.level == level)
 
+        if is_root is not None:
+            cond = (cls.parent == None) if is_root else (cls.parent != None)
+            select_nrows = select_nrows.where(cond)
 
-def hash_rows(rows, *, header=None, name=None, raw=False,
-              dialect=csv23.DIALECT, encoding=csv23.ENCODING):
-    if name is None:
-        name = 'sha256'
+        return select_nrows
 
-    log.info('hash rows with %r, csv header: %r', name, header)
-    result = hashlib.new(name)
-    assert hasattr(result, 'hexdigest')
+    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',
+                                                         parent_root=True)
 
-    csv23.write_csv(result, rows, header=header,
-                    dialect=dialect, encoding=encoding)
+    language_count = functools.partial(languoid_count,
+                                       cls=Child, fromclause=root_child,
+                                       level=LANGUAGE)
 
-    if not raw:
-        result = result.hexdigest()
-    return result
+    def iterselects():
+        yield languoid_count('languoids')
+
+        yield languoid_count('families', level=FAMILY, is_root=True)
+
+        yield languoid_count('isolates', level=LANGUAGE, is_root=True)
+
+        yield languoid_count('roots', is_root=True)
+
+        yield languoid_count('languages', level=LANGUAGE)
+
+        yield languoid_count('subfamilies', level=FAMILY, is_root=False)
+
+        yield languoid_count('dialects', level=DIALECT)
+
+        yield language_count('Spoken L1 Languages')\
+              .where(Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
+
+        for name in SPECIAL_FAMILIES:
+            yield language_count(name).where(Root.name == name)
+
+        yield language_count('All').where(Root.name != BOOKKEEPING)
+
+        yield language_count(BOOKKEEPING).where(Root.name == BOOKKEEPING)
+
+    return sa.union_all(*iterselects())
 
 
 @_views.register_view('example')
@@ -358,7 +351,7 @@ def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE)
 
     query = get_json_query(ordered=ordered, as_rows=True, load_json=raw)
 
-    return write_csv(query, filename=filename, bind=bind)
+    return _export.write_csv(query, filename=filename, bind=bind)
 
 
 def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
@@ -657,82 +650,6 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     select_json = _ordered_by(select_json, path, ordered=ordered)
 
     return select_json
-
-
-def print_languoid_stats(*, bind=ENGINE):
-    rows = _backend.iterrows(get_stats_query(), mappings=True, bind=bind)
-    rows, counts = itertools.tee(rows)
-
-    print_rows(rows, format_='{n:6,d} {kind}', bind=None)
-
-    sums = [('languoids', ('families', 'languages', 'subfamilies', 'dialects')),
-            ('roots', ('families', 'isolates')),
-            ('All', ('Spoken L1 Languages',) + SPECIAL_FAMILIES),
-            ('languages', ('All', BOOKKEEPING))]
-
-    counts = {c['kind']: c['n'] for c in counts}
-    for total, parts in sums:
-        values = [counts[p] for p in parts]
-        parts_sum = sum(values)
-        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
-        log.debug('verify %s == %d %s', term, counts[total], total)
-        if counts[total] != parts_sum:  # pragma: no cover
-            warnings.warn(f'{term} = {parts_sum:,d}'
-                          f' (expected {counts[total]:,d} {total})')
-
-
-@_views.register_view('stats')
-def get_stats_query():
-    # cf. https://glottolog.org/glottolog/glottologinformation
-
-    def languoid_count(kind, cls=Languoid, fromclause=Languoid,
-                       level=None, is_root=None):
-        select_nrows = select(sa.literal(kind).label('kind'),
-                              sa.func.count().label('n'))\
-                       .select_from(fromclause)
-
-        if level is not None:
-            select_nrows = select_nrows.where(cls.level == level)
-
-        if is_root is not None:
-            cond = (cls.parent == None) if is_root else (cls.parent != None)
-            select_nrows = select_nrows.where(cond)
-
-        return select_nrows
-
-    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',
-                                                         parent_root=True)
-
-    language_count = functools.partial(languoid_count,
-                                       cls=Child, fromclause=root_child,
-                                       level=LANGUAGE)
-
-    def iterselects():
-        yield languoid_count('languoids')
-
-        yield languoid_count('families', level=FAMILY, is_root=True)
-
-        yield languoid_count('isolates', level=LANGUAGE, is_root=True)
-
-        yield languoid_count('roots', is_root=True)
-
-        yield languoid_count('languages', level=LANGUAGE)
-
-        yield languoid_count('subfamilies', level=FAMILY, is_root=False)
-
-        yield languoid_count('dialects', level=DIALECT)
-
-        yield language_count('Spoken L1 Languages')\
-              .where(Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
-
-        for name in SPECIAL_FAMILIES:
-            yield language_count(name).where(Root.name == name)
-
-        yield language_count('All').where(Root.name != BOOKKEEPING)
-
-        yield language_count(BOOKKEEPING).where(Root.name == BOOKKEEPING)
-
-    return sa.union_all(*iterselects())
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):

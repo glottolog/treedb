@@ -4,7 +4,7 @@ import logging
 
 import sqlalchemy as sa
 
-from .. import queries as _queries
+from ..backend import export as _export
 
 from .models import Option, Value
 
@@ -25,4 +25,4 @@ def print_stats():
 
     template = '{section:<22} {option:<22} {n:,}'
 
-    _queries.print_rows(select_nvalues, format_=template)
+    _export.print_rows(select_nvalues, format_=template)

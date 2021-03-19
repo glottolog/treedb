@@ -9,8 +9,8 @@ import sqlalchemy as sa
 
 from .. import ENGINE, ROOT
 
+from ..backend import export as _export
 from .. import files as _files
-from .. import queries as _queries
 from .. import tools as _tools
 
 from . import records as _records
@@ -43,8 +43,8 @@ def write_raw_csv(filename=None, *,
                     .join_from(File, Value).join(Option)\
                     .order_by('path', 'section', 'option', 'line')
 
-    return _queries.write_csv(select_values, filename,
-                              dialect=dialect, encoding=encoding)
+    return _export.write_csv(select_values, filename,
+                             dialect=dialect, encoding=encoding)
 
 
 def write_files(root=ROOT, *,

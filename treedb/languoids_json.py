@@ -13,6 +13,7 @@ from . import _compat
 from . import ENGINE, ROOT
 
 from . import backend as _backend
+from .backend import export as _export
 from . import languoids as _languoids
 from . import queries as _queries
 from . import tools as _tools
@@ -152,9 +153,9 @@ def _checksum(bind_or_root=ENGINE, *, from_raw=False, ordered='id',
     header = ['path', 'json']
     log.info('csv header: %r', header)
 
-    hash_ = _queries.hash_rows(rows, header=header,
-                               name=name, raw=True,
-                               dialect=dialect, encoding=encoding)
+    hash_ = _export.hash_rows(rows, header=header,
+                              name=name, raw=True,
+                              dialect=dialect, encoding=encoding)
     result = f"{'_'.join(header)}:{ordered}:{hash_.name}:{hash_.hexdigest()}"
     log.debug('%s: %r', hash_.name, result)
     return result
