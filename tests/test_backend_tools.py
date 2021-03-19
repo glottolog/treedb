@@ -8,6 +8,15 @@ import sqlalchemy as sa
 import treedb as _treedb
 
 
+def test_print_schema(capsys):
+    assert _treedb.print_schema() is None
+
+    out, err = capsys.readouterr()
+    assert not err
+
+    assert out.strip().startswith('CREATE TABLE __dataset__ (')
+
+
 @pytest.mark.parametrize('query, pretty, expected', [
     (sa.select(_treedb.Languoid), False, ('SELECT languoid.id,'
                                           ' languoid.name,'
@@ -44,12 +53,3 @@ def test_print_query_sql(capsys, query, pretty, expected):
         assert norm_out == norm_exp
     else:
         assert out == expected
-
-
-def test_print_schema(capsys):
-    assert _treedb.print_schema() is None
-
-    out, err = capsys.readouterr()
-    assert not err
-
-    assert out.strip().startswith('CREATE TABLE __dataset__ (')

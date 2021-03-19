@@ -17,11 +17,26 @@ from . import records as _records
 
 from .models import File, Option, Value
 
-__all__ = ['write_raw_csv',
+__all__ = ['print_stats',
+           'write_raw_csv',
            'write_files']
 
 
 log = logging.getLogger(__name__)
+
+
+def print_stats():
+    log.info('fetch statistics')
+
+    select_nvalues = sa.select(Option.section, Option.option,
+                               sa.func.count().label('n'))\
+                     .join_from(Option, Value)\
+                     .group_by(Option.section, Option.option)\
+                     .order_by('section', sa.desc('n'))
+
+    template = '{section:<22} {option:<22} {n:,}'
+
+    _export.print_rows(select_nvalues, format_=template)
 
 
 def write_raw_csv(filename=None, *,

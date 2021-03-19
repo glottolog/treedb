@@ -18,6 +18,15 @@ MB = 2**20
 pytestmark = pytest.FLAGS.skip_exclude_raw
 
 
+def test_print_stats(capsys, treedb_raw):
+    assert treedb_raw.print_stats() is None
+
+    out, err = capsys.readouterr()
+    assert not err
+
+    assert out.strip()
+
+
 def test_write_raw_csv(treedb_raw):
     import treedb
 
