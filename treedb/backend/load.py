@@ -25,7 +25,7 @@ __all__ = ['main']
 log = logging.getLogger(__name__)
 
 
-def get_root(repo_root, *, default):
+def get_root(repo_root, *, default, treepath=_files.TREE_IN_ROOT):
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
     else:
@@ -82,7 +82,7 @@ def main(filename=ENGINE, repo_root=None,
          exclude_views=False,
          force_rebuild=False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
-    kwargs = {'root': get_root(repo_root, default=ROOT),
+    kwargs = {'root': get_root(repo_root, default=ROOT, treepath=treepath),
               'from_raw': get_from_raw(from_raw, exclude_raw=exclude_raw)}
 
     engine = get_engine(filename, require=require)

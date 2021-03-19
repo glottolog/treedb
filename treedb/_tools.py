@@ -2,7 +2,6 @@
 
 import builtins
 import bz2
-import contextlib
 import functools
 import gzip
 import hashlib

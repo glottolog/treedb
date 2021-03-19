@@ -21,7 +21,7 @@ from .. import backend as _backend
 
 __all__ = ['backup',
            'dump_sql',
-           'csv_zipfile'
+           'csv_zipfile',
            'print_rows',
            'write_csv', 'hash_csv', 'hash_rows']
 
