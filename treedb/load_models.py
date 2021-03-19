@@ -59,9 +59,7 @@ class ModelMap(dict):
         return pk
 
 
-def load(languoids, conn):
-    insert_lang = functools.partial(conn.execute, sa.insert(Languoid))
-
+def load(languoids, *, conn):
     macroareas = sorted(MACROAREA)
     log.debug('insert macroareas: %r', macroareas)
     conn.execute(sa.insert(Macroarea), [{'name': n} for n in macroareas])
@@ -75,7 +73,12 @@ def load(languoids, conn):
                 _seen[id_] = name
                 yield c
 
-    sourceprovider_ids = ModelMap(conn=conn, model=SourceProvider)
+    kwargs = {'conn': conn,
+              'insert_lang': functools.partial(conn.execute, sa.insert(Languoid)),
+              'unseen_countries': unseen_countries,
+              'sourceprovider_ids': ModelMap(conn=conn, model=SourceProvider),
+              'altnameprovider_ids': ModelMap(conn=conn, model=AltnameProvider),
+              'identifiersite_ids': ModelMap(conn=conn, model=IdentifierSite)}
 
     bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
@@ -94,10 +97,6 @@ def load(languoids, conn):
 
     bibitem_ids = BibitemMap(conn=conn, log_insert=False)  # silence bibitems
 
-    altnameprovider_ids = ModelMap(conn=conn, model=AltnameProvider)
-
-    identifiersite_ids = ModelMap(conn=conn, model=IdentifierSite)
-
     class EndangermentSourceMap(ModelMap):
         # using closure over bibitem_ids
 
@@ -114,123 +113,137 @@ def load(languoids, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
-    es_ids = EndangermentSourceMap(conn=conn) 
+    es_ids = EndangermentSourceMap(conn=conn)
+
+    kwargs.update(bibfile_ids=bibfile_ids,
+                  bibitem_ids=bibitem_ids,
+                  es_ids=es_ids)
 
     for _, l in languoids:
-        lid = l['id']
+        insert_languoid(l, **kwargs)
 
-        macroareas = l.pop('macroareas')
-        countries = l.pop('countries')
-        links = l.pop('links')
-        timespan = l.pop('timespan', None)
 
-        sources = l.pop('sources', None)
-        altnames = l.pop('altnames', None)
-        triggers = l.pop('triggers', None)
-        identifier = l.pop('identifier', None)
-        classification = l.pop('classification', None)
-        endangerment = l.pop('endangerment', None)
-        hh_ethnologue_comment = l.pop('hh_ethnologue_comment', None)
-        iso_retirement = l.pop('iso_retirement', None)
+def insert_languoid(languoid, *, conn,
+                    insert_lang,
+                    unseen_countries,
+                    sourceprovider_ids,
+                    bibfile_ids, bibitem_ids,
+                    altnameprovider_ids,
+                    identifiersite_ids,
+                    es_ids):
+    macroareas = languoid.pop('macroareas')
+    countries = languoid.pop('countries')
+    links = languoid.pop('links')
+    timespan = languoid.pop('timespan', None)
 
-        insert_lang(l)
+    sources = languoid.pop('sources', None)
+    altnames = languoid.pop('altnames', None)
+    triggers = languoid.pop('triggers', None)
+    identifier = languoid.pop('identifier', None)
+    classification = languoid.pop('classification', None)
+    endangerment = languoid.pop('endangerment', None)
+    hh_ethnologue_comment = languoid.pop('hh_ethnologue_comment', None)
+    iso_retirement = languoid.pop('iso_retirement', None)
 
-        if macroareas:
-            conn.execute(sa.insert(languoid_macroarea),
-                         [{'languoid_id': lid, 'macroarea_name': ma}
-                          for ma in macroareas])
+    lid = languoid['id']
+    insert_lang(languoid)
 
-        if countries:
-            new_countries = list(unseen_countries(countries))
-            if new_countries:
-                ids = [n['id'] for n in new_countries]
-                log.debug('insert new countries: %r', ids)
+    if macroareas:
+        conn.execute(sa.insert(languoid_macroarea),
+                     [{'languoid_id': lid, 'macroarea_name': ma}
+                      for ma in macroareas])
 
-                conn.execute(sa.insert(Country), new_countries)
+    if countries:
+        new_countries = list(unseen_countries(countries))
+        if new_countries:
+            ids = [n['id'] for n in new_countries]
+            log.debug('insert new countries: %r', ids)
 
-            conn.execute(sa.insert(languoid_country),
-                         [{'languoid_id': lid, 'country_id': c['id']}
-                          for c in countries])
+            conn.execute(sa.insert(Country), new_countries)
 
-        if links:
-            conn.execute(sa.insert(Link),
-                         [dict(languoid_id=lid, ord=i, **link)
-                          for i, link in enumerate(links, 1)])
+        conn.execute(sa.insert(languoid_country),
+                     [{'languoid_id': lid, 'country_id': c['id']}
+                      for c in countries])
 
-        if timespan:
-            conn.execute(sa.insert(Timespan),
-                         dict(languoid_id=lid, **timespan))
+    if links:
+        conn.execute(sa.insert(Link),
+                     [dict(languoid_id=lid, ord=i, **link)
+                      for i, link in enumerate(links, 1)])
 
-        if sources is not None:
-            for provider, data in sources.items():
-                provider_id = sourceprovider_ids[provider]
-                conn.execute(sa.insert(Source),
-                             [dict(languoid_id=lid,
-                                   provider_id=provider_id,
-                                   bibitem_id=bibitem_ids.pop_params(s), **s)
-                              for s in data])
+    if timespan:
+        conn.execute(sa.insert(Timespan),
+                     dict(languoid_id=lid, **timespan))
 
-        if altnames is not None:
-            for provider, names in altnames.items():
-                provider_id = altnameprovider_ids[provider]
-                half, full = groups = ([], [])
-                for n in names:
-                    r = dict(languoid_id=lid, provider_id=provider_id, **n)
-                    if 'lang' not in r:
-                        half.append(r)
-                    elif not r['lang']:  # lang = r.get('lang') or server_default
-                        r.pop('lang')
-                        half.append(r)
-                    else:
-                        full.append(r)
-                for rows in groups:
-                    if rows:
-                        conn.execute(sa.insert(Altname), rows)
-
-        if triggers is not None:
-            conn.execute(sa.insert(Trigger),
-                         [{'languoid_id': lid, 'field': field,
-                           'trigger': t, 'ord': i}
-                          for field, triggers in triggers.items()
-                          for i, t in enumerate(triggers, 1)])
-
-        if identifier is not None:
-            conn.execute(sa.insert(Identifier),
+    if sources is not None:
+        for provider, data in sources.items():
+            provider_id = sourceprovider_ids[provider]
+            conn.execute(sa.insert(Source),
                          [dict(languoid_id=lid,
-                               site_id=identifiersite_ids[site],
-                               identifier=i)
-                          for site, i in identifier.items()])
+                               provider_id=provider_id,
+                               bibitem_id=bibitem_ids.pop_params(s), **s)
+                          for s in data])
 
-        if classification is not None:
-            for c, value in classification.items():
-                isref, kind = CLASSIFICATION[c]
-                if isref:
-                    conn.execute(sa.insert(ClassificationRef),
-                                 [dict(languoid_id=lid, kind=kind,
-                                       bibitem_id=bibitem_ids.pop_params(r),
-                                       ord=i, **r)
-                                  for i, r in enumerate(value, 1)])
+    if altnames is not None:
+        for provider, names in altnames.items():
+            provider_id = altnameprovider_ids[provider]
+            half, full = groups = ([], [])
+            for n in names:
+                r = dict(languoid_id=lid, provider_id=provider_id, **n)
+                if 'lang' not in r:
+                    half.append(r)
+                elif not r['lang']:  # lang = r.get('lang') or server_default
+                    r.pop('lang')
+                    half.append(r)
                 else:
-                    conn.execute(sa.insert(ClassificationComment),
-                                 {'languoid_id': lid, 'kind': kind,
-                                  'comment': value})
+                    full.append(r)
+            for rows in groups:
+                if rows:
+                    conn.execute(sa.insert(Altname), rows)
 
-        if endangerment is not None:
-            source = es_ids.params_to_key(endangerment.pop('source'))
-            conn.execute(sa.insert(Endangerment),
-                         dict(languoid_id=lid, source_id=es_ids[source],
-                              **endangerment))
+    if triggers is not None:
+        conn.execute(sa.insert(Trigger),
+                     [{'languoid_id': lid, 'field': field,
+                       'trigger': t, 'ord': i}
+                      for field, triggers in triggers.items()
+                      for i, t in enumerate(triggers, 1)])
 
-        if hh_ethnologue_comment is not None:
-            conn.execute(sa.insert(EthnologueComment),
-                         dict(languoid_id=lid, **hh_ethnologue_comment))
+    if identifier is not None:
+        conn.execute(sa.insert(Identifier),
+                     [dict(languoid_id=lid,
+                           site_id=identifiersite_ids[site],
+                           identifier=i)
+                      for site, i in identifier.items()])
 
-        if iso_retirement is not None:
-            change_to = iso_retirement.pop('change_to')
-            conn.execute(sa.insert(IsoRetirement),
-                         dict(languoid_id=lid, **iso_retirement))
+    if classification is not None:
+        for c, value in classification.items():
+            isref, kind = CLASSIFICATION[c]
+            if isref:
+                conn.execute(sa.insert(ClassificationRef),
+                             [dict(languoid_id=lid, kind=kind,
+                                   bibitem_id=bibitem_ids.pop_params(r),
+                                   ord=i, **r)
+                              for i, r in enumerate(value, 1)])
+            else:
+                conn.execute(sa.insert(ClassificationComment),
+                             {'languoid_id': lid, 'kind': kind,
+                              'comment': value})
 
-            if change_to:
-                conn.execute(sa.insert(IsoRetirementChangeTo),
-                             [{'languoid_id': lid, 'code': c, 'ord': i}
-                              for i, c in enumerate(change_to, 1)])
+    if endangerment is not None:
+        source = es_ids.params_to_key(endangerment.pop('source'))
+        conn.execute(sa.insert(Endangerment),
+                     dict(languoid_id=lid, source_id=es_ids[source],
+                          **endangerment))
+
+    if hh_ethnologue_comment is not None:
+        conn.execute(sa.insert(EthnologueComment),
+                     dict(languoid_id=lid, **hh_ethnologue_comment))
+
+    if iso_retirement is not None:
+        change_to = iso_retirement.pop('change_to')
+        conn.execute(sa.insert(IsoRetirement),
+                     dict(languoid_id=lid, **iso_retirement))
+
+        if change_to:
+            conn.execute(sa.insert(IsoRetirementChangeTo),
+                         [{'languoid_id': lid, 'code': c, 'ord': i}
+                          for i, c in enumerate(change_to, 1)])

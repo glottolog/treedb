@@ -234,7 +234,7 @@ def load_raw(conn, *, root):
     from .. import raw
 
     log.debug('root: %r', root)
-    raw.load(root, conn)
+    raw.load(root, conn=conn)
 
 
 def load_languoids(conn, *, root, from_raw):
@@ -250,7 +250,7 @@ def load_languoids(conn, *, root, from_raw):
     log.debug('root_or_bind: %r', root_or_bind)
 
     pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
-    load_models.load(pairs, conn)
+    load_models.load(pairs, conn=conn)
 
 
 def write_dataset(conn, *, dataset):
