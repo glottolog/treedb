@@ -18,6 +18,7 @@ from . import records as _records
 from .models import File, Option, Value
 
 __all__ = ['print_stats',
+           'checksum',
            'write_raw_csv',
            'write_files']
 
@@ -37,6 +38,35 @@ def print_stats():
     template = '{section:<22} {option:<22} {n:,}'
 
     _export.print_rows(select_nvalues, format_=template)
+
+
+def checksum(*, weak=False, name=None,
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+    kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
+    log.info('calculate %r raw checksum', kind)
+
+    if weak:
+        select_rows = sa.select(File.path,
+                                Option.section, Option.option,
+                                Value.value)\
+                      .join_from(File, Value).join(Option)\
+
+        order = ['path', 'section', 'option']
+        if weak == 'unordered':
+            order.append(Value.value)
+        else:
+            order.append(Value.line)
+        select_rows = select_rows.order_by(*order)
+
+    else:
+        select_rows = sa.select(File.path, File.sha256)\
+                      .order_by('path')
+
+    hash_ = _export.hash_csv(select_rows, raw=True, name=name,
+                               dialect=dialect, encoding=encoding)
+
+    logging.debug('%s: %r', hash_.name, hash_.hexdigest())
+    return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
 
 
 def write_raw_csv(filename=None, *,
