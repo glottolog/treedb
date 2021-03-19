@@ -25,7 +25,6 @@ log = logging.getLogger(__name__)
 
 def register_view(name, **kwargs):
     log.debug('register_view(%r)', name)
-
     assert name not in VIEW_REGISTRY
 
     def decorator(func):
@@ -39,12 +38,10 @@ def create_all_views(*, clear=False):
     log.debug('run create_view() for %d views in VIEW_REGISTRY', len(VIEW_REGISTRY))
 
     ns = globals()
-
     for name, func in VIEW_REGISTRY.items():
         present = name in ns
 
         ns[name] = view(name, selectable=func(), clear=clear)
-
         if not present:
             __all__.append(name)
 
@@ -68,7 +65,6 @@ def make_table(selectable, *, name='view_table'):
     for c in selectable.alias().c:
         _, col = c._make_proxy(table)
         table.append_column(col)
-    
     return table
 
 
