@@ -263,7 +263,7 @@ def compare_with_files(bind=ENGINE, *, from_raw=True, root=ROOT):
 
     languoids_from_files = languoids.iterlanguoids(root,
                                                    ordered=True)
-    
+
     languoids_from_bind = languoids.iterlanguoids(bind,
                                                   from_raw=from_raw,
                                                   ordered='path')

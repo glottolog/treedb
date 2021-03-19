@@ -116,7 +116,7 @@ def roundtrip(root=ROOT, *, verbose=False,
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root,
                         progress_after=progress_after)
-                        
+
     records = records_from_files(triples)
     return write_files(records, root,
                        replace=False,

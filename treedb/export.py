@@ -28,7 +28,7 @@ __all__ = ['print_languoid_stats',
            'write_json_query_csv',
            'write_json_lines',
            'fetch_languoids',
-           'write_files',]
+           'write_files']
 
 
 log = logging.getLogger(__name__)
