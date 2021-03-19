@@ -33,9 +33,9 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
-__all__ = ['get_query',
-           'write_json_query_csv', 'write_json_lines', 'get_json_query',
-           'print_languoid_stats', 'get_stats_query',
+__all__ = ['print_languoid_stats', 'get_stats_query',
+           'get_query', 'get_json_query',
+           'write_json_query_csv', 'write_json_lines',
            'iterdescendants']
 
 
@@ -118,6 +118,18 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
+def _ordered_by(select_languoid, path, *, ordered):
+    if ordered is False:
+        pass
+    elif ordered in (True, 'id'):
+        select_languoid = select_languoid.order_by(Languoid.id)
+    elif ordered == 'path':
+        select_languoid = select_languoid.order_by(path)
+    else:
+        raise ValueError(f'ordered={ordered!r} not implemented')
+    return select_languoid
+
+
 @_views.register_view('example')
 def get_query(*, ordered='id', separator=', '):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
@@ -137,6 +149,8 @@ def get_query(*, ordered='id', separator=', '):
                              Languoid.latitude,
                              Languoid.longitude)\
                       .select_from(Languoid)
+
+    select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
 
     macroareas = select(languoid_macroarea.c.macroarea_name)\
                  .select_from(languoid_macroarea)\
@@ -326,79 +340,7 @@ def get_query(*, ordered='id', separator=', '):
 
     select_languoid = select_languoid.add_columns(iso_retirement_change_to)
 
-    select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
-
     return select_languoid
-
-
-def _ordered_by(select_languoid, path, *, ordered):
-    if ordered is False:
-        pass
-    elif ordered in (True, 'id'):
-        select_languoid = select_languoid.order_by(Languoid.id)
-    elif ordered == 'path':
-        select_languoid = select_languoid.order_by(path)
-    else:
-        raise ValueError(f'ordered={ordered!r} not implemented')
-    return select_languoid
-
-
-def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
-    if filename is None:
-        suffix = '_raw' if raw else ''
-        suffix = f'.languoids-json_query{suffix}.csv.gz'
-        filename = bind.file_with_suffix(suffix).name
-
-    query = get_json_query(ordered=ordered, as_rows=True, load_json=raw)
-
-    return _export.write_csv(query, filename=filename, bind=bind)
-
-
-def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
-    r"""Write languoids as newline delimited JSON.
-
-    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
-    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
-
-    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
-    """
-    open_kwargs = {'encoding': _encoding}
-
-    path = fobj = None
-    if filename is None:
-        path = bind.file_with_suffix('.languoids.jsonl')
-    elif filename is sys.stdout:
-        fobj = io.TextIOWrapper(sys.stdout.buffer, **open_kwargs)
-    elif hasattr(filename, 'write'):
-        fobj = filename
-    else:
-        path = _tools.path_from_filename(filename)
-
-    if path is None:
-        log.info('write json lines into: %r', fobj)
-        open_func = lambda: _compat.nullcontext(fobj)
-        result = fobj
-    else:
-        log.info('write json lines: %r', path)
-        open_func = functools.partial(path.open, 'wt', **open_kwargs)
-        result = path
-        if path.exists():
-            warnings.warn(f'delete present file: {path!r}')
-            path.unlink()
-
-    assert result is not None
-
-    query = get_json_query(ordered='id', as_rows=False, load_json=False,
-                           languoid_label='languoid')
-
-    rows = _backend.iterrows(query, bind=bind)
-
-    with open_func() as f:
-        write_line = functools.partial(print, file=f)
-        for path_languoid, in rows:
-            write_line(path_languoid)
-
-    return result
 
 
 @_views.register_view('path_json', as_rows=True, load_json=False)
@@ -650,6 +592,64 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     select_json = _ordered_by(select_json, path, ordered=ordered)
 
     return select_json
+
+
+def write_json_query_csv(filename=None, *, ordered='id', raw=False, bind=ENGINE):
+    if filename is None:
+        suffix = '_raw' if raw else ''
+        suffix = f'.languoids-json_query{suffix}.csv.gz'
+        filename = bind.file_with_suffix(suffix).name
+
+    query = get_json_query(ordered=ordered, as_rows=True, load_json=raw)
+
+    return _export.write_csv(query, filename=filename, bind=bind)
+
+
+def write_json_lines(filename=None, bind=ENGINE, _encoding='utf-8'):
+    r"""Write languoids as newline delimited JSON.
+
+    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
+    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
+
+    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
+    """
+    open_kwargs = {'encoding': _encoding}
+
+    path = fobj = None
+    if filename is None:
+        path = bind.file_with_suffix('.languoids.jsonl')
+    elif filename is sys.stdout:
+        fobj = io.TextIOWrapper(sys.stdout.buffer, **open_kwargs)
+    elif hasattr(filename, 'write'):
+        fobj = filename
+    else:
+        path = _tools.path_from_filename(filename)
+
+    if path is None:
+        log.info('write json lines into: %r', fobj)
+        open_func = lambda: _compat.nullcontext(fobj)
+        result = fobj
+    else:
+        log.info('write json lines: %r', path)
+        open_func = functools.partial(path.open, 'wt', **open_kwargs)
+        result = path
+        if path.exists():
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
+
+    assert result is not None
+
+    query = get_json_query(ordered='id', as_rows=False, load_json=False,
+                           languoid_label='languoid')
+
+    rows = _backend.iterrows(query, bind=bind)
+
+    with open_func() as f:
+        write_line = functools.partial(print, file=f)
+        for path_languoid, in rows:
+            write_line(path_languoid)
+
+    return result
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):

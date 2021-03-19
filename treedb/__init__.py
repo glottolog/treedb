@@ -38,8 +38,8 @@ from .logging_ import configure_logging
 from .models import LEVEL, Languoid
 
 from .queries import (print_languoid_stats,
-                      get_query,
-                      write_json_query_csv, write_json_lines, get_json_query,
+                      get_query,  get_json_query,
+                      write_json_query_csv, write_json_lines,
                       iterdescendants)
 
 from .shortcuts import pd_read_sql
@@ -62,8 +62,8 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'configure_logging',
            'LEVEL', 'Languoid',
            'print_languoid_stats',
-           'get_query',
-           'write_json_query_csv', 'write_json_lines', 'get_json_query',
+           'get_query', 'get_json_query',
+           'write_json_query_csv', 'write_json_lines',
            'iterdescendants',
            'pd_read_sql',
            'engine', 'root']
