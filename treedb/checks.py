@@ -36,15 +36,16 @@ def check(func=None, *, bind=ENGINE):
         exclude_raw = conn.scalar(sa.select(Dataset.exclude_raw))
 
     passed = True
+
     for func in check.registered:
         with Session(bind=bind) as session:
             ns = {'invalid_query': staticmethod(func), '__doc__': func.__doc__}
             check_cls = type(f'{func.__name__}Check', (Check,), ns)
 
-            if func.__name__ == 'no_empty_files':
-                kwargs = {'exclude_raw': exclude_raw}
-            else:
-                kwargs = {}
+
+            kwargs = ({'exclude_raw': exclude_raw}
+                      if func.__name__ == 'no_empty_files' else {})
+
             check_inst = check_cls(session, **kwargs)
 
             log.debug('validate %r', func.__name__)
@@ -68,8 +69,9 @@ class Check(object):
         raise NotImplementedError
 
     def validate(self):
-        query = sa.select(sa.func.count())\
-                .select_from(self.query.subquery())
+        query = self.query\
+                .with_only_columns(sa.func.count().label('invalid_count'))\
+                .order_by(None)
 
         with self.session as session:
             self.invalid_count = session.execute(query).scalar()
@@ -114,8 +116,8 @@ def docformat(func):
 def valid_glottocode(*, pattern=r'^[a-z0-9]{4}\d{4}$'):
     """Glottocodes match {pattern!r}."""
     return sa.select(Languoid)\
-           .where(~Languoid.id.regexp_match(pattern))\
-           .order_by('id')
+           .order_by('id')\
+           .where(~Languoid.id.regexp_match(pattern))
 
 
 @check
@@ -123,8 +125,8 @@ def valid_glottocode(*, pattern=r'^[a-z0-9]{4}\d{4}$'):
 def valid_iso639_3(*, pattern=r'^[a-z]{3}$'):
     """Iso codes match {pattern!r}."""
     return sa.select(Languoid)\
-           .where(~Languoid.iso639_3.regexp_match(pattern))\
-           .order_by('id')
+           .order_by('id')\
+           .where(~Languoid.iso639_3.regexp_match(pattern))
 
 
 @check
@@ -132,8 +134,8 @@ def valid_iso639_3(*, pattern=r'^[a-z]{3}$'):
 def valid_hid(*, pattern=r'^(?:[a-z]{3}|NOCODE_[A-Z][a-zA-Z0-9-]+)$'):
     """Hids match {pattern!r}."""
     return sa.select(Languoid)\
-           .where(~Languoid.hid.regexp_match(pattern))\
-           .order_by('id')
+           .order_by('id')\
+           .where(~Languoid.hid.regexp_match(pattern))
 
 
 @check
@@ -152,8 +154,8 @@ def clean_name():
                .any(sa.or_(*cond(Altname.name)), provider_id=gl)
 
     return sa.select(Languoid)\
-           .where(sa.or_(match_gl, *cond(Languoid.name)))\
-           .order_by('id')
+           .order_by('id')\
+           .where(sa.or_(match_gl, *cond(Languoid.name)))
 
 
 @check
@@ -228,6 +230,7 @@ def family_languages():
 def bookkeeping_no_children():
     """Bookkeeping languoids lack children (book1242 is flat)."""
     return sa.select(Languoid)\
+           .select_from(Languoid)\
            .order_by('id')\
            .where(Languoid.parent.has(name=BOOKKEEPING))\
            .where(Languoid.children.any())
@@ -242,4 +245,5 @@ def no_empty_files(*, exclude_raw):
     from .raw import File, Value
 
     return sa.select(File)\
+           .select_from(File)\
            .where(~sa.exists().where(Value.file_id == File.id))
