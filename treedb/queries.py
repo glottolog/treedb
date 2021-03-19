@@ -17,6 +17,7 @@ from . import ENGINE
 
 from . import backend as _backend
 from .backend import export as _export
+from .backend import views as _views
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -31,7 +32,6 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 from . import tools as _tools
-from . import views as _views
 
 __all__ = ['get_query',
            'write_json_query_csv', 'write_json_lines', 'get_json_query',

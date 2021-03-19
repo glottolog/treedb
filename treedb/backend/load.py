@@ -14,11 +14,11 @@ from .. import (ENGINE, ROOT,
 
 from .. import files as _files
 from .. import tools as _tools
-from .. import views as _views
 
 from .. import backend as _backend
 
-from .models import Dataset, Producer
+from . import models  as _models
+from . import views as _views
 
 __all__ = ['main']
 
@@ -59,9 +59,10 @@ def get_dataset(engine, *, exclude_raw, force_rebuild):
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
-        dataset = Dataset.get_dataset(bind=engine, strict=True)
+        dataset = _models.Dataset.get_dataset(bind=engine, strict=True)
     elif engine.file_size():
-        dataset = Dataset.get_dataset(bind=engine, strict=not force_rebuild)
+        dataset = _models.Dataset.get_dataset(bind=engine,
+                                              strict=not force_rebuild)
 
         if dataset is None:
             warnings.warn(f'force delete {engine.file!r}')
@@ -106,13 +107,12 @@ def main(filename=ENGINE, repo_root=None, *,
                        exclude_views=exclude_views)
 
         log.info('database loaded')
-        Dataset.log_dataset(dataset)
     else:
         log.info('use present %r', engine)
-        Dataset.log_dataset(dataset)
 
-    pdc = Producer.get_producer(bind=engine)
-    Producer.log_producer(pdc)
+    _models.Dataset.log_dataset(dataset)
+    pdc = _models.Producer.get_producer(bind=engine)
+    _models.Producer.log_producer(pdc)
 
     return engine
 
@@ -136,7 +136,7 @@ def create_tables(metadata, *, conn, exclude_raw, exclude_views):
         log.exception('error running %s.views.create_all_views(clear=%r)',
                       __package__, exclude_views)
 
-    application_id = sum(ord(c) for c in Dataset.__tablename__)
+    application_id = sum(ord(c) for c in _models.Dataset.__tablename__)
     assert application_id == 1122 == 0x462
 
     log.debug('set application_id = %r', application_id)
@@ -175,9 +175,9 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     log.info('record git commit in %r', root)
     # pre-create dataset to added as final item marking completeness
     dataset = make_dataset(root, exclude_raw=exclude_raw)
-    Dataset.log_dataset(dataset)
+    _models.Dataset.log_dataset(dataset)
 
-    log.info('write %r', Producer.__tablename__)
+    log.info('write %r', _models.Producer.__tablename__)
     with begin(bind=bind) as conn:
         write_producer(conn, name=__package__.partition('.')[0])
 
@@ -193,7 +193,7 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     with begin(bind=bind) as conn:
         load_languoids(conn, root=root, from_raw=from_raw)
 
-    log.info('write %r: %r', Dataset.__tablename__, dataset['title'])
+    log.info('write %r: %r', _models.Dataset.__tablename__, dataset['title'])
     with begin(bind=bind) as conn:
         write_dataset(conn, dataset=dataset)
 
@@ -226,8 +226,8 @@ def write_producer(conn, *, name):
     from .. import __version__
 
     params = {'name': name, 'version': __version__}
-    Producer.log_producer(params)
-    conn.execute(sa.insert(Producer), params)
+    _models.Producer.log_producer(params)
+    conn.execute(sa.insert(_models.Producer), params)
 
 
 def load_raw(conn, *, root):
@@ -255,4 +255,4 @@ def load_languoids(conn, *, root, from_raw):
 
 def write_dataset(conn, *, dataset):
     log.debug('dataset: %r', dataset)
-    conn.execute(sa.insert(Dataset), dataset)
+    conn.execute(sa.insert(_models.Dataset), dataset)
