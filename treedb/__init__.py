@@ -17,6 +17,8 @@ from .backend.models import Dataset, Producer
 
 from .backend.sqlite_master import print_table_sql, select_tables_nrows
 
+from .backend.views import TABLES as views
+
 from .backend.tools import print_schema, print_query_sql
 
 from .checks import check
@@ -49,6 +51,7 @@ __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'load',
            'Dataset', 'Producer',
            'print_table_sql', 'select_tables_nrows',
+           'views',
            'print_schema', 'print_query_sql',
            'check',
            'configure',

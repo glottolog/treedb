@@ -128,7 +128,7 @@ def create_tables(metadata, *, conn, exclude_raw, exclude_views):
         from .. import raw
 
     if not exclude_views:
-        log.info('prepare %d views', len(_views.VIEW_REGISTRY))
+        log.info('prepare %d views', len(_views.REGISTERED))
 
     try:
         _views.create_all_views(clear=exclude_views)

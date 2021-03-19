@@ -4,6 +4,7 @@
 
 import functools
 import logging
+import types
 
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
@@ -15,9 +16,11 @@ __all__ = ['register_view',
            'view',
            'make_table']
 
-VIEW_REGISTRY = {}
+REGISTERED = {}
 
 DDL = {}
+
+TABLES = types.SimpleNamespace()
 
 
 log = logging.getLogger(__name__)
@@ -25,25 +28,20 @@ log = logging.getLogger(__name__)
 
 def register_view(name, **kwargs):
     log.debug('register_view(%r)', name)
-    assert name not in VIEW_REGISTRY
+    assert name not in REGISTERED
 
     def decorator(func):
-        VIEW_REGISTRY[name] = functools.partial(func, **kwargs)
+        REGISTERED[name] = functools.partial(func, **kwargs)
         return func
 
     return decorator
 
 
 def create_all_views(*, clear=False):
-    log.debug('run create_view() for %d views in VIEW_REGISTRY', len(VIEW_REGISTRY))
-
-    ns = globals()
-    for name, func in VIEW_REGISTRY.items():
-        present = name in ns
-
-        ns[name] = view(name, selectable=func(), clear=clear)
-        if not present:
-            __all__.append(name)
+    log.debug('run create_view() for %d views in REGISTERED', len(REGISTERED))
+    for name, func in REGISTERED.items():
+        table = view(name, selectable=func(), clear=clear)
+        setattr(TABLES, name, table)
 
 
 def view(name, selectable, *, clear=False):
