@@ -20,7 +20,8 @@ BASENAME = 'md.ini'
 log = logging.getLogger(__name__)
 
 
-def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
+def set_root(repo_root, *, resolve=False,
+             treepath=TREE_IN_ROOT):
     """Set and return default root for glottolog lanugoid directory tree."""
     log.info('set_root: %r', repo_root)
     if repo_root is None:
@@ -34,7 +35,8 @@ def set_root(repo_root, treepath=TREE_IN_ROOT, *, resolve=False):
     return ROOT
 
 
-def get_repo_root(root, treepath=TREE_IN_ROOT):
+def get_repo_root(root,
+                  *, treepath=TREE_IN_ROOT):
     repo_root = _tools.path_from_filename(root)
     for _ in treepath.parts:
         repo_root = repo_root.parent
@@ -78,7 +80,8 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
-def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
+def iterfiles(root=ROOT,
+              *, progress_after=_tools.PROGRESS_AFTER):
     """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
     make_path = _tools.path_from_filename
     load_config = ConfigParser.from_file
@@ -101,9 +104,10 @@ def iterfiles(root=ROOT, *, progress_after=_tools.PROGRESS_AFTER):
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def records_from_files(triples):
+def records_from_files(triples,
+                       *, _default_section=configparser.DEFAULTSECT):
     for path_tuple, _, cfg in triples:
-        d = {s: dict(m) for s, m in cfg.items() if s != 'DEFAULT'}
+        d = {s: dict(m) for s, m in cfg.items() if s != _default_section}
         yield path_tuple, d
 
 
