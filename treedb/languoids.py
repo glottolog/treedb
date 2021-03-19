@@ -35,6 +35,54 @@ ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
 log = logging.getLogger(__name__)
 
 
+def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
+                  progress_after=_tools.PROGRESS_AFTER):
+    """Yield dicts from languoids/tree/**/md.ini files."""
+    log.info('generate languoids')
+
+    if hasattr(root_or_bind, 'execute'):
+        bind = root_or_bind
+
+        if not from_raw:
+            from . import languoids_json
+
+            yield from languoids_json.iterlanguoids(bind,
+                                                    ordered=ordered,
+                                                    progress_after=progress_after)
+            return
+
+        log.info('extract languoids from raw records')
+
+        from . import raw
+
+        if ordered is True:  # insert languoids in id order if available
+            ordered = 'id'
+
+        iterfiles = raw.iterrecords(bind=bind,
+                                    ordered=ordered,
+                                    progress_after=progress_after)
+    else:
+        log.info('extract languoids from files')
+        root = root_or_bind
+
+        if from_raw:
+            raise TypeError(f'from_raw=True requires bind (passed: {root!r})')
+
+        if ordered not in (True, False, 'file', 'path'):
+            raise ValueError(f'ordered={ordered!r} not implemented')
+
+        from . import files
+
+        iterfiles = files.iterfiles(root, progress_after=progress_after)
+        iterfiles = ((pt, cfg) for pt, _, cfg in iterfiles)
+
+    n = 0
+    for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
+        languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
+        yield path_tuple, languoid
+    log.info('%s languoids extracted', f'{n:_d}')
+
+
 def get_float(mapping, key, format_=FLOAT_FORMAT):
     result = mapping.get(key)
     if result is not None:
@@ -242,155 +290,104 @@ def formataltname(value):
     return '{name} [{lang}]'.format_map(value)
 
 
-def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
-                  progress_after=_tools.PROGRESS_AFTER):
-    """Yield dicts from languoids/tree/**/md.ini files."""
-    log.info('generate languoids')
-
-    if hasattr(root_or_bind, 'execute'):
-        bind = root_or_bind
-
-        if not from_raw:
-            from . import languoids_json
-
-            yield from languoids_json.iterlanguoids(bind,
-                                                    ordered=ordered,
-                                                    progress_after=progress_after)
-            return
-
-        log.info('extract languoids from raw records')
-
-        from . import raw
-
-        if ordered is True:  # insert languoids in id order if available
-            ordered = 'id'
-
-        iterfiles = raw.iterrecords(bind=bind,
-                                    ordered=ordered,
-                                    progress_after=progress_after)
-    else:
-        log.info('extract languoids from files')
-        root = root_or_bind
-
-        if from_raw:
-            raise TypeError(f'from_raw=True requires bind (passed: {root!r})')
-
-        if ordered not in (True, False, 'file', 'path'):
-            raise ValueError(f'ordered={ordered!r} not implemented')
-
-        from . import files
-
-        iterfiles = files.iterfiles(root, progress_after=progress_after)
-        iterfiles = ((pt, cfg) for pt, _, cfg in iterfiles)
-
-    n = 0
-    for n, (path_tuple, cfg) in enumerate(iterfiles, 1):
-        languoid = make_languoid(path_tuple, cfg, from_raw=from_raw)
-        yield path_tuple, languoid
-    log.info('%s languoids extracted', f'{n:_d}')
-
-
 def make_languoid(path_tuple, cfg, *, from_raw):
     _make_lines = make_lines_raw if from_raw else make_lines
 
-    sources = None
+    core = cfg['core']
+
+    languoid = {'id': path_tuple[-1],
+                'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
+                'level': core['level'],
+                'name': core['name'],
+                'hid': core.get('hid'),
+                'iso639_3': core.get('iso639-3'),
+                'latitude': get_float(core, 'latitude'),
+                'longitude': get_float(core, 'longitude'),
+                'macroareas': _make_lines(core.get('macroareas')),
+                'countries': [splitcountry(c)
+                              for c in _make_lines(core.get('countries'))],
+                'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+                'sources': None,
+                'altnames': None,
+                'triggers': None,
+                'identifier': None,
+                'classification': None,
+                'endangerment': None,
+                'hh_ethnologue_comment': None,
+                'iso_retirement': None}
+
+    # 'timespan' key is optional for backwards compat
+    timespan = core.get('timespan')
+    if timespan:
+        languoid['timespan'] = make_interval(timespan)
+
     if 'sources' in cfg:
         sources = skip_empty({
             provider: [splitsource(p) for p in _make_lines(sources)]
             for provider, sources in cfg['sources'].items()
-        }) or None
+        })
+        if sources:
+            languoid['sources'] = sources
 
-    altnames = None
     if 'altnames' in cfg:
         altnames = {
             provider: [splitaltname(a) for a in _make_lines(altnames)]
             for provider, altnames in cfg['altnames'].items()
-        } or None
+        }
+        if altnames:
+            languoid['altnames'] = altnames
 
-    triggers = None
     if 'triggers' in cfg:
         triggers = {
             field: _make_lines(triggers)
             for field, triggers in cfg['triggers'].items()
-        } or None
+        }
+        if triggers:
+            languoid['triggers'] = triggers
 
-    identifier = None
     if 'identifier' in cfg:
         # FIXME: semicolon-separated (wals)?
-        identifier = dict(cfg['identifier']) or None
+        identifier = dict(cfg['identifier'])
+        if identifier:
+            languoid['identifier'] = identifier
 
-    classification = None
     if 'classification' in cfg:
         classification = skip_empty({
             c: list(map(splitsource, _make_lines(classifications)))
                if c.endswith('refs') else
                classifications
             for c, classifications in cfg['classification'].items()
-        }) or None
+        })
+        if classification:
+            languoid['classification'] = classification
 
-    endangerment = None
     if 'endangerment' in cfg:
         sct = cfg['endangerment']
-        endangerment = {
-            'status': sct['status'],
-            'source': splitsource(sct['source'], endangerment=True),
-            'date': make_datetime(sct['date']),
-            'comment': sct['comment'],
-        }
+        languoid['endangerment'] = {'status': sct['status'],
+                                    'source': splitsource(sct['source'],
+                                                          endangerment=True),
+                                    'date': make_datetime(sct['date']),
+                                    'comment': sct['comment']}
 
-    hh_ethnologue_comment = None
     if 'hh_ethnologue_comment' in cfg:
         sct = cfg['hh_ethnologue_comment']
-        hh_ethnologue_comment = {
-            'isohid': sct['isohid'],
-            'comment_type': sct['comment_type'],
-            'ethnologue_versions': sct['ethnologue_versions'],
-            'comment': sct['comment'],
-        }
+        languoid['hh_ethnologue_comment'] = {'isohid': sct['isohid'],
+                                             'comment_type': sct['comment_type'],
+                                             'ethnologue_versions': sct['ethnologue_versions'],
+                                             'comment': sct['comment']}
 
-    iso_retirement = None
     if 'iso_retirement' in cfg:
         sct = cfg['iso_retirement']
-        iso_retirement = {
-            'code': sct['code'],
-            'name': sct['name'],
-            'change_request': sct.get('change_request'),
-            'effective': make_date(sct['effective']),
-            'reason': sct['reason'],
-            'change_to': _make_lines(sct.get('change_to')),
-            'remedy': sct.get('remedy'),
-            'comment': sct.get('comment'),
-        }
+        languoid['iso_retirement'] = {'code': sct['code'],
+                                      'name': sct['name'],
+                                      'change_request': sct.get('change_request'),
+                                      'effective': make_date(sct['effective']),
+                                      'reason': sct['reason'],
+                                      'change_to': _make_lines(sct.get('change_to')),
+                                      'remedy': sct.get('remedy'),
+                                      'comment': sct.get('comment')}
 
-    core = cfg['core']
-
-    item = {
-        'id': path_tuple[-1],
-        'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
-        'level': core['level'],
-        'name': core['name'],
-        'hid': core.get('hid'),
-        'iso639_3': core.get('iso639-3'),
-        'latitude': get_float(core, 'latitude'),
-        'longitude': get_float(core, 'longitude'),
-        'macroareas': _make_lines(core.get('macroareas')),
-        'countries': [splitcountry(c) for c in _make_lines(core.get('countries'))],
-        'links': [splitlink(c) for c in _make_lines(core.get('links'))],
-        'sources': sources,
-        'altnames': altnames,
-        'triggers': triggers,
-        'identifier': identifier,
-        'classification': classification,
-        'endangerment': endangerment,
-        'hh_ethnologue_comment': hh_ethnologue_comment,
-        'iso_retirement': iso_retirement,
-    }
-
-    timespan = core.get('timespan')
-    if timespan:
-        item['timespan'] = make_interval(timespan)
-
-    return item
+    return languoid
 
 
 def compare_with_files(bind=ENGINE, *, root=ROOT, from_raw=True):
