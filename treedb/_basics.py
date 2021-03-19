@@ -3,7 +3,7 @@
 from sqlalchemy.orm import (registry as _registry,
                             sessionmaker as _sessionmaker)
 
-from . import proxies as _proxies
+from . import _proxies
 
 CONFIG = 'treedb.ini'
 

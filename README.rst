@@ -100,7 +100,7 @@ Load the database into ``treedb.sqlite3`` (and set the default ``engine``):
 
     >>> treedb.load('treedb.sqlite3')
     ...
-    <treedb.proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
+    <treedb._proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
 
 Run consistency checks:
 
@@ -130,7 +130,7 @@ Rebuild the database (e.g. after an update):
 
     >>> treedb.load(rebuild=True)
     ...
-    <treedb.proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
+    <treedb._proxies.SqliteEngineProxy filename='treedb.sqlite3' ...>
 
 Execute a simple query with ``sqlalchemy`` core and write it to a CSV file:
 
