@@ -28,7 +28,7 @@ def test_print_dataset(capsys, treedb):
     out, err = capsys.readouterr()
     assert not err
 
-    assert out.startswith('git describe v')
+    assert out.startswith("git describe 'v")
 
 
 def test_print_schema(capsys):

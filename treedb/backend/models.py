@@ -69,7 +69,7 @@ class Dataset:
                   file=print_file)
             print(f"{name}.title: {params['title']!r}'",
                   file=print_file)
-            print(f"'{name}.git_commit: {params['git_commit']!r}'",
+            print(f"{name}.git_commit: {params['git_commit']!r}",
                   file=print_file)
 
         if not params['clean']:
@@ -101,5 +101,5 @@ class Producer:
         log.info('%s.name: %s', name, params['name'])
         log.info('%s.version: %s', name, params['version'])
         if also_print or print_file is not None:
-            print(f"{name}.name: {params['name']}'", file=print_file)
-            print(f"{name}.version: {params['version']}'", file=print_file)
+            print(f"{name}.name: {params['name']}", file=print_file)
+            print(f"{name}.version: {params['version']}", file=print_file)
