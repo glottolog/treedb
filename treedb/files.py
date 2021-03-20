@@ -127,7 +127,7 @@ def roundtrip(root=ROOT, *, replace=False,
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root,progress_after=progress_after)
     raw_records = raw_records_from_files(triples)
-    return write_files(raw_records, root, raw=True,
+    return write_files(raw_records, root, _join_lines=False,
                        replace=replace,
                        progress_after=progress_after)
 
@@ -135,9 +135,12 @@ def roundtrip(root=ROOT, *, replace=False,
 RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
 
 
+RawRecordItem = typing.Tuple[_basics.PathType, RawRecordType]
+
+
 def raw_records_from_files(triples: typing.Iterable[FileInfo],
                            *, _default_section: str = configparser.DEFAULTSECT
-                           ) -> typing.Iterator[RawRecordType]:
+                           ) -> typing.Iterator[RawRecordItem]:
     for path, cfg, _ in triples:
         raw_record = {name: dict(section) for name, section in cfg.items()
                       if name != _default_section}
@@ -145,14 +148,14 @@ def raw_records_from_files(triples: typing.Iterable[FileInfo],
 
 
 RecordsType = typing.Union[typing.Iterable[_basics.RecordItem],
-                           typing.Iterable[RawRecordType]]
+                           typing.Iterable[RawRecordItem]]
 
 
 def write_files(records: RecordsType, root=ROOT,
                 *, replace: bool = False,
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME,
-                raw: bool = False) -> int:
+                _join_lines: bool = True) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
@@ -160,7 +163,7 @@ def write_files(records: RecordsType, root=ROOT,
     if replace:
         log.warning(f'replace present {basename} files')
 
-    joined_records = map(join_lines_inplace, records) if not raw else records
+    joined_records = map(join_lines_inplace, records) if _join_lines else records
 
     load_config = ConfigParser.from_file
 
@@ -172,7 +175,8 @@ def write_files(records: RecordsType, root=ROOT,
         if replace:
             cfg.clear()
 
-        changed = update_config(cfg, raw_record)
+        changed = update_config(cfg, raw_record,
+                                quiet=replace)
 
         if changed:
             if not replace:
@@ -187,19 +191,21 @@ def write_files(records: RecordsType, root=ROOT,
     return files_written
 
 
-def join_lines_inplace(record: _basics.RecordType,
-                       *, is_lines=_fields.is_lines) -> RawRecordType:
+def join_lines_inplace(record_item: _basics.RecordItem,
+                       *, is_lines=_fields.is_lines) -> RawRecordItem:
+    path, record = record_item
     for name, section in record.items():
         for option in section:
             if is_lines(name, option):
                 lines = [''] + section[option]
-                section[name] = '\n'.join(lines)
-    return record
+                section[option] = '\n'.join(lines)
+    return path, record
 
 
 def update_config(cfg: ConfigParser,
                   raw_record: RawRecordType,
-                  *, is_lines=_fields.is_lines,
+                  *, quiet: bool = False,
+                  is_lines=_fields.is_lines,
                   core_sections=_fields.CORE_SECTIONS,
                   keep_empty_sections=_fields.KEEP_EMPTY_SECTIONS,
                   keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
@@ -224,7 +230,7 @@ def update_config(cfg: ConfigParser,
     add = new_sections - old_sections
     if add:
         add = sorted_sections(add)
-        if not replace:
+        if not quiet:
             log.debug('cfg.add_section(s) for s in %r', add)
         for s in add:
             cfg.add_section(s)
@@ -259,7 +265,7 @@ def update_config(cfg: ConfigParser,
             if old == value:
                 continue
 
-            if not replace:
+            if not quiet:
                 if old is None:
                     log.debug('cfg add option (%r, %r)', section, option)
                 log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
