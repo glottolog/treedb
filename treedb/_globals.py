@@ -44,27 +44,24 @@ ValueType = typing.Union[str,
                          int, float,
                          bool,
                          None,
-                         datetime.datetime]
+                         datetime.datetime,
+                         typing.List[str]]
 
 
-ValueList = typing.List[str]
+MatchType = typing.Mapping[str, ValueType]
 
 
-ValueMapping = typing.Mapping[str, ValueType]
+MatchList = typing.List[MatchType]
 
 
-ValueMappingList = typing.List[ValueMapping]
-
-
-ValueMappingListMapping = typing.Mapping[str, ValueMappingList]
+MatchListMapping = typing.Mapping[str, MatchList]
 
 
 LanguoidValueType = typing.Union[ValueType,
-                                 ValueList,
-                                 ValueMapping,
-                                 ValueMappingList,
-                                 ValueMappingListMapping,
-                                 typing.Mapping[str, ValueMappingListMapping]]
+                                 MatchType,
+                                 MatchList,
+                                 MatchListMapping,
+                                 typing.Mapping[str, MatchListMapping]]
 
 
 LanguoidType = typing.Mapping[str, LanguoidValueType]
