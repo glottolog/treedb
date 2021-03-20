@@ -122,13 +122,13 @@ def iterfiles(root=ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def roundtrip(root=ROOT, *, verbose: bool = False,
+def roundtrip(root=ROOT, *, replace=False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root,progress_after=progress_after)
     raw_records = raw_records_from_files(triples)
-    return write_files(raw_records, root,
-                       replace=False, raw=True,
+    return write_files(raw_records, root, raw=True,
+                       replace=replace,
                        progress_after=progress_after)
 
 
@@ -148,10 +148,11 @@ RecordsType = typing.Union[typing.Iterable[_basics.RecordItem],
                            typing.Iterable[RawRecordType]]
 
 
-def write_files(records: RecordsType,
-                *, root=ROOT, replace: bool = False, raw: bool = False,
+def write_files(records: RecordsType, root=ROOT,
+                *, replace: bool = False,
                 progress_after=_tools.PROGRESS_AFTER,
-                basename: str = BASENAME) -> int:
+                basename: str = BASENAME,
+                raw: bool = False) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
@@ -186,20 +187,23 @@ def write_files(records: RecordsType,
     return files_written
 
 
-def join_lines_inplace(record: _basics.RecordItem,
-                       *, is_lines=_fields.is_lines):
+def join_lines_inplace(record: _basics.RecordType,
+                       *, is_lines=_fields.is_lines) -> RawRecordType:
     for name, section in record.items():
         for option in section:
             if is_lines(name, option):
                 lines = [''] + section[option]
                 section[name] = '\n'.join(lines)
+    return record
 
 
 def update_config(cfg: ConfigParser,
                   raw_record: RawRecordType,
                   *, is_lines=_fields.is_lines,
                   core_sections=frozenset({'core'}),
-                  leave_empty_sections=frozenset({'sources'}),
+                  keep_empty_sections=frozenset({'sources'}),
+                  keep_empty_options=frozenset({('sources', 'glottolog'),
+                                                ('iso_retirement', 'change_to')}),
                   sorted_sections=_fields.sorted_sections,
                   sorted_options=_fields.sorted_options) -> bool:
     changed = False
@@ -208,9 +212,9 @@ def update_config(cfg: ConfigParser,
     old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
 
     new_sections = {sec for sec, s in raw_record.items() if s}
-    leave = (old_empty - new_sections) & leave_empty_sections
+    leave = (old_empty - new_sections) & keep_empty_sections
 
-    drop = old_sections - new_sections - leave - core_sections
+    drop = old_sections - core_sections - leave - new_sections
     if drop:
         drop = sorted_sections(drop)
         log.debug('cfg.remove_section(s) for s in %r', drop)
@@ -234,11 +238,10 @@ def update_config(cfg: ConfigParser,
         elif section in leave:
             continue
         else:
-            old_options = set(cfg.options(section))
+            old_options = {o for o in cfg.options(section)
+                           if (section, o) not in keep_empty_options}
             new_options = {k for k, v in s.items() if v}
             drop_options = old_options - new_options
-            if section == 'iso_retirement':
-                drop_options.discard('change_to')
 
             if drop_options:
                 drop_options = sorted_options(section, drop_options)
