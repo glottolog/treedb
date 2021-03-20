@@ -1,5 +1,3 @@
-# test_records.py
-
 import itertools
 
 

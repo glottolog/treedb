@@ -1,4 +1,4 @@
-# shortcuts.py - pandas convenience short-cut functions
+# pandas convenience short-cut functions
 
 import io
 import logging

@@ -1,4 +1,4 @@
-# glottolog.py - clone/checkout the Glottolog master repo
+# clone/checkout the Glottolog master repo
 
 import logging
 

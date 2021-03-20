@@ -1,5 +1,3 @@
-# test_backend_sqlite_master.py
-
 import re
 
 import pytest

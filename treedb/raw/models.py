@@ -1,4 +1,4 @@
-# models.py
+# raw tables schema
 
 import sqlalchemy as sa
 

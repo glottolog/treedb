@@ -1,4 +1,4 @@
-# files.py - load/write ../../languoids/tree/**/md.ini
+# load/write ../../languoids/tree/**/md.ini
 
 import configparser
 import functools

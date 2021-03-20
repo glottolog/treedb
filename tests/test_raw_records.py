@@ -1,5 +1,3 @@
-# test_raw_records.py
-
 import itertools
 
 import pytest

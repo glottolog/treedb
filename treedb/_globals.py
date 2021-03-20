@@ -1,4 +1,4 @@
-# _basics.py - package-level globals
+# package-level globals
 
 import typing
 

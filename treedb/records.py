@@ -1,4 +1,4 @@
-# languoids.py - load languoids/tree/**/md.ini into dicts
+# load languoids/tree/**/md.ini into dicts
 
 import datetime
 import logging

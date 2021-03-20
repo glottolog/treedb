@@ -1,4 +1,4 @@
-# export.py
+# write information to stdout, csv, files
 
 import logging
 import warnings

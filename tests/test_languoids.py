@@ -1,5 +1,3 @@
-# test_languoids.py
-
 import itertools
 
 

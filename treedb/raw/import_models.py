@@ -1,4 +1,4 @@
-# import_models.py
+# insert raw model tables
 
 import functools
 import logging

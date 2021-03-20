@@ -1,5 +1,3 @@
-# test_files.py
-
 import pytest
 
 

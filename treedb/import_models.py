@@ -1,4 +1,4 @@
-# import_models.py
+# load glottolog languoid model tables
 
 import functools
 import logging

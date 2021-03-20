@@ -1,4 +1,4 @@
-# _proxies.py - proxies for global default variables that can be updated
+# proxies for global default variables that can be updated
 
 import datetime
 import logging

@@ -1,5 +1,3 @@
-# test_queries.py
-
 import itertools
 
 import pytest

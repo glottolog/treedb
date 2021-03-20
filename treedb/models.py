@@ -1,4 +1,4 @@
-# models.py - sqlalchemy schema, loading, checking, and queries for sqlite3 db
+# main sqlalchemy schema for sqlite3 db
 
 import sqlalchemy as sa
 

@@ -1,5 +1,3 @@
-# test_fields.py
-
 import re
 
 import pytest

@@ -1,4 +1,4 @@
-# treedb.raw - ini content as (path, section, option, line, value) rows
+# raw ini content as (path, section, option, line, value) rows
 
 from .export import (print_stats,
                      checksum,

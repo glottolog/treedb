@@ -1,5 +1,3 @@
-# test_raw_export.py
-
 import pytest
 
 CHECKSUM = {('v4.1', False): ('strong:sha256:'

@@ -1,4 +1,4 @@
-# _tools.py - generic re-useable self-contained helpers
+# generic re-useable self-contained helpers
 
 import builtins
 import bz2

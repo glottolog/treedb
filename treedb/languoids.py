@@ -1,4 +1,4 @@
-# languoids.py - load languoids/tree/**/md.ini into dicts
+# fetch languoids from selecteable sources
 
 import logging
 import typing

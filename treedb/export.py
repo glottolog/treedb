@@ -1,4 +1,4 @@
-# export.py - load languoids from tables and write json csv
+# write information to stdout, csv, json, etc.
 
 import functools
 import io

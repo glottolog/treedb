@@ -1,5 +1,3 @@
-# test_models.py
-
 import pytest
 
 BOOK = 'book1242'

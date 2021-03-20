@@ -1,5 +1,3 @@
-# test_checks.py
-
 import pytest
 
 

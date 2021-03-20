@@ -1,4 +1,4 @@
-# logging_.py - stdlib logging configuration short-cuts
+# stdlib logging configuration short-cuts
 
 import logging
 import logging.config

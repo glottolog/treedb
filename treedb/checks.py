@@ -1,4 +1,4 @@
-# checks.py - check application-specific invariants
+# check application-specific invariants
 
 import inspect
 import itertools

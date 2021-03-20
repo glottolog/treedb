@@ -1,4 +1,4 @@
-# records.py
+# fetch records from the raw tables
 
 import contextlib
 import functools

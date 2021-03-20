@@ -1,5 +1,3 @@
-# test_shortcuts.py
-
 import sqlalchemy as sa
 
 import pytest

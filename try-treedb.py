@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# try-treedb.py - usage examples
+# usage example(s)
 
 import sqlalchemy as sa
 

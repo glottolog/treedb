@@ -1,4 +1,4 @@
-#  config.py - load configuration from treedb.ini
+#  load configuration from treedb.ini
 
 import configparser
 import logging
