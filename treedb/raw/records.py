@@ -67,7 +67,7 @@ def fetch_records(*, ordered: bool = True,
     groupby_file, groupby_section, groupby_option = groupby
 
     n = 0
-    with _backend.connect(bind) as conn:
+    with _backend.connect(bind=bind) as conn:
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
                 where = _backend.expression_compile(in_slice(key_column))
@@ -134,7 +134,7 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
 
-    with _backend.connect(bind) as conn,\
+    with _backend.connect(bind=bind) as conn,\
          contextlib.closing(conn.execute(select_keys)) as result:
         yield from result.scalars()
 
@@ -147,7 +147,7 @@ def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
 
-    with _backend.connect(bind) as conn,\
+    with _backend.connect(bind=bind) as conn,\
          contextlib.closing(conn.execute(select_keys)) as cursor:
         for keys in iter(functools.partial(cursor.fetchmany, size), []):
             last, = keys[-1]

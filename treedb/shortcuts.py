@@ -41,7 +41,7 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
 
         sql = queries.get_query()
 
-    with _backend.connect(con) as conn:
+    with _backend.connect(bind=con) as conn:
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 

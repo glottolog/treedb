@@ -11,7 +11,8 @@ from .backend import (set_engine,
                       scalar,
                       iterrows)
 
-from .backend.export import (print_schema,
+from .backend.export import (print_dataset,
+                             print_schema,
                              print_query_sql,
                              backup,
                              dump_sql,
@@ -63,7 +64,7 @@ from .shortcuts import pd_read_sql
 
 __all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
            'set_engine', 'connect', 'scalar', 'iterrows',
-           'print_schema', 'print_query_sql',
+           'print_dataset', 'print_schema', 'print_query_sql',
            'backup', 'dump_sql', 'csv_zipfile',
            'print_rows', 'write_csv', 'hash_csv',
            'load',

@@ -58,13 +58,22 @@ class Dataset:
             return result
 
     @classmethod
-    def log_dataset(cls, params):
+    def log_dataset(cls, params, *, also_print=False, print_file=None):
         name = cls.__tablename__
         log.info('git describe %(git_describe)r clean: %(clean)r', params)
-        if not params['clean']:
-            warnings.warn(f'{name} not clean')  # pragma: no cover
         log.debug('%s.title: %r', name, params['title'])
         log.info('%s.git_commit: %r', name, params['git_commit'])
+        if also_print or print_file is not None:
+            print('git describe {git_describe!r}'
+                  ' clean: {clean!r}'.format_map(params),
+                  file=print_file)
+            print(f"{name}.title: {params['title']!r}'",
+                  file=print_file)
+            print(f"'{name}.git_commit: {params['git_commit']!r}'",
+                  file=print_file)
+
+        if not params['clean']:
+            warnings.warn(f'{name} not clean')  # pragma: no cover
 
 
 @registry.mapped
@@ -87,7 +96,10 @@ class Producer:
         return result
 
     @classmethod
-    def log_producer(cls, params):
+    def log_producer(cls, params, *, also_print=False, print_file=None):
         name = cls.__tablename__
         log.info('%s.name: %s', name, params['name'])
         log.info('%s.version: %s', name, params['version'])
+        if also_print or print_file is not None:
+            print(f"{name}.name: {params['name']}'", file=print_file)
+            print(f"{name}.version: {params['version']}'", file=print_file)

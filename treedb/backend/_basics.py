@@ -86,7 +86,7 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
     return ENGINE
 
 
-def connect(bind=ENGINE):
+def connect(*, bind=ENGINE):
     if isinstance(bind, sa.engine.base.Connection):
         log.debug('nested connect (no-op): %r', bind)
         return _compat.nullcontext(bind)
@@ -98,12 +98,12 @@ def connect(bind=ENGINE):
 
 
 def scalar(statement, *args, bind=ENGINE, **kwargs):
-    with connect(bind) as conn:
+    with connect(bin=bind) as conn:
         return conn.scalar(statement, *args, **kwargs)
 
 
 def iterrows(query, *, mappings=False, bind=ENGINE):
-    with connect(bind) as conn:
+    with connect(bind=bind) as conn:
         result = conn.execute(query)
 
         if mappings:

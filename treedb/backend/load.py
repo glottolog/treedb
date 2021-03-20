@@ -147,7 +147,7 @@ def create_tables(metadata, *, conn, exclude_raw, exclude_views):
 @contextlib.contextmanager
 def begin(*, bind, pragma_bulk_insert=True):
     """Enter transaction: log boundaries, apply insert optimization, return connection."""
-    with _backend.connect(bind) as conn, conn.begin():
+    with _backend.connect(bind=bind) as conn, conn.begin():
         dbapi_conn = conn.connection.connection
         log.debug('begin transaction on %r', dbapi_conn)
 

@@ -19,7 +19,10 @@ from .. import _tools
 
 from .. import backend as _backend
 
-__all__ = ['print_schema',
+from .models import Dataset, Producer
+
+__all__ = ['print_dataset',
+           'print_schema',
            'print_query_sql',
            'get_query_sql',
            'backup',
@@ -30,6 +33,18 @@ __all__ = ['print_schema',
 
 
 log = logging.getLogger(__name__)
+
+
+def print_dataset(*, file=None, bind=ENGINE):
+    with _backend.connect(bind=bind) as conn:
+        dataset = (conn.execute(sa.select(Dataset))
+                   .mappings()
+                   .one())
+        producer = (conn.execute(sa.select(Producer))
+                    .mappings()
+                    .one())
+    Dataset.log_dataset(dataset, also_print=True, print_file=file)
+    Producer.log_producer(producer, also_print=True, print_file=file)
 
 
 def print_schema(metadata=REGISTRY.metadata, *, file=None,
@@ -158,7 +173,7 @@ def csv_zipfile(filename=None, *, exclude_raw=False,
     skip = {'_file', '_option', '_value'} if exclude_raw else {}
 
     log.info('write %r', filename)
-    with _backend.connect(engine) as conn,\
+    with _backend.connect(bind=engine) as conn,\
          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:
         for table in sorted_tables:
             if table.name in skip:
@@ -225,7 +240,7 @@ def write_csv(query=None, filename=None, *, verbose=False,
     if verbose:
         print(query)
 
-    with _backend.connect(bind) as conn:
+    with _backend.connect(bind=bind) as conn:
         result = conn.execute(query)
 
         header = list(result.keys())
@@ -243,7 +258,7 @@ def hash_csv(query=None, *, raw=False,
 
         query = _queries.get_query()
 
-    with _backend.connect(bind) as conn:
+    with _backend.connect(bind=bind) as conn:
         result = conn.execute(query)
 
         header = list(result.keys())

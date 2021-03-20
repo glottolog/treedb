@@ -21,6 +21,16 @@ QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
 MB = 2**20
 
 
+
+def test_print_dataset(capsys, treedb):
+    assert treedb.print_dataset() is None
+
+    out, err = capsys.readouterr()
+    assert not err
+
+    assert out.startswith('git describe v')
+
+
 def test_print_schema(capsys):
     assert _treedb.print_schema() is None
 
