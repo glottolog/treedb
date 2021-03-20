@@ -14,10 +14,12 @@ from .._globals import ENGINE
 from .. import _compat
 from .. import _proxies
 from .. import _tools
+from .. import logging_
 
 from . import sqlparse
 
-__all__ = ['set_engine',
+__all__ = ['print_versions',
+           'set_engine',
            'connect',
            'scalar',
            'iterrows']
@@ -52,6 +54,12 @@ def compile(element, compiler, **kwargs):
     return text
 
 
+def print_versions(*, engine=ENGINE, file=None):
+    logging_.log_version(also_print=True, print_file=file)
+    log_versions(also_print=True, print_file=file,
+                 engine=engine)
+
+
 def set_engine(filename, *, resolve=False, require=False, title=None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('set_engine: %r', filename)
@@ -78,12 +86,27 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
             raise RuntimeError(f'engine file does not exist: {filename!r}')
 
     ENGINE.file = filename
-    log.info('sqlite version: %s', ENGINE.dialect.dbapi.sqlite_version)
+    log_versions(engine=ENGINE)
+    return ENGINE
+
+
+def log_versions(*, also_print=False, print_file=None,
+                 engine=ENGINE):
     log.info('sqlalchemy version: %s', sa.__version__)
+    log.info('sqlite version: %s', engine.dialect.dbapi.sqlite_version)
     log.info('csv23 version: %s', csv23.__version__)
+    if also_print or print_file is not None:
+        print(f'sqlalchemy version: {sa.__version__}',
+              file=print_file)
+        print(f'sqlite_version: {engine.dialect.dbapi.sqlite_version}',
+              file=print_file)
+        print(f'csv23 version: {csv23.__version__}',
+              file=print_file)
     if sqlparse is not None:
         log.info('sqlparse version: %s', sqlparse.__version__)
-    return ENGINE
+        if also_print or print_file is not None:
+            print(f'sqlparse version: {sqlparse.__version__}',
+                  file=print_file)
 
 
 def connect(*, bind=ENGINE):

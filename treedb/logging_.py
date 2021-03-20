@@ -59,11 +59,14 @@ def reset_logging():
         h.close()
 
 
-def log_version():
+def log_version(*, also_print=False, print_file=None):
     import treedb
 
     log.info('%s version: %s', __package__, treedb.__version__)
     log.debug('%r', treedb)
+    if also_print or print_file is not None:
+        print(f'{__package__} version: {treedb.__version__}',
+              file=print_file)
 
 
 def set_capture_warnings(value=True):

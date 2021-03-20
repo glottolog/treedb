@@ -4,7 +4,8 @@
 
 from ._globals import SESSION as Session
 
-from .backend import (set_engine,
+from .backend import (print_versions,
+                      set_engine,
                       connect,
                       scalar,
                       iterrows)
@@ -61,8 +62,10 @@ from .queries import (get_query,
 from .shortcuts import pd_read_sql
 
 __all__ = ['Session',
+           'print_versions',
            'set_engine', 'connect', 'scalar', 'iterrows',
-           'print_dataset', 'print_schema', 'print_query_sql',
+           'print_dataset',
+           'print_schema', 'print_query_sql',
            'backup', 'dump_sql', 'csv_zipfile',
            'print_rows', 'write_csv', 'hash_csv',
            'load',
