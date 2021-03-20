@@ -76,8 +76,8 @@ def get_stats_query():
 
         yield languoid_count('dialects', level=DIALECT)
 
-        yield language_count('Spoken L1 Languages')\
-              .where(Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,)))
+        yield (language_count('Spoken L1 Languages')
+               .where(Root.name.notin_(SPECIAL_FAMILIES + (BOOKKEEPING,))))
 
         for name in SPECIAL_FAMILIES:
             yield language_count(name).where(Root.name == name)

@@ -69,9 +69,9 @@ class Check(object):
         raise NotImplementedError
 
     def validate(self):
-        query = self.query\
-                .with_only_columns(sa.func.count().label('invalid_count'))\
-                .order_by(None)
+        query = (self.query
+                 .with_only_columns(sa.func.count().label('invalid_count'))
+                 .order_by(None))
 
         with self.session as session:
             self.invalid_count = session.execute(query).scalar()

@@ -319,9 +319,9 @@ class Languoid:
         is_node = (tree.c[node_label] == Node.id)
         is_relative = (tree.c[relative_label] == Relative.id)
 
-        node_relative = tree.join(Node, is_node)\
-                        .join(Relative, is_relative,
-                              isouter=not innerjoin)
+        node_relative = (tree.join(Node, is_node)
+                         .join(Relative, is_relative,
+                               isouter=not innerjoin))
 
         return Node, Relative, tree, node_relative
 

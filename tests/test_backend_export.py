@@ -118,8 +118,8 @@ def test_csv_zipfilet(treedb):
 
 
 def test_print_rows(capsys, treedb):
-    query = sa.select(treedb.Languoid)\
-            .where(treedb.Languoid.iso639_3 == 'bsa')
+    query = (sa.select(treedb.Languoid)
+             .where(treedb.Languoid.iso639_3 == 'bsa'))
 
     format_ = '{id}: {name} ({level}) [{iso639_3}]'
 
