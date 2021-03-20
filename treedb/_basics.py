@@ -30,20 +30,22 @@ __all__ = ['CONFIG', 'DEFAULT_ROOT',
 PathType = typing.Tuple[str, ...]
 
 
-RecordType = typing.Mapping[str, typing.Mapping[str, str]]
+RecordValueType = typing.Union[str, typing.List[str]]
+
+
+RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
 
 
 RecordItem = typing.Tuple[PathType, RecordType]
 
 
-LanguoidType = typing.Mapping[
-    str,
-    typing.Union[
-        str, int, float, None,
-        typing.List[typing.Union[
-            str,
-            typing.Mapping[str, typing.Any]]],
-        typing.Mapping[str, typing.Any]]]
+LanguoidValueType = typing.Union[str, int, float, bool, None,
+                                 typing.List[str],
+                                 typing.Mapping[str, typing.Any],
+                                 typing.List[typing.Mapping[str, typing.Any]]]
+
+
+LanguoidType = typing.Mapping[str, LanguoidValueType]
 
 
 LanguoidItem = typing.Tuple[PathType, LanguoidType]

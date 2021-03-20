@@ -160,6 +160,8 @@ def write_files(records: typing.Iterable[_basics.RecordItem],
         if replace:
             cfg.clear()
 
+        join_lines_inplace(record)
+
         changed = update_config(cfg, record)
 
         if changed:
@@ -182,10 +184,10 @@ def join_lines_inplace(record: _basics.RecordItem,
             if is_lines(name, option):
                 lines = [''] + section[option]
                 section[name] = '\n'.join(lines)
-    
+
 
 def update_config(cfg: ConfigParser,
-                  record: _basics.RecordItem,
+                  joined_record: typing.Mapping[str, typing.Mapping[str, str]],
                   *, is_lines=_fields.is_lines,
                   core_sections=frozenset({'core'}),
                   leave_empty_sections=frozenset({'sources'}),
@@ -193,12 +195,10 @@ def update_config(cfg: ConfigParser,
                   sorted_options=_fields.sorted_options) -> bool:
     changed = False
 
-    join_lines_inplace(record)
-
     old_sections = set(cfg.sections())
     old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
 
-    new_sections = {sec for sec, s in record.items() if s}
+    new_sections = {sec for sec, s in joined_record.items() if s}
     leave = (old_empty - new_sections) & leave_empty_sections
 
     drop = old_sections - new_sections - leave - core_sections
@@ -218,8 +218,8 @@ def update_config(cfg: ConfigParser,
             cfg.add_section(s)
         changed = True
 
-    for section in sorted_sections(record):
-        s = record[section]
+    for section in sorted_sections(joined_record):
+        s = joined_record[section]
         if section not in old_sections or section in core_sections:
             pass
         elif section in leave:
