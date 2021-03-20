@@ -29,11 +29,13 @@ log = logging.getLogger(__name__)
 def print_stats(*, file=None):
     log.info('fetch statistics')
 
+    # order by descending frequency for any_options and undefined options
     select_nvalues = sa.select(Option.section, Option.option,
                                sa.func.count().label('n'))\
                      .join_from(Option, Value)\
                      .group_by(Option.section, Option.option)\
-                     .order_by('section', sa.desc('n'))
+                     .order_by(sa.desc('defined'), 'ord_section', 'ord_option',
+                               'section', sa.desc('n'), 'option')
 
     template = '{section:<22} {option:<22} {n:,}'
 

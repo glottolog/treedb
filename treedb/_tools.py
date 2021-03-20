@@ -156,8 +156,8 @@ class Ordering(dict):
     _missing = float('inf')
 
     @classmethod
-    def fromlist(cls, keys):
-        return cls((k, i) for i, k in enumerate(uniqued(keys)))
+    def fromlist(cls, keys, *, start_index=0):
+        return cls((k, i) for i, k in enumerate(uniqued(keys), start=start_index))
 
     def __missing__(self, key):
         return self._missing
@@ -167,3 +167,7 @@ class Ordering(dict):
 
     def sorted(self, keys):
         return sorted(keys, key=self._sortkey)
+
+    def sorted_enumerate(self, keys, start=0):
+        keyed = sorted((self[key], key) for key in keys)
+        return ((i, key) for i, (_, key) in enumerate(keyed, start))

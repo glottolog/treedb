@@ -31,7 +31,24 @@ class OptionMap(dict):
         section, option = key
         is_lines = _fields.is_lines(section, option)
 
-        params = {'section': section, 'option': option, 'is_lines': is_lines}
+        params = {'section': section, 'option': option,
+                  'is_lines': is_lines}
+
+        ord_section = _fields.SECTION_ORDER.get(section)
+        if (ord_section is not None
+            and _fields.is_all_options(*key)):
+            ord_option = 0
+            params.update(ord_option=ord_option,
+                          defined=True,
+                          defined_any_options=True)
+        else:
+            ord_option = _fields.FIELD_ORDER.get(key)
+            params.update(ord_option=ord_option,
+                          defined=ord_option is not None,
+                          defined_any_options=False)
+
+        params.update(ord_section=ord_section,
+                      ord_option=ord_option)
 
         pk, = self.insert(params).inserted_primary_key
 

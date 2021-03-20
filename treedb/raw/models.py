@@ -51,7 +51,18 @@ class Option:
 
     is_lines = Column(Boolean(create_constraint=True))
 
-    __table_args__ = (UniqueConstraint(section, option),)
+    defined = Column(Boolean(create_constraint=True), nullable=False)
+    defined_any_options = Column(Boolean(create_constraint=True), nullable=False)
+
+    ord_section = Column(Integer, CheckConstraint('ord_section >= 1'))
+    ord_option = Column(Integer, CheckConstraint('ord_section >= 0'))
+
+    __table_args__ = (UniqueConstraint(section, option),
+                      CheckConstraint('(is_lines IS NULL) = (defined = 0)'),
+                      CheckConstraint('defined = 1 OR defined_any_options = 0'),
+                      CheckConstraint('(defined = 0) = (ord_section IS NULL)'),
+                      CheckConstraint('ord_section IS NOT NULL'
+                                      ' OR ord_section IS NOT NULL'))
 
 
 @registry.mapped

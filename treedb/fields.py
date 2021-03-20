@@ -78,9 +78,9 @@ FIELDS = {(CORE, 'name'): False,
           (ISO_RETIREMENT, 'comment'): False}
 
 SECTION_ORDER = [s for s, _ in itertools.groupby(FIELDS, lambda x: x[0])]
-SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER)
+SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER, start_index=1)
 
-FIELD_ORDER = _tools.Ordering.fromlist(FIELDS)
+FIELD_ORDER = _tools.Ordering.fromlist(FIELDS, start_index=1)
 
 CORE_SECTIONS = frozenset({CORE})
 
@@ -96,6 +96,11 @@ log = logging.getLogger(__name__)
 def is_known(section, option):
     """Retun True if the section option is known or in an ALL_OPTIONS section."""
     return (section, ALL_OPTIONS) in FIELDS or (section, option) in FIELDS
+
+
+def is_all_options(section, option):
+    """Retun True if the section option is in an ALL_OPTIONS section."""
+    return (section, ALL_OPTIONS) in FIELDS
 
 
 def is_lines(section, option, *, unknown_as_scalar=True):
