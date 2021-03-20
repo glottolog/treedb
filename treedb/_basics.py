@@ -1,5 +1,7 @@
 # _basics.py - package-level globals
 
+import typing
+
 from sqlalchemy.orm import (registry as _registry,
                             sessionmaker as _sessionmaker)
 
@@ -23,3 +25,25 @@ __all__ = ['CONFIG', 'DEFAULT_ROOT',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION']
+
+
+PathType = typing.Tuple[str, ...]
+
+
+RecordType = typing.Mapping[str, typing.Mapping[str, str]]
+
+
+RecordItem = typing.Tuple[PathType, RecordType]
+
+
+LanguoidType = typing.Mapping[
+    str,
+    typing.Union[
+        str, int, float, None,
+        typing.List[typing.Union[
+            str,
+            typing.Mapping[str, typing.Any]]],
+        typing.Mapping[str, typing.Any]]]
+
+
+LanguoidItem = typing.Tuple[PathType, LanguoidType]

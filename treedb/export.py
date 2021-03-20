@@ -79,7 +79,9 @@ def validate_source_kwargs(*, source, file_order, file_means_path):
 
 
 def checksum(*, name=None,
-             source='tables', file_order=False, file_means_path=True):
+             source='tables',
+             file_order: bool = False,
+             file_means_path: bool = True):
     """Return checksum over source."""
     kwargs = validate_source_kwargs(source=source,
                                     file_order=file_order,
@@ -88,9 +90,11 @@ def checksum(*, name=None,
     return _checksum(name=name, **kwargs)
 
 
-def write_json_csv(*, filename=None, sort_keys=True,
-                   source='tables', file_order=False, file_means_path=True,
-                   dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+def write_json_csv(*, filename=None, sort_keys: bool = True,
+                   source='tables',
+                   file_order: bool = False,
+                   file_means_path: bool = True,
+                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     kwargs = validate_source_kwargs(source=source,
                                     file_order=file_order,
@@ -102,8 +106,8 @@ def write_json_csv(*, filename=None, sort_keys=True,
 
 
 def _checksum(bind_or_root=ENGINE, *, name=None, ordered='id',
-              from_raw=False,
-              dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+              from_raw: bool = False,
+              dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     log.info('calculate languoids json checksum')
 
     rows = _json_rows(bind_or_root, from_raw=from_raw,
@@ -120,9 +124,9 @@ def _checksum(bind_or_root=ENGINE, *, name=None, ordered='id',
     return result
 
 
-def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered=True,
-                    sort_keys=True, from_raw=False,
-                   dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
+                    sort_keys: bool = True, from_raw: bool = False,
+                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv.gz'
@@ -154,8 +158,8 @@ def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered=True,
 
 
 def _json_rows(bind_or_root=ENGINE, *,
-               ordered=True, sort_keys=True,
-               from_raw=False):
+               ordered: bool = True, sort_keys: bool = True,
+               from_raw: bool = False):
     json_dumps = functools.partial(json.dumps,
                                    # json-serialize datetime.datetime
                                    default=operator.methodcaller('isoformat'),
@@ -169,7 +173,7 @@ def _json_rows(bind_or_root=ENGINE, *,
 
 
 def write_json_query_csv(filename=None, *,
-                         ordered='id', raw=False,
+                         ordered='id', raw: bool = False,
                          bind=ENGINE):
     if filename is None:
         suffix = '_raw' if raw else ''
@@ -184,7 +188,7 @@ def write_json_query_csv(filename=None, *,
 
 
 def write_json_lines(filename=None, *,
-                     bind=ENGINE, _encoding='utf-8'):
+                     bind=ENGINE, _encoding: str = 'utf-8'):
     r"""Write languoids as newline delimited JSON.
 
     $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
@@ -234,7 +238,7 @@ def write_json_lines(filename=None, *,
 
 
 def fetch_languoids(bind=ENGINE, *, ordered='id',
-                    progress_after=_tools.PROGRESS_AFTER):
+                    progress_after: int = _tools.PROGRESS_AFTER):
     log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
@@ -261,9 +265,10 @@ def fetch_languoids(bind=ENGINE, *, ordered='id',
     log.info('%s languoids total', f'{n:_d}')
 
 
-def write_files(root=ROOT, *, replace=False,
-                from_raw=False,
-                progress_after=_tools.PROGRESS_AFTER, bind=ENGINE):
+def write_files(root=ROOT, *, replace: bool = False,
+                from_raw: bool = False,
+                progress_after: int = _tools.PROGRESS_AFTER,
+                bind=ENGINE) -> int:
     log.info('write from tables to tree')
 
     from . import files

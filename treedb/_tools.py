@@ -13,6 +13,7 @@ import os
 import pathlib
 import platform
 import subprocess
+import typing
 import warnings
 
 ENCODING = 'utf-8'
@@ -25,7 +26,7 @@ SUFFIX_OPEN_MODULE = {'.bz2': bz2,
 
 __all__ = ['next_count',
            'groupby_attrgetter',
-           'iterfiles',
+           'walk_scandir',
            'path_from_filename',
            'sha256sum',
            'run',
@@ -45,8 +46,10 @@ def groupby_attrgetter(*attrnames):
     return functools.partial(itertools.groupby, key=key)
 
 
-def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
-    """Yield DirEntry objects for all files under top."""
+def walk_scandir(top, *,
+                 verbose: bool = False,
+                 sortkey=operator.attrgetter('name')) -> typing.Iterator[os.DirEntry]:
+    """Yield os.DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = path_from_filename(top)
     if not top.is_absolute():
@@ -65,14 +68,15 @@ def iterfiles(top, *, verbose=False, sortkey=operator.attrgetter('name')):
         if verbose:
             print(root)
 
-        dentries = sorted(os.scandir(root), key=sortkey)
+        with os.scandir(root) as dentries:
+            dentries = sorted(dentries, key=sortkey)
 
         dirs = []
-        for d in dentries:
-            if d.is_dir():
-                dirs.append(d.path)
+        for dentry in dentries:
+            if dentry.is_dir():
+                dirs.append(dentry.path)
             else:
-                yield d
+                yield dentry
 
         stack.extend(reversed(dirs))
 

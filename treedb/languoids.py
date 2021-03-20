@@ -1,9 +1,11 @@
 # languoids.py - load languoids/tree/**/md.ini into dicts
 
 import logging
+import typing
 
 from . import ROOT
 
+from . import _basics
 from . import _tools
 from . import records as _records
 
@@ -13,8 +15,11 @@ __all__ = ['iterlanguoids']
 log = logging.getLogger(__name__)
 
 
-def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
-                  progress_after=_tools.PROGRESS_AFTER):
+def iterlanguoids(root_or_bind=ROOT, *,
+                  from_raw: bool = False,
+                  ordered: bool = True,
+                  progress_after: int = _tools.PROGRESS_AFTER
+                  ) -> typing.Iterable[_basics.LanguoidItem]:
     """Yield dicts from languoids/tree/**/md.ini files."""
     log.info('generate languoids')
 
@@ -30,8 +35,8 @@ def iterlanguoids(root_or_bind=ROOT, *, from_raw=False, ordered=True,
 
         from . import files
 
-        iterfiles = files.iterfiles(root, progress_after=progress_after)
-        records = ((pt, cfg) for pt, _, cfg in iterfiles)
+        fileinfos = files.iterfiles(root, progress_after=progress_after)
+        records = ((pt, cfg) for pt, cfg, _ in fileinfos)
     else:
         bind = root_or_bind
 

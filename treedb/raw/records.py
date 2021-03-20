@@ -4,11 +4,13 @@ import contextlib
 import functools
 import itertools
 import logging
+import typing
 
 import sqlalchemy as sa
 
 from .. import ENGINE
 
+from .. import _basics
 from .. import _tools
 from .. import backend as _backend
 
@@ -22,8 +24,11 @@ WINDOWSIZE = 500
 log = logging.getLogger(__name__)
 
 
-def fetch_records(*, ordered=True, progress_after=_tools.PROGRESS_AFTER,
-                  windowsize=WINDOWSIZE, skip_unknown=True, bind=ENGINE):
+def fetch_records(*, ordered: bool = True,
+                  progress_after: int =_tools.PROGRESS_AFTER,
+                  windowsize: int = WINDOWSIZE,
+                  skip_unknown: bool = True,
+                  bind=ENGINE) -> typing.Iterator[_basics.RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.connection

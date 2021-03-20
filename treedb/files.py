@@ -1,16 +1,20 @@
 # files.py - load/write ../../languoids/tree/**/md.ini
 
 import configparser
+import functools
 import logging
+import os
+import typing
 
 from . import ROOT
 
+from . import _basics
 from . import _tools
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
            'iterfiles',
-           'write_files', 'roundtrip']
+           'roundtrip', 'write_files']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 
@@ -80,23 +84,37 @@ class ConfigParser(configparser.ConfigParser):
             self.write(f)
 
 
+class FileInfo(typing.NamedTuple):
+    """Triple of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
+
+    path: _basics.PathType
+
+    config: ConfigParser
+
+    dentry: os.DirEntry
+
+    @classmethod
+    def from_dentry(cls, dentry: os.DirEntry,
+                    *, path_slice: slice = slice(None)):
+        path = _tools.path_from_filename(dentry)
+        config = ConfigParser.from_file(path)
+        return cls(path.parts[path_slice], config, dentry)
+
+
 def iterfiles(root=ROOT,
-              *, progress_after=_tools.PROGRESS_AFTER):
-    """Yield ((<path_part>, ...), DirEntry, <ConfigParser object>) triples."""
-    make_path = _tools.path_from_filename
-    load_config = ConfigParser.from_file
-
-    root = make_path(root).resolve()
+              *, progress_after: int =_tools.PROGRESS_AFTER
+              ) -> typing.Iterator[FileInfo]:
+    """Yield triples of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
+    root = _tools.path_from_filename(root).resolve()
     log.info(f'start parsing {BASENAME} files from %r', root)
-
-    path_slice = slice(len(root.parts), -1)
-
     msg = f'%s {BASENAME} files parsed'
 
+    make_fileinfo = functools.partial(FileInfo.from_dentry,
+                                      path_slice=slice(len(root.parts), -1))
+
     n = 0
-    for n, d in enumerate(_tools.iterfiles(root), 1):
-        path = make_path(d)
-        yield path.parts[path_slice], d, load_config(path)
+    for n, dentry in enumerate(_tools.walk_scandir(root), 1):
+        yield make_fileinfo(dentry)
 
         if not (n % progress_after):
             log.info(msg, f'{n:_d}')
@@ -104,37 +122,39 @@ def iterfiles(root=ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def records_from_files(triples,
-                       *, _default_section=configparser.DEFAULTSECT):
-    for path_tuple, _, cfg in triples:
-        d = {s: dict(m) for s, m in cfg.items() if s != _default_section}
-        yield path_tuple, d
-
-
-def roundtrip(root=ROOT, *, verbose=False,
-              progress_after=_tools.PROGRESS_AFTER):
+def roundtrip(root=ROOT, *, verbose: bool = False,
+              progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
-    triples = iterfiles(root,
-                        progress_after=progress_after)
-
+    triples = iterfiles(root,progress_after=progress_after)
     records = records_from_files(triples)
-    return write_files(records, root,
-                       replace=False,
+    return write_files(records, root, replace=False,
                        progress_after=progress_after)
 
 
-def write_files(records, *, root=ROOT, replace=False,
-                progress_after=_tools.PROGRESS_AFTER, basename=BASENAME):
+def records_from_files(triples: typing.Iterable[FileInfo],
+                       *, _default_section: str = configparser.DEFAULTSECT
+                       ) -> typing.Iterator[_basics.RecordItem]:
+    for path, cfg, _ in triples:
+        record = {name: dict(section) for name, section in cfg.items()
+                  if name != _default_section}
+        yield path, record
+
+
+def write_files(records: typing.Iterable[_basics.RecordItem],
+                *, root=ROOT, replace: bool = False,
+                progress_after=_tools.PROGRESS_AFTER,
+                basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     load_config = ConfigParser.from_file
 
     def iterpairs(records, is_lines=_fields.is_lines):
-        for p, r in records:
-            for section, s in r.items():
-                for option in s:
-                    if is_lines(section, option):
-                        s[option] = '\n'.join([''] + s[option])
-            yield p, r
+        for path, record in records:
+            for name, section in record.items():
+                for option in section:
+                    if is_lines(name, option):
+                        lines = [''] + section[option]
+                        section[name] = '\n'.join(lines)
+            yield path, record
 
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
@@ -150,7 +170,7 @@ def write_files(records, *, root=ROOT, replace=False,
     leave_empty = {'sources'}
 
     files_written = 0
-    for path_tuple, d in iterpairs(records):
+    for path_tuple, record in iterpairs(records):
         path = root.joinpath(*path_tuple + (basename,))
 
         cfg = load_config(path)
@@ -163,7 +183,7 @@ def write_files(records, *, root=ROOT, replace=False,
         old_sections = set(cfg.sections())
         old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
 
-        new_sections = {sec for sec, s in d.items() if s}
+        new_sections = {sec for sec, s in record.items() if s}
         leave = (old_empty - new_sections) & leave_empty
 
         drop = old_sections - new_sections - leave - core_sections
@@ -186,7 +206,7 @@ def write_files(records, *, root=ROOT, replace=False,
             changed = True
 
         for section in sorted_sections(d):
-            s = d[section]
+            s = record[section]
             if section not in old_sections or section in core_sections:
                 pass
             elif section in leave:
