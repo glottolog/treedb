@@ -126,22 +126,30 @@ def roundtrip(root=ROOT, *, verbose: bool = False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
     triples = iterfiles(root,progress_after=progress_after)
-    records = records_from_files(triples)
-    return write_files(records, root, replace=False,
+    raw_records = raw_records_from_files(triples)
+    return write_files(raw_records, root,
+                       replace=False, raw=True,
                        progress_after=progress_after)
 
 
-def records_from_files(triples: typing.Iterable[FileInfo],
-                       *, _default_section: str = configparser.DEFAULTSECT
-                       ) -> typing.Iterator[_basics.RecordItem]:
+RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
+
+
+def raw_records_from_files(triples: typing.Iterable[FileInfo],
+                           *, _default_section: str = configparser.DEFAULTSECT
+                           ) -> typing.Iterator[RawRecordType]:
     for path, cfg, _ in triples:
-        record = {name: dict(section) for name, section in cfg.items()
-                  if name != _default_section}
-        yield path, record
+        raw_record = {name: dict(section) for name, section in cfg.items()
+                      if name != _default_section}
+        yield path, raw_record
 
 
-def write_files(records: typing.Iterable[_basics.RecordItem],
-                *, root=ROOT, replace: bool = False,
+RecordsType = typing.Union[typing.Iterable[_basics.RecordItem],
+                           typing.Iterable[RawRecordType]]
+
+
+def write_files(records: RecordsType,
+                *, root=ROOT, replace: bool = False, raw: bool = False,
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
@@ -151,18 +159,19 @@ def write_files(records: typing.Iterable[_basics.RecordItem],
     if replace:
         log.warning(f'replace present {basename} files')
 
+    joined_records = map(join_lines_inplace, records) if not raw else records
+
     load_config = ConfigParser.from_file
 
     files_written = 0
-    for path_tuple, record in records:
+
+    for path_tuple, raw_record in joined_records:
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
         if replace:
             cfg.clear()
 
-        join_lines_inplace(record)
-
-        changed = update_config(cfg, record)
+        changed = update_config(cfg, raw_record)
 
         if changed:
             if not replace:
@@ -187,7 +196,7 @@ def join_lines_inplace(record: _basics.RecordItem,
 
 
 def update_config(cfg: ConfigParser,
-                  joined_record: typing.Mapping[str, typing.Mapping[str, str]],
+                  raw_record: RawRecordType,
                   *, is_lines=_fields.is_lines,
                   core_sections=frozenset({'core'}),
                   leave_empty_sections=frozenset({'sources'}),
@@ -198,7 +207,7 @@ def update_config(cfg: ConfigParser,
     old_sections = set(cfg.sections())
     old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
 
-    new_sections = {sec for sec, s in joined_record.items() if s}
+    new_sections = {sec for sec, s in raw_record.items() if s}
     leave = (old_empty - new_sections) & leave_empty_sections
 
     drop = old_sections - new_sections - leave - core_sections
@@ -218,8 +227,8 @@ def update_config(cfg: ConfigParser,
             cfg.add_section(s)
         changed = True
 
-    for section in sorted_sections(joined_record):
-        s = joined_record[section]
+    for section in sorted_sections(raw_record):
+        s = raw_record[section]
         if section not in old_sections or section in core_sections:
             pass
         elif section in leave:
