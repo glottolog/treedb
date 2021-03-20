@@ -2,12 +2,26 @@ Changelog
 =========
 
 
-Version 1.5 (in development)
-----------------------------
+Version 1.5
+-----------
 
 Rename ``treedb.export()`` to ``treedb.csv_zipfile()``.
 
-Update SQLAlchemy to 1.4.
+Update SQLAlchemy to 1.4 with FUTURE=True:
+- remove bound select (use sqlalchemy select with scalar,
+  iterrows, print_rows, write_csv, etc., or with  connect)
+- raw now records information about flag definitions
+- improved raw.print_stats() order
+
+Add ``print_versions()`` and ``print_dataset()``.
+
+Simplify count queries in checks.
+
+Improve package structure.
+
+Improve block-style code-formatting.
+
+Improve test environment: add --skip-slow and --log-sql
 
 
 Version 1.4.1

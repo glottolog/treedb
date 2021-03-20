@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+
 import pathlib
 from setuptools import setup, find_packages
 
 setup(
     name='treedb',
-    version='1.5.dev0',
+    version='1.5',
     author='Sebastian Bank',
     author_email='sebastian.bank@uni-leipzig.de',
     description='Glottolog languoid tree as SQLite database',
