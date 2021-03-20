@@ -8,9 +8,9 @@ import typing
 
 import sqlalchemy as sa
 
-from .. import ENGINE
+from .._globals import ENGINE
 
-from .. import _basics
+from .. import _globals
 from .. import _tools
 from .. import backend as _backend
 
@@ -28,7 +28,7 @@ def fetch_records(*, ordered: bool = True,
                   progress_after: int =_tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
-                  bind=ENGINE) -> typing.Iterator[_basics.RecordItem]:
+                  bind=ENGINE) -> typing.Iterator[_globals.RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.connection

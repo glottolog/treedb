@@ -9,7 +9,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .. import ENGINE, ROOT, REGISTRY
+from .._globals import ENGINE, ROOT, REGISTRY
 
 from .. import _tools
 from .. import files as _files

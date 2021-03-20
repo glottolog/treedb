@@ -2,7 +2,7 @@
 
 import sqlalchemy as sa
 
-from .. import ENGINE
+from .._globals import ENGINE
 
 __all__ = ['print_table_sql',
            'select_table_sql',

@@ -9,7 +9,7 @@ import csv23
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-from .. import ENGINE
+from .._globals import ENGINE
 
 from .. import _compat
 from .. import _proxies

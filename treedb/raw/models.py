@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy import (Column, Integer, String, Text, Boolean,
                         ForeignKey, CheckConstraint, UniqueConstraint)
 
-from .. import REGISTRY as registry
+from .._globals import REGISTRY as registry
 
 __all__ = ['File', 'Option', 'Value']
 

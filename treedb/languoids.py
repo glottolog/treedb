@@ -3,9 +3,9 @@
 import logging
 import typing
 
-from . import ROOT
+from ._globals import ROOT
 
-from . import _basics
+from . import _globals
 from . import _tools
 from . import records as _records
 
@@ -19,7 +19,7 @@ def iterlanguoids(root_or_bind=ROOT, *,
                   from_raw: bool = False,
                   ordered: bool = True,
                   progress_after: int = _tools.PROGRESS_AFTER
-                  ) -> typing.Iterable[_basics.LanguoidItem]:
+                  ) -> typing.Iterable[_globals.LanguoidItem]:
     """Yield dicts from languoids/tree/**/md.ini files."""
     log.info('generate languoids')
 

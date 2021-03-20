@@ -8,8 +8,8 @@ import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from . import (ENGINE, ROOT,
-               Session)
+from ._globals import (ENGINE, ROOT,
+                       SESSION as Session)
 
 from .backend.models import Dataset
 

@@ -5,7 +5,7 @@ import logging
 import operator
 import warnings
 
-from . import ENGINE
+from ._globals import ENGINE
 
 from . import backend as _backend
 

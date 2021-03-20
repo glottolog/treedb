@@ -13,7 +13,7 @@ import csv23
 
 from . import _compat
 
-from . import ENGINE, ROOT
+from ._globals import ENGINE, ROOT
 
 from . import _tools
 from . import backend as _backend

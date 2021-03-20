@@ -9,7 +9,7 @@ import types
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-from .. import REGISTRY
+from .._globals import REGISTRY
 
 __all__ = ['register_view',
            'create_all_views',

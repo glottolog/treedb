@@ -2,9 +2,7 @@
 
 """Load Glottolog lanuoid tree md.ini files into SQLite3 database."""
 
-from ._basics import (CONFIG, DEFAULT_ROOT,
-                      ENGINE, ROOT, REGISTRY,
-                      SESSION as Session)
+from ._globals import SESSION as Session
 
 from .backend import (set_engine,
                       connect,
@@ -62,7 +60,7 @@ from .queries import (get_query,
 
 from .shortcuts import pd_read_sql
 
-__all__ = ['ENGINE', 'ROOT', 'REGISTRY', 'Session',
+__all__ = ['Session',
            'set_engine', 'connect', 'scalar', 'iterrows',
            'print_dataset', 'print_schema', 'print_query_sql',
            'backup', 'dump_sql', 'csv_zipfile',
@@ -98,6 +96,4 @@ engine = set_engine(None, title=__title__)
 
 
 # default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog:repo_root, or ./glottolog
-root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT',
-                                 config_path=CONFIG,
-                                 fallback=DEFAULT_ROOT))
+root = set_root(get_default_root(env_var='GLOTTOLOG_REPO_ROOT'))

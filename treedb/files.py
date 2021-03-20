@@ -6,9 +6,9 @@ import logging
 import os
 import typing
 
-from . import ROOT
+from ._globals import ROOT
 
-from . import _basics
+from . import _globals
 from . import _tools
 from . import fields as _fields
 
@@ -87,7 +87,7 @@ class ConfigParser(configparser.ConfigParser):
 class FileInfo(typing.NamedTuple):
     """Triple of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
 
-    path: _basics.PathType
+    path: _globals.PathType
 
     config: ConfigParser
 
@@ -135,7 +135,7 @@ def roundtrip(root=ROOT, *, replace=False,
 RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
 
 
-RawRecordItem = typing.Tuple[_basics.PathType, RawRecordType]
+RawRecordItem = typing.Tuple[_globals.PathType, RawRecordType]
 
 
 def raw_records_from_files(triples: typing.Iterable[FileInfo],
@@ -147,7 +147,7 @@ def raw_records_from_files(triples: typing.Iterable[FileInfo],
         yield path, raw_record
 
 
-RecordsType = typing.Union[typing.Iterable[_basics.RecordItem],
+RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
                            typing.Iterable[RawRecordItem]]
 
 
@@ -191,7 +191,7 @@ def write_files(records: RecordsType, root=ROOT,
     return files_written
 
 
-def join_lines_inplace(record_item: _basics.RecordItem,
+def join_lines_inplace(record_item: _globals.RecordItem,
                        *, is_lines=_fields.is_lines) -> RawRecordItem:
     path, record = record_item
     for name, section in record.items():

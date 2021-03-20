@@ -2,7 +2,7 @@
 
 import logging
 
-from . import ROOT
+from ._globals import ROOT
 
 from . import _tools
 from . import files as _files

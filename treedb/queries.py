@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from . import ENGINE
+from ._globals import ENGINE
 
 from . import _tools
 from . import backend as _backend

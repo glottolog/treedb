@@ -8,7 +8,7 @@ import typing
 
 import pycountry
 
-from . import _basics
+from . import _globals
 from . import fields as _fields
 
 __all__ = ['languoids_from_records',
@@ -39,9 +39,9 @@ ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
 log = logging.getLogger(__name__)
 
 
-def languoids_from_records(records: typing.Iterable[_basics.RecordItem],
+def languoids_from_records(records: typing.Iterable[_globals.RecordItem],
                            *, from_raw: bool
-                           ) -> typing.Iterator[_basics.LanguoidItem]:
+                           ) -> typing.Iterator[_globals.LanguoidItem]:
     n = 0
     for n, (path, cfg) in enumerate(records, 1):
         languoid = make_languoid(path, cfg, from_raw=from_raw)
@@ -49,15 +49,15 @@ def languoids_from_records(records: typing.Iterable[_basics.RecordItem],
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def records_from_languoids(languoids: typing.Iterable[_basics.LanguoidItem]
-                           ) -> typing.Iterator[_basics.RecordItem]:
+def records_from_languoids(languoids: typing.Iterable[_globals.LanguoidItem]
+                           ) -> typing.Iterator[_globals.RecordItem]:
     for path, l in languoids:
         record = make_record(l)
         yield path, record
 
 
-def make_languoid(path_tuple: _basics.PathType, cfg: _basics.RecordType,
-                  *, from_raw: bool) -> _basics.LanguoidType:
+def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
+                  *, from_raw: bool) -> _globals.LanguoidType:
     _make_lines = make_lines_raw if from_raw else make_lines
 
     core = cfg[CORE]
@@ -157,7 +157,7 @@ def make_languoid(path_tuple: _basics.PathType, cfg: _basics.RecordType,
     return languoid
 
 
-def make_record(languoid: _basics.LanguoidType) -> _basics.RecordType:
+def make_record(languoid: _globals.LanguoidType) -> _globals.RecordType:
     core = {'name': languoid['name'],
             'hid': languoid['hid'],
             'level': languoid['level'],

@@ -7,7 +7,7 @@ import csv23
 
 import sqlalchemy as sa
 
-from .. import ENGINE, ROOT
+from .._globals import ENGINE, ROOT
 
 from .. import _tools
 from ..backend import export as _export

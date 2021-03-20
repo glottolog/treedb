@@ -4,7 +4,7 @@ import configparser
 import logging
 import os
 
-from . import CONFIG, DEFAULT_ROOT
+from ._globals import CONFIG, DEFAULT_ROOT
 
 from . import _tools
 
@@ -21,7 +21,9 @@ NOT_SET = object()
 log = logging.getLogger(__name__)
 
 
-def get_default_root(*, env_var, config_path, fallback):
+def get_default_root(*, env_var,
+                     config_path=CONFIG,
+                     fallback=DEFAULT_ROOT):
     """Return default root from environment variable, config, or fallback."""
     root = os.getenv(env_var)
 
