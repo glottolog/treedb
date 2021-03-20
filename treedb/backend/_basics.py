@@ -98,7 +98,7 @@ def connect(*, bind=ENGINE):
 
 
 def scalar(statement, *args, bind=ENGINE, **kwargs):
-    with connect(bin=bind) as conn:
+    with connect(bind=bind) as conn:
         return conn.scalar(statement, *args, **kwargs)
 
 
