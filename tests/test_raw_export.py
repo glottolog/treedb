@@ -76,7 +76,7 @@ def test_write_raw_csv(treedb_raw):
     import treedb
 
     expected = RAW_CSV_SHA256.get(pytest.FLAGS.glottolog_tag)
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb_raw.write_raw_csv()
 

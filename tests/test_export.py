@@ -108,7 +108,7 @@ def test_checksum(treedb):
 
 def test_write_json_csv(treedb):
     expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.write_json_csv()
 
@@ -126,7 +126,7 @@ def test_write_json_csv(treedb):
 
 @pytest.mark.parametrize('raw', [False, True])
 def test_write_json_query_csv(treedb, raw):
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
     raw_suffix = '_raw' if raw else ''
 
     path = treedb.write_json_query_csv(raw=raw)
@@ -139,7 +139,7 @@ def test_write_json_query_csv(treedb, raw):
 
 
 def test_write_json_lines(capsys, treedb, n=100):
-    suffix = '-memory' if treedb.ENGINE.file is None else ''
+    suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.write_json_lines()
 
