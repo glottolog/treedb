@@ -27,6 +27,7 @@ Thumbs.db
 /*.csv.gz
 /*.csv.xz
 /*.jsonl
+/*.jsonl.gz
 /*.sql
 /*.sql.gz
 /*.zip
