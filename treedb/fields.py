@@ -12,63 +12,82 @@ __all__ = ['is_lines',
            'sorted_sections',
            'sorted_options']
 
+SECTIONS = ('core',
+            'sources',
+            'altnames', 'triggers', 'identifier',
+            'classification',
+            'endangerment', 'hh_ethnologue_comment', 'iso_retirement')
+
+(CORE,
+ SOURCES,
+ ALTNAMES, TRIGGERS, IDENTIFIER,
+ CLASSIFICATION,
+ ENGANGERMENT, HH_ETHNOLOGUE_COMMENT, ISO_RETIREMENT) = SECTIONS
+
 ALL_OPTIONS = object()
 
-FIELDS = {('core', 'name'): False,
-          ('core', 'hid'): False,
-          ('core', 'level'): False,
-          ('core', 'iso639-3'): False,
-          ('core', 'latitude'): False,
-          ('core', 'longitude'): False,
-          ('core', 'macroareas'): True,
-          ('core', 'countries'): True,
-          ('core', 'name_comment'): False,
+FIELDS = {(CORE, 'name'): False,
+          (CORE, 'hid'): False,
+          (CORE, 'level'): False,
+          (CORE, 'iso639-3'): False,
+          (CORE, 'latitude'): False,
+          (CORE, 'longitude'): False,
+          (CORE, 'macroareas'): True,
+          (CORE, 'countries'): True,
+          (CORE, 'name_comment'): False,
           # FIXME: core hapaxes
-          ('core', 'comment'): False,
-          ('core', 'location'): False,
-          ('core', 'name_pronunciation'): False,
-          ('core', 'speakers'): False,
+          (CORE, 'comment'): False,
+          (CORE, 'location'): False,
+          (CORE, 'name_pronunciation'): False,
+          (CORE, 'speakers'): False,
 
-          ('core', 'links'): True,
+          (CORE, 'links'): True,
 
-          ('core', 'timespan'): False,
+          (CORE, 'timespan'): False,
 
-          ('sources', ALL_OPTIONS): True,
+          (SOURCES, ALL_OPTIONS): True,
 
-          ('altnames', ALL_OPTIONS): True,
+          (ALTNAMES, ALL_OPTIONS): True,
 
-          ('triggers', ALL_OPTIONS): True,
+          (TRIGGERS, ALL_OPTIONS): True,
 
-          ('identifier', ALL_OPTIONS): False,
+          (IDENTIFIER, ALL_OPTIONS): False,
 
-          ('classification', 'sub'): False,
-          ('classification', 'subrefs'): True,
-          ('classification', 'family'): False,
-          ('classification', 'familyrefs'): True,
+          (CLASSIFICATION, 'sub'): False,
+          (CLASSIFICATION, 'subrefs'): True,
+          (CLASSIFICATION, 'family'): False,
+          (CLASSIFICATION, 'familyrefs'): True,
 
-          ('endangerment', 'status'): False,
-          ('endangerment', 'source'): False,
-          ('endangerment', 'date'): False,
-          ('endangerment', 'comment'): False,
+          (ENGANGERMENT, 'status'): False,
+          (ENGANGERMENT, 'source'): False,
+          (ENGANGERMENT, 'date'): False,
+          (ENGANGERMENT, 'comment'): False,
 
-          ('hh_ethnologue_comment', 'isohid'): False,
-          ('hh_ethnologue_comment', 'comment_type'): False,
-          ('hh_ethnologue_comment', 'ethnologue_versions'): False,
-          ('hh_ethnologue_comment', 'comment'): False,
+          (HH_ETHNOLOGUE_COMMENT, 'isohid'): False,
+          (HH_ETHNOLOGUE_COMMENT, 'comment_type'): False,
+          (HH_ETHNOLOGUE_COMMENT, 'ethnologue_versions'): False,
+          (HH_ETHNOLOGUE_COMMENT, 'comment'): False,
 
-          ('iso_retirement', 'code'): False,
-          ('iso_retirement', 'name'): False,
-          ('iso_retirement', 'change_request'): False,
-          ('iso_retirement', 'effective'): False,
-          ('iso_retirement', 'reason'): False,
-          ('iso_retirement', 'change_to'): True,
-          ('iso_retirement', 'remedy'): False,
-          ('iso_retirement', 'comment'): False}
+          (ISO_RETIREMENT, 'code'): False,
+          (ISO_RETIREMENT, 'name'): False,
+          (ISO_RETIREMENT, 'change_request'): False,
+          (ISO_RETIREMENT, 'effective'): False,
+          (ISO_RETIREMENT, 'reason'): False,
+          (ISO_RETIREMENT, 'change_to'): True,
+          (ISO_RETIREMENT, 'remedy'): False,
+          (ISO_RETIREMENT, 'comment'): False}
 
 SECTION_ORDER = [s for s, _ in itertools.groupby(FIELDS, lambda x: x[0])]
 SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER)
 
 FIELD_ORDER = _tools.Ordering.fromlist(FIELDS)
+
+CORE_SECTIONS = frozenset({CORE})
+
+KEEP_EMPTY_SECTIONS = CORE_SECTIONS | frozenset({SOURCES})
+
+KEEP_EMPTY_OPTIONS = frozenset({(SOURCES, 'glottolog'),
+                                (ISO_RETIREMENT, 'change_to')})
 
 
 log = logging.getLogger(__name__)

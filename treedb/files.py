@@ -200,10 +200,9 @@ def join_lines_inplace(record: _basics.RecordType,
 def update_config(cfg: ConfigParser,
                   raw_record: RawRecordType,
                   *, is_lines=_fields.is_lines,
-                  core_sections=frozenset({'core'}),
-                  keep_empty_sections=frozenset({'sources'}),
-                  keep_empty_options=frozenset({('sources', 'glottolog'),
-                                                ('iso_retirement', 'change_to')}),
+                  core_sections=_fields.CORE_SECTIONS,
+                  keep_empty_sections=_fields.KEEP_EMPTY_SECTIONS,
+                  keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
                   sorted_sections=_fields.sorted_sections,
                   sorted_options=_fields.sorted_options) -> bool:
     changed = False

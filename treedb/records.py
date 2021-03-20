@@ -9,9 +9,16 @@ import typing
 import pycountry
 
 from . import _basics
+from . import fields as _fields
 
 __all__ = ['languoids_from_records',
            'records_from_languoids']
+
+(CORE,
+ SOURCES,
+ ALTNAMES, TRIGGERS, IDENTIFIER,
+ CLASSIFICATION,
+ ENGANGERMENT, HH_ETHNOLOGUE_COMMENT, ISO_RETIREMENT) = _fields.SECTIONS
 
 FLOAT_DIGITS = 12
 
@@ -53,7 +60,7 @@ def make_languoid(path_tuple: _basics.PathType, cfg: _basics.RecordType,
                   *, from_raw: bool) -> _basics.LanguoidType:
     _make_lines = make_lines_raw if from_raw else make_lines
 
-    core = cfg['core']
+    core = cfg[CORE]
 
     languoid = {'id': path_tuple[-1],
                 'parent_id': path_tuple[-2] if len(path_tuple) > 1 else None,
@@ -81,71 +88,71 @@ def make_languoid(path_tuple: _basics.PathType, cfg: _basics.RecordType,
     if timespan:
         languoid['timespan'] = make_interval(timespan)
 
-    if 'sources' in cfg:
+    if SOURCES in cfg:
         sources = skip_empty({
             provider: [splitsource(p) for p in _make_lines(sources)]
             for provider, sources in cfg['sources'].items()
         })
         if sources:
-            languoid['sources'] = sources
+            languoid[SOURCES] = sources
 
-    if 'altnames' in cfg:
+    if ALTNAMES in cfg:
         altnames = {
             provider: [splitaltname(a) for a in _make_lines(altnames)]
-            for provider, altnames in cfg['altnames'].items()
+            for provider, altnames in cfg[ALTNAMES].items()
         }
         if altnames:
-            languoid['altnames'] = altnames
+            languoid[ALTNAMES] = altnames
 
-    if 'triggers' in cfg:
+    if TRIGGERS in cfg:
         triggers = {
             field: _make_lines(triggers)
-            for field, triggers in cfg['triggers'].items()
+            for field, triggers in cfg[TRIGGERS].items()
         }
         if triggers:
-            languoid['triggers'] = triggers
+            languoid[TRIGGERS] = triggers
 
-    if 'identifier' in cfg:
+    if IDENTIFIER in cfg:
         # FIXME: semicolon-separated (wals)?
-        identifier = dict(cfg['identifier'])
+        identifier = dict(cfg[IDENTIFIER])
         if identifier:
-            languoid['identifier'] = identifier
+            languoid[IDENTIFIER] = identifier
 
-    if 'classification' in cfg:
+    if CLASSIFICATION in cfg:
         classification = skip_empty({
             c: list(map(splitsource, _make_lines(classifications)))
                if c.endswith('refs') else
                classifications
-            for c, classifications in cfg['classification'].items()
+            for c, classifications in cfg[CLASSIFICATION].items()
         })
         if classification:
-            languoid['classification'] = classification
+            languoid[CLASSIFICATION] = classification
 
-    if 'endangerment' in cfg:
-        sct = cfg['endangerment']
-        languoid['endangerment'] = {'status': sct['status'],
-                                    'source': splitsource(sct['source'],
-                                                          endangerment=True),
-                                    'date': make_datetime(sct['date']),
-                                    'comment': sct['comment']}
+    if ENGANGERMENT in cfg:
+        sct = cfg[ENGANGERMENT]
+        languoid[ENGANGERMENT] = {'status': sct['status'],
+                                  'source': splitsource(sct['source'],
+                                                        endangerment=True),
+                                  'date': make_datetime(sct['date']),
+                                  'comment': sct['comment']}
 
-    if 'hh_ethnologue_comment' in cfg:
-        sct = cfg['hh_ethnologue_comment']
-        languoid['hh_ethnologue_comment'] = {'isohid': sct['isohid'],
-                                             'comment_type': sct['comment_type'],
-                                             'ethnologue_versions': sct['ethnologue_versions'],
-                                             'comment': sct['comment']}
+    if HH_ETHNOLOGUE_COMMENT in cfg:
+        sct = cfg[HH_ETHNOLOGUE_COMMENT]
+        languoid[HH_ETHNOLOGUE_COMMENT] = {'isohid': sct['isohid'],
+                                           'comment_type': sct['comment_type'],
+                                           'ethnologue_versions': sct['ethnologue_versions'],
+                                           'comment': sct['comment']}
 
-    if 'iso_retirement' in cfg:
-        sct = cfg['iso_retirement']
-        languoid['iso_retirement'] = {'code': sct['code'],
-                                      'name': sct['name'],
-                                      'change_request': sct.get('change_request'),
-                                      'effective': make_date(sct['effective']),
-                                      'reason': sct['reason'],
-                                      'change_to': _make_lines(sct.get('change_to')),
-                                      'remedy': sct.get('remedy'),
-                                      'comment': sct.get('comment')}
+    if ISO_RETIREMENT in cfg:
+        sct = cfg[ISO_RETIREMENT]
+        languoid[ISO_RETIREMENT] = {'code': sct['code'],
+                                    'name': sct['name'],
+                                    'change_request': sct.get('change_request'),
+                                    'effective': make_date(sct['effective']),
+                                    'reason': sct['reason'],
+                                    'change_to': _make_lines(sct.get('change_to')),
+                                    'remedy': sct.get('remedy'),
+                                    'comment': sct.get('comment')}
 
     return languoid
 
@@ -162,7 +169,7 @@ def make_record(languoid: _basics.LanguoidType) -> _basics.RecordType:
             'links': list(map(formatlink, languoid['links'])),
             'timespan': format_interval(languoid.get('timespan'))}
 
-    record = {'core': core}
+    record = {CORE: core}
 
     sources = languoid.get('sources')
     if sources:
@@ -205,14 +212,14 @@ def make_record(languoid: _basics.LanguoidType) -> _basics.RecordType:
     else:
         iso_retirement = {}
 
-    record.update(sources=sources,
-                  altnames=altnames,
-                  triggers=triggers,
-                  identifier=identifier,
-                  classification=classification,
-                  endangerment=endangerment,
-                  hh_ethnologue_comment=hh_ethnologue_comment,
-                  iso_retirement=iso_retirement)
+    record.update({SOURCES: sources,
+                   ALTNAMES: altnames,
+                   TRIGGERS: triggers,
+                   IDENTIFIER: identifier,
+                   CLASSIFICATION: classification,
+                   ENGANGERMENT: endangerment,
+                   HH_ETHNOLOGUE_COMMENT: hh_ethnologue_comment,
+                   ISO_RETIREMENT: iso_retirement})
 
     return record
 
