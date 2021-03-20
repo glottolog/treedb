@@ -145,104 +145,22 @@ def write_files(records: typing.Iterable[_basics.RecordItem],
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
-    load_config = ConfigParser.from_file
-
-    def iterpairs(records, is_lines=_fields.is_lines):
-        for path, record in records:
-            for name, section in record.items():
-                for option in section:
-                    if is_lines(name, option):
-                        lines = [''] + section[option]
-                        section[name] = '\n'.join(lines)
-            yield path, record
-
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
 
     if replace:
         log.warning(f'replace present {basename} files')
 
-    sorted_sections = _fields.sorted_sections
-    sorted_options = _fields.sorted_options
-    is_lines = _fields.is_lines
-
-    core_sections = {'core'}
-    leave_empty = {'sources'}
+    load_config = ConfigParser.from_file
 
     files_written = 0
-    for path_tuple, record in iterpairs(records):
+    for path_tuple, record in records:
         path = root.joinpath(*path_tuple + (basename,))
-
         cfg = load_config(path)
-
         if replace:
             cfg.clear()
 
-        changed = False
-
-        old_sections = set(cfg.sections())
-        old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
-
-        new_sections = {sec for sec, s in record.items() if s}
-        leave = (old_empty - new_sections) & leave_empty
-
-        drop = old_sections - new_sections - leave - core_sections
-        if drop:
-            drop = sorted_sections(drop)
-            log.debug('cfg.remove_section(s) for s in %r', drop)
-            for s in drop:
-                cfg.remove_section(s)
-
-            changed = True
-
-        add = new_sections - old_sections
-        if add:
-            add = sorted_sections(add)
-            if not replace:
-                log.debug('cfg.add_section(s) for s in %r', add)
-            for s in add:
-                cfg.add_section(s)
-
-            changed = True
-
-        for section in sorted_sections(d):
-            s = record[section]
-            if section not in old_sections or section in core_sections:
-                pass
-            elif section in leave:
-                continue
-            else:
-                old_options = set(cfg.options(section))
-                new_options = {k for k, v in s.items() if v}
-                drop_options = old_options - new_options
-                if section == 'iso_retirement':
-                    drop_options.discard('change_to')
-
-                if drop_options:
-                    drop_options = sorted_options(section, drop_options)
-                    log.debug('cfg.remove_option(%r, o) for o in %r',
-                              section, drop_options)
-                    for o in drop_options:
-                        cfg.remove_option(section, o)
-
-                    changed = True
-
-            for option in sorted_options(section, s):
-                value = s[option]
-                if value is None or (not value and is_lines(section, option)):
-                    continue
-
-                old = cfg.get(section, option, fallback=None)
-                if old == value:
-                    continue
-
-                if not replace:
-                    if old is None:
-                        log.debug('cfg add option (%r, %r)', section, option)
-                    log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
-                cfg.set(section, option, value)
-
-                changed = True
+        changed = update_config(cfg, record)
 
         if changed:
             if not replace:
@@ -255,3 +173,86 @@ def write_files(records: typing.Iterable[_basics.RecordItem],
 
     log.info(f'%s {basename} files written total', f'{files_written:_d}')
     return files_written
+
+
+def join_lines_inplace(record: _basics.RecordItem,
+                       *, is_lines=_fields.is_lines):
+    for name, section in record.items():
+        for option in section:
+            if is_lines(name, option):
+                lines = [''] + section[option]
+                section[name] = '\n'.join(lines)
+    
+
+def update_config(cfg: ConfigParser,
+                  record: _basics.RecordItem,
+                  *, is_lines=_fields.is_lines,
+                  core_sections=frozenset({'core'}),
+                  leave_empty_sections=frozenset({'sources'}),
+                  sorted_sections=_fields.sorted_sections,
+                  sorted_options=_fields.sorted_options) -> bool:
+    changed = False
+
+    join_lines_inplace(record)
+
+    old_sections = set(cfg.sections())
+    old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
+
+    new_sections = {sec for sec, s in record.items() if s}
+    leave = (old_empty - new_sections) & leave_empty_sections
+
+    drop = old_sections - new_sections - leave - core_sections
+    if drop:
+        drop = sorted_sections(drop)
+        log.debug('cfg.remove_section(s) for s in %r', drop)
+        for s in drop:
+            cfg.remove_section(s)
+        changed = True
+
+    add = new_sections - old_sections
+    if add:
+        add = sorted_sections(add)
+        if not replace:
+            log.debug('cfg.add_section(s) for s in %r', add)
+        for s in add:
+            cfg.add_section(s)
+        changed = True
+
+    for section in sorted_sections(record):
+        s = record[section]
+        if section not in old_sections or section in core_sections:
+            pass
+        elif section in leave:
+            continue
+        else:
+            old_options = set(cfg.options(section))
+            new_options = {k for k, v in s.items() if v}
+            drop_options = old_options - new_options
+            if section == 'iso_retirement':
+                drop_options.discard('change_to')
+
+            if drop_options:
+                drop_options = sorted_options(section, drop_options)
+                log.debug('cfg.remove_option(%r, o) for o in %r',
+                          section, drop_options)
+                for o in drop_options:
+                    cfg.remove_option(section, o)
+                changed = True
+
+        for option in sorted_options(section, s):
+            value = s[option]
+            if value is None or (not value and is_lines(section, option)):
+                continue
+
+            old = cfg.get(section, option, fallback=None)
+            if old == value:
+                continue
+
+            if not replace:
+                if old is None:
+                    log.debug('cfg add option (%r, %r)', section, option)
+                log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
+            cfg.set(section, option, value)
+            changed = True
+
+    return changed
