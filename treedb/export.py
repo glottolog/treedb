@@ -214,7 +214,9 @@ def write_json_lines(filename=None, *,
         result = fobj
     else:
         log.info('write json lines: %r', path)
-        open_func = functools.partial(path.open, 'wt', **open_kwargs)
+        open_module = _tools.get_open_module(path, autocompress=True)
+        open_func = functools.partial(open_module.open, path, 'wt',
+                                      **open_kwargs)
         result = path
         if path.exists():
             warnings.warn(f'delete present file: {path!r}')

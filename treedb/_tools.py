@@ -27,6 +27,7 @@ SUFFIX_OPEN_MODULE = {'.bz2': bz2,
 __all__ = ['next_count',
            'groupby_attrgetter',
            'walk_scandir',
+           'get_open_module',
            'path_from_filename',
            'sha256sum',
            'run',
@@ -81,6 +82,20 @@ def walk_scandir(top, *,
         stack.extend(reversed(dirs))
 
 
+def get_open_module(filepath, autocompress=False):
+    file = path_from_filename(filepath)
+
+    suffix = file.suffix.lower()
+    if autocompress:
+        result = SUFFIX_OPEN_MODULE.get(suffix, builtins)
+    else:
+        result = builtins
+        if suffix in SUFFIX_OPEN_MODULE:
+            warnings.warn(f'file {file!r} has suffix {suffix!r}'
+                          ' but autocompress=False')
+    return result
+
+
 def path_from_filename(filename, *args, expanduser=True):
     if hasattr(filename, 'open'):
         assert not args
@@ -96,13 +111,7 @@ def path_from_filename(filename, *args, expanduser=True):
 def sha256sum(file, *, raw=False, autocompress=True):
     file = path_from_filename(file)
 
-    suffix = ''.join(str(file).rpartition('.')[1:]).lower()
-    if autocompress:
-        open_module = SUFFIX_OPEN_MODULE.get(suffix, builtins)
-    else:
-        open_module = builtins
-        if suffix in SUFFIX_OPEN_MODULE:
-            warnings.warn(f'suffix {suffix!r} but autocompress=False')
+    open_module = get_open_module(file, autocompress=autocompress)
 
     result = hashlib.sha256()
 
