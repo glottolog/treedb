@@ -11,15 +11,15 @@ CONFIG = 'treedb.ini'
 
 DEFAULT_ROOT = './glottolog/'
 
-FUTURE = True
+SQLALCHEMY_FUTURE = True
 
-ENGINE = _proxies.SQLiteEngineProxy(future=FUTURE)
+ENGINE = _proxies.SQLiteEngineProxy(future=SQLALCHEMY_FUTURE)
 
 ROOT = _proxies.PathProxy()
 
 REGISTRY = _registry()
 
-SESSION = _sessionmaker(bind=ENGINE, future=FUTURE)
+SESSION = _sessionmaker(bind=ENGINE, future=SQLALCHEMY_FUTURE)
 
 __all__ = ['CONFIG', 'DEFAULT_ROOT',
            'ENGINE', 'ROOT',
