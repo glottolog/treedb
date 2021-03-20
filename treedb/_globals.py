@@ -1,5 +1,6 @@
 # package-level globals
 
+import datetime
 import typing
 
 from sqlalchemy.orm import (registry as _registry,
@@ -39,10 +40,31 @@ RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
 RecordItem = typing.Tuple[PathType, RecordType]
 
 
-LanguoidValueType = typing.Union[str, int, float, bool, None,
-                                 typing.List[str],
-                                 typing.Mapping[str, typing.Any],
-                                 typing.List[typing.Mapping[str, typing.Any]]]
+ValueType = typing.Union[str,
+                         int, float,
+                         bool,
+                         None,
+                         datetime.datetime]
+
+
+ValueList = typing.List[str]
+
+
+ValueMapping = typing.Mapping[str, ValueType]
+
+
+ValueMappingList = typing.List[ValueMapping]
+
+
+ValueMappingListMapping = typing.Mapping[str, ValueMappingList]
+
+
+LanguoidValueType = typing.Union[ValueType,
+                                 ValueList,
+                                 ValueMapping,
+                                 ValueMappingList,
+                                 ValueMappingListMapping,
+                                 typing.Mapping[str, ValueMappingListMapping]]
 
 
 LanguoidType = typing.Mapping[str, LanguoidValueType]
