@@ -13,7 +13,7 @@ import csv23
 
 import sqlalchemy as sa
 
-from .. import ENGINE, REGISTRY
+from .._globals import ENGINE, REGISTRY
 
 from .. import _tools
 
@@ -35,7 +35,8 @@ __all__ = ['print_dataset',
 log = logging.getLogger(__name__)
 
 
-def print_dataset(*, file=None, bind=ENGINE):
+def print_dataset(*, ignore_dirty: bool = False,
+                  file=None, bind=ENGINE):
     with _backend.connect(bind=bind) as conn:
         dataset = (conn.execute(sa.select(Dataset))
                    .mappings()
@@ -43,8 +44,10 @@ def print_dataset(*, file=None, bind=ENGINE):
         producer = (conn.execute(sa.select(Producer))
                     .mappings()
                     .one())
-    Dataset.log_dataset(dataset, also_print=True, print_file=file)
-    Producer.log_producer(producer, also_print=True, print_file=file)
+    Dataset.log_dataset(dataset, ignore_dirty=ignore_dirty,
+                        also_print=True, print_file=file)
+    Producer.log_producer(producer,
+                          also_print=True, print_file=file)
 
 
 def print_schema(metadata=REGISTRY.metadata, *, file=None,

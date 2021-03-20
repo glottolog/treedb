@@ -5,7 +5,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .. import REGISTRY as registry
+from .._globals import REGISTRY as registry
 
 from .. import backend as _backend
 
@@ -58,11 +58,14 @@ class Dataset:
             return result
 
     @classmethod
-    def log_dataset(cls, params, *, also_print=False, print_file=None):
+    def log_dataset(cls, params, *,
+                    ignore_dirty: bool = False,
+                    also_print: bool = False, print_file=None):
         name = cls.__tablename__
         log.info('git describe %(git_describe)r clean: %(clean)r', params)
         log.debug('%s.title: %r', name, params['title'])
         log.info('%s.git_commit: %r', name, params['git_commit'])
+        log.debug('%s.exclude_raw: %r', name, params['exclude_raw'])
         if also_print or print_file is not None:
             print('git describe {git_describe!r}'
                   ' clean: {clean!r}'.format_map(params),
@@ -71,9 +74,12 @@ class Dataset:
                   file=print_file)
             print(f"{name}.git_commit: {params['git_commit']!r}",
                   file=print_file)
+            print(f"{name}.exclude_raw: {params['exclude_raw']!r}",
+                  file=print_file)
 
-        if not params['clean']:
-            warnings.warn(f'{name} not clean')  # pragma: no cover
+        if not params['clean'] and not ignore_dirty:
+            warnings.warn(f'{name} not clean,'
+                          ' pass ignore_dirty=True to disable')  # pragma: no cover
 
 
 @registry.mapped
