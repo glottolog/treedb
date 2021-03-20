@@ -30,17 +30,17 @@ def print_stats(*, file=None):
     log.info('fetch statistics')
 
     # order by descending frequency for any_options and undefined options
-    select_nvalues = sa.select(Option.section, Option.option,
-                               sa.func.count().label('n'))\
-                     .join_from(Option, Value)\
-                     .group_by(Option.section, Option.option)\
-                     .order_by(sa.desc('defined'), 'ord_section', 'ord_option',
-                               'section', sa.desc('n'), 'option')
+    select_nvalues = (sa.select(Option.section, Option.option,
+                                sa.func.count().label('n'))
+                      .join_from(Option, Value)
+                      .group_by(Option.section, Option.option)
+                      .order_by(sa.desc('defined'),
+                                'ord_section', 'ord_option',
+                                'section', sa.desc('n'), 'option'))
 
     template = '{section:<22} {option:<22} {n:,}'
 
-    _export.print_rows(select_nvalues,
-                       format_=template,
+    _export.print_rows(select_nvalues, format_=template,
                        file=file)
 
 
@@ -50,10 +50,10 @@ def checksum(*, weak=False, name=None,
     log.info('calculate %r raw checksum', kind)
 
     if weak:
-        select_rows = sa.select(File.path,
-                                Option.section, Option.option,
-                                Value.value)\
-                      .join_from(File, Value).join(Option)\
+        select_rows = (sa.select(File.path,
+                                 Option.section, Option.option,
+                                 Value.value)
+                       .join_from(File, Value).join(Option))
 
         order = ['path', 'section', 'option']
         if weak == 'unordered':
@@ -63,11 +63,11 @@ def checksum(*, weak=False, name=None,
         select_rows = select_rows.order_by(*order)
 
     else:
-        select_rows = sa.select(File.path, File.sha256)\
-                      .order_by('path')
+        select_rows = (sa.select(File.path, File.sha256)
+                       .order_by('path'))
 
     hash_ = _export.hash_csv(select_rows, raw=True, name=name,
-                               dialect=dialect, encoding=encoding)
+                             dialect=dialect, encoding=encoding)
 
     logging.debug('%s: %r', hash_.name, hash_.hexdigest())
     return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
@@ -86,11 +86,11 @@ def write_raw_csv(filename=None, *,
         warnings.warn(f'deltete present file: {path!r}')
         path.unlink()
 
-    select_values = sa.select(File.path,
-                              Option.section, Option.option,
-                              Value.line, Value.value)\
-                    .join_from(File, Value).join(Option)\
-                    .order_by('path', 'section', 'option', 'line')
+    select_values = (sa.select(File.path,
+                               Option.section, Option.option,
+                               Value.line, Value.value)
+                     .join_from(File, Value).join(Option)
+                     .order_by('path', 'section', 'option', 'line'))
 
     return _export.write_csv(select_values, filename,
                              dialect=dialect, encoding=encoding)

@@ -273,12 +273,12 @@ class Languoid:
         else:
             tree = _tree
 
-        select_path_part = sa.select(tree.c.parent_id.label(label))\
-                           .where(tree.c.child_id == cls.id)\
-                           .correlate(cls)\
-                           .order_by(tree.c.steps if bottomup
-                                     else tree.c.steps.desc())\
-                           .alias('parent_path')
+        select_path_part = (sa.select(tree.c.parent_id.label(label))
+                            .where(tree.c.child_id == cls.id)
+                            .correlate(cls)
+                            .order_by(tree.c.steps if bottomup
+                                      else tree.c.steps.desc())
+                            .alias('parent_path'))
 
         return select_path_part
 
@@ -348,23 +348,23 @@ class Languoid:
 
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
 
-        family = sa.select(tree.c.parent_id)\
-                 .where(tree.c.child_id == cls.id)\
-                 .correlate(cls)\
-                 .where(tree.c.steps > 0)\
-                 .where(tree.c.terminal == True)\
-                 .label(family_label)
+        family = (sa.select(tree.c.parent_id)
+                  .where(tree.c.child_id == cls.id)
+                  .correlate(cls)
+                  .where(tree.c.steps > 0)
+                  .where(tree.c.terminal == True)
+                  .label(family_label))
 
         Ancestor = aliased(Languoid, name='ancestor')
 
-        language = sa.select(tree.c.parent_id)\
-                   .where(tree.c.child_id == cls.id)\
-                   .correlate(cls)\
-                   .where(cls.level == DIALECT)\
-                   .where(sa.exists()
-                          .where(tree.c.parent_id == Ancestor.id)
-                          .where(Ancestor.level == LANGUAGE))\
-                   .label(language_label)
+        language = (sa.select(tree.c.parent_id)
+                    .where(tree.c.child_id == cls.id)
+                    .correlate(cls)
+                    .where(cls.level == DIALECT)
+                    .where(sa.exists()
+                           .where(tree.c.parent_id == Ancestor.id)
+                           .where(Ancestor.level == LANGUAGE))
+                    .label(language_label))
 
         return path, family, language
 

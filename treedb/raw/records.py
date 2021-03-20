@@ -38,9 +38,9 @@ def fetch_records(*, ordered: bool = True,
 
     select_files = sa.select(File.path)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
-    select_values = sa.select(Value.file_id, Option.section, Option.option,
-                               Option.is_lines, Value.value)\
-                    .join_from(Value, Option)
+    select_values = (sa.select(Value.file_id, Option.section, Option.option,
+                               Option.is_lines, Value.value)
+                     .join_from(Value, Option))
 
     if ordered in (True, False, 'file'):
         key_column = File.id
@@ -55,9 +55,9 @@ def fetch_records(*, ordered: bool = True,
 
     select_files = select_files.order_by(key_column)
 
-    select_values = select_values\
-                    .order_by(value_key, 'section',
-                              Value.line, 'option')
+    select_values = (select_values
+                     .order_by(value_key, 'section',
+                               Value.line, 'option'))
 
     if skip_unknown:
         select_values = select_values.where(Option.is_lines != None)
@@ -125,11 +125,11 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
 def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
-    select_all_keys = sa.select(key_column.label('key'), row_num)\
-                      .alias('key_ord')
+    select_all_keys = (sa.select(key_column.label('key'), row_num)
+                       .alias('key_ord'))
 
-    select_keys = sa.select(select_all_keys.c.key)\
-                  .where((select_all_keys.c.row_num % size) == 0)
+    select_keys = (sa.select(select_all_keys.c.key)
+                   .where((select_all_keys.c.row_num % size) == 0))
 
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
@@ -141,8 +141,8 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
 # Python 3.6 compat
 def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
-    select_keys = sa.select(key_column.label('key'))\
-                  .order_by(key_column)
+    select_keys = (sa.select(key_column.label('key'))
+                   .order_by(key_column))
 
     log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
               str(key_column.expression), size)
