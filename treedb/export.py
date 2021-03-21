@@ -207,7 +207,7 @@ def write_json_lines(file=None, *,
 
     with _backend.connect(bind=bind) as conn:
         lines = conn.execute(query).scalars()
-        result = _tools.pipe_json_lines(file, lines,
+        result = _tools.pipe_json_lines(file, lines, raw=True,
                                         delete_present=delete_present,
                                         autocompress=autocompress)
 

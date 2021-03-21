@@ -136,40 +136,44 @@ def test_write_json_query_csv(treedb, raw):
     assert 1 * MB <= path.stat().st_size <= 100 * MB
 
 
-def test_write_json_lines(capsys, treedb, n=100):
-    suffix = '-memory' if treedb.engine.file is None else ''
+@pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])
+def test_write_json_lines(capsys, treedb, suffix, n=100):
+    name_suffix = '-memory' if treedb.engine.file is None else ''
+    args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix == 'jsonl.gz'
+            else [])
 
-    path = treedb.write_json_lines()
+    path = treedb.write_json_lines(*args)
 
-    assert path.name == f'treedb{suffix}.languoids.jsonl'
+    assert path.name == f'treedb{name_suffix}.languoids{suffix}'
     assert path.exists()
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 200 * MB
 
-    with path.open(encoding='utf-8') as f:
-        head = list(itertools.islice(f, n))
+    if patn.name.endswith('.jsonl'):
+        with path.open(encoding='utf-8') as f:
+            head = list(itertools.islice(f, n))
 
-        assert head
-        assert len(head) == n
+            assert head
+            assert len(head) == n
 
-        for line in head:
-            item = json.loads(line)
-            assert isinstance(item, dict)
-            assert item
+            for line in head:
+                item = json.loads(line)
+                assert isinstance(item, dict)
+                assert item
 
-            path = item['path']
-            assert isinstance(path, list)
-            assert all(isinstance(p, str) for p in path)
-            assert path
-            assert all(path)
+                path = item['path']
+                assert isinstance(path, list)
+                assert all(isinstance(p, str) for p in path)
+                assert path
+                assert all(path)
 
-            languoid = item['languoid']
-            assert isinstance(languoid, dict)
-            assert languoid
-            assert languoid['id']
-            assert languoid['parent_id'] is None or languoid['parent_id']
-            assert languoid['level'] in ('family', 'language', 'dialect')
-            assert languoid['name']
+                languoid = item['languoid']
+                assert isinstance(languoid, dict)
+                assert languoid
+                assert languoid['id']
+                assert languoid['parent_id'] is None or languoid['parent_id']
+                assert languoid['level'] in ('family', 'language', 'dialect')
+                assert languoid['name']
 
     out, err = capsys.readouterr()
     assert not out
