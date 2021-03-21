@@ -139,7 +139,7 @@ def test_write_json_query_csv(treedb, raw):
 @pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])
 def test_write_json_lines(capsys, treedb, suffix, n=100):
     name_suffix = '-memory' if treedb.engine.file is None else ''
-    args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix == 'jsonl.gz'
+    args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
             else [])
 
     path = treedb.write_json_lines(*args)
