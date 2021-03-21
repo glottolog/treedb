@@ -13,7 +13,7 @@ import csv23
 
 from . import _compat
 
-from ._globals import ENGINE, ROOT
+from ._globals import ENGINE, ROOT, LANGUOID_ORDER
 
 from . import _tools
 from . import backend as _backend
@@ -104,7 +104,7 @@ def write_json_csv(*, filename=None, sort_keys: bool = True,
                            **kwargs)
 
 
-def _checksum(bind_or_root=ENGINE, *, name=None, ordered='id',
+def _checksum(bind_or_root=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
               from_raw: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     log.info('calculate languoids json checksum')
@@ -150,11 +150,12 @@ def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
     header = ['path', 'json']
     log.info('csv header: %r', header)
 
-    rows = _languoids.iterlanguoids(bind_or_root,
-                                    ordered=ordered,
-                                    from_raw=from_raw)
-    rows = pipe_json('dump', rows,
-                    sort_keys=sort_keys)
+
+    kwargs = {'ordered': 'path',
+              'from_raw':from_raw}
+
+    rows = _languoids.iterlanguoids(bind_or_root, **kwargs)
+    rows = pipe_json('dump', rows, sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
                            dialect=dialect, encoding=encoding,
@@ -184,7 +185,7 @@ def pipe_json(mode, languoids, *,
 
 
 
-def write_json_lines(file=None, *, ordered='id',
+def write_json_lines(file=None, *, ordered=LANGUOID_ORDER,
                      delete_present=True, autocompress=True,
                      bind=ENGINE):
     r"""Write languoids as newline delimited JSON.
@@ -211,13 +212,16 @@ def write_json_lines(file=None, *, ordered='id',
     return result
 
 
-def fetch_languoids(bind=ENGINE, *, ordered='id',
+def fetch_languoids(bind=ENGINE, *, ordered=LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER):
     log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
-    query = _queries.get_json_query(ordered=ordered,
-                                    load_json=True)
+    kwargs = {'as_rows': True,
+              'load_json': True,
+              'ordered': ordered}
+
+    query = _queries.get_json_query(**kwargs)
 
     json_datetime = _compat.datetime_fromisoformat
 
@@ -247,9 +251,11 @@ def write_files(root=ROOT, *, replace: bool = False,
 
     from . import files
 
-    languoids = _languoids.iterlanguoids(bind,
-                                         from_raw=from_raw,
-                                         ordered='path')
+    kwargs = {'ordered': 'path',
+              'from_raw': from_raw}
+
+    languoids = _languoids.iterlanguoids(bind, **kwargs)
+
     records = _records.dump(languoids)
 
     return files.write_files(records, root=root, _join_lines=True,

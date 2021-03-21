@@ -22,10 +22,13 @@ REGISTRY = _registry()
 
 SESSION = _sessionmaker(bind=ENGINE, future=SQLALCHEMY_FUTURE)
 
+LANGUOID_ORDER = 'id'
+
 __all__ = ['CONFIG', 'DEFAULT_ROOT',
            'ENGINE', 'ROOT',
            'REGISTRY',
-           'SESSION']
+           'SESSION',
+           'LANGUOID_ORDER']
 
 
 PathType = typing.Tuple[str, ...]
