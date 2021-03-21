@@ -135,18 +135,14 @@ def write_json_lines(file=None, *, suffix='.jsonl',
 
     if file is None:
         root_or_bind = lang_kwargs['root_or_bind']
-        suffix = f'.languoids{suffix}'
         try:
             file = (root_or_bind
-                    .file_with_suffix(suffix,
-                                      stem_suffix=f'-{source}'))
+                    .with_name(f'{file.stem}-{source}.languoids{suffix}'))
         except AttributeError:
             if source == 'files':
                 root_or_bind = DEFAULT_ENGINE
             file = _tools.path_from_filename(root_or_bind)
-            file = (file
-                    .with_stem(f'{file.stem}-{source}')
-                    .with_suffix(suffix))
+            file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
 
     log.info('write json lines: %r', file)
 
