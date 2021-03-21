@@ -115,7 +115,7 @@ def pipe_json(mode, documents):
 
 
 def pipe_lines(file, lines=None,
-               *, delete_present=True, autocompress=True):
+               *, delete_present=False, autocompress=True):
     open_func, result, hashobj = get_open_result(file,
                                                  write=lines is not None,
                                                  delete_present=delete_present,
@@ -140,7 +140,7 @@ def pipe_lines(file, lines=None,
 
 
 def write_wrapped(hashsum, f, lines, *, bufsize=1000):
-    write_line = functools.partial(print, file=file)
+    write_line = functools.partial(print, file=f)
     buf = f.buffer
     for lines in iterslices(lines, size=bufsize):
         for line in lines:

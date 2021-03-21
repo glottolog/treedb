@@ -187,8 +187,9 @@ def write_json_query_csv(filename=None, *,
     return _export.write_csv(query, filename=filename, bind=bind)
 
 
-def write_json_lines(filename=None, *,
-                     bind=ENGINE, _encoding: str = 'utf-8'):
+def write_json_lines(file=None, *,
+                     delete_present=True, autocompress=True,
+                     bind=ENGINE):
     r"""Write languoids as newline delimited JSON.
 
     $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
@@ -196,32 +197,8 @@ def write_json_lines(filename=None, *,
 
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
-    open_kwargs = {'encoding': _encoding}
-    textio_kwargs = {'write_through': True, 'encoding': _encoding}
-
-    path = fobj = None
-    if filename is None:
-        result = path = bind.file_with_suffix('.languoids.jsonl')
-    elif filename is sys.stdout:
-        result = fobj = io.TextIOWrapper(sys.stdout.buffer, **textio_kwargs)
-    elif hasattr(filename, 'write'):
-        result = fobj = file
-    else:
-        result = path = _tools.path_from_filename(filename)
-
-    if path is None:
-        log.info('write json lines into: %r', fobj)
-        open_func = lambda: _compat.nullcontext(fobj)
-    else:
-        log.info('write json lines: %r', path)
-        open_module = _tools.get_open_module(path, autocompress=True)
-        open_func = functools.partial(open_module.open, path, 'wt',
-                                      **open_kwargs)
-        if path.exists():
-            warnings.warn(f'delete present file: {path!r}')
-            path.unlink()
-
-    assert result is not None
+    if file is None:
+        file = bind.file_with_suffix('.languoids.jsonl.gz')
 
     query = _queries.get_json_query(ordered='id',
                                     as_rows=False,
@@ -230,8 +207,9 @@ def write_json_lines(filename=None, *,
 
     with _backend.connect(bind=bind) as conn:
         lines = conn.execute(query).scalars()
-        with open_func() as f:
-            _tools.write_lines(f, lines)
+        result = _tools.pipe_json_lines(file, lines,
+                                        delete_present=delete_present,
+                                        autocompress=autocompress)
 
     return result
 
