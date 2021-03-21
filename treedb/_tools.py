@@ -5,7 +5,9 @@ import bz2
 import functools
 import gzip
 import hashlib
+import io
 import itertools
+import json
 import logging
 import lzma
 import operator
@@ -13,8 +15,11 @@ import os
 import pathlib
 import platform
 import subprocess
+import sys
 import typing
 import warnings
+
+from . import _compat
 
 ENCODING = 'utf-8'
 
@@ -82,18 +87,80 @@ def walk_scandir(top, *,
         stack.extend(reversed(dirs))
 
 
-def get_open_module(filepath, autocompress=False):
-    file = path_from_filename(filepath)
+def pipe_json_lines(file, documents=None, *, raw=False,
+                    delete_present=True, autocompress=True):
+    kwargs = {'delete_present': delete_present, 'autocompress': autocompress}
 
-    suffix = file.suffix.lower()
-    if autocompress:
-        result = SUFFIX_OPEN_MODULE.get(suffix, builtins)
+    if documents is not None:
+        lines = pipe_json('dump', documents) if not raw else documents
+        return pipe_lines(file, lines, **kwargs)
+
+    lines = pipe_lines(file, **kwargs)
+    return pipe_json('load', lines) if not raw else lines
+
+
+def pipe_json(mode, documents):
+    codec = {'load': json.loads, 'dump': json.dumps}[mode]
+
+    def itercodec(docs):
+        for d in docs:
+            yield codec(d)
+
+    if mode == 'load':
+        assert next(itercodec(['null'])) is None
     else:
-        result = builtins
-        if suffix in SUFFIX_OPEN_MODULE:
-            warnings.warn(f'file {file!r} has suffix {suffix!r}'
-                          ' but autocompress=False')
-    return result
+        assert next(itercodec([None])) == 'null'
+            
+    return itercodec(documents)
+
+
+def pipe_lines(file, lines=None,
+               *, delete_present=True, autocompress=True):
+    open_func, result, hashobj = get_open_result(file,
+                                                 write=lines is not None,
+                                                 delete_present=delete_present,
+                                                 autocompress=autocompress)
+
+    if lines is not None:
+        with open_func() as f:
+            if hashobj is not None:
+                write_wrapped(hashobj, f, lines)
+            else:
+                write_lines(f, lines)
+
+            if file is None:
+                result = f.getvalue()
+        return result
+
+    def iterlines():
+        with open_func() as f:
+            yield from f
+
+    return iterlines()
+
+
+def write_wrapped(hashsum, f, lines, *, bufsize=1000):
+    write_line = functools.partial(print, file=file)
+    buf = f.buffer
+    for lines in iterslices(lines, size=bufsize):
+        for line in lines:
+            write_line(line)
+        hashsum.update(buf.getbuffer())
+        # NOTE: f.truncate(0) would prepend zero-bytes
+        f.seek(0)
+        f.truncate()
+
+
+def iterslices(iterable, *, size):
+    iterable = iter(iterable)
+    next_slice = functools.partial(itertools.islice, iterable, size)
+    return iter(lambda: list(next_slice()), [])
+
+
+def write_lines(file, lines):
+    write_line = functools.partial(print, file=file)
+    for line in lines:
+        write_line(line)
 
 
 def path_from_filename(filename, *args, expanduser=True):
@@ -108,9 +175,67 @@ def path_from_filename(filename, *args, expanduser=True):
     return result
 
 
+def get_open_result(file, *, write=False, 
+                    delete_present=False, autocompress=False,
+                    _encoding: str = 'utf-8'):
+    open_kwargs = {'mode': 'wt' if write else 'rt',
+                   'encoding': _encoding}
+    textio_kwargs = {'write_through': True, 'encoding': _encoding}
+
+    path = fobj = hashobj = None
+
+    if file is None:
+        if not write:
+            raise TypeError('file cannot be Null for write=False')
+        result = fobj = io.StringIO()
+    elif file is sys.stdout:
+        result = fobj = io.TextIOWrapper(sys.stdout.buffer, **textio_kwargs)
+    elif hasattr(file, 'write'):
+        result = fobj = hashobj = file
+    elif hasattr(file, 'hexdigest'):
+        if not write:
+            raise TypeError('missing lines')
+        result = hashobj = file
+        fobj = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
+    else:
+        result = path = path_from_filename(file)
+
+    if path is None:
+        log.info('write lines into: %r', fobj)
+        open_func = lambda: _compat.nullcontext(fobj)
+    else:
+        log.info('write lines: %r', path)
+        open_module = get_open_module(path, autocompress=autocompress)
+        open_func = functools.partial(open_module.open, path,
+                                      **open_kwargs)
+
+        if write and path.exists():
+            if not delete_present:
+                raise RuntimeError('refuse to delete_present file: {path!r}')
+            warnings.warn(f'delete present file: {path!r}')
+            path.unlink()
+
+    assert result is not None
+
+    return open_func, result, hashobj
+
+
+def get_open_module(filepath, autocompress=False):
+    file = path_from_filename(filepath)
+
+    suffix = file.suffix.lower()
+    if autocompress:
+        result = SUFFIX_OPEN_MODULE.get(suffix, builtins)
+    else:
+        result = builtins
+        if suffix in SUFFIX_OPEN_MODULE:
+            warnings.warn(f'file {file!r} has suffix {suffix!r}'
+                          ' but autocompress=False')
+    return result
+
+
 def sha256sum(file, *, raw=False, autocompress=True):
     file = path_from_filename(file)
-
     open_module = get_open_module(file, autocompress=autocompress)
 
     result = hashlib.sha256()
