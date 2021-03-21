@@ -7,11 +7,12 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from ._globals import ENGINE
+from ._globals import ENGINE, PATH_LABEL, LANGUOID_LABEL
 
 from . import _tools
 from . import backend as _backend
 from .backend import views as _views
+from . import models
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -316,33 +317,36 @@ def get_query(*, ordered='id', separator=', '):
 
 @_views.register_view('path_json', as_rows=False, load_json=False)
 def get_json_query(*, ordered='id', as_rows=False, load_json=True,
-                   path_label='path', languoid_label='languoid'):
+                   sort_keys=False, path_label=PATH_LABEL,
+                   languoid_label=LANGUOID_LABEL):
     languoid = {'id': Languoid.id,
-               'parent_id': Languoid.parent_id,
-               'level': Languoid.level,
-               'name': Languoid.name,
-               'hid': Languoid.hid,
-               'iso639_3': Languoid.iso639_3,
-               'latitude': Languoid.latitude,
-               'longitude': Languoid.longitude}
+                'parent_id': Languoid.parent_id,
+                'level': Languoid.level,
+                'name': Languoid.name,
+                'hid': Languoid.hid,
+                'iso639_3': Languoid.iso639_3,
+                'latitude': Languoid.latitude,
+                'longitude': Languoid.longitude}
 
-    subselects = dict(languoid_subselects())
+    subselects = dict(languoid_subselects(sort_keys=sort_keys))
 
     languoid.update(subselects)
 
-    # Windows, Python < 3.9: https://www.sqlite.org/download.html
-    json_object = sa.func.json_object
+    def json_object(**kwargs):
+        return models.json_object(sort_keys_=sort_keys, **kwargs)
 
-    value = json_object(*(x for kv in languoid.items() for x in kv))
+    value = json_object(**languoid)
     if as_rows:
         path = Languoid.path()
         if load_json:
             value = sa.type_coerce(value, sa.types.JSON)
         columns = [path.label(path_label),
                    value.label(languoid_label)]
+        assert path_label < languoid_label
     else:
         path = Languoid.path_as_json()
-        value = json_object(path_label, path, languoid_label, value)
+        value = json_object(**{path_label: path,
+                               languoid_label: value})
         if load_json:
             value = sa.type_coerce(value, sa.types.JSON)
         columns = [value]
@@ -352,7 +356,7 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
     return select_json
 
 
-def languoid_subselects():
+def languoid_subselects(*, sort_keys: bool = False):
     # Windows, Python < 3.9: https://www.sqlite.org/download.html
     group_array = sa.func.json_group_array
     group_object = sa.func.json_group_object
@@ -370,7 +374,7 @@ def languoid_subselects():
 
     yield 'macroareas', macroareas
 
-    countries = (select(Country.jsonf())
+    countries = (select(Country.jsonf(sort_keys=sort_keys))
                  .join_from(languoid_country, Country)
                  .where(languoid_country.c.languoid_id == Languoid.id)
                  .correlate(Languoid)
@@ -383,7 +387,7 @@ def languoid_subselects():
 
     yield 'countries', countries
 
-    links = (select(Link.jsonf())
+    links = (select(Link.jsonf(sort_keys=sort_keys))
              .select_from(Link)
              .filter_by(languoid_id=Languoid.id)
              .correlate(Languoid)
@@ -395,7 +399,7 @@ def languoid_subselects():
 
     yield 'links', links
 
-    timespan = (select(Timespan.jsonf())
+    timespan = (select(Timespan.jsonf(sort_keys=sort_keys))
                 .select_from(Timespan)
                 .filter_by(languoid_id=Languoid.id)
                 .scalar_subquery())
@@ -407,7 +411,8 @@ def languoid_subselects():
     s_bibitem = aliased(Bibitem, name='source_bibitem')
 
     sources = (select(s_provider.name.label('provider'),
-                      Source.jsonf(s_bibfile, s_bibitem))
+                      Source.jsonf(s_bibfile, s_bibitem,
+                                   sort_keys=sort_keys))
               .select_from(Source)
               .filter_by(languoid_id=Languoid.id)
               .correlate(Languoid)
@@ -431,7 +436,8 @@ def languoid_subselects():
 
     a_provider = aliased(AltnameProvider, name='altname_provider')
 
-    altnames = (select(a_provider.name.label('provider'), Altname.jsonf())
+    altnames = (select(a_provider.name.label('provider'),
+                       Altname.jsonf(sort_keys=sort_keys))
                 .select_from(Altname)
                 .filter_by(languoid_id=Languoid.id)
                 .correlate(Languoid)
@@ -493,7 +499,8 @@ def languoid_subselects():
     cr_bibitem = aliased(Bibitem, name='bibitem_cr')
 
     classification_refs = (select((ClassificationRef.kind + 'refs').label('key'),
-                                  ClassificationRef.jsonf(cr_bibfile, cr_bibitem))
+                                  ClassificationRef.jsonf(cr_bibfile, cr_bibitem,
+                                                          sort_keys=sort_keys))
                            .select_from(ClassificationRef)
                            .filter_by(languoid_id=Languoid.id)
                            .correlate(Languoid)
@@ -524,6 +531,7 @@ def languoid_subselects():
 
     endangerment = (select(Endangerment.jsonf(EndangermentSource,
                                               e_bibfile, e_bibitem,
+                                              sort_keys=sort_keys,
                                               label='endangerment'))
                     .join_from(Endangerment, EndangermentSource)
                     .outerjoin(sa.join(e_bibitem, e_bibfile))
@@ -534,7 +542,8 @@ def languoid_subselects():
     yield 'endangerment', endangerment
 
     hh_ethnologue_comment = (select(EthnologueComment
-                                    .jsonf(label='hh_ethnologue_comment'))
+                                    .jsonf(sort_keys=sort_keys,
+                                           label='hh_ethnologue_comment'))
                              .select_from(EthnologueComment)
                              .filter_by(languoid_id=Languoid.id)
                              .correlate(Languoid)
@@ -555,6 +564,7 @@ def languoid_subselects():
                  .scalar_subquery())
 
     iso_retirement = (select(IsoRetirement.jsonf(change_to=change_to,
+                                                 sort_keys=sort_keys,
                                                  optional=True,
                                                  label='iso_retirement'))
                       .select_from(IsoRetirement)

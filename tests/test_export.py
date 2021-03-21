@@ -142,7 +142,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
                 item = json.loads(line)
                 assert_nonempty_dict(item)
 
-                path = item['path']
+                path = item['__path__']
                 assert isinstance(path, list)
                 assert all(isinstance(p, str) for p in path)
                 assert path

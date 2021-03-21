@@ -58,6 +58,13 @@ EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
 
 
+# Windows, Python < 3.9: https://www.sqlite.org/download.html
+def json_object(*, sort_keys_, label_=None, **kwargs):
+    items = sorted(kwargs.items()) if sort_keys_ else kwargs.items()
+    obj = sa.func.json_object(*[x for kv in items for x in kv])
+    return obj.label(label_) if label_ is not None else obj
+
+
 @registry.mapped
 class Languoid:
 
@@ -427,9 +434,11 @@ class Country:
                 if not minimal else cls.id).label(label)
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('id', cls.id,
-                                   'name', cls.name).label(label)
+    def jsonf(cls, *, sort_keys, label='jsonf'):
+        return json_object(id=cls.id,
+                           name=cls.name,
+                           sort_keys_=sort_keys,
+                           label_=label,)
 
 
 languoid_country = Table('languoid_country', registry.metadata,
@@ -479,10 +488,12 @@ class Link:
                        else_=cls.url).label(label)
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('scheme', cls.scheme,
-                                   'url', cls.url,
-                                   'title', cls.title).label(label)
+    def jsonf(cls, *, sort_keys, label='jsonf'):
+        return json_object(scheme=cls.scheme,
+                           url=cls.url,
+                           title= cls.title,
+                           sort_keys_=sort_keys,
+                           label_=label)
 
 
 @registry.mapped
@@ -520,13 +531,15 @@ class Timespan:
                             back_populates='timespan')
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        return sa.func.json_object('start_year', cls.start_year,
-                                   'start_month', cls.start_month,
-                                   'start_day', cls.start_day,
-                                   'end_year', cls.end_year,
-                                   'end_month', cls.end_month,
-                                   'end_day', cls.end_day).label(label)
+    def jsonf(cls, *, sort_keys, label='jsonf'):
+        return json_object(start_year=cls.start_year,
+                           start_month=cls.start_month,
+                           start_day=cls.start_day,
+                           end_year=cls.end_year,
+                           end_month=cls.end_month,
+                           end_day=cls.end_day,
+                           sort_keys_=sort_keys,
+                           label_=label)
 
 
 @registry.mapped
@@ -580,11 +593,13 @@ class Source:
                        ).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, *, label='jsonf'):
-        return sa.func.json_object('bibfile', bibfile.name,
-                                   'bibkey', bibitem.bibkey,
-                                   'pages', cls.pages,
-                                   'trigger', cls.trigger).label(label)
+    def jsonf(cls, bibfile, bibitem, *, sort_keys, label='jsonf'):
+        return json_object(bibfile=bibfile.name,
+                           bibkey=bibitem.bibkey,
+                           pages=cls.pages,
+                           trigger=cls.trigger,
+                           sort_keys_=sort_keys,
+                           label_=label)
 
 
 @registry.mapped
@@ -685,11 +700,13 @@ class Altname:
         return sa.case((cls.lang == '', cls.name), else_=full).label(label)
 
     @classmethod
-    def jsonf(cls, *, label='jsonf'):
-        half = sa.func.json_object('name', cls.name,
-                                   'lang', None)
-        full = sa.func.json_object('name', cls.name,
-                                   'lang', cls.lang)
+    def jsonf(cls, *, sort_keys, label='jsonf'):
+        half = json_object(name=cls.name,
+                           lang=None,
+                           sort_keys_=sort_keys)
+        full = json_object(name=cls.name,
+                           lang=cls.lang,
+                           sort_keys_=sort_keys)
         return sa.case((cls.lang == '', half), else_=full).label(label)
 
 
@@ -836,11 +853,13 @@ class ClassificationRef:
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, *, label='jsonf'):
-        return sa.func.json_object('bibfile', bibfile.name,
-                                   'bibkey', bibitem.bibkey,
-                                   'pages', cls.pages,
-                                   'trigger', None).label(label)
+    def jsonf(cls, bibfile, bibitem, *, sort_keys, label='jsonf'):
+        return json_object(bibfile=bibfile.name,
+                           bibkey=bibitem.bibkey,
+                           pages=cls.pages,
+                           trigger=None,
+                           sort_keys_=sort_keys,
+                           label_=label)
 
 
 @registry.mapped
@@ -875,15 +894,18 @@ class Endangerment:
                           back_populates='endangerment')
 
     @classmethod
-    def jsonf(cls, source, bibfile, bibitem, *, label='jsonf'):
-        source = sa.func.json_object('name', source.name,
-                                     'bibfile', bibfile.name,
-                                     'bibkey', bibitem.bibkey,
-                                     'pages', source.pages)
-        return sa.func.json_object('status', cls.status,
-                                   'source', source,
-                                   'date', cls.date,
-                                   'comment', cls.comment).label(label)
+    def jsonf(cls, source, bibfile, bibitem, *, sort_keys, label='jsonf'):
+        source = json_object(name=source.name,
+                             bibfile=bibfile.name,
+                             bibkey=bibitem.bibkey,
+                             pages=source.pages,
+                             sort_keys_=sort_keys)
+        return json_object(status=cls.status,
+                           source=source,
+                           date=cls.date,
+                           comment=cls.comment,
+                           sort_keys_=sort_keys,
+                           label_=label)
 
 
 @registry.mapped
@@ -949,11 +971,12 @@ class EthnologueComment:
                             back_populates='ethnologue_comment')
 
     @classmethod
-    def jsonf(cls, *, label='jsonf', optional=False):
-        mapping = sa.func.json_object('isohid', cls.isohid,
-                                      'comment_type', cls.comment_type,
-                                      'ethnologue_versions', cls.ethnologue_versions,
-                                      'comment', cls.comment)
+    def jsonf(cls, *, sort_keys, label='jsonf', optional=False):
+        mapping = json_object(isohid=cls.isohid,
+                              comment_type=cls.comment_type,
+                              ethnologue_versions=cls.ethnologue_versions,
+                              comment=cls.comment,
+                              sort_keys_=sort_keys)
         if optional:
             return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
         return mapping.label(label)
@@ -1004,15 +1027,16 @@ class IsoRetirement:
                              back_populates='iso_retirement')
 
     @classmethod
-    def jsonf(cls, *, change_to=None, label='jsonf', optional=False):
-        mapping = sa.func.json_object('code', cls.code,
-                                      'name', cls.name,
-                                      'change_request', cls.change_request,
-                                      'change_to', change_to,
-                                      'effective', cls.effective,
-                                      'reason', cls.reason,
-                                      'remedy', cls.remedy,
-                                      'comment', cls.comment)
+    def jsonf(cls, *, sort_keys, change_to=None, label='jsonf', optional=False):
+        mapping = json_object(code=cls.code,
+                              name=cls.name,
+                              change_request=cls.change_request,
+                              change_to=change_to,
+                              effective=cls.effective,
+                              reason=cls.reason,
+                              remedy=cls.remedy,
+                              comment=cls.comment,
+                              sort_keys_=sort_keys)
         if optional:
             return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
         return mapping.label(label)

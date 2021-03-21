@@ -14,6 +14,10 @@ DEFAULT_ROOT = './glottolog/'
 
 DEFAULT_ENGINE = 'treedb.sqlite3'
 
+PATH_LABEL = '__path__'
+
+LANGUOID_LABEL = 'languoid'
+
 SQLALCHEMY_FUTURE = True
 
 ENGINE = _proxies.SQLiteEngineProxy(future=SQLALCHEMY_FUTURE)
@@ -27,10 +31,14 @@ SESSION = _sessionmaker(bind=ENGINE, future=SQLALCHEMY_FUTURE)
 LANGUOID_ORDER = 'path'
 
 __all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
+           'PATH_LABEL', 'LANGUOID_LABEL',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION',
            'LANGUOID_ORDER']
+
+
+assert PATH_LABEL < LANGUOID_LABEL
 
 
 PathType = typing.Tuple[str, ...]

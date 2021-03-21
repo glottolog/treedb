@@ -14,6 +14,7 @@ import csv23
 from . import _compat
 
 from ._globals import (DEFAULT_ENGINE,
+                       PATH_LABEL, LANGUOID_LABEL,
                        ENGINE, ROOT,
                        LANGUOID_ORDER)
 
@@ -121,7 +122,9 @@ def write_json_lines(file=None, *, suffix='.jsonl',
                      source='tables',
                      file_order: bool = True,
                      file_means_path: bool = True,
-                     sort_keys: bool = True):
+                     sort_keys: bool = True,
+                     path_label: str = PATH_LABEL,
+                     languoid_label: str = LANGUOID_LABEL):
     r"""Write languoids as newline delimited JSON.
 
     $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
@@ -134,15 +137,15 @@ def write_json_lines(file=None, *, suffix='.jsonl',
                                          file_means_path=file_means_path)
 
     if file is None:
-        root_or_bind = lang_kwargs['root_or_bind']
-        try:
-            file = (root_or_bind
-                    .with_name(f'{file.stem}-{source}.languoids{suffix}'))
-        except AttributeError:
-            if source == 'files':
-                root_or_bind = DEFAULT_ENGINE
-            file = _tools.path_from_filename(root_or_bind)
-            file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
+        if source == 'files':
+            file = _tools.path_from_filename(DEFAULT_ENGINE)
+        else:
+            root_or_bind = lang_kwargs['root_or_bind']
+            if hasattr(root_or_bind, 'file_with_name'):
+                file = root_or_bind.file
+            else:
+                file = _tools.path_from_filename(root_or_bind)
+        file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
 
     log.info('write json lines: %r', file)
 
@@ -150,13 +153,14 @@ def write_json_lines(file=None, *, suffix='.jsonl',
                    'autocompress': autocompress}
 
     if source == 'tables':
-        del sort_keys  # json string built via SQL
-
         query_kwargs = {'as_rows': False,
                         'load_json': False,
                         'ordered': lang_kwargs['ordered']}
 
-        query = _queries.get_json_query(**query_kwargs)
+        query = _queries.get_json_query(sort_keys=sort_keys,
+                                        path_label=path_label,
+                                        languoid_label=languoid_label,
+                                        **query_kwargs)
 
         with _backend.connect(bind=lang_kwargs['root_or_bind']) as conn:
             lines = conn.execute(query).scalars()
@@ -165,7 +169,8 @@ def write_json_lines(file=None, *, suffix='.jsonl',
         return result
         
     items = _languoids.iterlanguoids(**lang_kwargs)
-    items = ({'path': path, 'languoid': languoid} for path, languoid in items)
+    items = ({path_label: path, languoid_label: languoid}
+             for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
                                   sort_keys=sort_keys,
                                   **json_kwargs)
