@@ -122,6 +122,12 @@ def iterfiles(root=ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
+def records_from_files(triples: typing.Iterable[FileInfo]
+                       )-> typing.Iterator[_globals.RecordItem]:
+     for path, cfg, _ in triples:
+         yield path, cfg
+
+
 def roundtrip(root=ROOT, *, replace=False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""

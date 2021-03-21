@@ -1,7 +1,12 @@
-import itertools
 import json
 
 import pytest
+
+from conftest import (pairwise,
+                      get_assert_head,
+                      assert_nonempty_string,
+                      assert_nonempty_dict,
+                      assert_file_size_between)
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -111,9 +116,7 @@ def test_write_json_csv(treedb):
     path = treedb.write_json_csv()
 
     assert path.name == f'treedb{suffix}.languoids-json.csv.gz'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 100 * MB
+    assert_file_size_between(path, 1, 100)
 
     if expected is None:
         pass
@@ -131,21 +134,13 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     path = treedb.write_json_lines(*args)
 
     assert path.name == f'treedb{name_suffix}.languoids{suffix}'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 200 * MB
+    assert_file_size_between(path, 1, 200)
 
     if path.name.endswith('.jsonl'):
         with path.open(encoding='utf-8') as f:
-            head = list(itertools.islice(f, n))
-
-            assert head
-            assert len(head) == n
-
-            for line in head:
+            for line in get_assert_head(f, n=n):
                 item = json.loads(line)
-                assert isinstance(item, dict)
-                assert item
+                assert_nonempty_dict(item)
 
                 path = item['path']
                 assert isinstance(path, list)
@@ -154,12 +149,13 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
                 assert all(path)
 
                 languoid = item['languoid']
-                assert isinstance(languoid, dict)
-                assert languoid
-                assert languoid['id']
-                assert languoid['parent_id'] is None or languoid['parent_id']
+                assert_nonempty_dict(languoid)
+
+                for key in ('id', 'level', 'name'):
+                    assert_nonempty_string(languoid[key])
+
+                assert languoid['parent_id'] or languoid['parent_id'] is None
                 assert languoid['level'] in ('family', 'language', 'dialect')
-                assert languoid['name']
 
     out, err = capsys.readouterr()
     assert not out
@@ -249,9 +245,3 @@ def test_checksum_equivalence(treedb, kwargs):
 
     for (c, cur), (n, nxt) in pairwise(results):
         assert cur[-64:] == nxt[-64:], f'checksum(**{c!r}) == checksum(**{n!r})'
-
-
-def pairwise(iterable):
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)

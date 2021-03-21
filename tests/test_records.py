@@ -1,22 +1,29 @@
-import itertools
+from conftest import (get_assert_head,
+                      assert_nonempty_string,
+                      assert_nonempty_string_tuple,
+                      assert_nonempty_dict,
+                      assert_valid_languoids)
 
 
-def test_records_from_languoids(bare_treedb, n=100):
+def test_pipe(bare_treedb, *, n=100):
+    from treedb import files as _files
+
+    files = bare_treedb.iterfiles()
+    record_items = _files.records_from_files(files)
+    items = bare_treedb.records.pipe('parse', record_items,
+                                     from_raw=False)
+
+    assert_valid_languoids(items, n=n)
+
+
+def test_dump(bare_treedb, *, n=100):
     languoids = bare_treedb.iterlanguoids()
-    pairs = bare_treedb.records.records_from_languoids(languoids)
+    items = bare_treedb.records.dump(languoids)
 
-    head = list(itertools.islice(pairs, n))
+    for path, record in get_assert_head(items, n=n):
+        assert_nonempty_string_tuple(path)
+        assert_nonempty_dict(record)
 
-    assert head
-    assert len(head) == n
+        assert_nonempty_string(record['core']['name'])
 
-    for path, record in head:
-        assert isinstance(path, tuple)
-        assert all(isinstance(p, str) for p in path)
-        assert path
-        assert all(path)
-
-        assert isinstance(record, dict)
-        assert record
         assert record['core']['level'] in ('family', 'language', 'dialect')
-        assert record['core']['name']

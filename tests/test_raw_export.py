@@ -1,5 +1,7 @@
 import pytest
 
+from conftest import assert_file_size_between
+
 CHECKSUM = {('v4.1', False): ('strong:sha256:'
                               '1d5a043b6cff9b2adb073e94eb67f5d4'
                               '789b3b8f215c1eb7a3f26d0d1858d90a'),
@@ -79,9 +81,7 @@ def test_write_raw_csv(treedb_raw):
     path = treedb_raw.write_raw_csv()
 
     assert path.name == f'treedb{suffix}.raw.csv.gz'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 100 * MB
+    assert_file_size_between(path, 1, 100)
 
     if expected is None:
         pass

@@ -4,6 +4,8 @@ import sys
 import pytest
 import sqlalchemy as sa
 
+from conftest import assert_file_size_between
+
 import treedb as _treedb
 
 QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
@@ -16,9 +18,6 @@ QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
                       ('bf8af9e4840642f4622cec41bf3156af'
                        'ac75317740ff0eef1ac75ec1998d4f78')}
 
-MB = 2**20
-
-
 
 def test_print_dataset(capsys, treedb):
     assert treedb.print_dataset() is None
@@ -29,8 +28,8 @@ def test_print_dataset(capsys, treedb):
     assert out.startswith("git describe '")
 
 
-def test_print_schema(capsys):
-    assert _treedb.print_schema() is None
+def test_print_schema(capsys, bare_treedb):
+    assert bare_treedb.print_schema() is None
 
     out, err = capsys.readouterr()
     assert not err
@@ -60,8 +59,8 @@ def test_print_schema(capsys):
     (None, False, None),
     (None, True, None)
 ])
-def test_print_query_sql(capsys, query, pretty, expected):
-    assert _treedb.print_query_sql(query, pretty=pretty) is None
+def test_print_query_sql(capsys, bare_treedb, query, pretty, expected):
+    assert bare_treedb.print_query_sql(query, pretty=pretty) is None
 
     out, err = capsys.readouterr()
     assert not err
@@ -84,9 +83,7 @@ def test_backup(treedb):
     engine = treedb.backup(path.name)
 
     assert engine.url.database == path.name
-    assert path.exists()
-    assert path.is_file()
-    assert 10 * MB <= path.stat().st_size <= 200 * MB
+    assert_file_size_between(path, 10, 200)
 
     # SQLiteEngineProxy
     engine = treedb.engine.__class__(engine, future=treedb.engine.future)
@@ -108,9 +105,7 @@ def test_dump_sql(treedb):
     path = treedb.dump_sql()
 
     assert path.name == f'treedb{suffix}.sql.gz'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 20 * MB
+    assert_file_size_between(path, 1, 20)
 
 
 @pytest.skip_slow
@@ -120,9 +115,7 @@ def test_csv_zipfilet(treedb):
     path = treedb.csv_zipfile()
 
     assert path.name == f'treedb{suffix}.zip'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 20 * MB
+    assert_file_size_between(path, 1, 20)
 
 
 def test_print_rows(capsys, treedb):
@@ -151,9 +144,7 @@ def test_write_csv(treedb):
     path = treedb.write_csv()
 
     assert path.name == f'treedb{suffix}.query.csv'
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 30 * MB
+    assert_file_size_between(path, 1, 30)
 
     if expected is None:
         pass

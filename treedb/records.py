@@ -11,7 +11,7 @@ import pycountry
 from . import _globals
 from . import fields as _fields
 
-__all__ = ['pipe_records',
+__all__ = ['pipe',
            'parse', 'dump']
 
 (CORE,
@@ -39,10 +39,10 @@ ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
 log = logging.getLogger(__name__)
 
 
-def pipe_records(mode, items, *, from_raw: bool):
+def pipe(mode, items, *, from_raw: bool):
     codec = {'parse': parse, 'dump': dump}[mode]
-    kwargs = {'from_raw': from_raw }if mode == 'parse' else {}
-    return codec(languoids, **kwargs)
+    kwargs = {'from_raw': from_raw } if mode == 'parse' else {}
+    return codec(items, **kwargs)
 
 
 def parse(records: typing.Iterable[_globals.RecordItem],
