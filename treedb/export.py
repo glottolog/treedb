@@ -146,7 +146,7 @@ def _write_json_lines(file=None, *, default_suffix='.jsonl',
 
     items = _languoids.iterlanguoids(bind_or_root, **kwargs)
     items = ({'path': path, 'languoid': languoid} for path, languoid in items)
-    return _tools.pipe_json_lines('dump', items,
+    return _tools.pipe_json_lines(file, items,
                                   sort_keys=sort_keys)
 
 
@@ -219,7 +219,7 @@ def write_json_lines(file=None, *, ordered=LANGUOID_ORDER,
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     if file is None:
-        file = bind.file_with_suffix(f'.languoids.{default_suffix}')
+        file = bind.file_with_suffix(f'.languoids{default_suffix}')
 
     kwargs = {'as_rows': False,
               'load_json': False,
