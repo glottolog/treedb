@@ -25,8 +25,8 @@ from . import records as _records
 
 __all__ = ['print_languoid_stats',
            'checksum',
-           'write_json_csv',
            'write_json_lines',
+           'write_json_csv',
            'fetch_languoids',
            'write_files']
 
@@ -61,20 +61,21 @@ def print_languoid_stats(*, file=None,
 
 
 def validate_source_kwargs(*, source, file_order, file_means_path):
+    by_file = 'path' if file_means_path else 'file'
+    ordered = by_file if file_order else 'id'
     try:
-        kwargs = {'tables': {'bind_or_root': ENGINE,
-                             'from_raw': False},
-                  'raw': {'bind_or_root': ENGINE,
-                          'from_raw': True},
-                  'files': {'bind_or_root': ROOT,
-                            'from_raw': False}}[source]
+        return {'tables': {'root_or_bind': ENGINE,
+                           'from_raw': False,
+                           'ordered': ordered},
+                'raw': {'root_or_bind': ENGINE,
+                        'from_raw': True,
+                        'ordered': ordered},
+                'files': {'root_or_bind': ROOT,
+                          'from_raw': None,
+                          'ordered': 'path'}}[source]
     except KeyError:
         raise ValueError(f'unknown checksum source: {source!r}'
                          f' (possible values: {list(kwargs)})')
-
-    by_file = 'path' if file_means_path else 'file'
-    kwargs['ordered'] = by_file if file_order else 'id'
-    return kwargs
 
 
 def checksum(*, name=None,
@@ -104,12 +105,12 @@ def write_json_csv(*, filename=None, sort_keys: bool = True,
                            **kwargs)
 
 
-def _checksum(bind_or_root=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
+def _checksum(root_or_bind=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
               from_raw: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     log.info('calculate languoids json checksum')
 
-    rows = _languoids.iterlanguoids(bind_or_root,
+    rows = _languoids.iterlanguoids(root_or_bind,
                                     ordered=ordered,
                                     from_raw=from_raw)
 
@@ -127,39 +128,68 @@ def _checksum(bind_or_root=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
     return result
 
 
-def _write_json_lines(file=None, *, default_suffix='.jsonl',
-                      ordered: bool = True,
-                      sort_keys: bool = True,
-                      from_raw: bool = False,
-                      bind_or_root=ENGINE):
+def write_json_lines(file=None, *, suffix='.jsonl',
+                     delete_present: bool = True,
+                     autocompress: bool = True,
+                     source='tables',
+                     file_order: bool = False,
+                     file_means_path: bool = True,
+                     sort_keys: bool = True):
+    r"""Write languoids as newline delimited JSON.
+
+    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
+    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
+
+    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
+    """
+    lang_kwargs = validate_source_kwargs(source=source,
+                                         file_order=file_order,
+                                         file_means_path=file_means_path)
+
     if file is None:
-        suffix = f'.languoids{default_suffix}'
+        root_or_bind = lang_kwargs['root_or_bind']
+        suffix = f'.languoids{suffix}'
         try:
-            file = bind_or_root.file_with_suffix(suffix)
+            file = root_or_bind.file_with_suffix(suffix)
         except AttributeError:
-            file = _tools.path_from_filename(bind_or_root).with_suffix(suffix)
+            file = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
 
     log.info('write json lines: %r', file)
 
-    kwargs = {'ordered': ordered,
-              'from_raw':from_raw}
+    json_kwargs = {'delete_present': delete_present,
+                   'autocompress': autocompress}
 
-    items = _languoids.iterlanguoids(bind_or_root, **kwargs)
+    if source == 'tables':
+        del sort_keys
+
+        query_kwargs = {'as_rows': False,
+                        'load_json': False,
+                        'ordered': lang_kwargs['ordered']}
+
+        query = _queries.get_json_query(**query_kwargs)
+
+        with _backend.connect(bind=lang_kwargs['root_or_bind']) as conn:
+            lines = conn.execute(query).scalars()
+            result = _tools.pipe_json_lines(file, lines, raw=True,
+                                            **json_kwargs)
+        return result
+        
+    items = _languoids.iterlanguoids(**lang_kwargs)
     items = ({'path': path, 'languoid': languoid} for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
-                                  sort_keys=sort_keys)
+                                  sort_keys=sort_keys, **json_kwargs)
 
 
-def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
+def _write_json_csv(root_or_bind=ENGINE, *, filename=None, ordered: bool = True,
                     sort_keys: bool = True, from_raw: bool = False,
-                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
+                    dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     if filename is None:
         suffix = '.languoids-json.csv.gz'
         try:
-            path = bind_or_root.file_with_suffix(suffix)
+            path = root_or_bind.file_with_suffix(suffix)
         except AttributeError:
-            path = _tools.path_from_filename(bind_or_root).with_suffix(suffix)
+            path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
         filename = path.name
     else:
         filename = _tools.path_from_filename(filename)
@@ -176,7 +206,7 @@ def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
     kwargs = {'ordered': ordered,
               'from_raw':from_raw}
 
-    rows = _languoids.iterlanguoids(bind_or_root, **kwargs)
+    rows = _languoids.iterlanguoids(root_or_bind, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
@@ -204,36 +234,6 @@ def pipe_json(mode, languoids, *,
                 yield path.split('/'), codec(doc)
 
     return itercodec(languoids)
-
-
-
-def write_json_lines(file=None, *, ordered=LANGUOID_ORDER,
-                     default_suffix='.jsonl.gz',
-                     delete_present=True, autocompress=True,
-                     bind=ENGINE):
-    r"""Write languoids as newline delimited JSON.
-
-    $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
-    | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
-
-    $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
-    """
-    if file is None:
-        file = bind.file_with_suffix(f'.languoids{default_suffix}')
-
-    kwargs = {'as_rows': False,
-              'load_json': False,
-              'ordered': ordered}
-
-    query = _queries.get_json_query(**kwargs)
-
-    with _backend.connect(bind=bind) as conn:
-        lines = conn.execute(query).scalars()
-        result = _tools.pipe_json_lines(file, lines, raw=True,
-                                        delete_present=delete_present,
-                                        autocompress=autocompress)
-
-    return result
 
 
 def fetch_languoids(bind=ENGINE, *, ordered=LANGUOID_ORDER,
