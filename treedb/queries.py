@@ -314,14 +314,9 @@ def get_query(*, ordered='id', separator=', '):
     return select_languoid
 
 
-@_views.register_view('path_json', as_rows=True, load_json=False)
-def get_json_query(*, ordered='id', as_rows=True, load_json=True,
-                   path_label='path', languoid_label='json'):
-    # Windows, Python < 3.9: https://www.sqlite.org/download.html
-    json_object = sa.func.json_object
-    group_array = sa.func.json_group_array
-    group_object = sa.func.json_group_object
-
+@_views.register_view('path_json', as_rows=False, load_json=False)
+def get_json_query(*, ordered='id', as_rows=False, load_json=True,
+                   path_label='path', languoid_label='languoid'):
     languoid = {'id': Languoid.id,
                'parent_id': Languoid.parent_id,
                'level': Languoid.level,
@@ -330,6 +325,37 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                'iso639_3': Languoid.iso639_3,
                'latitude': Languoid.latitude,
                'longitude': Languoid.longitude}
+
+    subselects = dict(languoid_subselects())
+
+    languoid.update(subselects)
+
+    # Windows, Python < 3.9: https://www.sqlite.org/download.html
+    json_object = sa.func.json_object
+
+    value = json_object(*(x for kv in languoid.items() for x in kv))
+    if as_rows:
+        path = Languoid.path()
+        if load_json:
+            value = sa.type_coerce(value, sa.types.JSON)
+        columns = [path.label(path_label),
+                   value.label(languoid_label)]
+    else:
+        path = Languoid.path_as_json()
+        value = json_object(path_label, path, languoid_label, value)
+        if load_json:
+            value = sa.type_coerce(value, sa.types.JSON)
+        columns = [value]
+
+    select_json = select(*columns).select_from(Languoid)
+    select_json = _ordered_by(select_json, ordered, path=path)
+    return select_json
+
+
+def languoid_subselects():
+    # Windows, Python < 3.9: https://www.sqlite.org/download.html
+    group_array = sa.func.json_group_array
+    group_object = sa.func.json_group_object
 
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -342,7 +368,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                          .label('macroareas'))
                   .scalar_subquery())
 
-    languoid['macroareas'] = macroareas
+    yield 'macroareas', macroareas
 
     countries = (select(Country.jsonf())
                  .join_from(languoid_country, Country)
@@ -355,7 +381,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                         .label('countries'))
                  .scalar_subquery())
 
-    languoid['countries'] = countries
+    yield 'countries', countries
 
     links = (select(Link.jsonf())
              .select_from(Link)
@@ -367,14 +393,14 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
     links = (select(group_array(links.c.jsonf).label('links'))
              .scalar_subquery())
 
-    languoid['links'] = links
+    yield 'links', links
 
     timespan = (select(Timespan.jsonf())
                 .select_from(Timespan)
                 .filter_by(languoid_id=Languoid.id)
                 .scalar_subquery())
 
-    languoid['timespan'] = timespan
+    yield 'timespan', timespan
 
     s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
@@ -401,7 +427,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                       .label('sources'))
                .scalar_subquery())
 
-    languoid['sources'] = sources
+    yield 'sources', sources
 
     a_provider = aliased(AltnameProvider, name='altname_provider')
 
@@ -424,7 +450,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                        .label('altnames'))
                 .scalar_subquery())
 
-    languoid['altnames'] = altnames
+    yield 'altnames', altnames
 
     triggers = (select(Trigger.field, Trigger.trigger)
                 .select_from(Trigger)
@@ -443,7 +469,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                                       '{}').label('triggers'))
                 .scalar_subquery())
 
-    languoid['triggers'] = triggers
+    yield 'triggers', triggers
 
     identifier = (select(sa.func.nullif(group_object(IdentifierSite.name.label('site'),
                                                      Identifier.identifier),
@@ -454,7 +480,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                  .filter_by(site_id=IdentifierSite.id)
                  .scalar_subquery())
 
-    languoid['identifier'] = identifier
+    yield 'identifier', identifier
 
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      ClassificationComment.comment.label('value'))
@@ -491,7 +517,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                       .select_from(classification)
                       .scalar_subquery())
 
-    languoid['classification'] = classification
+    yield 'classification', classification
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
@@ -505,7 +531,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                     .correlate(Languoid)
                     .scalar_subquery())
 
-    languoid['endangerment'] = endangerment
+    yield 'endangerment', endangerment
 
     hh_ethnologue_comment = (select(EthnologueComment
                                     .jsonf(label='hh_ethnologue_comment'))
@@ -514,7 +540,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                              .correlate(Languoid)
                              .scalar_subquery())
 
-    languoid['hh_ethnologue_comment'] = hh_ethnologue_comment
+    yield 'hh_ethnologue_comment', hh_ethnologue_comment
 
     irct = aliased(IsoRetirementChangeTo, name='irct')
 
@@ -536,34 +562,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
                       .correlate(Languoid)
                       .scalar_subquery())
 
-    languoid['iso_retirement'] = iso_retirement
-
-    languoid = json_object(*(x for kv in languoid.items() for x in kv))
-
-    if as_rows:
-        path = Languoid.path()
-
-        if load_json:
-            languoid = sa.type_coerce(languoid, sa.types.JSON)
-
-        columns = [path.label(path_label),
-                   languoid.label(languoid_label)]
-    else:
-        path = Languoid.path_json()
-
-        path_json = json_object(path_label, path,
-                                languoid_label, languoid)
-
-        if load_json:
-            path_json = sa.type_coerce(path_json, sa.types.JSON)
-
-        columns = [path_json]
-
-    select_json = select(*columns).select_from(Languoid)
-
-    select_json = _ordered_by(select_json, ordered, path=path)
-
-    return select_json
+    yield 'iso_retirement', iso_retirement
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):

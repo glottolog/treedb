@@ -290,7 +290,7 @@ class Languoid:
         return sa.select(path).label(label)
 
     @classmethod
-    def path_json(cls, *, label='path'):
+    def path_as_json(cls, *, label='path'):
         squery = cls._path_part(include_self=True, bottomup=False)
         path = sa.func.json_group_array(squery.c.path_part).label(label)
         return sa.select(path).label(label)
