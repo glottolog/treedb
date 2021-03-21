@@ -96,17 +96,17 @@ def pipe_json_lines(file, documents=None, *, raw=False,
         return pipe_lines(file, lines, **kwargs)
 
     lines = pipe_lines(file, **kwargs)
-    return pipe_json('load', lines) if not raw else lines
+    return pipe_json('parse', lines) if not raw else lines
 
 
 def pipe_json(mode, documents):
-    codec = {'load': json.loads, 'dump': json.dumps}[mode]
+    codec = {'parse': json.loads, 'dump': json.dumps}[mode]
 
     def itercodec(docs):
         for d in docs:
             yield codec(d)
 
-    if mode == 'load':
+    if mode == 'parse':
         assert next(itercodec(['null'])) is None
     else:
         assert next(itercodec([None])) == 'null'

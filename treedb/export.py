@@ -250,7 +250,7 @@ def write_files(root=ROOT, *, replace: bool = False,
     languoids = _languoids.iterlanguoids(bind,
                                          from_raw=from_raw,
                                          ordered='path')
-    records = _records.records_from_languoids(languoids)
+    records = _records.dump(languoids)
 
     return files.write_files(records, root=root, _join_lines=True,
                              replace=replace,

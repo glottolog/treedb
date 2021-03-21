@@ -58,4 +58,4 @@ def iterlanguoids(root_or_bind=ROOT, *,
                                     ordered=ordered,
                                     progress_after=progress_after)
 
-    return _records.languoids_from_records(records, from_raw=from_raw)
+    return _records.parse(records, from_raw=from_raw)

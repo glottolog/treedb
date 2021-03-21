@@ -11,8 +11,8 @@ import pycountry
 from . import _globals
 from . import fields as _fields
 
-__all__ = ['languoids_from_records',
-           'records_from_languoids']
+__all__ = ['pipe_records',
+           'parse', 'dump']
 
 (CORE,
  SOURCES,
@@ -39,9 +39,14 @@ ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
 log = logging.getLogger(__name__)
 
 
-def languoids_from_records(records: typing.Iterable[_globals.RecordItem],
-                           *, from_raw: bool
-                           ) -> typing.Iterator[_globals.LanguoidItem]:
+def pipe_records(mode, items, *, from_raw: bool):
+    codec = {'parse': parse, 'dump': dump}[mode]
+    kwargs = {'from_raw': from_raw }if mode == 'parse' else {}
+    return codec(languoids, **kwargs)
+
+
+def parse(records: typing.Iterable[_globals.RecordItem],
+          *, from_raw: bool) -> typing.Iterator[_globals.LanguoidItem]:
     n = 0
     for n, (path, cfg) in enumerate(records, 1):
         languoid = make_languoid(path, cfg, from_raw=from_raw)
@@ -49,8 +54,8 @@ def languoids_from_records(records: typing.Iterable[_globals.RecordItem],
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def records_from_languoids(languoids: typing.Iterable[_globals.LanguoidItem]
-                           ) -> typing.Iterator[_globals.RecordItem]:
+def dump(languoids: typing.Iterable[_globals.LanguoidItem]
+         ) -> typing.Iterator[_globals.RecordItem]:
     for path, l in languoids:
         record = make_record(l)
         yield path, record
