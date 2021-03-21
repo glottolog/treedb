@@ -38,8 +38,8 @@ from .config import (configure,
 
 from .export import (print_languoid_stats,
                      checksum,
-                     write_json_csv,
                      write_json_lines as write_languoids,
+                     write_json_csv,
                      write_files)
 
 from .files import (set_root,

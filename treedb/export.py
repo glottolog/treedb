@@ -90,21 +90,6 @@ def checksum(*, name=None,
     return _checksum(name=name, **kwargs)
 
 
-def write_json_csv(*, filename=None, sort_keys: bool = True,
-                   source='tables',
-                   file_order: bool = False,
-                   file_means_path: bool = True,
-                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
-    """Write (path, json) rows for each languoid to filename."""
-    kwargs = validate_source_kwargs(source=source,
-                                    file_order=file_order,
-                                    file_means_path=file_means_path)
-
-    return _write_json_csv(filename=filename, sort_keys=sort_keys,
-                           dialect=csv23.DIALECT, encoding=csv23.ENCODING,
-                           **kwargs)
-
-
 def _checksum(root_or_bind=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
               from_raw: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
@@ -178,6 +163,22 @@ def write_json_lines(file=None, *, suffix='.jsonl',
     items = ({'path': path, 'languoid': languoid} for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
                                   sort_keys=sort_keys, **json_kwargs)
+
+
+# DEPRECATED
+def write_json_csv(*, filename=None, sort_keys: bool = True,
+                   source='tables',
+                   file_order: bool = False,
+                   file_means_path: bool = True,
+                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
+    """Write (path, json) rows for each languoid to filename."""
+    kwargs = validate_source_kwargs(source=source,
+                                    file_order=file_order,
+                                    file_means_path=file_means_path)
+
+    return _write_json_csv(filename=filename, sort_keys=sort_keys,
+                           dialect=csv23.DIALECT, encoding=csv23.ENCODING,
+                           **kwargs)
 
 
 def _write_json_csv(root_or_bind=ENGINE, *, filename=None, ordered: bool = True,
