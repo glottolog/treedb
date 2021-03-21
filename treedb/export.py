@@ -150,8 +150,7 @@ def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
     header = ['path', 'json']
     log.info('csv header: %r', header)
 
-
-    kwargs = {'ordered': 'path',
+    kwargs = {'ordered': ordered,
               'from_raw':from_raw}
 
     rows = _languoids.iterlanguoids(bind_or_root, **kwargs)
