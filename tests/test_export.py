@@ -122,20 +122,6 @@ def test_write_json_csv(treedb):
         assert shasum == expected
 
 
-@pytest.mark.parametrize('raw', [False, True])
-def test_write_json_query_csv(treedb, raw):
-    suffix = '-memory' if treedb.engine.file is None else ''
-    raw_suffix = '_raw' if raw else ''
-
-    path = treedb.write_json_query_csv(raw=raw)
-
-    assert path.name == (f'treedb{suffix}'
-                         f'.languoids-json_query{raw_suffix}.csv.gz')
-    assert path.exists()
-    assert path.is_file()
-    assert 1 * MB <= path.stat().st_size <= 100 * MB
-
-
 @pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])
 def test_write_json_lines(capsys, treedb, suffix, n=100):
     name_suffix = '-memory' if treedb.engine.file is None else ''
@@ -149,7 +135,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     assert path.is_file()
     assert 1 * MB <= path.stat().st_size <= 200 * MB
 
-    if patn.name.endswith('.jsonl'):
+    if path.name.endswith('.jsonl'):
         with path.open(encoding='utf-8') as f:
             head = list(itertools.islice(f, n))
 

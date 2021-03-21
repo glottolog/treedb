@@ -26,7 +26,6 @@ from . import records as _records
 __all__ = ['print_languoid_stats',
            'checksum',
            'write_json_csv',
-           'write_json_query_csv',
            'write_json_lines',
            'fetch_languoids',
            'write_files']
@@ -172,22 +171,7 @@ def _json_rows(bind_or_root=ENGINE, *,
     return (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
 
 
-def write_json_query_csv(filename=None, *,
-                         ordered='id', raw: bool = False,
-                         bind=ENGINE):
-    if filename is None:
-        suffix = '_raw' if raw else ''
-        suffix = f'.languoids-json_query{suffix}.csv.gz'
-        filename = bind.file_with_suffix(suffix).name
-
-    query = _queries.get_json_query(ordered=ordered,
-                                    as_rows=True,
-                                    load_json=raw)
-
-    return _export.write_csv(query, filename=filename, bind=bind)
-
-
-def write_json_lines(file=None, *,
+def write_json_lines(file=None, *, ordered='id',
                      delete_present=True, autocompress=True,
                      bind=ENGINE):
     r"""Write languoids as newline delimited JSON.
@@ -200,7 +184,7 @@ def write_json_lines(file=None, *,
     if file is None:
         file = bind.file_with_suffix('.languoids.jsonl.gz')
 
-    query = _queries.get_json_query(ordered='id',
+    query = _queries.get_json_query(ordered=ordered,
                                     as_rows=False,
                                     load_json=False,
                                     languoid_label='languoid')
