@@ -109,8 +109,12 @@ def _checksum(bind_or_root=ENGINE, *, name=None, ordered='id',
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     log.info('calculate languoids json checksum')
 
-    rows = _json_rows(bind_or_root, from_raw=from_raw,
-                      ordered=ordered, sort_keys=True)
+    rows = _languoids.iterlanguoids(bind_or_root,
+                                    ordered=ordered,
+                                    from_raw=from_raw)
+
+    rows = pipe_json('dump', rows,
+                     sort_keys=True)
 
     header = ['path', 'json']
     log.info('csv header: %r', header)
@@ -146,29 +150,38 @@ def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
     header = ['path', 'json']
     log.info('csv header: %r', header)
 
-    rows = _json_rows(bind_or_root,
-                      ordered=ordered,
-                      sort_keys=sort_keys,
-                      from_raw=from_raw)
+    rows = _languoids.iterlanguoids(bind_or_root,
+                                    ordered=ordered,
+                                    from_raw=from_raw)
+    rows = pipe_json('dump', rows,
+                    sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
                            dialect=dialect, encoding=encoding,
                            autocompress=True)
 
 
-def _json_rows(bind_or_root=ENGINE, *,
-               ordered: bool = True, sort_keys: bool = True,
-               from_raw: bool = False):
-    json_dumps = functools.partial(json.dumps,
-                                   # json-serialize datetime.datetime
-                                   default=operator.methodcaller('isoformat'),
-                                   sort_keys=sort_keys)
+def pipe_json(mode, languoids, *,
+              sort_keys: bool = True):
+    codec = {'load': json.loads, 'dump': json.dumps}[mode]
 
-    rows = _languoids.iterlanguoids(bind_or_root,
-                                    from_raw=from_raw,
-                                    ordered=ordered)
+    if mode == 'dump':
+        codec = functools.partial(codec,
+                                  # json-serialize datetime.datetime
+                                  default=operator.methodcaller('isoformat'),
+                                  sort_keys=sort_keys)
 
-    return (('/'.join(path_tuple), json_dumps(l)) for path_tuple, l in rows)
+    if mode == 'dump':
+        def itercodec(langs):
+            for path_tuple, l in langs:
+                yield '/'.join(path_tuple), codec(l)
+    else:
+        def itercodec(langs):
+            for path, doc in langs:
+                yield path.split('/'), codec(doc)
+
+    return itercodec(languoids)
+
 
 
 def write_json_lines(file=None, *, ordered='id',
