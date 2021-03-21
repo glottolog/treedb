@@ -5,7 +5,7 @@ Changelog
 Version 2.0 (in development)
 ----------------------------
 
-
+Rename ``treedb.read_json_lines()`` to `` treedb.write_languoids()``.
 
 
 Version 1.5

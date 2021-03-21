@@ -131,7 +131,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
             else [])
 
-    path = treedb.write_json_lines(*args)
+    path = treedb.write_languoids(*args)
 
     assert path.name == f'treedb{name_suffix}.languoids{suffix}'
     assert_file_size_between(path, 1, 200)
