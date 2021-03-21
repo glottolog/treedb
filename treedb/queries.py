@@ -89,7 +89,7 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
-def _ordered_by(select_languoid, path, *, ordered):
+def _ordered_by(select_languoid, ordered, *, path):
     if ordered is False:
         pass
     elif ordered in (True, 'id'):
@@ -121,7 +121,7 @@ def get_query(*, ordered='id', separator=', '):
                               Languoid.longitude)
                        .select_from(Languoid))
 
-    select_languoid = _ordered_by(select_languoid, path, ordered=ordered)
+    select_languoid = _ordered_by(select_languoid, ordered, path=path)
 
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -561,7 +561,7 @@ def get_json_query(*, ordered='id', as_rows=True, load_json=True,
 
     select_json = select(*columns).select_from(Languoid)
 
-    select_json = _ordered_by(select_json, path, ordered=ordered)
+    select_json = _ordered_by(select_json, ordered, path=path)
 
     return select_json
 
