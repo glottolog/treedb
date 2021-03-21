@@ -127,6 +127,29 @@ def _checksum(bind_or_root=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
     return result
 
 
+def _write_json_lines(file=None, *, default_suffix='.jsonl',
+                      ordered: bool = True,
+                      sort_keys: bool = True,
+                      from_raw: bool = False,
+                      bind_or_root=ENGINE):
+    if file is None:
+        suffix = f'.languoids{default_suffix}'
+        try:
+            file = bind_or_root.file_with_suffix(suffix)
+        except AttributeError:
+            file = _tools.path_from_filename(bind_or_root).with_suffix(suffix)
+
+    log.info('write json lines: %r', file)
+
+    kwargs = {'ordered': ordered,
+              'from_raw':from_raw}
+
+    items = _languoids.iterlanguoids(bind_or_root, **kwargs)
+    items = ({'path': path, 'languoid': languoid} for path, languoid in items)
+    return _tools.pipe_json_lines('dump', items,
+                                  sort_keys=sort_keys)
+
+
 def _write_json_csv(bind_or_root=ENGINE, *, filename=None, ordered: bool = True,
                     sort_keys: bool = True, from_raw: bool = False,
                    dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
@@ -185,6 +208,7 @@ def pipe_json(mode, languoids, *,
 
 
 def write_json_lines(file=None, *, ordered=LANGUOID_ORDER,
+                     default_suffix='.jsonl.gz',
                      delete_present=True, autocompress=True,
                      bind=ENGINE):
     r"""Write languoids as newline delimited JSON.
@@ -195,12 +219,13 @@ def write_json_lines(file=None, *, ordered=LANGUOID_ORDER,
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     if file is None:
-        file = bind.file_with_suffix('.languoids.jsonl.gz')
+        file = bind.file_with_suffix(f'.languoids.{default_suffix}')
 
-    query = _queries.get_json_query(ordered=ordered,
-                                    as_rows=False,
-                                    load_json=False,
-                                    languoid_label='languoid')
+    kwargs = {'as_rows': False,
+              'load_json': False,
+              'ordered': ordered}
+
+    query = _queries.get_json_query(**kwargs)
 
     with _backend.connect(bind=bind) as conn:
         lines = conn.execute(query).scalars()

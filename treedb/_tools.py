@@ -88,19 +88,30 @@ def walk_scandir(top, *,
 
 
 def pipe_json_lines(file, documents=None, *, raw=False,
-                    delete_present=True, autocompress=True):
-    kwargs = {'delete_present': delete_present, 'autocompress': autocompress}
+                    delete_present=True, autocompress=True,
+                    sort_keys: bool = True):
+    lines_kwargs = {'delete_present': delete_present,
+                    'autocompress': autocompress}
+    json_kwargs = {'sort_keys': sort_keys}
 
     if documents is not None:
-        lines = pipe_json('dump', documents) if not raw else documents
-        return pipe_lines(file, lines, **kwargs)
+        lines = (pipe_json('dump', documents, **json_kwargs) if not raw
+                 else documents)
+        return pipe_lines(file, lines, **lines_kwargs)
 
-    lines = pipe_lines(file, **kwargs)
-    return pipe_json('parse', lines) if not raw else lines
+    lines = pipe_lines(file, **lines_kwargs)
+    return pipe_json('parse', lines, **json_kwargs) if not raw else lines
 
 
-def pipe_json(mode, documents):
+def pipe_json(mode, documents,
+              sort_keys: bool = True):
     codec = {'parse': json.loads, 'dump': json.dumps}[mode]
+
+    if mode == 'dump':
+        codec = functools.partial(codec,
+                                  # json-serialize datetime.datetime
+                                  default=operator.methodcaller('isoformat'),
+                                  sort_keys=sort_keys)
 
     def itercodec(docs):
         for d in docs:
@@ -124,13 +135,13 @@ def pipe_lines(file, lines=None,
     if lines is not None:
         with open_func() as f:
             if hashobj is not None:
-                write_wrapped(hashobj, f, lines)
+                total = write_wrapped(hashobj, f, lines)
             else:
-                write_lines(f, lines)
+                total = write_lines(f, lines)
 
             if file is None:
                 result = f.getvalue()
-        return result
+        return result, total
 
     def iterlines():
         with open_func() as f:
@@ -142,13 +153,16 @@ def pipe_lines(file, lines=None,
 def write_wrapped(hashsum, f, lines, *, bufsize=1000):
     write_line = functools.partial(print, file=f)
     buf = f.buffer
+    total = 0
     for lines in iterslices(lines, size=bufsize):
         for line in lines:
             write_line(line)
+        total += len(lines)
         hashsum.update(buf.getbuffer())
         # NOTE: f.truncate(0) would prepend zero-bytes
         f.seek(0)
         f.truncate()
+    return total
 
 
 def iterslices(iterable, *, size):
@@ -159,8 +173,10 @@ def iterslices(iterable, *, size):
 
 def write_lines(file, lines):
     write_line = functools.partial(print, file=file)
-    for line in lines:
+    total = 0
+    for total, line in enumerate(lines):
         write_line(line)
+    return total
 
 
 def path_from_filename(filename, *args, expanduser=True):
