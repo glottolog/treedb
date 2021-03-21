@@ -92,7 +92,9 @@ def pipe_json_lines(file, documents=None, *, raw=False,
                     sort_keys: bool = True):
     lines_kwargs = {'delete_present': delete_present,
                     'autocompress': autocompress}
-    json_kwargs = {'sort_keys': sort_keys}
+    json_kwargs = {'sort_keys': sort_keys,
+                   'compact': True,
+                   'indent': None}
 
     if documents is not None:
         lines = (pipe_json('dump', documents, **json_kwargs) if not raw
@@ -104,14 +106,23 @@ def pipe_json_lines(file, documents=None, *, raw=False,
 
 
 def pipe_json(mode, documents,
-              sort_keys: bool = True):
+              sort_keys: bool = True,
+              compact: bool = False,
+              indent: typing.Optional[int] = None):
     codec = {'parse': json.loads, 'dump': json.dumps}[mode]
 
     if mode == 'dump':
-        codec = functools.partial(codec,
-                                  # json-serialize datetime.datetime
-                                  default=operator.methodcaller('isoformat'),
-                                  sort_keys=sort_keys)
+        dump_kwargs = {'indent': indent,
+                       # json-serialize datetime.datetime
+                       'default': operator.methodcaller('isoformat'),
+                       'sort_keys': sort_keys}
+        if compact:
+            if indent:
+                warnings.warn(f'indent={indent!r} overridden'
+                              f' by compact={compact}')
+            dump_kwargs.update(indent=None,
+                               separators=(',', ':'))
+        codec = functools.partial(codec, **dump_kwargs)
 
     def itercodec(docs):
         for d in docs:

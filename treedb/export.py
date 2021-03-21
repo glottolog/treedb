@@ -13,7 +13,9 @@ import csv23
 
 from . import _compat
 
-from ._globals import ENGINE, ROOT, LANGUOID_ORDER
+from ._globals import (DEFAULT_ENGINE,
+                       ENGINE, ROOT,
+                       LANGUOID_ORDER)
 
 from . import _tools
 from . import backend as _backend
@@ -90,7 +92,7 @@ def checksum(*, name=None,
     return _checksum(name=name, **kwargs)
 
 
-def _checksum(root_or_bind=ENGINE, *, name=None, ordered=LANGUOID_ORDER,
+def _checksum(root_or_bind=ENGINE, *, name=None, ordered='id',
               from_raw: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     log.info('calculate languoids json checksum')
@@ -117,7 +119,7 @@ def write_json_lines(file=None, *, suffix='.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
                      source='tables',
-                     file_order: bool = False,
+                     file_order: bool = True,
                      file_means_path: bool = True,
                      sort_keys: bool = True):
     r"""Write languoids as newline delimited JSON.
@@ -135,9 +137,16 @@ def write_json_lines(file=None, *, suffix='.jsonl',
         root_or_bind = lang_kwargs['root_or_bind']
         suffix = f'.languoids{suffix}'
         try:
-            file = root_or_bind.file_with_suffix(suffix)
+            file = (root_or_bind
+                    .file_with_suffix(suffix,
+                                      stem_suffix=f'-{source}'))
         except AttributeError:
-            file = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
+            if source == 'files':
+                root_or_bind = DEFAULT_ENGINE
+            file = _tools.path_from_filename(root_or_bind)
+            file = (file
+                    .with_stem(f'{file.stem}-{source}')
+                    .with_suffix(suffix))
 
     log.info('write json lines: %r', file)
 
@@ -145,7 +154,7 @@ def write_json_lines(file=None, *, suffix='.jsonl',
                    'autocompress': autocompress}
 
     if source == 'tables':
-        del sort_keys
+        del sort_keys  # json string built via SQL
 
         query_kwargs = {'as_rows': False,
                         'load_json': False,
@@ -162,7 +171,8 @@ def write_json_lines(file=None, *, suffix='.jsonl',
     items = _languoids.iterlanguoids(**lang_kwargs)
     items = ({'path': path, 'languoid': languoid} for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
-                                  sort_keys=sort_keys, **json_kwargs)
+                                  sort_keys=sort_keys,
+                                  **json_kwargs)
 
 
 # DEPRECATED
