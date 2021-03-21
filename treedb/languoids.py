@@ -35,8 +35,8 @@ def iterlanguoids(root_or_bind=ROOT, *,
 
         from . import files
 
-        fileinfos = files.iterfiles(root, progress_after=progress_after)
-        records = files.records_from_files(fileinfos)
+        records = files.iterrecords(root,
+                                    progress_after=progress_after)
     else:
         bind = root_or_bind
 

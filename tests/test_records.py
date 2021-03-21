@@ -8,10 +8,8 @@ from conftest import (get_assert_head,
 def test_pipe(bare_treedb, *, n=100):
     from treedb import files as _files
 
-    files = bare_treedb.iterfiles()
-    record_items = _files.records_from_files(files)
-    items = bare_treedb.records.pipe('parse', record_items,
-                                     from_raw=False)
+    records = _files.iterrecords()
+    items = bare_treedb.records.pipe('parse', records, from_raw=False)
 
     assert_valid_languoids(items, n=n)
 

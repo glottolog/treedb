@@ -13,7 +13,7 @@ from . import _tools
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
-           'iterfiles',
+           'iterfiles', 'iterrecords',
            'roundtrip', 'write_files']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
@@ -122,46 +122,53 @@ def iterfiles(root=ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def records_from_files(triples: typing.Iterable[FileInfo]
-                       )-> typing.Iterator[_globals.RecordItem]:
-     for path, cfg, _ in triples:
-         yield path, cfg
-
-
-def roundtrip(root=ROOT, *, replace=False,
-              progress_after: int = _tools.PROGRESS_AFTER) -> int:
-    """Do a load/save cycle with all config files."""
-    triples = iterfiles(root,progress_after=progress_after)
-    raw_records = raw_records_from_files(triples)
-    return write_files(raw_records, root, _join_lines=False,
-                       replace=replace,
-                       progress_after=progress_after)
-
-
 RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
 
 
 RawRecordItem = typing.Tuple[_globals.PathType, RawRecordType]
 
 
-def raw_records_from_files(triples: typing.Iterable[FileInfo],
-                           *, _default_section: str = configparser.DEFAULTSECT
-                           ) -> typing.Iterator[RawRecordItem]:
-    for path, cfg, _ in triples:
-        raw_record = {name: dict(section) for name, section in cfg.items()
-                      if name != _default_section}
-        yield path, raw_record
-
-
 RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
                            typing.Iterable[RawRecordItem]]
+
+
+def iterrecords(root=ROOT,
+                *, progress_after: int =_tools.PROGRESS_AFTER,
+                 raw: bool = False) -> RecordsType:
+    fileinfos = iterfiles(root, progress_after=progress_after)
+    record_items = _iterrecords(fileinfos, raw=raw)
+    return record_items
+
+
+def _iterrecords(fileinfos: typing.Iterable[FileInfo],
+                 raw: bool = False,
+                 _default_section: str = configparser.DEFAULTSECT) -> RecordsType:
+    if raw:
+        for path, cfg, _ in fileinfos:
+            raw_record = {name: dict(section) for name, section in cfg.items()
+                          if name != _default_section}
+            yield path, raw_record
+        return
+
+    for path, cfg, _ in fileinfos:
+        yield path, cfg
+
+
+def roundtrip(root=ROOT, *, replace=False,
+              progress_after: int = _tools.PROGRESS_AFTER) -> int:
+    """Do a load/save cycle with all config files."""
+    raw_records = iterrecords(root, raw=True,
+                              progress_after=progress_after)
+    return write_files(raw_records, root, raw=True,
+                       replace=replace,
+                       progress_after=progress_after)
 
 
 def write_files(records: RecordsType, root=ROOT,
                 *, replace: bool = False,
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME,
-                _join_lines: bool = True) -> int:
+                raw: bool = False) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
@@ -169,7 +176,7 @@ def write_files(records: RecordsType, root=ROOT,
     if replace:
         log.warning(f'replace present {basename} files')
 
-    joined_records = map(join_lines_inplace, records) if _join_lines else records
+    joined_records = map(join_lines_inplace, records) if not raw else records
 
     load_config = ConfigParser.from_file
 
