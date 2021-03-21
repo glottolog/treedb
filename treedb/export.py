@@ -197,27 +197,26 @@ def write_json_lines(filename=None, *,
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     open_kwargs = {'encoding': _encoding}
+    textio_kwargs = {'write_through': True, 'encoding': _encoding}
 
     path = fobj = None
     if filename is None:
-        path = bind.file_with_suffix('.languoids.jsonl')
+        result = path = bind.file_with_suffix('.languoids.jsonl')
     elif filename is sys.stdout:
-        fobj = io.TextIOWrapper(sys.stdout.buffer, **open_kwargs)
+        result = fobj = io.TextIOWrapper(sys.stdout.buffer, **textio_kwargs)
     elif hasattr(filename, 'write'):
-        fobj = filename
+        result = fobj = file
     else:
-        path = _tools.path_from_filename(filename)
+        result = path = _tools.path_from_filename(filename)
 
     if path is None:
         log.info('write json lines into: %r', fobj)
         open_func = lambda: _compat.nullcontext(fobj)
-        result = fobj
     else:
         log.info('write json lines: %r', path)
         open_module = _tools.get_open_module(path, autocompress=True)
         open_func = functools.partial(open_module.open, path, 'wt',
                                       **open_kwargs)
-        result = path
         if path.exists():
             warnings.warn(f'delete present file: {path!r}')
             path.unlink()
@@ -229,12 +228,10 @@ def write_json_lines(filename=None, *,
                                     load_json=False,
                                     languoid_label='languoid')
 
-    rows = _backend.iterrows(query, bind=bind)
-
-    with open_func() as f:
-        write_line = functools.partial(print, file=f)
-        for path_languoid, in rows:
-            write_line(path_languoid)
+    with _backend.connect(bind=bind) as conn:
+        lines = conn.execute(query).scalars()
+        with open_func() as f:
+            _tools.write_lines(f, lines)
 
     return result
 
