@@ -500,7 +500,6 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                   .filter_by(languoid_id=Languoid.id)
                   .correlate(Languoid)
                   .filter_by(site_id=IdentifierSite.id)
-                  .order_by(IdentifierSite.name)
                   .alias('lang_identifiers'))
 
     identifier = (select(identifier.c.site, identifier.c.identifier)
