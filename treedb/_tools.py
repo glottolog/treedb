@@ -93,6 +93,7 @@ def pipe_json_lines(file, documents=None, *, raw=False,
     lines_kwargs = {'delete_present': delete_present,
                     'autocompress': autocompress}
     json_kwargs = {'sort_keys': sort_keys,
+                   'ensure_ascii': False,
                    'compact': True,
                    'indent': None}
 
@@ -108,14 +109,16 @@ def pipe_json_lines(file, documents=None, *, raw=False,
 def pipe_json(mode, documents,
               sort_keys: bool = True,
               compact: bool = False,
-              indent: typing.Optional[int] = None):
+              indent: typing.Optional[int] = None,
+              ensure_ascii: bool = False):
     codec = {'parse': json.loads, 'dump': json.dumps}[mode]
 
     if mode == 'dump':
-        dump_kwargs = {'indent': indent,
+        dump_kwargs = {'sort_keys': sort_keys,
+                       'indent': indent,
+                       'ensure_ascii': ensure_ascii,
                        # json-serialize datetime.datetime
-                       'default': operator.methodcaller('isoformat'),
-                       'sort_keys': sort_keys}
+                       'default': operator.methodcaller('isoformat')}
         if compact:
             if indent:
                 warnings.warn(f'indent={indent!r} overridden'
