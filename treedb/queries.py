@@ -316,7 +316,8 @@ def get_query(*, ordered='id', separator=', '):
     return select_languoid
 
 
-@_views.register_view('path_json', as_rows=False, load_json=False)
+@_views.register_view('path_json', as_rows=True, load_json=False,
+                      path_label='path', languoid_label='json')
 def get_json_query(*, ordered='id', as_rows=False, load_json=True,
                    sort_keys=False, path_label=PATH_LABEL,
                    languoid_label=LANGUOID_LABEL, _legacy=None):
