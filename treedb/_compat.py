@@ -1,11 +1,14 @@
 # Python 3.6 compatibility backports
 
 import datetime
+import operator
 import sys
 import warnings
 
 __all__ = ['nullcontext',
            'datetime_fromisoformat']
+
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 if sys.version_info < (3, 7):
@@ -15,7 +18,7 @@ if sys.version_info < (3, 7):
     def nullcontext(enter_result=None):
         yield enter_result
 
-    _formats = ('%Y-%m-%dT%H:%M:%S',
+    _formats = (DATETIME_FORMAT,
                 '%Y-%m-%d %H:%M:%S',
                 '%Y-%m-%dT%H:%M:%S.%f',
                 '%Y-%m-%d %H:%M:%S.%f')
@@ -34,7 +37,15 @@ if sys.version_info < (3, 7):
         else:
             return result
 
+    datetime_toisoformat = operator.methodcaller('strftime',
+                                                 DATETIME_FORMAT)
+
 else:
     from contextlib import nullcontext
+    import operator
 
     datetime_fromisoformat = datetime.datetime.fromisoformat
+
+    assert (datetime.datetime(2000, 1, 1).isoformat()
+            == datetime.datetime(2000, 1, 1).strftime(DATETIME_FORMAT))
+    datetime_toisoformat = operator.methodcaller('isoformat')

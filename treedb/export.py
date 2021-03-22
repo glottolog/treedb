@@ -237,7 +237,7 @@ def pipe_json(mode, languoids, *,
     if mode == 'dump':
         codec = functools.partial(codec,
                                   # json-serialize datetime.datetime
-                                  default=operator.methodcaller('isoformat'),
+                                  default=_compat.datetime_toisoformat,
                                   sort_keys=sort_keys)
 
     if mode == 'dump':
