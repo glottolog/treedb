@@ -79,6 +79,7 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'countries': [splitcountry(c)
                               for c in _make_lines(core.get('countries'))],
                 'links': [splitlink(c) for c in _make_lines(core.get('links'))],
+                'timespan':  make_interval( core.get('timespan')),
                 'sources': None,
                 'altnames': None,
                 'triggers': None,
@@ -88,10 +89,10 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'hh_ethnologue_comment': None,
                 'iso_retirement': None}
 
-    # 'timespan' key is optional for backwards compat
-    timespan = core.get('timespan')
-    if timespan:
-        languoid['timespan'] = make_interval(timespan)
+    # make 'timespan' field optional for checksum backwards compat
+    # allows treedb pre 0.11 to read the (Glottolog pre 4.2) output from later versions
+    if languoid['timespan'] is None:
+        del languoid['timespan']
 
     if SOURCES in cfg:
         sources = skip_empty({

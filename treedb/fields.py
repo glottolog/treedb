@@ -32,9 +32,12 @@ FIELDS = {(CORE, 'name'): False,
           (CORE, 'iso639-3'): False,
           (CORE, 'latitude'): False,
           (CORE, 'longitude'): False,
+
           (CORE, 'macroareas'): True,
           (CORE, 'countries'): True,
+
           (CORE, 'name_comment'): False,
+
           # FIXME: core hapaxes
           (CORE, 'comment'): False,
           (CORE, 'location'): False,
@@ -83,6 +86,9 @@ SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER, start_index=1)
 FIELD_ORDER = _tools.Ordering.fromlist(FIELDS, start_index=1)
 
 CORE_SECTIONS = frozenset({CORE})
+
+# avoid writing empty 'core', 'timespan' options to files (first added in Glottolog 4.2, treedb 0.11)
+OMIT_EMPTY_CORE_OPTIONS = frozenset({'timespan'})
 
 KEEP_EMPTY_SECTIONS = CORE_SECTIONS | frozenset({SOURCES})
 

@@ -220,10 +220,17 @@ def update_config(cfg: ConfigParser,
                   *, quiet: bool = False,
                   is_lines=_fields.is_lines,
                   core_sections=_fields.CORE_SECTIONS,
+                  omit_empty_core_options=_fields.OMIT_EMPTY_CORE_OPTIONS,
                   keep_empty_sections=_fields.KEEP_EMPTY_SECTIONS,
                   keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
                   sorted_sections=_fields.sorted_sections,
                   sorted_options=_fields.sorted_options) -> bool:
+    for core_section in core_sections:
+        s = raw_record[core_section]
+        for core_option in omit_empty_core_options:
+            if not s.get(core_option):
+                del s[core_option]
+
     changed = False
 
     old_sections = set(cfg.sections())
