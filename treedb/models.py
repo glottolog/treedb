@@ -65,6 +65,12 @@ def json_object(*, sort_keys_, label_=None, **kwargs):
     return obj.label(label_) if label_ is not None else obj
 
 
+def json_datetime(date):
+    date = sa.func.replace(date, ' ', 'T')
+    date = sa.func.replace(date, '.000000', '')
+    return date
+
+
 @registry.mapped
 class Languoid:
 
@@ -902,7 +908,7 @@ class Endangerment:
                              sort_keys_=sort_keys)
         return json_object(status=cls.status,
                            source=source,
-                           date=cls.date,
+                           date=json_datetime(cls.date),
                            comment=cls.comment,
                            sort_keys_=sort_keys,
                            label_=label)
@@ -1032,7 +1038,7 @@ class IsoRetirement:
                               name=cls.name,
                               change_request=cls.change_request,
                               change_to=change_to,
-                              effective=cls.effective,
+                              effective=json_datetime(cls.effective),
                               reason=cls.reason,
                               remedy=cls.remedy,
                               comment=cls.comment,
