@@ -100,7 +100,8 @@ def _checksum(root_or_bind=ENGINE, *, name=None, ordered='id',
 
     rows = _languoids.iterlanguoids(root_or_bind,
                                     ordered=ordered,
-                                    from_raw=from_raw)
+                                    from_raw=from_raw,
+                                    _legacy=True)
 
     rows = pipe_json('dump', rows,
                      sort_keys=True)
@@ -218,7 +219,8 @@ def _write_json_csv(root_or_bind=ENGINE, *, filename=None, ordered: bool = True,
     kwargs = {'ordered': ordered,
               'from_raw':from_raw}
 
-    rows = _languoids.iterlanguoids(root_or_bind, **kwargs)
+    rows = _languoids.iterlanguoids(root_or_bind, _legacy=True,
+                                    **kwargs)
     rows = pipe_json('dump', rows, sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
@@ -249,7 +251,8 @@ def pipe_json(mode, languoids, *,
 
 
 def fetch_languoids(bind=ENGINE, *, ordered=LANGUOID_ORDER,
-                    progress_after: int = _tools.PROGRESS_AFTER):
+                    progress_after: int = _tools.PROGRESS_AFTER,
+                    _legacy=None):
     log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
@@ -257,7 +260,7 @@ def fetch_languoids(bind=ENGINE, *, ordered=LANGUOID_ORDER,
               'load_json': True,
               'ordered': ordered}
 
-    query = _queries.get_json_query(**kwargs)
+    query = _queries.get_json_query(_legacy=_legacy, **kwargs)
 
     json_datetime = _compat.datetime_fromisoformat
 

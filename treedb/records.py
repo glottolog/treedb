@@ -46,10 +46,10 @@ def pipe(mode, items, *, from_raw: bool):
 
 
 def parse(records: typing.Iterable[_globals.RecordItem],
-          *, from_raw: bool) -> typing.Iterator[_globals.LanguoidItem]:
+          *, from_raw: bool, _legacy=None) -> typing.Iterator[_globals.LanguoidItem]:
     n = 0
     for n, (path, cfg) in enumerate(records, 1):
-        languoid = make_languoid(path, cfg, from_raw=from_raw)
+        languoid = make_languoid(path, cfg, from_raw=from_raw, _legacy=_legacy)
         yield path, languoid
     log.info('%s languoids extracted from records', f'{n:_d}')
 
@@ -62,7 +62,7 @@ def dump(languoids: typing.Iterable[_globals.LanguoidItem]
 
 
 def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
-                  *, from_raw: bool) -> _globals.LanguoidType:
+                  *, from_raw: bool, _legacy=None) -> _globals.LanguoidType:
     _make_lines = make_lines_raw if from_raw else make_lines
 
     core = cfg[CORE]
@@ -89,9 +89,8 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'hh_ethnologue_comment': None,
                 'iso_retirement': None}
 
-    # make 'timespan' field optional for checksum backwards compat
-    # allows treedb pre 0.11 to read the (Glottolog pre 4.2) output from later versions
-    if languoid['timespan'] is None:
+    # make 'timespan' field optional for legacy checksum backwards compat
+    if _legacy and languoid['timespan'] is None:
         del languoid['timespan']
 
     if SOURCES in cfg:

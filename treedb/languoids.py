@@ -18,8 +18,8 @@ log = logging.getLogger(__name__)
 def iterlanguoids(root_or_bind=ROOT, *,
                   from_raw: bool = False,
                   ordered: bool = True,
-                  progress_after: int = _tools.PROGRESS_AFTER
-                  ) -> typing.Iterable[_globals.LanguoidItem]:
+                  progress_after: int = _tools.PROGRESS_AFTER,
+                  _legacy=None) -> typing.Iterable[_globals.LanguoidItem]:
     """Yield dicts from languoids/tree/**/md.ini files."""
     kwargs = {'progress_after': progress_after}
     log.info('generate languoids')
@@ -40,7 +40,8 @@ def iterlanguoids(root_or_bind=ROOT, *,
         from . import export
 
         kwargs['ordered'] = ordered
-        return export.fetch_languoids(bind=root_or_bind, **kwargs)
+        return export.fetch_languoids(bind=root_or_bind,
+                                      _legacy=_legacy, **kwargs)
     else:
         log.info('extract languoids from raw records')
 
@@ -50,4 +51,5 @@ def iterlanguoids(root_or_bind=ROOT, *,
         kwargs['ordered'] = 'id' if ordered is True else ordered
         records = raw.fetch_records(bind=root_or_bind, **kwargs)
 
-    return _records.parse(records, from_raw=from_raw)
+    return _records.parse(records, from_raw=from_raw,
+                          _legacy=_legacy)
