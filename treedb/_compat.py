@@ -15,10 +15,10 @@ if sys.version_info < (3, 7):
     def nullcontext(enter_result=None):
         yield enter_result
 
-    _formats = ('%Y-%m-%d %H:%M:%S',
-                '%Y-%m-%dT%H:%M:%S',
-                '%Y-%m-%d %H:%M:%S.%f',
-                '%Y-%m-%dT%H:%M:%S.%f')
+    _formats = ('%Y-%m-%dT%H:%M:%S',
+                '%Y-%m-%d %H:%M:%S',
+                '%Y-%m-%dT%H:%M:%S.%f',
+                '%Y-%m-%d %H:%M:%S.%f')
 
     def datetime_fromisoformat(date_string):
         result = None
@@ -29,7 +29,8 @@ if sys.version_info < (3, 7):
             else:
                 raise RuntimeError(f'cannot match time data: {date_string}')
         except ValueError as e:
-            warnings.warn(f'failed datetime_fromisoformat: {e}')
+            warnings.warn(f'date_string {date_string!r} failed'
+                          f' datetime_fromisoformat: {e}')
         else:
             return result
 
