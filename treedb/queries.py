@@ -338,7 +338,7 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
 
     if _legacy:
         value = value.label('raw_value')
-        timespan = sa.type_coerce(value, sa.types.JSON)['timespan']
+        timespan = sa.type_coerce(value, sa.JSON)['timespan']
         value = sa.func.json_remove(value,
                                     sa.case((timespan == None, '$.timespan'),
                                             else_='$.__KEEP_ALL__'))
@@ -346,7 +346,7 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
     if as_rows:
         path = column_for_path_order = Languoid.path()
         if load_json:
-            value = sa.type_coerce(value, sa.types.JSON)
+            value = sa.type_coerce(value, sa.JSON)
         columns = [path.label(path_label), value.label(languoid_label)]
     else:
         subquery = Languoid._path_part(include_self=True, bottomup=False)
@@ -362,7 +362,7 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
         value = json_object(**{path_label: path_array,
                                languoid_label: value})
         if load_json:
-            value = sa.type_coerce(value, sa.types.JSON)
+            value = sa.type_coerce(value, sa.JSON)
         columns = [value]
         column_for_path_order = file_path
 
