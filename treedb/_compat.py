@@ -21,6 +21,7 @@ if sys.version_info < (3, 7):
                 '%Y-%m-%dT%H:%M:%S.%f')
 
     def datetime_fromisoformat(date_string):
+        result = None
         try:
             for f in _formats:
                 result = datetime.datetime.strptime(date_string, f)
@@ -29,7 +30,8 @@ if sys.version_info < (3, 7):
                 raise RuntimeError(f'cannot match time data: {date_string}')
         except ValueError as e:
             warnings.warn(f'failed datetime_fromisoformat: {e}')
-        return result
+        else:
+            return result
 
 else:
     from contextlib import nullcontext
