@@ -494,14 +494,23 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
 
     yield 'triggers', triggers
 
-    identifier = (select(sa.func.nullif(group_object(IdentifierSite.name.label('site'),
-                                                     Identifier.identifier),
-                                        '{}').label('identifier'))
-                 .select_from(Identifier)
-                 .filter_by(languoid_id=Languoid.id)
-                 .correlate(Languoid)
-                 .filter_by(site_id=IdentifierSite.id)
-                 .scalar_subquery())
+    identifier = (select(IdentifierSite.name.label('site'),
+                         Identifier.identifier.label('identifier'))
+                  .select_from(Identifier)
+                  .filter_by(languoid_id=Languoid.id)
+                  .correlate(Languoid)
+                  .filter_by(site_id=IdentifierSite.id)
+                  .order_by(IdentifierSite.name)
+                  .alias('lang_identifiers'))
+
+    identifier = (select(identifier.c.site, identifier.c.identifier)
+                  .order_by('site')
+                  .alias('lang_identifiers_ordered'))
+
+    identifier = (select(sa.func.nullif(group_object(identifier.c.site,
+                                                     identifier.c.identifier),
+                                        '{}').label('identifiers'))
+                  .scalar_subquery())
 
     yield 'identifier', identifier
 
