@@ -36,28 +36,27 @@ def fetch_records(*, ordered: bool = True,
         dbapi_conn = None
     log.info('start generating raw records from %r', dbapi_conn or bind)
 
-    select_files = sa.select(File.path)
     # depend on no empty value files (save sa.outerjoin(File, Value) below)
-    select_values = (sa.select(Value.file_id, Option.section, Option.option,
-                               Option.is_lines, Value.value)
+    select_values = (sa.select(Value.file_id,
+                               Option.section, Option.option, Option.is_lines,
+                               Value.value)
                      .join_from(Value, Option))
 
-    if ordered in (True, False, 'file'):
+    if ordered in (True, None, False, 'file'):
         key_column = File.id
         value_key = Value.file_id
     elif ordered in ('id', 'path'):
         select_values = select_values.join(File)
-        key_column = File.glottocode if ordered == 'id' else File.path
-        value_key = key_column
+        key_column = value_key = (File.glottocode if ordered == 'id'
+                                  else File.path)
     else:
         raise ValueError(f'ordered={ordered!r} not implememted')
+
     log.info('ordered: %r', ordered)
-
-    select_files = select_files.order_by(key_column)
-
+    select_files = sa.select(File.path).order_by(key_column)
     select_values = (select_values
-                     .order_by(value_key, 'section',
-                               Value.line, 'option'))
+                     .order_by(value_key,
+                               'section', Value.line, 'option'))
 
     if skip_unknown:
         select_values = select_values.where(Option.is_lines != None)

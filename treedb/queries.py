@@ -90,13 +90,13 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
-def _ordered_by(select_languoid, ordered, *, path):
-    if ordered is False:
-        pass
-    elif ordered in (True, 'id'):
+def _ordered_by(select_languoid, *, ordered, column_for_path_order):
+    if ordered in (True, None, 'id'):
         select_languoid = select_languoid.order_by(Languoid.id)
     elif ordered == 'path':
-        select_languoid = select_languoid.order_by(path)
+        select_languoid = select_languoid.order_by(column_for_path_order)
+    elif ordered is False:
+        pass
     else:
         raise ValueError(f'ordered={ordered!r} not implemented')
     return select_languoid
@@ -122,7 +122,8 @@ def get_query(*, ordered='id', separator=', '):
                               Languoid.longitude)
                        .select_from(Languoid))
 
-    select_languoid = _ordered_by(select_languoid, ordered, path=path)
+    select_languoid = _ordered_by(select_languoid, ordered=ordered,
+                                  column_for_path_order=path)
 
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -337,22 +338,34 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
 
     value = json_object(**languoid)
     if as_rows:
-        path = Languoid.path()
+        path = column_for_path_order = Languoid.path()
         if load_json:
             value = sa.type_coerce(value, sa.types.JSON)
+        assert path_label < languoid_label
         columns = [path.label(path_label),
                    value.label(languoid_label)]
-        assert path_label < languoid_label
     else:
-        path = Languoid.path_as_json()
-        value = json_object(**{path_label: path,
+        subselect = Languoid._path_part(include_self=True, bottomup=False)
+
+        path_array = (sa.func.json_group_array(subselect.c.path_part)
+                     .label('path_array'))
+        path_array = select(path_array).label('path')
+
+        file_path = (sa.func.group_concat(subselect.c.path_part, '/')
+                     .label('path_string'))
+        file_path = select(file_path).label('file_path')
+
+        value = json_object(**{path_label: path_array,
                                languoid_label: value})
         if load_json:
             value = sa.type_coerce(value, sa.types.JSON)
         columns = [value]
+        column_for_path_order = file_path
+
 
     select_json = select(*columns).select_from(Languoid)
-    select_json = _ordered_by(select_json, ordered, path=path)
+    select_json = _ordered_by(select_json, ordered=ordered,
+                              column_for_path_order=column_for_path_order)
     return select_json
 
 
