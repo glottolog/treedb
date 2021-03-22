@@ -86,18 +86,26 @@ def checksum(*, name=None,
              file_order: bool = False,
              file_means_path: bool = True):
     """Return checksum over source."""
+    log.info('calculate languoids json checksum')
     kwargs = validate_source_kwargs(source=source,
                                     file_order=file_order,
                                     file_means_path=file_means_path)
 
-    return _checksum(name=name, **kwargs)
+    header = ['path', 'json']
+    log.info('csv header: %r', header)
+
+    hashobj = _checksum(name=name, header=header, **kwargs)
+    result = (f"{'_'.join(header)}"
+              f":{kwargs['ordered']}"
+              f':{hashobj.name}'
+              f':{hashobj.hexdigest()}')
+    log.info('%s: %r', hashobj.name, result)
+    return result
 
 
-def _checksum(root_or_bind=ENGINE, *, name=None, ordered='id',
+def _checksum(root_or_bind=ENGINE, *, header, name=None, ordered='id',
               from_raw: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
-    log.info('calculate languoids json checksum')
-
     rows = _languoids.iterlanguoids(root_or_bind,
                                     ordered=ordered,
                                     from_raw=from_raw,
@@ -106,15 +114,9 @@ def _checksum(root_or_bind=ENGINE, *, name=None, ordered='id',
     rows = pipe_json('dump', rows,
                      sort_keys=True)
 
-    header = ['path', 'json']
-    log.info('csv header: %r', header)
-
-    hash_ = _export.hash_rows(rows, header=header,
-                              name=name, raw=True,
-                              dialect=dialect, encoding=encoding)
-    result = f"{'_'.join(header)}:{ordered}:{hash_.name}:{hash_.hexdigest()}"
-    log.debug('%s: %r', hash_.name, result)
-    return result
+    return _export.hash_rows(rows, header=header,
+                             name=name, raw=True,
+                             dialect=dialect, encoding=encoding)
 
 
 def write_json_lines(file=None, *, suffix='.jsonl',

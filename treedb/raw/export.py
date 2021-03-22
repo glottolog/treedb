@@ -66,11 +66,11 @@ def checksum(*, weak=False, name=None,
         select_rows = (sa.select(File.path, File.sha256)
                        .order_by('path'))
 
-    hash_ = _export.hash_csv(select_rows, raw=True, name=name,
+    hashobj = _export.hash_csv(select_rows, raw=True, name=name,
                              dialect=dialect, encoding=encoding)
 
-    logging.debug('%s: %r', hash_.name, hash_.hexdigest())
-    return f'{kind}:{hash_.name}:{hash_.hexdigest()}'
+    logging.info('%s: %r', hashobj.name, hashobj.hexdigest())
+    return f'{kind}:{hashobj.name}:{hashobj.hexdigest()}'
 
 
 def write_raw_csv(filename=None, *,
