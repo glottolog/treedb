@@ -332,9 +332,20 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
                 'hid': Languoid.hid,
                 'iso639_3': Languoid.iso639_3,
                 'latitude': Languoid.latitude,
-                'longitude': Languoid.longitude}
+                'longitude': Languoid.longitude,
+                'macroareas': languoid_macroareas(),
+                'countries': languoid_countries(sort_keys=sort_keys),
+                'links': languoid_links(sort_keys=sort_keys),
+                'timespan': languoid_timespan(sort_keys=sort_keys),
+                'sources': languoid_sources(sort_keys=sort_keys),
+                'altnames': languoid_altnames(sort_keys=sort_keys),
+                'triggers': languoid_triggers(),
+                'identifier': languoid_identifier(),
+                'classification': languoid_classification(sort_keys=sort_keys),
+                'endangerment':  languoid_endangerment(sort_keys=sort_keys),
+                'hh_ethnologue_comment': languoid_hh_ethnologue_comment(sort_keys=sort_keys),
+                'iso_retirement': languoid_iso_retirement(sort_keys=sort_keys)}
 
-    languoid.update(languoid_scalar_selects(sort_keys=sort_keys))
     del sort_keys
 
     value = json_object(**languoid)
@@ -376,11 +387,14 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
     return select_json
 
 
-def languoid_scalar_selects(*, sort_keys: bool = False):
-    # Windows, Python < 3.9: https://www.sqlite.org/download.html
-    group_array = sa.func.json_group_array
-    group_object = sa.func.json_group_object
+# Windows, Python < 3.9: https://www.sqlite.org/download.html
+group_array = sa.func.json_group_array
 
+
+group_object = sa.func.json_group_object
+
+
+def languoid_macroareas():
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
                   .filter_by(languoid_id=Languoid.id)
@@ -388,12 +402,12 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                   .order_by('macroarea_name')
                   .alias('lang_ma'))
 
-    macroareas = (select(group_array(macroareas.c.macroarea_name)
-                         .label('macroareas'))
-                  .scalar_subquery())
+    return (select(group_array(macroareas.c.macroarea_name)
+                   .label('macroareas'))
+            .scalar_subquery())
 
-    yield 'macroareas', macroareas
 
+def languoid_countries(*, sort_keys: bool = False):
     countries = (select(Country.jsonf(sort_keys=sort_keys))
                  .select_from(languoid_country)
                  .filter_by(languoid_id=Languoid.id)
@@ -402,12 +416,12 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                  .order_by(Country.printf())
                  .alias('lang_country'))
 
-    countries = (select(group_array(sa.func.json(countries.c.jsonf))
-                        .label('countries'))
-                 .scalar_subquery())
+    return (select(group_array(sa.func.json(countries.c.jsonf))
+                   .label('countries'))
+            .scalar_subquery())
 
-    yield 'countries', countries
 
+def languoid_links(*, sort_keys: bool = False):
     links = (select(Link.jsonf(sort_keys=sort_keys))
              .select_from(Link)
              .filter_by(languoid_id=Languoid.id)
@@ -415,18 +429,18 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
              .order_by(Link.ord)
              .alias('lang_link'))
 
-    links = (select(group_array(links.c.jsonf).label('links'))
-             .scalar_subquery())
+    return (select(group_array(links.c.jsonf).label('links'))
+            .scalar_subquery())
 
-    yield 'links', links
 
-    timespan = (select(Timespan.jsonf(sort_keys=sort_keys))
-                .select_from(Timespan)
-                .filter_by(languoid_id=Languoid.id)
-                .scalar_subquery())
+def languoid_timespan(*, sort_keys: bool = False):
+    return (select(Timespan.jsonf(sort_keys=sort_keys))
+            .select_from(Timespan)
+            .filter_by(languoid_id=Languoid.id)
+            .scalar_subquery())
 
-    yield 'timespan', timespan
 
+def languoid_sources(*, sort_keys: bool = False):
     s_provider = aliased(SourceProvider, name='source_provider')
     s_bibfile = aliased(Bibfile, name='source_bibfile')
     s_bibitem = aliased(Bibitem, name='source_bibitem')
@@ -448,13 +462,13 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                .group_by(sources.c.provider)
                .alias('lang_sources'))
 
-    sources = (select(sa.func.nullif(group_object(sources.c.key,
-                                     sa.func.json(sources.c.value)), '{}')
-                      .label('sources'))
-               .scalar_subquery())
+    return (select(sa.func.nullif(group_object(sources.c.key,
+                                  sa.func.json(sources.c.value)), '{}')
+                   .label('sources'))
+            .scalar_subquery())
 
-    yield 'sources', sources
 
+def languoid_altnames(*, sort_keys: bool = False):
     a_provider = aliased(AltnameProvider, name='altname_provider')
 
     altnames = (select(a_provider.name.label('provider'),
@@ -472,13 +486,13 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                 .group_by(altnames.c.provider)
                 .alias('lang_altnames'))
 
-    altnames = (select(sa.func.nullif(group_object(altnames.c.key,
-                                      sa.func.json(altnames.c.value)), '{}')
-                       .label('altnames'))
-                .scalar_subquery())
+    return (select(sa.func.nullif(group_object(altnames.c.key,
+                                  sa.func.json(altnames.c.value)), '{}')
+                   .label('altnames'))
+            .scalar_subquery())
 
-    yield 'altnames', altnames
 
+def languoid_triggers():
     triggers = (select(Trigger.field, Trigger.trigger)
                 .select_from(Trigger)
                 .filter_by(languoid_id=Languoid.id)
@@ -491,13 +505,13 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                 .group_by(triggers.c.field)
                 .alias('lang_triggers'))
 
-    triggers = (select(sa.func.nullif(group_object(triggers.c.key,
-                                                   triggers.c.value),
-                                      '{}').label('triggers'))
-                .scalar_subquery())
+    return (select(sa.func.nullif(group_object(triggers.c.key,
+                                               triggers.c.value),
+                                  '{}').label('triggers'))
+            .scalar_subquery())
 
-    yield 'triggers', triggers
 
+def languoid_identifier():
     identifier = (select(IdentifierSite.name.label('site'),
                          Identifier.identifier.label('identifier'))
                   .select_from(Identifier)
@@ -510,13 +524,13 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                   .order_by('site')
                   .alias('lang_identifiers_ordered'))
 
-    identifier = (select(sa.func.nullif(group_object(identifier.c.site,
-                                                     identifier.c.identifier),
-                                        '{}').label('identifiers'))
-                  .scalar_subquery())
+    return (select(sa.func.nullif(group_object(identifier.c.site,
+                                               identifier.c.identifier),
+                                  '{}').label('identifiers'))
+            .scalar_subquery())
 
-    yield 'identifier', identifier
 
+def languoid_classification(*, sort_keys: bool = False):
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      ClassificationComment.comment.label('value'))
                               .select_from(ClassificationComment)
@@ -547,40 +561,40 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                       .union_all(classification_refs)
                       .alias('lang_classifciation'))
 
-    classification = (select(sa.func.nullif(group_object(classification.c.key,
-                                                         classification.c.value),
-                                            '{}').label('classification'))
-                      .select_from(classification)
-                      .scalar_subquery())
+    return (select(sa.func.nullif(group_object(classification.c.key,
+                                               classification.c.value),
+                                  '{}').label('classification'))
+            .select_from(classification)
+            .scalar_subquery())
 
-    yield 'classification', classification
 
+def languoid_endangerment(*, sort_keys: bool = False):
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
-    endangerment = (select(Endangerment.jsonf(EndangermentSource,
-                                              e_bibfile, e_bibitem,
-                                              sort_keys=sort_keys,
-                                              label='endangerment'))
-                    .select_from(Endangerment)
-                    .filter_by(languoid_id=Languoid.id)
-                    .correlate(Languoid)
-                    .join(Endangerment.source)
-                    .outerjoin(sa.join(e_bibitem, e_bibfile))
-                    .scalar_subquery())
+    return (select(Endangerment.jsonf(EndangermentSource,
+                                      e_bibfile, e_bibitem,
+                                      sort_keys=sort_keys,
+                                      label='endangerment'))
+            .select_from(Endangerment)
+            .filter_by(languoid_id=Languoid.id)
+            .correlate(Languoid)
+            .join(Endangerment.source)
+            .outerjoin(sa.join(e_bibitem, e_bibfile))
+            .scalar_subquery())
 
-    yield 'endangerment', endangerment
 
-    hh_ethnologue_comment = (select(EthnologueComment
-                                    .jsonf(sort_keys=sort_keys,
-                                           label='hh_ethnologue_comment'))
-                             .select_from(EthnologueComment)
-                             .filter_by(languoid_id=Languoid.id)
-                             .correlate(Languoid)
-                             .scalar_subquery())
+def languoid_hh_ethnologue_comment(*, sort_keys: bool = False):
+    return (select(EthnologueComment
+                   .jsonf(sort_keys=sort_keys,
+                          label='hh_ethnologue_comment'))
+            .select_from(EthnologueComment)
+            .filter_by(languoid_id=Languoid.id)
+            .correlate(Languoid)
+            .scalar_subquery())
 
-    yield 'hh_ethnologue_comment', hh_ethnologue_comment
 
+def languoid_iso_retirement(*, sort_keys: bool = False):
     change_to = (select(IsoRetirementChangeTo.code)
                  .select_from(IsoRetirementChangeTo)
                  .filter_by(languoid_id=IsoRetirement.languoid_id)
@@ -591,16 +605,14 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
     change_to = (select(group_array(change_to.c.code).label('change_to'))
                  .scalar_subquery())
 
-    iso_retirement = (select(IsoRetirement.jsonf(change_to=change_to,
-                                                 sort_keys=sort_keys,
-                                                 optional=True,
-                                                 label='iso_retirement'))
-                      .select_from(IsoRetirement)
-                      .filter_by(languoid_id=Languoid.id)
-                      .correlate(Languoid)
-                      .scalar_subquery())
-
-    yield 'iso_retirement', iso_retirement
+    return (select(IsoRetirement.jsonf(change_to=change_to,
+                                       sort_keys=sort_keys,
+                                       optional=True,
+                                       label='iso_retirement'))
+            .select_from(IsoRetirement)
+            .filter_by(languoid_id=Languoid.id)
+            .correlate(Languoid)
+            .scalar_subquery())
 
 
 def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
