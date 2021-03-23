@@ -533,7 +533,7 @@ def select_languoid_identifier(languoid_id=Languoid.id):
 
 def select_languoid_classification(languoid_id=Languoid.id, *, sort_keys: bool = False):
     classification_comment = (select(ClassificationComment.kind.label('key'),
-                                     ClassificationComment.comment.label('value'))
+                                     sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
                               .filter_by(languoid_id=languoid_id)
                               .correlate(Languoid)
@@ -562,8 +562,14 @@ def select_languoid_classification(languoid_id=Languoid.id, *, sort_keys: bool =
                       .union_all(classification_refs)
                       .alias('lang_classifciation'))
 
+    classification = (select(classification.c.key,
+                             classification.c.value
+                             .label('value'))
+                      .order_by('key')
+                      .alias('classification_object'))
+
     return (select(sa.func.nullif(group_object(classification.c.key,
-                                               classification.c.value),
+                                               sa.func.json(classification.c.value)),
                                   '{}').label('classification'))
             .select_from(classification)
             .scalar_subquery())
