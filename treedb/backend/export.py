@@ -13,7 +13,7 @@ import csv23
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE, REGISTRY
+from .._globals import ENGINE, REGISTRY, DEFAULT_HASH
 
 from .. import _tools
 
@@ -253,9 +253,9 @@ def write_csv(query=None, filename=None, *, verbose=False,
                                autocompress=True)
 
 
-def hash_csv(query=None, *, raw=False,
-             name=None, bind=ENGINE,
-             dialect=csv23.DIALECT, encoding=csv23.ENCODING):
+def hash_csv(query=None, *, hash_name: str = DEFAULT_HASH,
+             dialect=csv23.DIALECT, encoding=csv23.ENCODING,
+             raw: bool = False, bind=ENGINE):
     if query is None:
         from .. import queries as _queries
 
@@ -265,18 +265,19 @@ def hash_csv(query=None, *, raw=False,
         result = conn.execute(query)
 
         header = list(result.keys())
-        return hash_rows(result, header=header, name=name, raw=raw,
+        return hash_rows(result, header=header, hash_name=hash_name, raw=raw,
                          dialect=dialect, encoding=encoding)
 
 
-def hash_rows(rows, *, header=None,
-              raw=False, name=None,
-              dialect=csv23.DIALECT, encoding=csv23.ENCODING):
-    if name is None:
-        name = 'sha256'
+def hash_rows(rows, *, hash_name: str = DEFAULT_HASH,
+              header=None,
+              dialect=csv23.DIALECT, encoding=csv23.ENCODING,
+              raw: bool = False):
+    if hash_name is None:
+        hash_name = DEFAULT_HASH
 
-    log.info('hash rows with %r, csv header: %r', name, header)
-    result = hashlib.new(name)
+    log.info('hash rows with %r, csv header: %r', hash_name, header)
+    result = hashlib.new(hash_name)
     assert hasattr(result, 'hexdigest')
 
     csv23.write_csv(result, rows, header=header,

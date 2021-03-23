@@ -13,7 +13,7 @@ import csv23
 
 from . import _compat
 
-from ._globals import (DEFAULT_ENGINE,
+from ._globals import (DEFAULT_ENGINE, DEFAULT_HASH,
                        PATH_LABEL, LANGUOID_LABEL,
                        ENGINE, ROOT,
                        LANGUOID_ORDER)
@@ -63,9 +63,11 @@ def print_languoid_stats(*, file=None,
             warnings.warn(f'{term} = {parts_sum:,d}')
 
 
-def validate_source_kwargs(*, source, file_order, file_means_path):
-    by_file = 'path' if file_means_path else 'file'
-    ordered = by_file if file_order else 'id'
+def validate_source_kwargs(*, source: str,
+                           file_order: bool,
+                           file_means_path: bool):
+    ordered = ('path' if file_order and file_means_path else
+               'file' if file_order else 'id')
     try:
         return {'tables': {'root_or_bind': ENGINE,
                            'from_raw': False,
@@ -81,20 +83,24 @@ def validate_source_kwargs(*, source, file_order, file_means_path):
                          f' (possible values: {list(kwargs)})')
 
 
-def checksum(*, name=None,
-             source='tables',
+def checksum(*, source: str = 'tables',
              file_order: bool = False,
-             file_means_path: bool = True):
+             file_means_path: bool = True,
+             hash_name: str = DEFAULT_HASH):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
     kwargs = validate_source_kwargs(source=source,
                                     file_order=file_order,
                                     file_means_path=file_means_path)
 
+
+    rows = _languoids.iterlanguoids(_legacy=True, **kwargs)
+    rows = pipe_json('dump', rows, sort_keys=True)
+
     header = ['path', 'json']
     log.info('csv header: %r', header)
-
-    hashobj = _checksum(name=name, header=header, **kwargs)
+    hashobj =_export.hash_rows(rows, hash_name=hash_name, header=header,
+                               dialect='excel', encoding='utf-8', raw=True)
     result = (f"{'_'.join(header)}"
               f":{kwargs['ordered']}"
               f':{hashobj.name}'
@@ -103,26 +109,10 @@ def checksum(*, name=None,
     return result
 
 
-def _checksum(root_or_bind=ENGINE, *, header, name=None, ordered='id',
-              from_raw: bool = False,
-              dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
-    rows = _languoids.iterlanguoids(root_or_bind,
-                                    ordered=ordered,
-                                    from_raw=from_raw,
-                                    _legacy=True)
-
-    rows = pipe_json('dump', rows,
-                     sort_keys=True)
-
-    return _export.hash_rows(rows, header=header,
-                             name=name, raw=True,
-                             dialect=dialect, encoding=encoding)
-
-
-def write_json_lines(file=None, *, suffix='.jsonl',
+def write_json_lines(file=None, *, suffix: str = '.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
-                     source='tables',
+                     source: str = 'tables',
                      file_order: bool = True,
                      file_means_path: bool = True,
                      sort_keys: bool = True,
@@ -180,10 +170,11 @@ def write_json_lines(file=None, *, suffix='.jsonl',
 
 
 # DEPRECATED
-def write_json_csv(*, filename=None, sort_keys: bool = True,
-                   source='tables',
+def write_json_csv(*, filename=None,
+                   source: str = 'tables',
                    file_order: bool = False,
                    file_means_path: bool = True,
+                   sort_keys: bool = True,
                    dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
     kwargs = validate_source_kwargs(source=source,
@@ -195,7 +186,8 @@ def write_json_csv(*, filename=None, sort_keys: bool = True,
                            **kwargs)
 
 
-def _write_json_csv(root_or_bind=ENGINE, *, filename=None, ordered: bool = True,
+def _write_json_csv(root_or_bind=ENGINE, *,
+                    filename=None, ordered: bool = True,
                     sort_keys: bool = True, from_raw: bool = False,
                     dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
@@ -230,7 +222,7 @@ def _write_json_csv(root_or_bind=ENGINE, *, filename=None, ordered: bool = True,
                            autocompress=True)
 
 
-def pipe_json(mode, languoids, *,
+def pipe_json(mode: str, languoids, *,
               sort_keys: bool = True):
     codec = {'load': json.loads, 'dump': json.dumps}[mode]
 
@@ -252,7 +244,7 @@ def pipe_json(mode, languoids, *,
     return itercodec(languoids)
 
 
-def fetch_languoids(bind=ENGINE, *, ordered=LANGUOID_ORDER,
+def fetch_languoids(bind=ENGINE, *, ordered: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     _legacy=None):
     log.info('fetch languoids from json query')

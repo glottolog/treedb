@@ -18,6 +18,8 @@ PATH_LABEL = '__path__'
 
 LANGUOID_LABEL = 'languoid'
 
+DEFAULT_HASH = 'sha256'
+
 SQLALCHEMY_FUTURE = True
 
 ENGINE = _proxies.SQLiteEngineProxy(future=SQLALCHEMY_FUTURE)
