@@ -392,9 +392,10 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
     yield 'macroareas', macroareas
 
     countries = (select(Country.jsonf(sort_keys=sort_keys))
-                 .join_from(languoid_country, Country)
-                 .where(languoid_country.c.languoid_id == Languoid.id)
+                 .select_from(languoid_country)
+                 .filter_by(languoid_id=Languoid.id)
                  .correlate(Languoid)
+                 .join(Country)
                  .order_by(Country.printf())
                  .alias('lang_country'))
 
