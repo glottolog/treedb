@@ -251,7 +251,7 @@ def no_empty_files(*, exclude_raw):
 
 
 def compare_with_files(bind=ENGINE, *, from_raw=True, root=ROOT):
-    from . import languoids
+    from . import export
 
     def compare(left, right):
         same = True
@@ -262,11 +262,9 @@ def compare_with_files(bind=ENGINE, *, from_raw=True, root=ROOT):
 
         return same
 
-    languoids_from_files = languoids.iterlanguoids(root,
-                                                   ordered=True)
+    languoids_from_files = export.iterlanguoids(root, ordered=True)
 
-    languoids_from_bind = languoids.iterlanguoids(bind,
-                                                  from_raw=from_raw,
-                                                  ordered='path')
+    languoids_from_bind = export.iterlanguoids(bind, ordered='path',
+                                               from_raw=from_raw)
 
     return compare(languoids_from_files, languoids_from_bind)

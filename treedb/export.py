@@ -7,6 +7,7 @@ import json
 import logging
 import operator
 import sys
+import typing
 import warnings
 
 import csv23
@@ -16,17 +17,18 @@ from . import _compat
 from ._globals import (DEFAULT_ENGINE, DEFAULT_HASH,
                        PATH_LABEL, LANGUOID_LABEL,
                        ENGINE, ROOT,
-                       LANGUOID_ORDER)
+                       LANGUOID_ORDER,
+                       LanguoidItem)
 
 from . import _tools
 from . import backend as _backend
 from .backend import export as _export
-from . import languoids as _languoids
 from .models import SPECIAL_FAMILIES, BOOKKEEPING
 from . import queries as _queries
 from . import records as _records
 
 __all__ = ['print_languoid_stats',
+           'iterlanguoids',
            'checksum',
            'write_json_lines',
            'write_json_csv',
@@ -63,6 +65,43 @@ def print_languoid_stats(*, file=None,
             warnings.warn(f'{term} = {parts_sum:,d}')
 
 
+def iterlanguoids(root_or_bind=ROOT, *,
+                  from_raw: bool = False,
+                  ordered: bool = True,
+                  progress_after: int = _tools.PROGRESS_AFTER,
+                  _legacy=None) -> typing.Iterable[LanguoidItem]:
+    """Yield (path, languoid) pairs from diffferent sources."""
+    kwargs = {'progress_after': progress_after}
+    log.info('generate languoids')
+    if not hasattr(root_or_bind, 'execute'):
+        log.info('extract languoids from files')
+        if from_raw:
+            raise TypeError(f'from_raw=True requires bind'
+                            f' (passed: {root_or_bind!r})')
+
+        if ordered not in (True, None, False, 'file', 'path'):
+            raise ValueError(f'ordered={ordered!r} not implemented')
+
+        from . import files
+
+        del ordered
+        records = files.iterrecords(root=root_or_bind, **kwargs)
+    elif not from_raw:
+        kwargs['ordered'] = ordered
+        return fetch_languoids(bind=root_or_bind, _legacy=_legacy, **kwargs)
+    else:
+        log.info('extract languoids from raw records')
+
+        from . import raw
+
+        # insert languoids in id order if available
+        kwargs['ordered'] = 'id' if ordered is True else ordered
+        records = raw.fetch_records(bind=root_or_bind, **kwargs)
+
+    return _records.parse(records, from_raw=from_raw,
+                          _legacy=_legacy)
+
+
 def validate_source_kwargs(*, source: str,
                            file_order: bool,
                            file_means_path: bool):
@@ -94,7 +133,7 @@ def checksum(*, source: str = 'tables',
                                     file_means_path=file_means_path)
 
 
-    rows = _languoids.iterlanguoids(_legacy=True, **kwargs)
+    rows = iterlanguoids(_legacy=True, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=True)
 
     header = ['path', 'json']
@@ -161,7 +200,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                                             **json_kwargs)
         return result
         
-    items = _languoids.iterlanguoids(**lang_kwargs)
+    items = iterlanguoids(**lang_kwargs)
     items = ({path_label: path, languoid_label: languoid}
              for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
@@ -213,8 +252,7 @@ def _write_json_csv(root_or_bind=ENGINE, *,
     kwargs = {'ordered': ordered,
               'from_raw':from_raw}
 
-    rows = _languoids.iterlanguoids(root_or_bind, _legacy=True,
-                                    **kwargs)
+    rows = iterlanguoids(root_or_bind, _legacy=True, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
@@ -287,7 +325,7 @@ def write_files(root=ROOT, *, replace: bool = False,
     kwargs = {'ordered': 'path',
               'from_raw': from_raw}
 
-    languoids = _languoids.iterlanguoids(bind, **kwargs)
+    languoids = iterlanguoids(bind, **kwargs)
 
     records = _records.dump(languoids)
 

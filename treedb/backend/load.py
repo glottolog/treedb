@@ -246,7 +246,7 @@ def import_raw(conn, *, root):
 def import_languoids(conn, *, root, from_raw):
     log.debug('import source module %s.languoids', __package__)
 
-    from .. import languoids
+    from .. import export
 
     log.debug('import target module %s.import_models', __package__)
 
@@ -255,6 +255,5 @@ def import_languoids(conn, *, root, from_raw):
     root_or_bind = conn if from_raw else root
     log.debug('root_or_bind: %r', root_or_bind)
 
-    pairs = languoids.iterlanguoids(root_or_bind, from_raw=from_raw)
-
+    pairs = export.iterlanguoids(root_or_bind, from_raw=from_raw)
     import_models.main(pairs, conn=conn)

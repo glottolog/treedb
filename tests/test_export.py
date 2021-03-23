@@ -6,7 +6,8 @@ from conftest import (pairwise,
                       get_assert_head,
                       assert_nonempty_string,
                       assert_nonempty_dict,
-                      assert_file_size_between)
+                      assert_file_size_between,
+                      assert_valid_languoids)
 
 STATS = {'v4.1': '''\
 24,701 languoids
@@ -95,6 +96,11 @@ def test_print_languoid_stats(capsys, treedb):
         assert out.strip()
     else:
         assert out == expected
+
+
+def test_iterlanguoids(bare_treedb, n=100):
+    items = bare_treedb.iterlanguoids()
+    assert_valid_languoids(items, n=n)
 
 
 def test_checksum(treedb):

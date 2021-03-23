@@ -37,6 +37,7 @@ from .config import (configure,
                      get_default_root)
 
 from .export import (print_languoid_stats,
+                     iterlanguoids,
                      checksum,
                      write_json_lines as write_languoids,
                      write_json_csv,
@@ -46,8 +47,6 @@ from .files import (set_root,
                     iterfiles)
 
 from .glottolog import checkout_or_clone
-
-from .languoids import iterlanguoids
 
 from .logging_ import configure_logging
 
@@ -74,12 +73,12 @@ __all__ = ['Session',
            'check', 'compare_with_files',
            'configure',
            'print_languoid_stats',
+           'iterlanguoids',
            'checksum',
            'write_languoids',
            'write_files',
            'set_root', 'iterfiles',
            'checkout_or_clone',
-           'iterlanguoids',
            'configure_logging',
            'LEVEL', 'Languoid',
            'get_query', 'get_json_query',
