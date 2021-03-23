@@ -7,7 +7,9 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from ._globals import ENGINE, PATH_LABEL, LANGUOID_LABEL
+from ._globals import (FILE_PATH_SEP,
+                       ENGINE,
+                       PATH_LABEL, LANGUOID_LABEL)
 
 from . import _tools
 from . import backend as _backend
@@ -356,7 +358,8 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
                      .label('path_array'))
         path_array = select(path_array).label('path')
 
-        file_path = (sa.func.group_concat(subquery.c.path_part, '/')
+        file_path = (sa.func.group_concat(subquery.c.path_part,
+                                          FILE_PATH_SEP)
                      .label('path_string'))
         file_path = select(file_path).label('file_path')
 

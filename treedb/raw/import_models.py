@@ -5,6 +5,7 @@ import logging
 
 import sqlalchemy as sa
 
+from .._globals import FILE_PATH_SEP
 from .. import _tools
 from .. import fields as _fields
 from .. import files as _files
@@ -80,7 +81,7 @@ def main(root, *, conn):
         sha256 = _tools.sha256sum(dentry.path, raw=True)
 
         file_params = {'glottocode': path_tuple[-1],
-                       'path': '/'.join(path_tuple),
+                       'path': FILE_PATH_SEP.join(path_tuple),
                        'size': dentry.stat().st_size,
                        'sha256': sha256.hexdigest()}
         file_id, = insert_file(file_params).inserted_primary_key

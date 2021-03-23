@@ -20,6 +20,8 @@ LANGUOID_LABEL = 'languoid'
 
 DEFAULT_HASH = 'sha256'
 
+FILE_PATH_SEP = '/'
+
 SQLALCHEMY_FUTURE = True
 
 ENGINE = _proxies.SQLiteEngineProxy(future=SQLALCHEMY_FUTURE)
@@ -37,7 +39,8 @@ __all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION',
-           'LANGUOID_ORDER']
+           'LANGUOID_ORDER',
+           'LanguoidItem']
 
 
 assert PATH_LABEL < LANGUOID_LABEL
@@ -52,7 +55,21 @@ RecordValueType = typing.Union[str, typing.List[str]]
 RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
 
 
-RecordItem = typing.Tuple[PathType, RecordType]
+def filepath_tuple(file_path: str,
+                   *, sep=FILE_PATH_SEP) -> typing.Tuple[str]:
+     path_parts = file_path.split(sep)
+     return tuple(path_parts)
+
+
+class RecordItem(typing.NamedTuple):
+
+    path: PathType
+
+    record: RecordType
+
+    @classmethod
+    def from_filepath_record(cls, file_path: str, languoid):
+        return cls(filepath_tuple(file_path), languoid)
 
 
 ValueType = typing.Union[str,
@@ -82,4 +99,12 @@ LanguoidValueType = typing.Union[ValueType,
 LanguoidType = typing.Mapping[str, LanguoidValueType]
 
 
-LanguoidItem = typing.Tuple[PathType, LanguoidType]
+class LanguoidItem(typing.NamedTuple):
+
+    path: PathType
+
+    languoid: LanguoidType
+
+    @classmethod
+    def from_filepath_languoid(cls, file_path: str, languoid):
+        return cls(filepath_tuple(file_path), languoid)

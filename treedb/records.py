@@ -9,6 +9,7 @@ import typing
 import pycountry
 
 from . import _globals
+from ._globals import LanguoidItem
 from . import fields as _fields
 
 __all__ = ['pipe',
@@ -46,15 +47,16 @@ def pipe(mode, items, *, from_raw: bool):
 
 
 def parse(records: typing.Iterable[_globals.RecordItem],
-          *, from_raw: bool, _legacy=None) -> typing.Iterator[_globals.LanguoidItem]:
+          *, from_raw: bool, _legacy=None) -> typing.Iterator[LanguoidItem]:
     n = 0
+    make_item = LanguoidItem
     for n, (path, cfg) in enumerate(records, 1):
         languoid = make_languoid(path, cfg, from_raw=from_raw, _legacy=_legacy)
-        yield path, languoid
+        yield make_item(path, languoid)
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def dump(languoids: typing.Iterable[_globals.LanguoidItem]
+def dump(languoids: typing.Iterable[LanguoidItem]
          ) -> typing.Iterator[_globals.RecordItem]:
     for path, l in languoids:
         record = make_record(l)

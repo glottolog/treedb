@@ -13,6 +13,7 @@ from . import _compat
 
 from ._globals import (DEFAULT_ENGINE, DEFAULT_HASH,
                        PATH_LABEL, LANGUOID_LABEL,
+                       FILE_PATH_SEP,
                        ENGINE, ROOT,
                        LANGUOID_ORDER,
                        LanguoidItem)
@@ -260,7 +261,8 @@ def _write_json_csv(root_or_bind=ENGINE, *,
 
 
 def pipe_json(mode: str, languoids, *,
-              sort_keys: bool = True):
+              sort_keys: bool = True,
+              file_path_sep=FILE_PATH_SEP):
     codec = {'load': json.loads, 'dump': json.dumps}[mode]
 
     if mode == 'dump':
@@ -272,11 +274,13 @@ def pipe_json(mode: str, languoids, *,
     if mode == 'dump':
         def itercodec(langs):
             for path_tuple, l in langs:
-                yield '/'.join(path_tuple), codec(l)
+                yield file_path_sep.join(path_tuple), codec(l)
     else:
+        make_item = LanguoidItem.from_file_path
+
         def itercodec(langs):
             for path, doc in langs:
-                yield path.split('/'), codec(doc)
+                yield make_item(path, codec(doc))
 
     return itercodec(languoids)
 
@@ -298,14 +302,14 @@ def fetch_languoids(bind=ENGINE, *, ordered: str = LANGUOID_ORDER,
     rows = _backend.iterrows(query, bind=bind)
 
     n = 0
+    make_item = LanguoidItem.from_filepath_languoid
     for n, (path, item) in enumerate(rows, 1):
         endangerment = item['endangerment']
         if endangerment is not None:
             endangerment['date'] = json_datetime(endangerment['date'])
         if not item.get('timespan'):
             item.pop('timespan', None)
-
-        yield tuple(path.split('/')), item
+        yield make_item(path, item)
 
         if not (n % progress_after):
             log.info('%s languoids fetched', f'{n:_d}')

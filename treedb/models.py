@@ -8,7 +8,8 @@ from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
 
 from sqlalchemy.orm import relationship, aliased
 
-from ._globals import REGISTRY as registry
+from ._globals import (FILE_PATH_SEP,
+                       REGISTRY as registry)
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -296,7 +297,8 @@ class Languoid:
         return select_path_part
 
     @classmethod
-    def path(cls, *, label='path', delimiter='/', include_self=True, bottomup=False, _tree=None):
+    def path(cls, *, label='path', delimiter=FILE_PATH_SEP,
+             include_self=True, bottomup=False, _tree=None):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup,
                                 _tree=_tree)
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
@@ -355,7 +357,8 @@ class Languoid:
         return Parent, Child, parent_child
 
     @classmethod
-    def path_family_language(cls, *, path_label='path', path_delimiter='/', include_self=True, bottomup=False,
+    def path_family_language(cls, *, path_label='path', path_delimiter=FILE_PATH_SEP,
+                             include_self=True, bottomup=False,
                              family_label='family_id', language_label='language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
 

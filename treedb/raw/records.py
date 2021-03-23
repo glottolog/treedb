@@ -8,7 +8,7 @@ import typing
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE
+from .._globals import ENGINE, RecordItem
 
 from .. import _globals
 from .. import _tools
@@ -28,7 +28,7 @@ def fetch_records(*, ordered: bool = True,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
-                  bind=ENGINE) -> typing.Iterator[_globals.RecordItem]:
+                  bind=ENGINE) -> typing.Iterator[RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.connection
@@ -66,6 +66,7 @@ def fetch_records(*, ordered: bool = True,
     groupby_file, groupby_section, groupby_option = groupby
 
     n = 0
+    make_item = RecordItem.from_filepath_record
     with _backend.connect(bind=bind) as conn:
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
@@ -83,7 +84,7 @@ def fetch_records(*, ordered: bool = True,
                     s: {o: [l.value for l in lines] if is_lines else next(lines).value
                        for (o, is_lines), lines in groupby_option(sections)}
                     for s, sections in groupby_section(values)}
-                yield tuple(path.split('/')), record
+                yield make_item(path, record)
 
             n += count
             if not (n % progress_after):
