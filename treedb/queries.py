@@ -441,21 +441,21 @@ def languoid_timespan(*, sort_keys: bool = False):
 
 
 def languoid_sources(*, sort_keys: bool = False):
-    s_provider = aliased(SourceProvider, name='source_provider')
-    s_bibfile = aliased(Bibfile, name='source_bibfile')
-    s_bibitem = aliased(Bibitem, name='source_bibitem')
+    provider = aliased(SourceProvider, name='source_provider')
+    bibitem = aliased(Bibitem, name='source_bibitem')
+    bibfile = aliased(Bibfile, name='source_bibfile')
 
-    sources = (select(s_provider.name.label('provider'),
-                      Source.jsonf(s_bibfile, s_bibitem,
+    sources = (select(provider.name.label('provider'),
+                      Source.jsonf(bibfile, bibitem,
                                    sort_keys=sort_keys))
-              .select_from(Source)
-              .filter_by(languoid_id=Languoid.id)
-              .correlate(Languoid)
-              .join(Source.provider.of_type(s_provider))
-              .join(Source.bibitem.of_type(s_bibitem))
-              .join(Bibitem.bibfile.of_type(s_bibfile))
-              .order_by(s_provider.name, s_bibfile.name, s_bibitem.bibkey)
-              .alias('lang_source'))
+               .select_from(Source)
+               .filter_by(languoid_id=Languoid.id)
+               .correlate(Languoid)
+               .join(Source.provider.of_type(provider))
+               .join(Source.bibitem.of_type(bibitem))
+               .join(bibitem.bibfile.of_type(bibfile))
+               .order_by(provider.name, bibfile.name, bibitem.bibkey)
+               .alias('lang_source'))
 
     sources = (select(sources.c.provider.label('key'),
                      group_array(sa.func.json(sources.c.jsonf)).label('value'))
@@ -469,15 +469,15 @@ def languoid_sources(*, sort_keys: bool = False):
 
 
 def languoid_altnames(*, sort_keys: bool = False):
-    a_provider = aliased(AltnameProvider, name='altname_provider')
+    provider = aliased(AltnameProvider, name='altname_provider')
 
-    altnames = (select(a_provider.name.label('provider'),
+    altnames = (select(provider.name.label('provider'),
                        Altname.jsonf(sort_keys=sort_keys))
                 .select_from(Altname)
                 .filter_by(languoid_id=Languoid.id)
                 .correlate(Languoid)
-                .join(Altname.provider.of_type(a_provider))
-                .order_by(a_provider.name, Altname.printf())
+                .join(Altname.provider.of_type(provider))
+                .order_by(provider.name, Altname.printf())
                 .alias('lang_altname'))
 
     altnames = (select(altnames.c.provider.label('key'),
@@ -538,17 +538,17 @@ def languoid_classification(*, sort_keys: bool = False):
                               .correlate(Languoid)
                               .scalar_subquery())
 
-    cr_bibfile = aliased(Bibfile, name='bibfile_cr')
-    cr_bibitem = aliased(Bibitem, name='bibitem_cr')
+    bibitem = aliased(Bibitem, name='bibitem_cr')
+    bibfile = aliased(Bibfile, name='bibfile_cr')
 
     classification_refs = (select((ClassificationRef.kind + 'refs').label('key'),
-                                  ClassificationRef.jsonf(cr_bibfile, cr_bibitem,
+                                  ClassificationRef.jsonf(bibfile, bibitem,
                                                           sort_keys=sort_keys))
                            .select_from(ClassificationRef)
                            .filter_by(languoid_id=Languoid.id)
                            .correlate(Languoid)
-                           .join(ClassificationRef.bibitem.of_type(cr_bibitem))
-                           .join(Bibitem.bibfile.of_type(cr_bibfile))
+                           .join(ClassificationRef.bibitem.of_type(bibitem))
+                           .join(bibitem.bibfile.of_type(bibfile))
                            .order_by(ClassificationRef.kind, ClassificationRef.ord)
                            .alias('lang_cref'))
 
@@ -569,18 +569,18 @@ def languoid_classification(*, sort_keys: bool = False):
 
 
 def languoid_endangerment(*, sort_keys: bool = False):
-    e_bibfile = aliased(Bibfile, name='bibfile_e')
-    e_bibitem = aliased(Bibitem, name='bibitem_e')
+    bibitem = aliased(Bibitem, name='bibitem_e')
+    bibfile = aliased(Bibfile, name='bibfile_e')
 
     return (select(Endangerment.jsonf(EndangermentSource,
-                                      e_bibfile, e_bibitem,
+                                      bibfile, bibitem,
                                       sort_keys=sort_keys,
                                       label='endangerment'))
             .select_from(Endangerment)
             .filter_by(languoid_id=Languoid.id)
             .correlate(Languoid)
             .join(Endangerment.source)
-            .outerjoin(sa.join(e_bibitem, e_bibfile))
+            .outerjoin(sa.join(bibitem, bibfile))
             .scalar_subquery())
 
 
