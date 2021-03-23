@@ -433,9 +433,9 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
               .select_from(Source)
               .filter_by(languoid_id=Languoid.id)
               .correlate(Languoid)
-              .filter_by(provider_id=s_provider.id)
-              .filter_by(bibitem_id=s_bibitem.id)
-              .where(s_bibitem.bibfile_id == s_bibfile.id)
+              .join(Source.provider.of_type(s_provider))
+              .join(Source.bibitem.of_type(s_bibitem))
+              .join(Bibitem.bibfile.of_type(s_bibfile))
               .order_by(s_provider.name, s_bibfile.name, s_bibitem.bibkey)
               .alias('lang_source'))
 
@@ -458,7 +458,7 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                 .select_from(Altname)
                 .filter_by(languoid_id=Languoid.id)
                 .correlate(Languoid)
-                .filter_by(provider_id=a_provider.id)
+                .join(Altname.provider.of_type(a_provider))
                 .order_by(a_provider.name, Altname.printf())
                 .alias('lang_altname'))
 
@@ -499,7 +499,7 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                   .select_from(Identifier)
                   .filter_by(languoid_id=Languoid.id)
                   .correlate(Languoid)
-                  .filter_by(site_id=IdentifierSite.id)
+                  .join(Identifier.site.of_type(IdentifierSite))
                   .alias('lang_identifiers'))
 
     identifier = (select(identifier.c.site, identifier.c.identifier)
@@ -529,8 +529,8 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                            .select_from(ClassificationRef)
                            .filter_by(languoid_id=Languoid.id)
                            .correlate(Languoid)
-                           .filter_by(bibitem_id=cr_bibitem.id)
-                           .where(cr_bibitem.bibfile_id == cr_bibfile.id)
+                           .join(ClassificationRef.bibitem.of_type(cr_bibitem))
+                           .join(Bibitem.bibfile.of_type(cr_bibfile))
                            .order_by(ClassificationRef.kind, ClassificationRef.ord)
                            .alias('lang_cref'))
 
@@ -558,10 +558,11 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
                                               e_bibfile, e_bibitem,
                                               sort_keys=sort_keys,
                                               label='endangerment'))
-                    .join_from(Endangerment, EndangermentSource)
-                    .outerjoin(sa.join(e_bibitem, e_bibfile))
-                    .where(Endangerment.languoid_id == Languoid.id)
+                    .select_from(Endangerment)
+                    .filter_by(languoid_id=Languoid.id)
                     .correlate(Languoid)
+                    .join(Endangerment.source)
+                    .outerjoin(sa.join(e_bibitem, e_bibfile))
                     .scalar_subquery())
 
     yield 'endangerment', endangerment
@@ -576,13 +577,11 @@ def languoid_scalar_selects(*, sort_keys: bool = False):
 
     yield 'hh_ethnologue_comment', hh_ethnologue_comment
 
-    irct = aliased(IsoRetirementChangeTo, name='irct')
-
-    change_to = (select(irct.code)
-                 .select_from(irct)
+    change_to = (select(IsoRetirementChangeTo.code)
+                 .select_from(IsoRetirementChangeTo)
                  .filter_by(languoid_id=IsoRetirement.languoid_id)
                  .correlate(IsoRetirement)
-                 .order_by(irct.ord)
+                 .order_by(IsoRetirementChangeTo.ord)
                  .alias('lang_irct'))
 
     change_to = (select(group_array(change_to.c.code).label('change_to'))
