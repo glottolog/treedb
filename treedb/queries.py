@@ -436,6 +436,7 @@ def select_languoid_links(languoid_id=Languoid.id, *, sort_keys: bool = False):
 def select_languoid_timespan(languoid_id=Languoid.id, *, sort_keys: bool = False):
     return (select(Timespan.jsonf(sort_keys=sort_keys))
             .select_from(Timespan)
+            .correlate(Languoid)
             .filter_by(languoid_id=languoid_id)
             .scalar_subquery())
 
