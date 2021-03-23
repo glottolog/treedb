@@ -42,7 +42,7 @@ __all__ = ['next_count',
 log = logging.getLogger(__name__)
 
 
-def next_count(start=0, step=1):
+def next_count(start: int = 0, step: int = 1):
     count = itertools.count(start, step)
     return functools.partial(next, count)
 
@@ -87,8 +87,8 @@ def walk_scandir(top, *,
         stack.extend(reversed(dirs))
 
 
-def pipe_json_lines(file, documents=None, *, raw=False,
-                    delete_present=True, autocompress=True,
+def pipe_json_lines(file, documents=None, *, raw: bool = False,
+                    delete_present: bool = True, autocompress: bool = True,
                     sort_keys: bool = True):
     lines_kwargs = {'delete_present': delete_present,
                     'autocompress': autocompress}
@@ -135,12 +135,12 @@ def pipe_json(mode, documents,
         assert next(itercodec(['null'])) is None
     else:
         assert next(itercodec([None])) == 'null'
-            
+
     return itercodec(documents)
 
 
 def pipe_lines(file, lines=None,
-               *, delete_present=False, autocompress=True):
+               *, delete_present: bool = False, autocompress: bool = True):
     open_func, result, hashobj = get_open_result(file,
                                                  write=lines is not None,
                                                  delete_present=delete_present,
@@ -164,7 +164,7 @@ def pipe_lines(file, lines=None,
     return iterlines()
 
 
-def write_wrapped(hashsum, f, lines, *, bufsize=1000):
+def write_wrapped(hashsum, f, lines, *, bufsize: int = 1_000):
     write_line = functools.partial(print, file=f)
     buf = f.buffer
     total = 0
@@ -193,7 +193,7 @@ def write_lines(file, lines):
     return total
 
 
-def path_from_filename(filename, *args, expanduser=True):
+def path_from_filename(filename, *args, expanduser: bool = True):
     if hasattr(filename, 'open'):
         assert not args
         result = filename
@@ -205,8 +205,8 @@ def path_from_filename(filename, *args, expanduser=True):
     return result
 
 
-def get_open_result(file, *, write=False, 
-                    delete_present=False, autocompress=False,
+def get_open_result(file, *, write: bool = False,
+                    delete_present: bool = False, autocompress: bool = False,
                     _encoding: str = 'utf-8'):
     open_kwargs = {'mode': 'wt' if write else 'rt',
                    'encoding': _encoding}
@@ -250,7 +250,7 @@ def get_open_result(file, *, write=False,
     return open_func, result, hashobj
 
 
-def get_open_module(filepath, autocompress=False):
+def get_open_module(filepath, autocompress: bool = False):
     file = path_from_filename(filepath)
 
     suffix = file.suffix.lower()
@@ -264,7 +264,7 @@ def get_open_module(filepath, autocompress=False):
     return result
 
 
-def sha256sum(file, *, raw=False, autocompress=True):
+def sha256sum(file, *, raw: bool = False, autocompress: bool = True):
     file = path_from_filename(file)
     open_module = get_open_module(file, autocompress=autocompress)
 
@@ -278,12 +278,13 @@ def sha256sum(file, *, raw=False, autocompress=True):
     return result
 
 
-def update_hash(hash_, file, *, chunksize=2**16):  # 64 KiB
+def update_hash(hash_, file, *, chunksize: int = 2**16):  # 64 KiB
     for chunk in iter(functools.partial(file.read, chunksize), b''):
         hash_.update(chunk)
 
 
-def run(cmd, *, capture_output=False, unpack=False, cwd=None, check=False,
+def run(cmd, *, capture_output: bool = False,
+        unpack: bool = False, cwd=None, check: bool = False,
         encoding=ENCODING):
     log.info('subprocess.run(%r)', cmd)
 
@@ -320,7 +321,7 @@ class Ordering(dict):
     _missing = float('inf')
 
     @classmethod
-    def fromlist(cls, keys, *, start_index=0):
+    def fromlist(cls, keys, *, start_index: int = 0):
         return cls((k, i) for i, k in enumerate(uniqued(keys), start=start_index))
 
     def __missing__(self, key):
@@ -332,6 +333,6 @@ class Ordering(dict):
     def sorted(self, keys):
         return sorted(keys, key=self._sortkey)
 
-    def sorted_enumerate(self, keys, start=0):
+    def sorted_enumerate(self, keys, start: int = 0):
         keyed = sorted((self[key], key) for key in keys)
         return ((i, key) for i, (_, key) in enumerate(keyed, start))

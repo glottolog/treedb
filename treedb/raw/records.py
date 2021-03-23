@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 
 def fetch_records(*, ordered: bool = True,
-                  progress_after: int =_tools.PROGRESS_AFTER,
+                  progress_after: int = _tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
                   bind=ENGINE) -> typing.Iterator[_globals.RecordItem]:

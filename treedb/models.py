@@ -497,7 +497,7 @@ class Link:
     def jsonf(cls, *, sort_keys, label='jsonf'):
         return json_object(scheme=cls.scheme,
                            url=cls.url,
-                           title= cls.title,
+                           title=cls.title,
                            sort_keys_=sort_keys,
                            label_=label)
 
@@ -577,8 +577,8 @@ class Source:
                             back_populates='sources')
 
     bibitem = relationship('Bibitem',
-                            innerjoin=True,
-                            back_populates='sources')
+                           innerjoin=True,
+                           back_populates='sources')
 
     @classmethod
     def printf(cls, bibfile, bibitem, *, label='printf'):
@@ -587,15 +587,15 @@ class Source:
                                        bibfile.name, bibitem.bibkey,
                                        cls.pages, cls.trigger)),
                        (cls.pages != None,
-                        sa.func.printf('**%s:%s**:%s', bibfile.name,
-                                                       bibitem.bibkey,
-                                                       cls.pages)),
+                        sa.func.printf('**%s:%s**:%s',
+                                       bibfile.name, bibitem.bibkey,
+                                       cls.pages)),
                        (cls.trigger != None,
                         sa.func.printf('**%s:%s**<trigger "%s">',
                                        bibfile.name, bibitem.bibkey,
                                        cls.trigger)),
-                       else_=sa.func.printf('**%s:%s**', bibfile.name,
-                                                         bibitem.bibkey)
+                       else_=sa.func.printf('**%s:%s**',
+                                            bibfile.name, bibitem.bibkey)
                        ).label(label)
 
     @classmethod
@@ -945,9 +945,9 @@ class EndangermentSource:
     @classmethod
     def printf(cls, bibfile, bibitem, *, label='printf'):
         return sa.case((cls.bibitem_id == None, cls.name),
-                       else_=sa.func.printf('**%s:%s**:%s', bibfile.name,
-                                                            bibitem.bibkey,
-                                                            cls.pages)).label(label)
+                       else_=sa.func.printf('**%s:%s**:%s',
+                                            bibfile.name, bibitem.bibkey,
+                                            cls.pages)).label(label)
 
 
 @registry.mapped

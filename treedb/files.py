@@ -102,7 +102,7 @@ class FileInfo(typing.NamedTuple):
 
 
 def iterfiles(root=ROOT,
-              *, progress_after: int =_tools.PROGRESS_AFTER
+              *, progress_after: int = _tools.PROGRESS_AFTER
               ) -> typing.Iterator[FileInfo]:
     """Yield triples of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
     root = _tools.path_from_filename(root).resolve()
@@ -133,8 +133,8 @@ RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
 
 
 def iterrecords(root=ROOT,
-                *, progress_after: int =_tools.PROGRESS_AFTER,
-                 raw: bool = False) -> RecordsType:
+                *, progress_after: int = _tools.PROGRESS_AFTER,
+                raw: bool = False) -> RecordsType:
     fileinfos = iterfiles(root, progress_after=progress_after)
     record_items = _iterrecords(fileinfos, raw=raw)
     return record_items

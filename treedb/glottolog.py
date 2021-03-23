@@ -37,7 +37,7 @@ def git_clone(tag_or_branch, *, target, depth=1):
            '--single-branch',
            '--branch', tag_or_branch,
            '--depth', f'{depth:d}',
-            REPO_URL, target]
+           REPO_URL, target]
     return _tools.run(cmd, check=True)
 
 

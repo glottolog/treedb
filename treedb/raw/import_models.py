@@ -35,8 +35,7 @@ class OptionMap(dict):
                   'is_lines': is_lines}
 
         ord_section = _fields.SECTION_ORDER.get(section)
-        if (ord_section is not None
-            and _fields.is_all_options(*key)):
+        if ord_section is not None and _fields.is_all_options(*key):
             ord_option = 0
             params.update(ord_option=ord_option,
                           defined=True,

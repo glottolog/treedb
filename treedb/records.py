@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 
 def pipe(mode, items, *, from_raw: bool):
     codec = {'parse': parse, 'dump': dump}[mode]
-    kwargs = {'from_raw': from_raw } if mode == 'parse' else {}
+    kwargs = {'from_raw': from_raw} if mode == 'parse' else {}
     return codec(items, **kwargs)
 
 
@@ -79,7 +79,7 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'countries': [splitcountry(c)
                               for c in _make_lines(core.get('countries'))],
                 'links': [splitlink(c) for c in _make_lines(core.get('links'))],
-                'timespan':  make_interval( core.get('timespan')),
+                'timespan': make_interval(core.get('timespan')),
                 'sources': None,
                 'altnames': None,
                 'triggers': None,
@@ -334,7 +334,7 @@ def format_interval(value, year_tmpl='{: 05d}'):
 def splitcountry(name, *, _match=re.compile(r'(?P<id_only>[A-Z]{2})'
                                             r'|'
                                             r'(?:'
-                                                r'(?P<name>.+?)'
+                                            r'(?P<name>.+?)'
                                                 r' '
                                                 r'\('
                                                 r'(?P<id>[^)]+)'

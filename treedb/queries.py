@@ -308,7 +308,7 @@ def get_query(*, ordered='id', separator=', '):
                                 .alias('lang_irct'))
 
     iso_retirement_change_to = (select(group_concat(iso_retirement_change_to.c.code)
-                                        .label('iso_retirement_change_to'))
+                                       .label('iso_retirement_change_to'))
                                 .label('iso_retirement_change_to'))
 
     select_languoid = select_languoid.add_columns(iso_retirement_change_to)

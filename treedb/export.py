@@ -1,12 +1,9 @@
 # write information to stdout, csv, json, etc.
 
 import functools
-import io
 import itertools
 import json
 import logging
-import operator
-import sys
 import typing
 import warnings
 
@@ -107,16 +104,19 @@ def validate_source_kwargs(*, source: str,
                            file_means_path: bool):
     ordered = ('path' if file_order and file_means_path else
                'file' if file_order else 'id')
+
+    kwargs = {'tables': {'root_or_bind': ENGINE,
+                         'from_raw': False,
+                         'ordered': ordered},
+              'raw': {'root_or_bind': ENGINE,
+                      'from_raw': True,
+                      'ordered': ordered},
+              'files': {'root_or_bind': ROOT,
+                        'from_raw': None,
+                        'ordered': 'path'}}
+
     try:
-        return {'tables': {'root_or_bind': ENGINE,
-                           'from_raw': False,
-                           'ordered': ordered},
-                'raw': {'root_or_bind': ENGINE,
-                        'from_raw': True,
-                        'ordered': ordered},
-                'files': {'root_or_bind': ROOT,
-                          'from_raw': None,
-                          'ordered': 'path'}}[source]
+        return kwargs[source]
     except KeyError:
         raise ValueError(f'unknown checksum source: {source!r}'
                          f' (possible values: {list(kwargs)})')
@@ -132,14 +132,13 @@ def checksum(*, source: str = 'tables',
                                     file_order=file_order,
                                     file_means_path=file_means_path)
 
-
     rows = iterlanguoids(_legacy=True, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=True)
 
     header = ['path', 'json']
     log.info('csv header: %r', header)
-    hashobj =_export.hash_rows(rows, hash_name=hash_name, header=header,
-                               dialect='excel', encoding='utf-8', raw=True)
+    hashobj = _export.hash_rows(rows, hash_name=hash_name, header=header,
+                                dialect='excel', encoding='utf-8', raw=True)
     result = (f"{'_'.join(header)}"
               f":{kwargs['ordered']}"
               f':{hashobj.name}'
@@ -199,7 +198,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
             result = _tools.pipe_json_lines(file, lines, raw=True,
                                             **json_kwargs)
         return result
-        
+
     items = iterlanguoids(**lang_kwargs)
     items = ({path_label: path, languoid_label: languoid}
              for path, languoid in items)
@@ -250,7 +249,7 @@ def _write_json_csv(root_or_bind=ENGINE, *,
     log.info('csv header: %r', header)
 
     kwargs = {'ordered': ordered,
-              'from_raw':from_raw}
+              'from_raw': from_raw}
 
     rows = iterlanguoids(root_or_bind, _legacy=True, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=sort_keys)
