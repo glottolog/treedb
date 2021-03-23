@@ -64,6 +64,7 @@ def print_languoid_stats(*, file=None,
 
 
 def iterlanguoids(root_or_bind=ROOT, *,
+                  limit: typing.Optional[int] = None,
                   from_raw: bool = False,
                   ordered: bool = True,
                   progress_after: int = _tools.PROGRESS_AFTER,
@@ -86,7 +87,8 @@ def iterlanguoids(root_or_bind=ROOT, *,
         records = files.iterrecords(root=root_or_bind, **kwargs)
     elif not from_raw:
         kwargs['ordered'] = ordered
-        return fetch_languoids(bind=root_or_bind, _legacy=_legacy, **kwargs)
+        return fetch_languoids(bind=root_or_bind, _legacy=_legacy,
+                               limit=limit, **kwargs)
     else:
         log.info('extract languoids from raw records')
 
@@ -96,8 +98,8 @@ def iterlanguoids(root_or_bind=ROOT, *,
         kwargs['ordered'] = 'id' if ordered is True else ordered
         records = raw.fetch_records(bind=root_or_bind, **kwargs)
 
-    return _records.parse(records, from_raw=from_raw,
-                          _legacy=_legacy)
+    items = _records.parse(records, from_raw=from_raw, _legacy=_legacy)
+    return itertools.islice(items, limit) if limit is not None else items
 
 
 def validate_source_kwargs(*, source: str,
@@ -285,7 +287,8 @@ def pipe_json(mode: str, languoids, *,
     return itercodec(languoids)
 
 
-def fetch_languoids(bind=ENGINE, *, ordered: str = LANGUOID_ORDER,
+def fetch_languoids(bind=ENGINE, *, limit: typing.Optional[int] = None,
+                    ordered: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     _legacy=None):
     log.info('fetch languoids from json query')
@@ -296,6 +299,10 @@ def fetch_languoids(bind=ENGINE, *, ordered: str = LANGUOID_ORDER,
               'ordered': ordered}
 
     query = _queries.get_json_query(_legacy=_legacy, **kwargs)
+
+    if limit is not None:
+        query = query.limit(limit)
+        del limit
 
     json_datetime = _compat.datetime_fromisoformat
 
