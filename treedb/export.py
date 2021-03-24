@@ -102,27 +102,21 @@ def iterlanguoids(root_or_bind=ROOT, *,
     return itertools.islice(items, limit) if limit is not None else items
 
 
-def validate_source_kwargs(*, source: str,
-                           file_order: bool,
-                           file_means_path: bool):
-    ordered = ('path' if file_order and file_means_path else
-               'file' if file_order else 'id')
-
-    kwargs = {'tables': {'root_or_bind': ENGINE,
-                         'from_raw': False,
-                         'ordered': ordered},
-              'raw': {'root_or_bind': ENGINE,
-                      'from_raw': True,
-                      'ordered': ordered},
-              'files': {'root_or_bind': ROOT,
-                        'from_raw': None,
-                        'ordered': 'path'}}
-
-    try:
-        return kwargs[source]
-    except KeyError:
-        raise ValueError(f'unknown checksum source: {source!r}'
-                         f' (possible values: {list(kwargs)})')
+def get_source_kwargs(*, source: str,
+                      file_order: bool,
+                      file_means_path: bool):
+    if source == 'files':
+        return {'root_or_bind': ROOT,
+                'from_raw': None,
+                'ordered': 'path'}
+    elif source in ('raw', 'tables'):
+        return {'root_or_bind': ENGINE,
+                'from_raw': (source == 'raw'),
+                'ordered': ('path' if file_order and file_means_path else
+                            'file' if file_order else
+                            'id')}
+    else:
+        raise ValueError(f'unknown source: {source!r}')
 
 
 def checksum(*, source: str = 'tables',
@@ -131,9 +125,9 @@ def checksum(*, source: str = 'tables',
              hash_name: str = DEFAULT_HASH):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
-    kwargs = validate_source_kwargs(source=source,
-                                    file_order=file_order,
-                                    file_means_path=file_means_path)
+    kwargs = get_source_kwargs(source=source,
+                               file_order=file_order,
+                               file_means_path=file_means_path)
 
     rows = iterlanguoids(_legacy=True, **kwargs)
     rows = pipe_json('dump', rows, sort_keys=True)
@@ -166,9 +160,9 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
 
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
-    lang_kwargs = validate_source_kwargs(source=source,
-                                         file_order=file_order,
-                                         file_means_path=file_means_path)
+    lang_kwargs = get_source_kwargs(source=source,
+                                    file_order=file_order,
+                                    file_means_path=file_means_path)
 
     if file is None:
         if source == 'files':
@@ -218,9 +212,9 @@ def write_json_csv(*, filename=None,
                    sort_keys: bool = True,
                    dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, json) rows for each languoid to filename."""
-    kwargs = validate_source_kwargs(source=source,
-                                    file_order=file_order,
-                                    file_means_path=file_means_path)
+    kwargs = get_source_kwargs(source=source,
+                               file_order=file_order,
+                               file_means_path=file_means_path)
 
     return _write_json_csv(filename=filename, sort_keys=sort_keys,
                            dialect=csv23.DIALECT, encoding=csv23.ENCODING,
@@ -287,10 +281,10 @@ def pipe_json(mode: str, languoids, *,
     return itercodec(languoids)
 
 
-def fetch_languoids(bind=ENGINE, *, limit: typing.Optional[int] = None,
+def fetch_languoids(*, limit: typing.Optional[int] = None,
                     ordered: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
-                    _legacy=None):
+                    bind=ENGINE, _legacy=False):
     log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
