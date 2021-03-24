@@ -9,24 +9,50 @@ from conftest import (pairwise,
                       assert_file_size_between,
                       assert_valid_languoids)
 
-STATS = {'v4.1': '''\
-24,701 languoids
-   241 families
-   188 isolates
-   429 roots
- 8,506 languages
- 4,170 subfamilies
-11,784 dialects
- 7,596 Spoken L1 Languages
-   194 Sign Language
-   122 Unclassifiable
-    80 Pidgin
+
+PREFIX_LEGACY = 'path_json:id:sha256:'
+
+PREFIX = 'path_languoid:path:sha256:'
+
+CHECKSUM_LEGACY = {'master': None,
+                   'v4.3-treedb-fixes':
+                   'c384ab4887ec10a4f80baa1c36198a94f127c46aee768d3680ce3b474d0eac4e',
+                   'v4.2.1':
+                   'f3a0127b580e2ac3361af2cf84466777d66efad996483b6a92ac29218036e120',
+                   'v4.2':
+                   'a3c7550c507bab3d7431ef7b772c9f8ce27df03b5e4d5ca085d109f869503261',
+                   'v4.1':
+                   'd09dd920871bdaaecad609922bd29b90bf2f1307a19e144d393e992460092a1d'}
+
+CHECKSUM = {'master': None,
+            'v4.3-treedb-fixes':
+            '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
+            'v4.2.1':
+            '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
+            'v4.2':
+            '91756e0e9150872e71a1c27419a302d229f4b497f5f629d1d98fc40305f8e5ea',
+            'v4.1':
+            '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
+
+STATS = {'master': None,
+         'v4.3-treedb-fixes': '''\
+25,439 languoids
+   244 families
+   181 isolates
+   425 roots
+ 8,516 languages
+ 4,265 subfamilies
+12,414 dialects
+ 7,606 Spoken L1 Languages
+   196 Sign Language
+   123 Unclassifiable
+    81 Pidgin
     67 Unattested
-    28 Artificial Language
-    14 Mixed Language
+    29 Artificial Language
+    12 Mixed Language
     10 Speech Register
- 8,111 All
-   395 Bookkeeping
+ 8,124 All
+   392 Bookkeeping
 ''',
          'v4.2.1': '''\
 25,228 languoids
@@ -47,51 +73,27 @@ STATS = {'v4.1': '''\
  8,122 All
    393 Bookkeeping
 ''',
-        'v4.3-treedb-fixes': '''\
-25,439 languoids
-   244 families
-   181 isolates
-   425 roots
- 8,516 languages
- 4,265 subfamilies
-12,414 dialects
- 7,606 Spoken L1 Languages
-   196 Sign Language
-   123 Unclassifiable
-    81 Pidgin
+        'v4.1': '''\
+24,701 languoids
+   241 families
+   188 isolates
+   429 roots
+ 8,506 languages
+ 4,170 subfamilies
+11,784 dialects
+ 7,596 Spoken L1 Languages
+   194 Sign Language
+   122 Unclassifiable
+    80 Pidgin
     67 Unattested
-    29 Artificial Language
-    12 Mixed Language
+    28 Artificial Language
+    14 Mixed Language
     10 Speech Register
- 8,124 All
-   392 Bookkeeping
+ 8,111 All
+   395 Bookkeeping
 '''}
 
 STATS['v4.2'] = STATS['v4.2.1']
-
-PREFIX_LEGACY = 'path_json:id:sha256:'
-
-PREFIX = 'path_languoid:path:sha256:'
-
-CHECKSUM_LEGACY = {'v4.3-treedb-fixes':
-                   'c384ab4887ec10a4f80baa1c36198a94f127c46aee768d3680ce3b474d0eac4e',
-                   'v4.2.1':
-                   'f3a0127b580e2ac3361af2cf84466777d66efad996483b6a92ac29218036e120',
-                   'v4.2':
-                   'a3c7550c507bab3d7431ef7b772c9f8ce27df03b5e4d5ca085d109f869503261',
-                   'v4.1':
-                   'd09dd920871bdaaecad609922bd29b90bf2f1307a19e144d393e992460092a1d'}
-
-CHECKSUM = {'master':
-            None,
-            'v4.3-treedb-fixes':
-            '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
-            'v4.2.1':
-            '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
-            'v4.2':
-            '91756e0e9150872e71a1c27419a302d229f4b497f5f629d1d98fc40305f8e5ea',
-            'v4.1':
-            '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 MB = 2**20
 
