@@ -76,7 +76,7 @@ def get_query_sql(query=None,
     if query is None:
         from .. import queries
 
-        query = queries.get_examplke_query()
+        query = queries.get_example_query()
 
     compiled = _backend.expression_compile(query, literal_binds=literal_binds)
     result = compiled.string
