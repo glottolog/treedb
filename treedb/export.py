@@ -133,7 +133,7 @@ def checksum(source: str = 'tables', *,
 
     if _legacy:
         rows = iterlanguoids(_legacy=True, **kwargs)
-        rows = pipe_json('dump', rows, sort_keys=True)
+        rows = pipe_json(rows, dump=True, sort_keys=True)
 
         header = ['path', 'json']
         log.info('csv header: %r', header)
@@ -266,25 +266,24 @@ def _write_json_csv(root_or_bind=ENGINE, *,
               'from_raw': from_raw}
 
     rows = iterlanguoids(root_or_bind, _legacy=True, **kwargs)
-    rows = pipe_json('dump', rows, sort_keys=sort_keys)
+    rows = pipe_json(rows, dump=True, sort_keys=sort_keys)
 
     return csv23.write_csv(filename, rows, header=header,
                            dialect=dialect, encoding=encoding,
                            autocompress=True)
 
 
-def pipe_json(mode: str, languoids, *,
+def pipe_json(languoids, *, dump: bool = False,
               sort_keys: bool = True,
               file_path_sep=FILE_PATH_SEP):
-    codec = {'load': json.loads, 'dump': json.dumps}[mode]
+    codec = json.dumps if dump else json.loads
 
-    if mode == 'dump':
+    if dump:
         codec = functools.partial(codec,
                                   # json-serialize datetime.datetime
                                   default=_compat.datetime_toisoformat,
                                   sort_keys=sort_keys)
 
-    if mode == 'dump':
         def itercodec(langs):
             for path_tuple, l in langs:
                 yield file_path_sep.join(path_tuple), codec(l)

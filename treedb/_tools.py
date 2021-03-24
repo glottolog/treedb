@@ -98,22 +98,23 @@ def pipe_json_lines(file, documents=None, *, raw: bool = False,
                    'indent': None}
 
     if documents is not None:
-        lines = (pipe_json('dump', documents, **json_kwargs) if not raw
+        lines = (pipe_json(documents, dump=True, **json_kwargs) if not raw
                  else documents)
         return pipe_lines(file, lines, **lines_kwargs)
 
     lines = pipe_lines(file, **lines_kwargs)
-    return pipe_json('parse', lines, **json_kwargs) if not raw else lines
+    return pipe_json(lines, dump=False, **json_kwargs) if not raw else lines
 
 
-def pipe_json(mode, documents,
+def pipe_json(documents, *, dump: bool,
               sort_keys: bool = True,
               compact: bool = False,
               indent: typing.Optional[int] = None,
               ensure_ascii: bool = False):
-    codec = {'parse': json.loads, 'dump': json.dumps}[mode]
+    """Bidirectional codec between a generator and a consumer."""
+    codec = json.dumps if dump else json.loads
 
-    if mode == 'dump':
+    if dump:
         dump_kwargs = {'sort_keys': sort_keys,
                        'indent': indent,
                        'ensure_ascii': ensure_ascii,
@@ -131,10 +132,10 @@ def pipe_json(mode, documents,
         for d in docs:
             yield codec(d)
 
-    if mode == 'parse':
-        assert next(itercodec(['null'])) is None
-    else:
+    if dump:
         assert next(itercodec([None])) == 'null'
+    else:
+        assert next(itercodec(['null'])) is None
 
     return itercodec(documents)
 
