@@ -30,7 +30,7 @@ from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = ['get_stats_query',
-           'get_query',
+           'get_example_query',
            'get_json_query',
            'iterdescendants']
 
@@ -105,7 +105,7 @@ def _ordered_by(select_languoid, *, ordered, column_for_path_order):
 
 
 @_views.register_view('example')
-def get_query(*, ordered='id', separator=', '):
+def get_example_query(*, ordered='id', separator=', '):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)
 

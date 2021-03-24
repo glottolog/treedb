@@ -39,7 +39,7 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
     if sql is None:
         from . import queries
 
-        sql = queries.get_query()
+        sql = queries.get_example_query()
 
     with _backend.connect(bind=con) as conn:
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)

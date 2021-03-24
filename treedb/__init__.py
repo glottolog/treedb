@@ -53,7 +53,7 @@ from .logging_ import configure_logging
 from .models import (LEVEL,
                      Languoid)
 
-from .queries import (get_query,
+from .queries import (get_example_query,
                       get_json_query,
                       iterdescendants)
 
@@ -81,7 +81,8 @@ __all__ = ['Session',
            'checkout_or_clone',
            'configure_logging',
            'LEVEL', 'Languoid',
-           'get_query', 'get_json_query',
+           'get_example_query',
+           'get_json_query',
            'iterdescendants',
            'pd_read_sql',
            'engine', 'root']

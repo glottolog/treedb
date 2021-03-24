@@ -76,7 +76,7 @@ def get_query_sql(query=None,
     if query is None:
         from .. import queries
 
-        query = queries.get_query()
+        query = queries.get_examplke_query()
 
     compiled = _backend.expression_compile(query, literal_binds=literal_binds)
     result = compiled.string
@@ -204,7 +204,7 @@ def print_rows(query=None, *, format_=None,
     if query is None:
         from .. import queries as _queries
 
-        query = _queries.get_query()
+        query = _queries.get_example_query()
 
     if not isinstance(query, sa.sql.base.Executable):
         # assume mappings
@@ -224,11 +224,11 @@ def print_rows(query=None, *, format_=None,
 
 def write_csv(query=None, filename=None, *, verbose=False,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
-    """Write get_query() example query (or given query) to CSV, return filename."""
+    """Write get__example_query() query (or given query) to CSV, return filename."""
     if query is None:
         from .. import queries as _queries
 
-        query = _queries.get_query()
+        query = _queries.get_example_query()
 
     if filename is None:
         filename = bind.file_with_suffix('.query.csv').name
@@ -259,7 +259,7 @@ def hash_csv(query=None, *, hash_name: str = DEFAULT_HASH,
     if query is None:
         from .. import queries as _queries
 
-        query = _queries.get_query()
+        query = _queries.get_example_query()
 
     with _backend.connect(bind=bind) as conn:
         result = conn.execute(query)
