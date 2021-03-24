@@ -37,4 +37,4 @@ def test_select_views(treedb):
     with treedb.connect() as conn:
         names = [n for n, in conn.execute(query)]
 
-    assert names == ['example', 'path_json', 'stats']
+    assert names == ['example', 'path_languoid', 'stats']
