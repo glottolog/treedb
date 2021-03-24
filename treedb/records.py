@@ -47,11 +47,11 @@ def pipe(mode, items, *, from_raw: bool):
 
 
 def parse(records: typing.Iterable[_globals.RecordItem],
-          *, from_raw: bool, _legacy=None) -> typing.Iterator[LanguoidItem]:
+          *, from_raw: bool) -> typing.Iterator[LanguoidItem]:
     n = 0
     make_item = LanguoidItem
     for n, (path, cfg) in enumerate(records, 1):
-        languoid = make_languoid(path, cfg, from_raw=from_raw, _legacy=_legacy)
+        languoid = make_languoid(path, cfg, from_raw=from_raw)
         yield make_item(path, languoid)
     log.info('%s languoids extracted from records', f'{n:_d}')
 
@@ -64,7 +64,7 @@ def dump(languoids: typing.Iterable[LanguoidItem]
 
 
 def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
-                  *, from_raw: bool, _legacy=None) -> _globals.LanguoidType:
+                  *, from_raw: bool) -> _globals.LanguoidType:
     _make_lines = make_lines_raw if from_raw else make_lines
 
     core = cfg[CORE]
@@ -90,10 +90,6 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'endangerment': None,
                 'hh_ethnologue_comment': None,
                 'iso_retirement': None}
-
-    # make 'timespan' field optional for legacy checksum backwards compat
-    if _legacy and languoid['timespan'] is None:
-        del languoid['timespan']
 
     if SOURCES in cfg:
         sources = skip_empty({

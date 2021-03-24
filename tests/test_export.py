@@ -9,20 +9,7 @@ from conftest import (pairwise,
                       assert_file_size_between,
                       assert_valid_languoids)
 
-
-PREFIX_LEGACY = 'path_json:id:sha256:'
-
 PREFIX = 'path_languoid:path:sha256:'
-
-CHECKSUM_LEGACY = {'master': None,
-                   'v4.3-treedb-fixes':
-                   'c384ab4887ec10a4f80baa1c36198a94f127c46aee768d3680ce3b474d0eac4e',
-                   'v4.2.1':
-                   'f3a0127b580e2ac3361af2cf84466777d66efad996483b6a92ac29218036e120',
-                   'v4.2':
-                   'a3c7550c507bab3d7431ef7b772c9f8ce27df03b5e4d5ca085d109f869503261',
-                   'v4.1':
-                   'd09dd920871bdaaecad609922bd29b90bf2f1307a19e144d393e992460092a1d'}
 
 CHECKSUM = {'master': None,
             'v4.3-treedb-fixes':
@@ -117,35 +104,16 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-@pytest.mark.parametrize('legacy', [True, False])
-def test_checksum(treedb, legacy):
-    expected = CHECKSUM_LEGACY if legacy else CHECKSUM
-    expected = expected.get(pytest.FLAGS.glottolog_tag)
+def test_checksum(treedb):
+    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
 
-    result = treedb.checksum(_legacy=legacy)
-
-    prefix = PREFIX_LEGACY if legacy else PREFIX
-    if expected is None:
-        assert result.startswith(prefix)
-        assert len(result) - len(prefix) == 64
-    else:
-        assert result == prefix + expected
-
-
-def test_write_json_csv(treedb):
-    expected = CHECKSUM_LEGACY.get(pytest.FLAGS.glottolog_tag)
-    suffix = '-memory' if treedb.engine.file is None else ''
-
-    path = treedb.write_json_csv()
-
-    assert path.name == f'treedb{suffix}.languoids-json.csv.gz'
-    assert_file_size_between(path, 1, 100)
+    result = treedb.checksum()
 
     if expected is None:
-        pass
+        assert result.startswith(PREFIX)
+        assert len(result) - len(PREFIX) == 64
     else:
-        shasum = treedb.sha256sum(path)
-        assert shasum == expected
+        assert result == PREFIX + expected
 
 
 @pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])
@@ -192,15 +160,9 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.parametrize('kwargs', [
-    [{'source': 'raw'}, {'source': 'tables'}],
-    [{'source': 'files', 'file_order': True},
-     {'source': 'raw', 'file_order': True},
-     {'source': 'tables', 'file_order': True},
-     {'source': 'raw', 'file_order': True, 'file_means_path': False}],
-    [{'_legacy': False, 'source': 'files'},
-     {'_legacy': False, 'source': 'raw'},
-     {'_legacy': False, 'source': 'tables'}],
-])
+    [{'source': 'files'},
+     {'source': 'raw'},
+     {'source': 'tables'}]])
 def test_checksum_equivalence(treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 
@@ -264,12 +226,8 @@ def test_checksum_equivalence(treedb, kwargs):
                 ordered = 'file'
         else:
             ordered = 'id'
-        if kw.get('_legacy', True):
-            prefix = f'path_json:{ordered}:sha256:'
-        else:
-            prefix = PREFIX
-        assert r.startswith(prefix)
-        assert len(r) - len(prefix) == 64
+        assert r.startswith(PREFIX)
+        assert len(r) - len(PREFIX) == 64
 
     if pytest.FLAGS.glottolog_tag in ('v4.1',
                                       'v4.2', 'v4.2.1',

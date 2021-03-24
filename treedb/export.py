@@ -30,7 +30,6 @@ __all__ = ['print_languoid_stats',
            'iterlanguoids',
            'checksum',
            'write_json_lines',
-           'write_json_csv',
            'fetch_languoids',
            'write_files']
 
@@ -68,8 +67,7 @@ def iterlanguoids(root_or_bind=ROOT, *,
                   limit: typing.Optional[int] = None,
                   from_raw: bool = False,
                   ordered: bool = True,
-                  progress_after: int = _tools.PROGRESS_AFTER,
-                  _legacy=False) -> typing.Iterable[LanguoidItem]:
+                  progress_after: int = _tools.PROGRESS_AFTER) -> typing.Iterable[LanguoidItem]:
     """Yield (path, languoid) pairs from diffferent sources."""
     kwargs = {'progress_after': progress_after}
     log.info('generate languoids')
@@ -88,8 +86,7 @@ def iterlanguoids(root_or_bind=ROOT, *,
         records = files.iterrecords(root=root_or_bind, **kwargs)
     elif not from_raw:
         kwargs['ordered'] = ordered
-        return fetch_languoids(bind=root_or_bind, _legacy=_legacy,
-                               limit=limit, **kwargs)
+        return fetch_languoids(bind=root_or_bind, limit=limit, **kwargs)
     else:
         log.info('extract languoids from raw records')
 
@@ -99,7 +96,7 @@ def iterlanguoids(root_or_bind=ROOT, *,
         kwargs['ordered'] = 'id' if ordered is True else ordered
         records = raw.fetch_records(bind=root_or_bind, **kwargs)
 
-    items = _records.parse(records, from_raw=from_raw, _legacy=_legacy)
+    items = _records.parse(records, from_raw=from_raw)
     return itertools.islice(items, limit) if limit is not None else items
 
 
@@ -123,35 +120,24 @@ def get_source_kwargs(*, source: str,
 def checksum(source: str = 'tables', *,
              file_order: bool = False,
              file_means_path: bool = True,
-             hash_name: str = DEFAULT_HASH,
-             _legacy=True):
+             hash_name: str = DEFAULT_HASH):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
     kwargs = get_source_kwargs(source=source,
                                file_order=file_order,
                                file_means_path=file_means_path)
 
-    if _legacy:
-        rows = iterlanguoids(_legacy=True, **kwargs)
-        rows = pipe_json(rows, dump=True, sort_keys=True)
-
-        header = ['path', 'json']
-        log.info('csv header: %r', header)
-        hashobj = _export.hash_rows(rows, hash_name=hash_name, header=header,
-                                    dialect='excel', encoding='utf-8', raw=True)
-        name = '_'.join(header)
-    else:
-        log.info('hash json lines with %r', hash_name)
-        hashobj = hashlib.new(hash_name)
-        assert hasattr(hashobj, 'hexdigest')
-        kwargs['ordered'] = 'path'
-        hashobj, total_lines = write_json_lines(hashobj,
-                                                source=source,
-                                                file_order=True,
-                                                file_means_path=True,
-                                                sort_keys=True)
-        log.info('%d lines written', total_lines)
-        name = 'path_languoid'
+    log.info('hash json lines with %r', hash_name)
+    hashobj = hashlib.new(hash_name)
+    assert hasattr(hashobj, 'hexdigest')
+    kwargs['ordered'] = 'path'
+    hashobj, total_lines = write_json_lines(hashobj,
+                                            source=source,
+                                            file_order=True,
+                                            file_means_path=True,
+                                            sort_keys=True)
+    log.info('%d lines written', total_lines)
+    name = 'path_languoid'
 
     result = (f"{name}"
               f":{kwargs['ordered']}"
@@ -221,86 +207,10 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                                   **json_kwargs)
 
 
-# DEPRECATED
-def write_json_csv(*, filename=None,
-                   source: str = 'tables',
-                   file_order: bool = False,
-                   file_means_path: bool = True,
-                   sort_keys: bool = True,
-                   dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
-    """Write (path, json) rows for each languoid to filename."""
-    kwargs = get_source_kwargs(source=source,
-                               file_order=file_order,
-                               file_means_path=file_means_path)
-
-    return _write_json_csv(filename=filename, sort_keys=sort_keys,
-                           dialect=csv23.DIALECT, encoding=csv23.ENCODING,
-                           **kwargs)
-
-
-def _write_json_csv(root_or_bind=ENGINE, *,
-                    filename=None, ordered: bool = True,
-                    sort_keys: bool = True, from_raw: bool = False,
-                    dialect=csv23.DIALECT, encoding: str = csv23.ENCODING):
-    """Write (path, json) rows for each languoid to filename."""
-    if filename is None:
-        suffix = '.languoids-json.csv.gz'
-        try:
-            path = root_or_bind.file_with_suffix(suffix)
-        except AttributeError:
-            path = _tools.path_from_filename(root_or_bind).with_suffix(suffix)
-        filename = path.name
-    else:
-        filename = _tools.path_from_filename(filename)
-
-    log.info('write json csv: %r', filename)
-    path = _tools.path_from_filename(filename)
-    if path.exists():
-        warnings.warn(f'delete peresent file {path!r}')
-        path.unlink()
-
-    header = ['path', 'json']
-    log.info('csv header: %r', header)
-
-    kwargs = {'ordered': ordered,
-              'from_raw': from_raw}
-
-    rows = iterlanguoids(root_or_bind, _legacy=True, **kwargs)
-    rows = pipe_json(rows, dump=True, sort_keys=sort_keys)
-
-    return csv23.write_csv(filename, rows, header=header,
-                           dialect=dialect, encoding=encoding,
-                           autocompress=True)
-
-
-def pipe_json(languoids, *, dump: bool = False,
-              sort_keys: bool = True,
-              file_path_sep=FILE_PATH_SEP):
-    codec = json.dumps if dump else json.loads
-
-    if dump:
-        codec = functools.partial(codec,
-                                  # json-serialize datetime.datetime
-                                  default=_compat.datetime_toisoformat,
-                                  sort_keys=sort_keys)
-
-        def itercodec(langs):
-            for path_tuple, l in langs:
-                yield file_path_sep.join(path_tuple), codec(l)
-    else:
-        make_item = LanguoidItem.from_file_path
-
-        def itercodec(langs):
-            for path, doc in langs:
-                yield make_item(path, codec(doc))
-
-    return itercodec(languoids)
-
-
 def fetch_languoids(*, limit: typing.Optional[int] = None,
                     ordered: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
-                    bind=ENGINE, _legacy=False):
+                    bind=ENGINE):
     log.info('fetch languoids from json query')
     log.info('ordered: %r', ordered)
 
@@ -308,7 +218,7 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
               'load_json': True,
               'ordered': ordered}
 
-    query = _queries.get_json_query(_legacy=_legacy, **kwargs)
+    query = _queries.get_json_query(**kwargs)
 
     if limit is not None:
         query = query.limit(limit)

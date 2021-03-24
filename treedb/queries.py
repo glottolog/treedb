@@ -322,7 +322,7 @@ def get_example_query(*, ordered='id', separator=', '):
                       path_label='path', languoid_label='json')
 def get_json_query(*, ordered='id', as_rows=False, load_json=True,
                    sort_keys=False, path_label=PATH_LABEL,
-                   languoid_label=LANGUOID_LABEL, _legacy=None):
+                   languoid_label=LANGUOID_LABEL):
     json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
 
     languoid = {'id': Languoid.id,
@@ -349,13 +349,6 @@ def get_json_query(*, ordered='id', as_rows=False, load_json=True,
     del sort_keys
 
     value = json_object(**languoid)
-
-    if _legacy:
-        value = value.label('raw_value')
-        timespan = sa.type_coerce(value, sa.JSON)['timespan']
-        value = sa.func.json_remove(value,
-                                    sa.case((timespan == None, '$.timespan'),
-                                            else_='$.__KEEP_ALL__'))
 
     if as_rows:
         path = column_for_path_order = Languoid.path()
