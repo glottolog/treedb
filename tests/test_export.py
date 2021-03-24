@@ -137,13 +137,13 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
             else [])
 
-    path, _ = treedb.write_languoids(*args)
+    filepath, _ = treedb.write_languoids(*args)
 
-    assert path.name == f'treedb{name_suffix}.languoids{suffix}'
-    assert_file_size_between(path, 1, 200)
+    assert filepath.name == f'treedb{name_suffix}.languoids{suffix}'
+    assert_file_size_between(filepath, 1, 200)
 
-    if path.name.endswith('.jsonl'):
-        with path.open(encoding='utf-8') as f:
+    if filepath.name.endswith('.jsonl'):
+        with filepath.open(encoding='utf-8') as f:
             for line in get_assert_head(f, n=n):
                 item = json.loads(line)
                 assert_nonempty_dict(item)

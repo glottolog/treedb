@@ -4,6 +4,8 @@
 
 from ._globals import SESSION as Session
 
+from ._tools import sha256sum
+
 from .backend import (print_versions,
                       set_engine,
                       connect,
@@ -60,6 +62,7 @@ from .queries import (get_example_query,
 from .shortcuts import pd_read_sql
 
 __all__ = ['Session',
+           'sha256sum',
            'print_versions',
            'set_engine', 'connect', 'scalar', 'iterrows',
            'print_dataset',
