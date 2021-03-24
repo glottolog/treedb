@@ -91,7 +91,8 @@ def pipe_json_lines(file, documents=None, *, raw: bool = False,
                     delete_present: bool = True, autocompress: bool = True,
                     sort_keys: bool = True):
     lines_kwargs = {'delete_present': delete_present,
-                    'autocompress': autocompress}
+                    'autocompress': autocompress,
+                    'newline': '\n'}
     json_kwargs = {'sort_keys': sort_keys,
                    'ensure_ascii': False,
                    'compact': True,
@@ -140,12 +141,13 @@ def pipe_json(documents, *, dump: bool,
     return itercodec(documents)
 
 
-def pipe_lines(file, lines=None,
-               *, delete_present: bool = False, autocompress: bool = True):
+def pipe_lines(file, lines=None, *, newline: typing.Optional[str] = None,
+               delete_present: bool = False, autocompress: bool = True):
     open_func, result, hashobj = get_open_result(file,
                                                  write=lines is not None,
                                                  delete_present=delete_present,
-                                                 autocompress=autocompress)
+                                                 autocompress=autocompress,
+                                                 newline=newline)
 
     if lines is not None:
         with open_func() as f:
@@ -208,9 +210,11 @@ def path_from_filename(filename, *args, expanduser: bool = True):
 
 def get_open_result(file, *, write: bool = False,
                     delete_present: bool = False, autocompress: bool = False,
+                    newline: typing.Optional[str] = None,
                     _encoding: str = 'utf-8'):
     open_kwargs = {'mode': 'wt' if write else 'rt',
-                   'encoding': _encoding}
+                   'encoding': _encoding,
+                   'newline': newline}
     textio_kwargs = {'write_through': True, 'encoding': _encoding}
 
     path = fobj = hashobj = None
@@ -220,14 +224,18 @@ def get_open_result(file, *, write: bool = False,
             raise TypeError('file cannot be Null for write=False')
         result = fobj = io.StringIO()
     elif file is sys.stdout:
-        result = fobj = io.TextIOWrapper(sys.stdout.buffer, **textio_kwargs)
+        result = fobj = io.TextIOWrapper(sys.stdout.buffer,
+                                         newline=open_kwargs.pop('newline', None),
+                                         **textio_kwargs)
     elif hasattr(file, 'write'):
         result = fobj = hashobj = file
     elif hasattr(file, 'hexdigest'):
         if not write:
             raise TypeError('missing lines')
         result = hashobj = file
-        fobj = io.TextIOWrapper(io.BytesIO(), **textio_kwargs)
+        fobj = io.TextIOWrapper(io.BytesIO(),
+                                newline=open_kwargs.pop('newline', None),
+                                **textio_kwargs)
     else:
         result = path = path_from_filename(file)
 

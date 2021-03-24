@@ -69,17 +69,29 @@ STATS = {'v4.1': '''\
 
 STATS['v4.2'] = STATS['v4.2.1']
 
-PREFIX = 'path_json:id:sha256:'
+PREFIX_LEGACY = 'path_json:id:sha256:'
 
-CHECKSUM = {'v4.1': ('d09dd920871bdaaecad609922bd29b90'
-                     'bf2f1307a19e144d393e992460092a1d'),
-            'v4.2': ('a3c7550c507bab3d7431ef7b772c9f8c'
-                     'e27df03b5e4d5ca085d109f869503261'),
-            'v4.2.1': ('f3a0127b580e2ac3361af2cf84466777'
-                       'd66efad996483b6a92ac29218036e120'),
+PREFIX = 'path_languoid:path:sha256:'
+
+CHECKSUM_LEGACY = {'v4.3-treedb-fixes':
+                   'c384ab4887ec10a4f80baa1c36198a94f127c46aee768d3680ce3b474d0eac4e',
+                   'v4.2.1':
+                   'f3a0127b580e2ac3361af2cf84466777d66efad996483b6a92ac29218036e120',
+                   'v4.2':
+                   'a3c7550c507bab3d7431ef7b772c9f8ce27df03b5e4d5ca085d109f869503261',
+                   'v4.1':
+                   'd09dd920871bdaaecad609922bd29b90bf2f1307a19e144d393e992460092a1d'}
+
+CHECKSUM = {'master':
+            None,
             'v4.3-treedb-fixes':
-                    ('c384ab4887ec10a4f80baa1c36198a94'
-                     'f127c46aee768d3680ce3b474d0eac4e')}
+            '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
+            'v4.2.1':
+            '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
+            'v4.2':
+            '91756e0e9150872e71a1c27419a302d229f4b497f5f629d1d98fc40305f8e5ea',
+            'v4.1':
+            '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 MB = 2**20
 
@@ -103,20 +115,23 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-def test_checksum(treedb):
-    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+@pytest.mark.parametrize('legacy', [True, False])
+def test_checksum(treedb, legacy):
+    expected = CHECKSUM_LEGACY if legacy else CHECKSUM
+    expected = expected.get(pytest.FLAGS.glottolog_tag)
 
-    result = treedb.checksum()
+    result = treedb.checksum(_legacy=legacy)
 
+    prefix = PREFIX_LEGACY if legacy else PREFIX
     if expected is None:
-        assert result.startswith(PREFIX)
-        assert len(result) - len(PREFIX) == 64
+        assert result.startswith(prefix)
+        assert len(result) - len(prefix) == 64
     else:
-        assert result == PREFIX + expected
+        assert result == prefix + expected
 
 
 def test_write_json_csv(treedb):
-    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+    expected = CHECKSUM_LEGACY.get(pytest.FLAGS.glottolog_tag)
     suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.write_json_csv()
@@ -127,7 +142,7 @@ def test_write_json_csv(treedb):
     if expected is None:
         pass
     else:
-        shasum = treedb._tools.sha256sum(path)
+        shasum = treedb.sha256sum(path)
         assert shasum == expected
 
 
@@ -167,15 +182,22 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     assert not out
     assert not err
 
+    expected_checksum = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+    if expected_checksum is not None:
+        assert treedb.sha256sum(filepath) == expected_checksum
+
 
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.parametrize('kwargs', [
-    ({'source': 'raw'}, {'source': 'tables'}),
-    ({'source': 'files', 'file_order': True},
+    [{'source': 'raw'}, {'source': 'tables'}],
+    [{'source': 'files', 'file_order': True},
      {'source': 'raw', 'file_order': True},
      {'source': 'tables', 'file_order': True},
-     {'source': 'raw', 'file_order': True, 'file_means_path': False}),
+     {'source': 'raw', 'file_order': True, 'file_means_path': False}],
+    [{'_legacy': False, 'source': 'files'},
+     {'_legacy': False, 'source': 'raw'},
+     {'_legacy': False, 'source': 'tables'}],
 ])
 def test_checksum_equivalence(treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
@@ -240,7 +262,10 @@ def test_checksum_equivalence(treedb, kwargs):
                 ordered = 'file'
         else:
             ordered = 'id'
-        prefix = f'path_json:{ordered}:sha256:'
+        if kw.get('_legacy', True):
+            prefix = f'path_json:{ordered}:sha256:'
+        else:
+            prefix = PREFIX
         assert r.startswith(prefix)
         assert len(r) - len(prefix) == 64
 
