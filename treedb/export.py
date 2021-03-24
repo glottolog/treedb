@@ -2,6 +2,7 @@
 
 import functools
 import itertools
+import hashlib
 import json
 import logging
 import typing
@@ -68,7 +69,7 @@ def iterlanguoids(root_or_bind=ROOT, *,
                   from_raw: bool = False,
                   ordered: bool = True,
                   progress_after: int = _tools.PROGRESS_AFTER,
-                  _legacy=None) -> typing.Iterable[LanguoidItem]:
+                  _legacy=False) -> typing.Iterable[LanguoidItem]:
     """Yield (path, languoid) pairs from diffferent sources."""
     kwargs = {'progress_after': progress_after}
     log.info('generate languoids')
@@ -119,24 +120,40 @@ def get_source_kwargs(*, source: str,
         raise ValueError(f'unknown source: {source!r}')
 
 
-def checksum(*, source: str = 'tables',
+def checksum(source: str = 'tables', *,
              file_order: bool = False,
              file_means_path: bool = True,
-             hash_name: str = DEFAULT_HASH):
+             hash_name: str = DEFAULT_HASH,
+             _legacy=True):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
     kwargs = get_source_kwargs(source=source,
                                file_order=file_order,
                                file_means_path=file_means_path)
 
-    rows = iterlanguoids(_legacy=True, **kwargs)
-    rows = pipe_json('dump', rows, sort_keys=True)
+    if _legacy:
+        rows = iterlanguoids(_legacy=True, **kwargs)
+        rows = pipe_json('dump', rows, sort_keys=True)
 
-    header = ['path', 'json']
-    log.info('csv header: %r', header)
-    hashobj = _export.hash_rows(rows, hash_name=hash_name, header=header,
-                                dialect='excel', encoding='utf-8', raw=True)
-    result = (f"{'_'.join(header)}"
+        header = ['path', 'json']
+        log.info('csv header: %r', header)
+        hashobj = _export.hash_rows(rows, hash_name=hash_name, header=header,
+                                    dialect='excel', encoding='utf-8', raw=True)
+        name = '_'.join(header)
+    else:
+        log.info('hash json lines with %r', hash_name)
+        hashobj = hashlib.new(hash_name)
+        assert hasattr(hashobj, 'hexdigest')
+        kwargs['ordered'] = 'path'
+        hashobj, total_lines = write_json_lines(hashobj,
+                                                source=source,
+                                                file_order=True,
+                                                file_means_path=True,
+                                                sort_keys=True)
+        log.info('%d lines written', total_lines)
+        name = 'path_languoid'
+
+    result = (f"{name}"
               f":{kwargs['ordered']}"
               f':{hashobj.name}'
               f':{hashobj.hexdigest()}')
