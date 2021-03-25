@@ -61,6 +61,7 @@ def print_languoid_stats(*, file=None,
 
 def iterlanguoids(source: str = 'files',
                   *, limit: typing.Optional[int] = None,
+                  offset: typing.Optional[int] = 0,
                   order_by: str = LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   root=ROOT, bind=ENGINE) -> typing.Iterable[LanguoidItem]:
@@ -91,13 +92,18 @@ def iterlanguoids(source: str = 'files',
         del order_by
     else:
         return fetch_languoids(limit=limit,
+                               offset=offset,
                                order_by=order_by,
                                progress_after=progress_after,
                                bind=bind)
 
 
     items = _records.parse(records, from_raw=(source == 'raw'))
-    return itertools.islice(items, limit) if limit is not None else items
+    if limit is not None and offset:
+        return itertools.islice(items, limit, limit + offset)
+    elif limit is not None:
+        return itertools.islice(items, limit)
+    return items
 
 
 def checksum(source: str = 'tables',
@@ -182,6 +188,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
 
 
 def fetch_languoids(*, limit: typing.Optional[int] = None,
+                    offset: typing.Optional[int] = 0,
                     order_by: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     bind=ENGINE):
@@ -191,6 +198,10 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
     query = _queries.get_json_query(order_by=order_by,
                                     as_rows=True,
                                     load_json=True)
+
+    if offset:
+        query = query.offset(offset)
+        del offset
 
     if limit is not None:
         query = query.limit(limit)
