@@ -104,7 +104,8 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-def test_checksum(treedb):
+@pytest.mark.parametrize('source', ['files', 'raw', 'tables'])
+def test_checksum(treedb, source):
     expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
 
     result = treedb.checksum()

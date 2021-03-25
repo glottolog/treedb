@@ -116,14 +116,12 @@ def get_source_kwargs(*, source: str,
 
 
 def checksum(source: str = 'tables', *,
-             file_order: bool = False,
-             file_means_path: bool = True,
              hash_name: str = DEFAULT_HASH):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
     kwargs = get_source_kwargs(source=source,
-                               file_order=file_order,
-                               file_means_path=file_means_path)
+                               file_order=True,
+                               file_means_path=True)
 
     log.info('hash json lines with %r', hash_name)
     hashobj = hashlib.new(hash_name)

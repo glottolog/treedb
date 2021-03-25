@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import operator
 import re
 import warnings
 import typing
@@ -78,8 +79,9 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'latitude': get_float(core, 'latitude'),
                 'longitude': get_float(core, 'longitude'),
                 'macroareas': _make_lines(core.get('macroareas')),
-                'countries': [splitcountry(c)
-                              for c in _make_lines(core.get('countries'))],
+                'countries': sorted((splitcountry(c)
+                                     for c in _make_lines(core.get('countries'))),
+                                    key=operator.itemgetter('id')),
                 'links': [splitlink(c) for c in _make_lines(core.get('links'))],
                 'timespan': make_interval(core.get('timespan')),
                 'sources': None,
