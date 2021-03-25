@@ -55,7 +55,7 @@ from .models import (LEVEL,
                      Languoid)
 
 from .queries import (get_example_query,
-                      get_json_query,
+                      get_json_query as get_languoids_query,
                       iterdescendants)
 
 from .shortcuts import pd_read_sql
@@ -84,7 +84,7 @@ __all__ = ['Session',
            'configure_logging',
            'LEVEL', 'Languoid',
            'get_example_query',
-           'get_json_query',
+           'get_languoids_query',
            'iterdescendants',
            'pd_read_sql',
            'engine', 'root']
