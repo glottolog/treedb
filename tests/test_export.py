@@ -234,4 +234,5 @@ def test_checksum_equivalence(treedb, kwargs):
         pytest.xfail('format change: minimal countries')
 
     for (c, cur), (n, nxt) in pairwise(results):
-        assert cur[-64:] == nxt[-64:], f'checksum(**{c!r}) == checksum(**{n!r})'
+        cur, nxt = (s.rpartition(':')[2] for s in (cur, nxt))
+        assert cur == nxt, f'checksum(**{c!r}) == checksum(**{n!r})'

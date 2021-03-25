@@ -46,16 +46,17 @@ def fetch_records(*, order_by: str = LANGUOID_ORDER,
         value_key = Value.file_id
     elif order_by in ('path', 'id'):
         select_values = select_values.join(File)
-        key_column = File.path
         if order_by == 'path':
-            value_key = File.path
+            key_column = File.path
         else:
-            value_key = File.glottocode
+            key_column = File.glottocode
+        value_key = key_column
     else:
         raise ValueError(f'order_by={order_by!r} not implememted')
 
     log.info('order_by: %r', order_by)
-    select_files = sa.select(File.path).order_by(key_column)
+    select_files = (sa.select(File.path)
+                    .order_by(key_column))
     select_values = (select_values
                      .order_by(value_key,
                                'section', Value.line, 'option'))
