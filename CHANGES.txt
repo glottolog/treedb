@@ -2,10 +2,21 @@ Changelog
 =========
 
 
-Version 2.0 (in development)
-----------------------------
+Version 2.0
+-----------
 
-Rename ``treedb.read_json_lines()`` to `` treedb.write_languoids()``.
+Add source parameter to ``iterlanguoids()``, ``checksum()``, and ``write_json_lines()``
+to use ``'files'``, ``'raw'``, or ``'tables'`` as data source. 
+
+Changed checksums from ``path_json:id:...`` to ``path_languoid:path:...`` over json lines.
+
+Rename ``treedb.write_json_lines()`` to `` treedb.write_languoids()`` making it equal to checksum.
+
+Rename ``compare_with_files()`` to ``compare_languoids()``.
+
+Rename ``get_json_query()`` to ``get_languoids_query()``.
+
+Rename ``get_query()`` to ``get_example_query()``.
 
 
 Version 1.5
