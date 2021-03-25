@@ -255,5 +255,7 @@ def import_languoids(conn, *, root, from_raw):
     root_or_bind = conn if from_raw else root
     log.debug('root_or_bind: %r', root_or_bind)
 
-    pairs = export.iterlanguoids(root_or_bind, from_raw=from_raw)
+    pairs = export.iterlanguoids(root_or_bind, from_raw=from_raw,
+                                 # insert languoids in id order if available
+                                 ordered='id' if from_raw else True)
     import_models.main(pairs, conn=conn)

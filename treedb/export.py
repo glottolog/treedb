@@ -92,8 +92,6 @@ def iterlanguoids(root_or_bind=ROOT, *,
 
         from . import raw
 
-        # insert languoids in id order if available
-        kwargs['ordered'] = 'id' if ordered is True else ordered
         records = raw.fetch_records(bind=root_or_bind, **kwargs)
 
     items = _records.parse(records, from_raw=from_raw)
