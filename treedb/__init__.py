@@ -33,7 +33,7 @@ from .backend.sqlite_master import (print_table_sql,
 from .backend.views import TABLES as views
 
 from .checks import (check,
-                     compare_with_files)
+                     compare_languoids)
 
 from .config import (configure,
                      get_default_root)
@@ -72,7 +72,7 @@ __all__ = ['Session',
            'Dataset', 'Producer',
            'print_table_sql', 'select_tables_nrows',
            'views',
-           'check', 'compare_with_files',
+           'check', 'compare_languoids',
            'configure',
            'print_languoid_stats',
            'iterlanguoids',

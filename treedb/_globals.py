@@ -18,28 +18,30 @@ PATH_LABEL = '__path__'
 
 LANGUOID_LABEL = 'languoid'
 
+LANGUOID_ORDER = 'path'
+
 DEFAULT_HASH = 'sha256'
 
 FILE_PATH_SEP = '/'
 
-SQLALCHEMY_FUTURE = True
+_SQLALCHEMY_FUTURE = True
 
-ENGINE = _proxies.SQLiteEngineProxy(future=SQLALCHEMY_FUTURE)
+ENGINE = _proxies.SQLiteEngineProxy(future=_SQLALCHEMY_FUTURE)
 
 ROOT = _proxies.PathProxy()
 
 REGISTRY = _registry()
 
-SESSION = _sessionmaker(bind=ENGINE, future=SQLALCHEMY_FUTURE)
+SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
 
-LANGUOID_ORDER = 'path'
 
 __all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
-           'PATH_LABEL', 'LANGUOID_LABEL',
+           'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
+           'DEFAULT_HASH', 'FILE_PATH_SEP',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION',
-           'LANGUOID_ORDER',
+           'RecordItem',
            'LanguoidItem']
 
 

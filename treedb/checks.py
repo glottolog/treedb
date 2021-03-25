@@ -18,7 +18,7 @@ from .models import (FAMILY, LANGUAGE, DIALECT,
                      Languoid, Altname, AltnameProvider)
 
 __all__ = ['check',
-           'compare_with_files']
+           'compare_languoids']
 
 
 log = logging.getLogger(__name__)
@@ -250,7 +250,7 @@ def no_empty_files(*, exclude_raw):
             .where(~sa.exists().where(Value.file_id == File.id)))
 
 
-def compare_with_files(bind=ENGINE, *, from_raw=True, root=ROOT):
+def compare_languoids(bind=ENGINE, *, from_raw=True, root=ROOT):
     from . import export
 
     def compare(left, right):

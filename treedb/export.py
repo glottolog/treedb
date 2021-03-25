@@ -1,22 +1,16 @@
 # write information to stdout, csv, json, etc.
 
-import functools
 import itertools
 import hashlib
-import json
 import logging
 import typing
 import warnings
 
-import csv23
-
 from . import _compat
 
 from ._globals import (DEFAULT_ENGINE, DEFAULT_HASH,
-                       PATH_LABEL, LANGUOID_LABEL,
-                       FILE_PATH_SEP,
+                       PATH_LABEL, LANGUOID_LABEL, LANGUOID_ORDER,
                        ENGINE, ROOT,
-                       LANGUOID_ORDER,
                        LanguoidItem)
 
 from . import _tools
@@ -39,8 +33,8 @@ log = logging.getLogger(__name__)
 
 def print_languoid_stats(*, file=None,
                          bind=ENGINE):
-    rows = _backend.iterrows(_queries.get_stats_query(),
-                             mappings=True, bind=bind)
+    select_stats = _queries.get_stats_query()
+    rows = _backend.iterrows(select_stats, mappings=True, bind=bind)
     rows, counts = itertools.tee(rows)
 
     _export.print_rows(rows,
