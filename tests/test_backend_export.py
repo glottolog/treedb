@@ -109,7 +109,7 @@ def test_dump_sql(treedb):
 
 
 @pytest.skip_slow
-def test_csv_zipfilet(treedb):
+def test_csv_zipfile(treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.csv_zipfile()
