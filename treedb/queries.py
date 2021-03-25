@@ -341,7 +341,7 @@ def get_json_query(*, ordered='path', as_rows=False, load_json=True,
                 'triggers': select_languoid_triggers(),
                 'identifier': select_languoid_identifier(),
                 'classification': select_languoid_classification(sort_keys=sort_keys),
-                'endangerment':  select_languoid_endangerment(sort_keys=sort_keys),
+                'endangerment': select_languoid_endangerment(sort_keys=sort_keys),
                 'hh_ethnologue_comment': select_languoid_hh_ethnologue_comment(sort_keys=sort_keys),
                 'iso_retirement': select_languoid_iso_retirement(sort_keys=sort_keys)}
 

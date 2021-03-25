@@ -10,7 +10,6 @@ import sqlalchemy as sa
 
 from .._globals import ENGINE, RecordItem
 
-from .. import _globals
 from .. import _tools
 from .. import backend as _backend
 

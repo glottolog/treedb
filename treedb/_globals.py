@@ -59,8 +59,8 @@ RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
 
 def filepath_tuple(file_path: str,
                    *, sep=FILE_PATH_SEP) -> typing.Tuple[str]:
-     path_parts = file_path.split(sep)
-     return tuple(path_parts)
+    path_parts = file_path.split(sep)
+    return tuple(path_parts)
 
 
 class RecordItem(typing.NamedTuple):
