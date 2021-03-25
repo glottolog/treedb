@@ -11,6 +11,8 @@ from conftest import (pairwise,
 
 PREFIX = 'path_languoid:path:sha256:'
 
+PREFIX_ID = 'path_languoid:id:sha256:'
+
 CHECKSUM = {'master': None,
             'v4.3-treedb-fixes':
             '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
@@ -163,7 +165,9 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
 @pytest.mark.parametrize('kwargs', [
     [{'source': 'files'},
      {'source': 'raw'},
-     {'source': 'tables'}]])
+     {'source': 'tables'}],
+    [{'source': 'raw', 'order_by': 'id'},
+     {'source': 'tables', 'order_by': 'id'}]])
 def test_checksum_equivalence(treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 
@@ -220,8 +224,9 @@ def test_checksum_equivalence(treedb, kwargs):
     results = list(iterchecksums(kwargs))
 
     for kw, r in results:
-        assert r.startswith(PREFIX)
-        assert len(r) - len(PREFIX) == 64
+        prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
+        assert r.startswith(prefix)
+        assert len(r) - len(prefix) == 64
 
     if pytest.FLAGS.glottolog_tag in ('v4.1',
                                       'v4.2', 'v4.2.1',

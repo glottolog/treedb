@@ -34,7 +34,6 @@ REGISTRY = _registry()
 
 SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
 
-
 __all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
            'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
            'DEFAULT_HASH', 'FILE_PATH_SEP',
