@@ -7,9 +7,9 @@ import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from ._globals import (FILE_PATH_SEP,
-                       ENGINE,
-                       PATH_LABEL, LANGUOID_LABEL)
+from ._globals import (PATH_LABEL, LANGUOID_LABEL, LANGUOID_ORDER,
+                       FILE_PATH_SEP,
+                       ENGINE)
 
 from . import _tools
 from . import backend as _backend
@@ -92,20 +92,20 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
-def _ordered_by(select_languoid, *, ordered, column_for_path_order):
-    if ordered in (True, None, 'id'):
+def _add_order_by(select_languoid, *, order_by, column_for_path_order):
+    if order_by in (True, None, 'id'):
         select_languoid = select_languoid.order_by(Languoid.id)
-    elif ordered == 'path':
+    elif order_by == 'path':
         select_languoid = select_languoid.order_by(column_for_path_order)
-    elif ordered is False:
+    elif order_by is False:
         pass
     else:
-        raise ValueError(f'ordered={ordered!r} not implemented')
+        raise ValueError(f'order_by={order_by!r} not implemented')
     return select_languoid
 
 
 @_views.register_view('example')
-def get_example_query(*, ordered='id', separator=', '):
+def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     group_concat = lambda x: sa.func.group_concat(x, separator)
 
@@ -124,8 +124,9 @@ def get_example_query(*, ordered='id', separator=', '):
                               Languoid.longitude)
                        .select_from(Languoid))
 
-    select_languoid = _ordered_by(select_languoid, ordered=ordered,
-                                  column_for_path_order=path)
+    select_languoid = _add_order_by(select_languoid,
+                                    order_by=order_by,
+                                    column_for_path_order=path)
 
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -319,9 +320,9 @@ def get_example_query(*, ordered='id', separator=', '):
 
 
 @_views.register_view('path_languoid', as_rows=True, load_json=False)
-def get_json_query(*, ordered='path', as_rows=False, load_json=True,
-                   sort_keys=False, path_label=PATH_LABEL,
-                   languoid_label=LANGUOID_LABEL):
+def get_json_query(*, order_by=LANGUOID_ORDER,
+                   as_rows=False, load_json=True, sort_keys=False,
+                   path_label=PATH_LABEL, languoid_label=LANGUOID_LABEL):
     json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
 
     languoid = {'id': Languoid.id,
@@ -374,9 +375,9 @@ def get_json_query(*, ordered='path', as_rows=False, load_json=True,
         column_for_path_order = file_path
 
     select_json = select(*columns).select_from(Languoid)
-    select_json = _ordered_by(select_json, ordered=ordered,
-                              column_for_path_order=column_for_path_order)
-    return select_json
+    return _add_order_by(select_json,
+                         order_by=order_by,
+                         column_for_path_order=column_for_path_order)
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html

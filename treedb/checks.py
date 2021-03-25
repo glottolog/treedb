@@ -8,7 +8,8 @@ import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from ._globals import (ENGINE, ROOT,
+from ._globals import (LANGUOID_ORDER,
+                       ENGINE,
                        SESSION as Session)
 
 from .backend.models import Dataset
@@ -250,7 +251,8 @@ def no_empty_files(*, exclude_raw):
             .where(~sa.exists().where(Value.file_id == File.id)))
 
 
-def compare_languoids(bind=ENGINE, *, from_raw=True, root=ROOT):
+def compare_languoids(left_source: str = 'files', right_source: str = 'raw',
+                      *, order_by: str = LANGUOID_ORDER):
     from . import export
 
     def compare(left, right):
@@ -262,9 +264,7 @@ def compare_languoids(bind=ENGINE, *, from_raw=True, root=ROOT):
 
         return same
 
-    languoids_from_files = export.iterlanguoids(root, ordered=True)
+    left, right = (export.iterlanguoids(source, order_by=order_by)
+                   for source in (left_source, right_source))
 
-    languoids_from_bind = export.iterlanguoids(bind, ordered='path',
-                                               from_raw=from_raw)
-
-    return compare(languoids_from_files, languoids_from_bind)
+    return compare(left, right)

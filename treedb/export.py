@@ -27,6 +27,8 @@ __all__ = ['print_languoid_stats',
            'fetch_languoids',
            'write_files']
 
+SOURCES = ('files', 'raw', 'tables')
+
 
 log = logging.getLogger(__name__)
 
@@ -57,80 +59,69 @@ def print_languoid_stats(*, file=None,
             warnings.warn(f'{term} = {parts_sum:,d}')
 
 
-def iterlanguoids(root_or_bind=ROOT, *,
-                  limit: typing.Optional[int] = None,
-                  from_raw: bool = False,
-                  ordered: bool = True,
-                  progress_after: int = _tools.PROGRESS_AFTER) -> typing.Iterable[LanguoidItem]:
+def iterlanguoids(source: str = 'files',
+                  *, limit: typing.Optional[int] = None,
+                  order_by: str = LANGUOID_ORDER,
+                  progress_after: int = _tools.PROGRESS_AFTER,
+                  root=ROOT, bind=ENGINE) -> typing.Iterable[LanguoidItem]:
     """Yield (path, languoid) pairs from diffferent sources."""
-    kwargs = {'progress_after': progress_after}
     log.info('generate languoids')
-    if not hasattr(root_or_bind, 'execute'):
-        log.info('extract languoids from files')
-        if from_raw:
-            raise TypeError(f'from_raw=True requires bind'
-                            f' (passed: {root_or_bind!r})')
+    if source not in SOURCES:
+        raise ValueError(f'unknown source: {source!r}')
 
-        if ordered not in (True, None, False, 'file', 'path'):
-            raise ValueError(f'ordered={ordered!r} not implemented')
+    if source == 'files':
+        log.info('extract languoids from files')
 
         from . import files
 
-        del ordered
-        records = files.iterrecords(root=root_or_bind, **kwargs)
-    elif not from_raw:
-        kwargs['ordered'] = ordered
-        return fetch_languoids(bind=root_or_bind, limit=limit, **kwargs)
-    else:
+        if order_by not in (True, None, False, 'file', 'path'):
+            raise ValueError(f'order_by={order_by!r} not implemented')
+        del order_by
+
+        records = files.iterrecords(root=root,
+                                    progress_after=progress_after)
+    elif source == 'raw':
         log.info('extract languoids from raw records')
 
         from . import raw
 
-        records = raw.fetch_records(bind=root_or_bind, **kwargs)
+        records = raw.fetch_records(order_by=order_by,
+                                    progress_after=progress_after,
+                                    bind=bind)
+        del order_by
+    else:
+        return fetch_languoids(limit=limit,
+                               order_by=order_by,
+                               progress_after=progress_after,
+                               bind=bind)
 
-    items = _records.parse(records, from_raw=from_raw)
+
+    items = _records.parse(records, from_raw=(source == 'raw'))
     return itertools.islice(items, limit) if limit is not None else items
 
 
-def get_source_kwargs(*, source: str,
-                      file_order: bool,
-                      file_means_path: bool):
-    if source == 'files':
-        return {'root_or_bind': ROOT,
-                'from_raw': None,
-                'ordered': 'path'}
-    elif source in ('raw', 'tables'):
-        return {'root_or_bind': ENGINE,
-                'from_raw': (source == 'raw'),
-                'ordered': ('path' if file_order and file_means_path else
-                            'file' if file_order else
-                            'id')}
-    else:
-        raise ValueError(f'unknown source: {source!r}')
-
-
-def checksum(source: str = 'tables', *,
-             hash_name: str = DEFAULT_HASH):
+def checksum(source: str = 'tables',
+             *, order_by: str = LANGUOID_ORDER,
+             hash_name: str = DEFAULT_HASH,
+             bind=ENGINE):
     """Return checksum over source."""
     log.info('calculate languoids json checksum')
-    kwargs = get_source_kwargs(source=source,
-                               file_order=True,
-                               file_means_path=True)
+    if source not in SOURCES:
+        raise ValueError(f'unknown source: {source!r}')
 
     log.info('hash json lines with %r', hash_name)
     hashobj = hashlib.new(hash_name)
     assert hasattr(hashobj, 'hexdigest')
-    kwargs['ordered'] = 'path'
     hashobj, total_lines = write_json_lines(hashobj,
                                             source=source,
-                                            file_order=True,
-                                            file_means_path=True,
-                                            sort_keys=True)
+                                            order_by=order_by,
+                                            sort_keys=True,
+                                            bind=bind)
     log.info('%d lines written', total_lines)
     name = 'path_languoid'
 
-    result = (f"{name}"
-              f":{kwargs['ordered']}"
+    result = (f'{name}'
+              f':{order_by}'
               f':{hashobj.name}'
               f':{hashobj.hexdigest()}')
     log.info('%s: %r', hashobj.name, result)
@@ -141,11 +132,11 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
                      source: str = 'tables',
-                     file_order: bool = True,
-                     file_means_path: bool = True,
+                     order_by: str = LANGUOID_ORDER,
                      sort_keys: bool = True,
                      path_label: str = PATH_LABEL,
-                     languoid_label: str = LANGUOID_LABEL):
+                     languoid_label: str = LANGUOID_LABEL,
+                     bind=ENGINE):
     r"""Write languoids as newline delimited JSON.
 
     $ python -c "import sys, treedb; treedb.load('treedb.sqlite3'); treedb.write_json_lines(sys.stdout)" \
@@ -153,62 +144,53 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
 
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
-    lang_kwargs = get_source_kwargs(source=source,
-                                    file_order=file_order,
-                                    file_means_path=file_means_path)
+    if source not in SOURCES:
+        raise ValueError(f'unknown source: {source!r}')
 
     if file is None:
-        if source == 'files':
-            file = _tools.path_from_filename(DEFAULT_ENGINE)
-        else:
-            root_or_bind = lang_kwargs['root_or_bind']
-            if hasattr(root_or_bind, 'file_with_name'):
-                file = root_or_bind.file
-            else:
-                file = _tools.path_from_filename(root_or_bind)
+        file = (_tools.path_from_filename(DEFAULT_ENGINE) if source == 'files'
+                else bind.file)
         file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
 
     log.info('write json lines: %r', file)
 
-    json_kwargs = {'delete_present': delete_present,
-                   'autocompress': autocompress}
-
     if source == 'tables':
-        query_kwargs = {'as_rows': False,
-                        'load_json': False,
-                        'ordered': lang_kwargs['ordered']}
-
-        query = _queries.get_json_query(sort_keys=sort_keys,
+        query = _queries.get_json_query(as_rows=False,
+                                        load_json=False,
+                                        order_by=order_by,
+                                        sort_keys=sort_keys,
                                         path_label=path_label,
-                                        languoid_label=languoid_label,
-                                        **query_kwargs)
+                                        languoid_label=languoid_label)
 
-        with _backend.connect(bind=lang_kwargs['root_or_bind']) as conn:
+        del sort_keys
+
+        with _backend.connect(bind=bind) as conn:
             lines = conn.execute(query).scalars()
-            result = _tools.pipe_json_lines(file, lines, raw=True,
-                                            **json_kwargs)
+            result = _tools.pipe_json_lines(file, lines,
+                                            raw=True,
+                                            delete_present=delete_present,
+                                            autocompress=autocompress)
         return result
 
-    items = iterlanguoids(**lang_kwargs)
+    items = iterlanguoids(source, order_by=order_by, bind=bind)
     items = ({path_label: path, languoid_label: languoid}
              for path, languoid in items)
     return _tools.pipe_json_lines(file, items,
                                   sort_keys=sort_keys,
-                                  **json_kwargs)
+                                  delete_present=delete_present,
+                                  autocompress=autocompress)
 
 
 def fetch_languoids(*, limit: typing.Optional[int] = None,
-                    ordered: str = LANGUOID_ORDER,
+                    order_by: str = LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     bind=ENGINE):
     log.info('fetch languoids from json query')
-    log.info('ordered: %r', ordered)
+    log.info('order_by: %r', order_by)
 
-    kwargs = {'as_rows': True,
-              'load_json': True,
-              'ordered': ordered}
-
-    query = _queries.get_json_query(**kwargs)
+    query = _queries.get_json_query(order_by=order_by,
+                                    as_rows=True,
+                                    load_json=True)
 
     if limit is not None:
         query = query.limit(limit)
@@ -235,17 +217,14 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
 
 
 def write_files(root=ROOT, *, replace: bool = False,
-                from_raw: bool = False,
+                source: str = 'tables',
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=ENGINE) -> int:
     log.info('write from tables to tree')
 
     from . import files
 
-    kwargs = {'ordered': 'path',
-              'from_raw': from_raw}
-
-    languoids = iterlanguoids(bind, **kwargs)
+    languoids = iterlanguoids(source, order_by='path', bind=bind)
 
     records = _records.dump(languoids)
 

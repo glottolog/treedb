@@ -8,7 +8,7 @@ import typing
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE, RecordItem
+from .._globals import LANGUOID_ORDER, ENGINE, RecordItem
 
 from .. import _tools
 from .. import backend as _backend
@@ -23,7 +23,7 @@ WINDOWSIZE = 500
 log = logging.getLogger(__name__)
 
 
-def fetch_records(*, ordered: bool = True,
+def fetch_records(*, order_by: str = LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
@@ -41,17 +41,20 @@ def fetch_records(*, ordered: bool = True,
                                Value.value)
                      .join_from(Value, Option))
 
-    if ordered in (True, None, False, 'file'):
+    if order_by in ('file', True, None, False):
         key_column = File.id
         value_key = Value.file_id
-    elif ordered in ('id', 'path'):
+    elif order_by in ('path', 'id'):
         select_values = select_values.join(File)
-        key_column = value_key = (File.glottocode if ordered == 'id'
-                                  else File.path)
+        key_column = File.path
+        if order_by == 'path':
+            value_key = File.path
+        else:
+            value_key = File.glottocode
     else:
-        raise ValueError(f'ordered={ordered!r} not implememted')
+        raise ValueError(f'order_by={order_by!r} not implememted')
 
-    log.info('ordered: %r', ordered)
+    log.info('order_by: %r', order_by)
     select_files = sa.select(File.path).order_by(key_column)
     select_values = (select_values
                      .order_by(value_key,

@@ -189,7 +189,8 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
 
     log.info('load languoids')
     with begin(bind=bind) as conn:
-        import_languoids(conn, root=root, from_raw=from_raw)
+        import_languoids(conn, root=root,
+                         source='raw' if from_raw else 'files')
 
     log.info('write %r: %r', _models.Dataset.__tablename__, dataset['title'])
     with begin(bind=bind) as conn:
@@ -243,7 +244,7 @@ def import_raw(conn, *, root):
     import_models.main(root, conn=conn)
 
 
-def import_languoids(conn, *, root, from_raw):
+def import_languoids(conn, *, root, source: str):
     log.debug('import source module %s.languoids', __package__)
 
     from .. import export
@@ -252,10 +253,19 @@ def import_languoids(conn, *, root, from_raw):
 
     from .. import import_models
 
-    root_or_bind = conn if from_raw else root
+    if source == 'files':
+        order_by = True
+        root_or_bind = root
+    elif source == 'raw':
+        # import_models.insert_languoid() requires parent before child, we use path order for this
+        order_by = 'path'
+        root_or_bind = conn
+    else:
+        ValueError(f'unknown source: {source!r}')
     log.debug('root_or_bind: %r', root_or_bind)
 
-    pairs = export.iterlanguoids(root_or_bind, from_raw=from_raw,
-                                 # insert languoids in id order if available
-                                 ordered='id' if from_raw else True)
+    pairs = export.iterlanguoids(source,
+                                 order_by=order_by,
+                                 root=root, bind=conn)
+
     import_models.main(pairs, conn=conn)
