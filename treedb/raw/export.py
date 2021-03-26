@@ -107,5 +107,5 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
 
     records = _records.fetch_records(bind=bind)
 
-    return _files.write_files(records, root=root, _join_lines=True,
-                              replace=replace, progress_after=progress_after)
+    return _files.write_files(records, root=root, replace=replace,
+                              progress_after=progress_after)

@@ -226,6 +226,5 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
 
     records = _records.dump(languoids)
 
-    return files.write_files(records, root=root, _join_lines=True,
-                             replace=replace,
+    return files.write_files(records, root=root, replace=replace,
                              progress_after=progress_after)
