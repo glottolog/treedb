@@ -2,7 +2,6 @@
 # usage example(s)
 
 import sqlalchemy as sa
-
 import treedb
 
 treedb.configure(log_sql=True)

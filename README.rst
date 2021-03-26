@@ -140,20 +140,20 @@ Execute a simple query with ``sqlalchemy`` core and write it to a CSV file:
     >>> treedb.write_csv(sa.select(treedb.Languoid), filename='languoids.csv')
     ...Path('languoids.csv')
 
-Get one row from the ``languoid`` table via `sqlalchemy` core:
+Get one row from the ``languoid`` table via `sqlalchemy` core (ordered by Glottocode):
 
 .. code:: python
 
     >>> next(treedb.iterrows(sa.select(treedb.Languoid)))
-    ('abin1243', 'language', 'Abinomn', None, 'bsa', 'bsa', -2.92281, 138.891)
+    ('3adt1234', '3Ad-Tekles', 'dialect', 'nort3292', None, None, None, None)
 
-Get one ``Languoid`` model instance via ``sqlalchemy`` orm:
+Get one ``Languoid`` model instance via ``sqlalchemy`` orm (orderd by Glottocode):
 
 .. code:: python
 
     >>> session = treedb.Session()
     >>> session.query(treedb.Languoid).first()
-    <Languoid id='abin1243' level='language' name='Abinomn' hid='bsa' iso639_3='bsa'>
+    <Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>
     >>> session.close()
 
 
