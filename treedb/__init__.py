@@ -27,7 +27,8 @@ from .backend.load import main as load
 from .backend.models import (Dataset,
                              Producer)
 
-from .backend.pandas import pd_read_sql
+from .backend.pandas import (pd_read_sql,
+                             pd_read_json_lines as pd_read_languoids)
 
 from .backend.sqlite_master import (print_table_sql,
                                     select_tables_nrows)
@@ -70,7 +71,7 @@ __all__ = ['Session',
            'print_rows', 'write_csv', 'hash_csv',
            'load',
            'Dataset', 'Producer',
-           'pd_read_sql',
+           'pd_read_sql', 'pd_read_languoids',
            'print_table_sql', 'select_tables_nrows',
            'views',
            'check', 'compare_languoids',

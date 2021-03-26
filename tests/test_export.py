@@ -1,3 +1,4 @@
+import io
 import json
 
 import pytest
@@ -117,6 +118,21 @@ def test_checksum(treedb, source):
         assert len(result) - len(PREFIX) == 64
     else:
         assert result == PREFIX + expected
+
+
+def test_write_json_lines_checksum(treedb):
+    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+
+    with io.StringIO() as buf:
+        treedb.write_languoids(buf)
+        value = buf.getvalue()
+
+    result = treedb.sha256sum(value, hash_file_string=True)
+
+    if expected is None:
+        assert len(result) == 64
+    else:
+        assert result == expected
 
 
 @pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])

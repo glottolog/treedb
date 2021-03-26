@@ -179,11 +179,11 @@ def pipe_lines(file, lines=None, *, newline: typing.Optional[str] = None,
     return iterlines()
 
 
-def write_wrapped(hashsum, f, lines, *, bufsize: int = 1_000):
+def write_wrapped(hashsum, f, lines, *, buflines: int = 1_000):
     write_line = functools.partial(print, file=f)
     buf = f.buffer
     total = 0
-    for lines in iterslices(lines, size=bufsize):
+    for lines in iterslices(lines, size=buflines):
         for line in lines:
             write_line(line)
         total += len(lines)
@@ -285,28 +285,32 @@ def get_open_module(filepath, autocompress: bool = False):
     return result
 
 
-def sha256sum(file, *, raw: bool = False, autocompress: bool = True):
-    file = path_from_filename(file)
-    open_module = get_open_module(file, autocompress=autocompress)
+def sha256sum(file, *, raw: bool = False, autocompress: bool = True,
+              hash_file_string: bool = False,
+              file_string_encoding: str = ENCODING):
+    hashobj = hashlib.sha256()
 
-    result = hashlib.sha256()
+    if hash_file_string:
+        encoded_bytes = file.encode(file_string_encoding)
+        hashobj.update(encoded_bytes)
+    else:
+        file = path_from_filename(file)
+        open_module = get_open_module(file, autocompress=autocompress)
 
-    with open_module.open(file, 'rb') as f:
-        update_hash(result, f)
+        with open_module.open(file, 'rb') as f:
+            update_hashobj(hashobj, f)
 
-    if not raw:
-        result = result.hexdigest()
-    return result
+    return hashobj if raw else hashobj.hexdigest()
 
 
-def update_hash(hash_, file, *, chunksize: int = 2**16):  # 64 KiB
+def update_hashobj(hashobj, file, *, chunksize: int = 2**16):  # 64 KiB
     for chunk in iter(functools.partial(file.read, chunksize), b''):
-        hash_.update(chunk)
+        hashobj.update(chunk)
 
 
 def run(cmd, *, capture_output: bool = False,
         unpack: bool = False, cwd=None, check: bool = False,
-        encoding=ENCODING):
+        encoding: str = ENCODING):
     log.info('subprocess.run(%r)', cmd)
 
     if platform.system() == 'Windows':

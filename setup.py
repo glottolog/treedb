@@ -30,7 +30,7 @@ setup(
         'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],
         'test': ['pytest>=5.2', 'pytest-cov'],
         'pretty': ['sqlparse>=0.3'],
-        'pandas': ['pandas'],
+        'pandas': ['pandas>=1'],
     },
     long_description=pathlib.Path('README.rst').read_text(encoding='utf-8'),
     classifiers=[
