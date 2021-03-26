@@ -88,7 +88,6 @@ __all__ = ['Session',
            'get_example_query',
            'get_languoids_query',
            'iterdescendants',
-           'pd_read_sql',
            'engine', 'root']
 
 __title__ = 'treedb'
