@@ -2,16 +2,25 @@ Changelog
 =========
 
 
-Version 2.0.1 (in development)
-------------------------------
+Version 2.1 (in development)
+----------------------------
 
+Bump ``pandas`` optional dependency to ``>=1``.
 
+Add ``pd_read_languoids()`` reading json lines.
+
+Add ``limit`` and ``offset`` parameters to ``iterlanguoids()``, ``checksum()``,
+``write_languoids()``, and ``pd_read_languoids()``.
+
+Increase test data coverage.
+
+Clean up namespaces, add more type annotations.
 
 
 Version 2.0
 -----------
 
-Add source parameter to ``iterlanguoids()``, ``checksum()``, and ``write_json_lines()``
+Add ``source`` parameter to ``iterlanguoids()``, ``checksum()``, and ``write_json_lines()``
 to use ``'files'``, ``'raw'``, or ``'tables'`` as data source. 
 
 Changed checksums from ``path_json:id:...`` to ``path_languoid:path:...`` over json lines.
