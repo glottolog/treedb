@@ -20,6 +20,8 @@ LANGUOID_LABEL = 'languoid'
 
 LANGUOID_ORDER = 'path'
 
+CHECKSUM_NAME = 'path_languoid'
+
 DEFAULT_HASH = 'sha256'
 
 FILE_PATH_SEP = '/'
@@ -36,7 +38,7 @@ SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
 
 __all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
            'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
-           'DEFAULT_HASH', 'FILE_PATH_SEP',
+           'CHECKSUM_NAME', 'DEFAULT_HASH', 'FILE_PATH_SEP',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION',

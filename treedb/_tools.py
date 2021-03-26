@@ -31,6 +31,7 @@ SUFFIX_OPEN_MODULE = {'.bz2': bz2,
 
 __all__ = ['next_count',
            'groupby_attrgetter',
+           'islice_limit',
            'walk_scandir',
            'get_open_module',
            'path_from_filename',
@@ -50,6 +51,17 @@ def next_count(start: int = 0, step: int = 1):
 def groupby_attrgetter(*attrnames):
     key = operator.attrgetter(*attrnames)
     return functools.partial(itertools.groupby, key=key)
+
+
+def islice_limit(iterable,
+                 *, limit: typing.Optional[int] = None,
+                 offset: typing.Optional[int] = 0):
+    if limit is not None and offset:
+        stop = limit + offset
+        return itertools.islice(iterable, limit, stop)
+    elif limit is not None:
+        return itertools.islice(iterable, limit)
+    return iterable
 
 
 def walk_scandir(top, *,
@@ -182,7 +194,7 @@ def write_wrapped(hashsum, f, lines, *, bufsize: int = 1_000):
     return total
 
 
-def iterslices(iterable, *, size):
+def iterslices(iterable, *, size: int):
     iterable = iter(iterable)
     next_slice = functools.partial(itertools.islice, iterable, size)
     return iter(lambda: list(next_slice()), [])
