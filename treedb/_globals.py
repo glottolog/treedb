@@ -12,15 +12,11 @@ CONFIG = 'treedb.ini'
 
 DEFAULT_ROOT = './glottolog/'
 
-DEFAULT_ENGINE = 'treedb.sqlite3'
-
 PATH_LABEL = '__path__'
 
 LANGUOID_LABEL = 'languoid'
 
 LANGUOID_ORDER = 'path'
-
-CHECKSUM_NAME = 'path_languoid'
 
 DEFAULT_HASH = 'sha256'
 

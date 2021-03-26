@@ -9,7 +9,7 @@ import types
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-from .._globals import REGISTRY
+from .. import _globals
 
 __all__ = ['register_view',
            'create_all_views',
@@ -66,7 +66,7 @@ def make_table(selectable, *, name='view_table'):
     return table
 
 
-@sa.event.listens_for(REGISTRY.metadata, 'after_create')
+@sa.event.listens_for(_globals.REGISTRY.metadata, 'after_create')
 def after_create(target, bind, **kwargs):
     for name, (create_view, _) in DDL.items():
         if create_view is not None:
@@ -74,7 +74,7 @@ def after_create(target, bind, **kwargs):
             create_view(target, bind)
 
 
-@sa.event.listens_for(REGISTRY.metadata, 'before_drop')
+@sa.event.listens_for(_globals.REGISTRY.metadata, 'before_drop')
 def before_drop(target, bind, **kwargs):
     for name, (_, drop_view) in DDL.items():
         if drop_view is not None:

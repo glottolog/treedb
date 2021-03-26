@@ -9,8 +9,6 @@ import warnings
 from . import _compat
 
 from . import _globals
-from ._globals import DEFAULT_ENGINE, CHECKSUM_NAME
-
 from . import _tools
 from . import backend as _backend
 from .backend import export as _backend_export
@@ -24,6 +22,10 @@ __all__ = ['print_languoid_stats',
            'write_json_lines',
            'fetch_languoids',
            'write_files']
+
+CHECKSUM_NAME = 'path_languoid'
+
+FALLBACK_ENGINE_PATH = _tools.path_from_filename('treedb.sqlite3')
 
 
 log = logging.getLogger(__name__)
@@ -132,7 +134,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     if file is None:
-        file = (_tools.path_from_filename(DEFAULT_ENGINE) if source == 'files'
+        file = (FALLBACK_ENGINE_PATH if source == 'files'
                 else bind.file).with_name(f'{file.stem}-{source}.languoids{suffix}')
 
     log.info('write json lines: %r', file)

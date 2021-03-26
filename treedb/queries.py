@@ -9,7 +9,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
 from . import _globals
-from ._globals import FILE_PATH_SEP
 from . import _tools
 from . import backend as _backend
 from .backend import views as _views
@@ -365,7 +364,7 @@ def get_json_query(*, order_by: str = _globals.LANGUOID_ORDER,
         path_array = select(path_array).label('path')
 
         file_path = (sa.func.group_concat(subquery.c.path_part,
-                                          FILE_PATH_SEP)
+                                          _globals.FILE_PATH_SEP)
                      .label('path_string'))
         file_path = select(file_path).label('file_path')
 
