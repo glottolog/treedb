@@ -5,8 +5,8 @@ import logging
 import operator
 import warnings
 
-from . import _globals
-from . import backend as _backend
+from .. import _globals
+from .. import backend as _backend
 
 __all__ = ['pd_read_sql',
            'pd_read_json_lines']
@@ -36,7 +36,7 @@ def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
         return None
 
     if sql is None:
-        from . import queries
+        from .. import queries
 
         sql = queries.get_example_query()
 
@@ -50,16 +50,13 @@ def pd_read_json_lines(bind=_globals.ENGINE, **kwargs):
     if PANDAS is None:
         return None
 
-    from . import queries
+    from .. import export
 
     with io.StringIO() as buf:
-        queries.write_json_lines(buf, bind=bind)
-
+        export.write_json_lines(buf, bind=bind)
         buf.seek(0)
-
         df = PANDAS.read_json(buf, orient='record', lines=True, **kwargs)
 
     index = df['languoid'].map(operator.itemgetter('id')).rename('id')
     df.set_index(index, inplace=True, verify_integrity=True)
-
     return df

@@ -240,7 +240,7 @@ def get_open_result(file, *, write: bool = False,
                                          newline=open_kwargs.pop('newline', None),
                                          **textio_kwargs)
     elif hasattr(file, 'write'):
-        result = fobj = hashobj = file
+        result = fobj = file
     elif hasattr(file, 'hexdigest'):
         if not write:
             raise TypeError('missing lines')

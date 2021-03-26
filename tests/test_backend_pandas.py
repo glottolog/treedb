@@ -11,7 +11,7 @@ def test_pd_read_sql(treedb):
 
     df = treedb.pd_read_sql(query, index_col='id')
 
-    if treedb.shortcuts.PANDAS is None:
+    if treedb.backend.pandas.PANDAS is None:
         assert df is None
     else:
         assert not df.empty
@@ -19,15 +19,8 @@ def test_pd_read_sql(treedb):
 
 
 def test_pd_read_json_lines(treedb):
-    try:
-        import pandas
-    except ImportError:
-        pass
-    else:
-        assert pandas
-        pytest.skip('TODO: check memory usage')
-
-    df = treedb.shortcuts.pd_read_json_lines()
+    # TODO: check memory usage
+    df = treedb.backend.pandas.pd_read_json_lines()
 
     if treedb.shortcuts.PANDAS is None:
         assert df is None

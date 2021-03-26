@@ -27,6 +27,8 @@ from .backend.load import main as load
 from .backend.models import (Dataset,
                              Producer)
 
+from .backend.pandas import pd_read_sql
+
 from .backend.sqlite_master import (print_table_sql,
                                     select_tables_nrows)
 
@@ -58,8 +60,6 @@ from .queries import (get_example_query,
                       get_json_query as get_languoids_query,
                       iterdescendants)
 
-from .shortcuts import pd_read_sql
-
 __all__ = ['Session',
            'sha256sum',
            'print_versions',
@@ -70,6 +70,7 @@ __all__ = ['Session',
            'print_rows', 'write_csv', 'hash_csv',
            'load',
            'Dataset', 'Producer',
+           'pd_read_sql',
            'print_table_sql', 'select_tables_nrows',
            'views',
            'check', 'compare_languoids',
