@@ -83,7 +83,7 @@ def pd_read_json_lines(*, order_by: str = _globals.LANGUOID_ORDER,
             else:
                 df = PANDAS.concat([df, lines_df], copy=False)
 
-    df.rename(columns={'__path__': 'path'}, inplace=True)
+    df.rename(columns={_globals.PATH_LABEL: 'path'}, inplace=True)
     index = df['languoid'].map(operator.itemgetter('id')).rename('id')
     df.set_index(index, inplace=True, verify_integrity=True)
     return df
