@@ -2,7 +2,7 @@
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE
+from .. import _globals
 
 __all__ = ['print_table_sql',
            'select_table_sql',
@@ -29,10 +29,11 @@ sqlite_temp_master = sa.table('sqlite_temp_master',
                               sa.column('sql', sa.Text))
 
 
-def print_table_sql(model_or_table, *, include_nrows=True,
-                    file=None, flush=True):
+def print_table_sql(model_or_table, *, include_nrows: bool = True,
+                    file=None, flush: bool = True,
+                    bind=_globals.ENGINE):
     """Print CREATE TABLE for the given table and its number of rows."""
-    with ENGINE.connect() as conn:
+    with bind.connect() as conn:
         result = conn.execute(select_table_sql(model_or_table))
         sql = result.scalar_one_or_none()
 
@@ -68,16 +69,18 @@ def select_table_sql(model_or_table):
     return select
 
 
-def select_table_nrows(model_or_table, *, label='n_rows'):
+def select_table_nrows(model_or_table, *, label: str = 'n_rows'):
     """Select the number of rows for the given table."""
     table_name = _get_table_name(model_or_table)
     return (sa.select(sa.func.count().label(label))
            .select_from(sa.table(table_name)))
 
 
-def select_tables_nrows(*, table_label='table_name', nrows_label='n_rows'):
+def select_tables_nrows(*, table_label: str = 'table_name',
+                        nrows_label: str = 'n_rows',
+                        bind=_globals.ENGINE):
     """Select table name and number of rows for all tables in sqlite_master."""
-    with ENGINE.connect() as conn:  # requires dynamic query creation
+    with bind.connect() as conn:  # requires dynamic query creation
         result = conn.execute(select_tables())
         tables = result.all()
 

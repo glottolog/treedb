@@ -8,9 +8,8 @@ import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm
 
-from ._globals import (LANGUOID_ORDER,
-                       ENGINE,
-                       SESSION as Session)
+from . import _globals
+from ._globals import SESSION as Session
 
 from .backend.models import Dataset
 
@@ -25,7 +24,7 @@ __all__ = ['check',
 log = logging.getLogger(__name__)
 
 
-def check(func=None, *, bind=ENGINE):
+def check(func=None, *, bind=_globals.ENGINE):
     """Run consistency/sanity checks on database."""
     if func is not None:
         try:
@@ -239,7 +238,7 @@ def bookkeeping_no_children():
 
 
 @check
-def no_empty_files(*, exclude_raw):
+def no_empty_files(*, exclude_raw: bool):
     if exclude_raw:  # pragma: no cover
         pytest.skip('skipped from exclude_raw=True')
         return sa.select(sa.true()).where(sa.false())
@@ -252,7 +251,7 @@ def no_empty_files(*, exclude_raw):
 
 
 def compare_languoids(left_source: str = 'files', right_source: str = 'raw',
-                      *, order_by: str = LANGUOID_ORDER):
+                      *, order_by: str = _globals.LANGUOID_ORDER):
     from . import export
 
     def compare(left, right):

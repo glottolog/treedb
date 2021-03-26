@@ -2,15 +2,14 @@
 
 import functools
 import logging
+import typing
 
 import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 
-from ._globals import (PATH_LABEL, LANGUOID_LABEL, LANGUOID_ORDER,
-                       FILE_PATH_SEP,
-                       ENGINE)
-
+from . import _globals
+from ._globals import FILE_PATH_SEP
 from . import _tools
 from . import backend as _backend
 from .backend import views as _views
@@ -92,7 +91,7 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
-def _add_order_by(select_languoid, *, order_by, column_for_path_order):
+def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
     if order_by in (True, None, 'id'):
         select_languoid = select_languoid.order_by(Languoid.id)
     elif order_by == 'path':
@@ -320,9 +319,12 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
 
 
 @_views.register_view('path_languoid', as_rows=True, load_json=False)
-def get_json_query(*, order_by=LANGUOID_ORDER,
-                   as_rows=False, load_json=True, sort_keys=False,
-                   path_label=PATH_LABEL, languoid_label=LANGUOID_LABEL):
+def get_json_query(*, order_by: str = _globals.LANGUOID_ORDER,
+                   as_rows: bool = False,
+                   load_json: bool = True,
+                   sort_keys: bool = False,
+                   path_label: str  = _globals.PATH_LABEL,
+                   languoid_label: str = _globals.LANGUOID_LABEL):
     json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
 
     languoid = {'id': Languoid.id,
@@ -400,7 +402,8 @@ def select_languoid_macroareas(languoid_id=Languoid.id):
             .scalar_subquery())
 
 
-def select_languoid_countries(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_countries(languoid_id=Languoid.id,
+                              *, sort_keys: bool = False):
     countries = (select(Country.jsonf(sort_keys=sort_keys))
                  .select_from(languoid_country)
                  .filter_by(languoid_id=languoid_id)
@@ -414,7 +417,8 @@ def select_languoid_countries(languoid_id=Languoid.id, *, sort_keys: bool = Fals
             .scalar_subquery())
 
 
-def select_languoid_links(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_links(languoid_id=Languoid.id,
+                          *, sort_keys: bool = False):
     links = (select(Link.jsonf(sort_keys=sort_keys))
              .select_from(Link)
              .filter_by(languoid_id=languoid_id)
@@ -426,7 +430,8 @@ def select_languoid_links(languoid_id=Languoid.id, *, sort_keys: bool = False):
             .scalar_subquery())
 
 
-def select_languoid_timespan(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_timespan(languoid_id=Languoid.id,
+                             *, sort_keys: bool = False):
     return (select(Timespan.jsonf(sort_keys=sort_keys))
             .select_from(Timespan)
             .correlate(Languoid)
@@ -434,7 +439,8 @@ def select_languoid_timespan(languoid_id=Languoid.id, *, sort_keys: bool = False
             .scalar_subquery())
 
 
-def select_languoid_sources(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_sources(languoid_id=Languoid.id,
+                            *, sort_keys: bool = False):
     provider = aliased(SourceProvider, name='source_provider')
     bibitem = aliased(Bibitem, name='source_bibitem')
     bibfile = aliased(Bibfile, name='source_bibfile')
@@ -462,7 +468,8 @@ def select_languoid_sources(languoid_id=Languoid.id, *, sort_keys: bool = False)
             .scalar_subquery())
 
 
-def select_languoid_altnames(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_altnames(languoid_id=Languoid.id,
+                             *, sort_keys: bool = False):
     provider = aliased(AltnameProvider, name='altname_provider')
 
     altnames = (select(provider.name.label('provider'),
@@ -524,7 +531,8 @@ def select_languoid_identifier(languoid_id=Languoid.id):
             .scalar_subquery())
 
 
-def select_languoid_classification(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_classification(languoid_id=Languoid.id,
+                                   *, sort_keys: bool = False):
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
@@ -568,7 +576,8 @@ def select_languoid_classification(languoid_id=Languoid.id, *, sort_keys: bool =
             .scalar_subquery())
 
 
-def select_languoid_endangerment(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_endangerment(languoid_id=Languoid.id,
+                                 *, sort_keys: bool = False):
     bibitem = aliased(Bibitem, name='bibitem_e')
     bibfile = aliased(Bibfile, name='bibfile_e')
 
@@ -584,7 +593,8 @@ def select_languoid_endangerment(languoid_id=Languoid.id, *, sort_keys: bool = F
             .scalar_subquery())
 
 
-def select_languoid_hh_ethnologue_comment(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_hh_ethnologue_comment(languoid_id=Languoid.id,
+                                          *, sort_keys: bool = False):
     return (select(EthnologueComment
                    .jsonf(sort_keys=sort_keys,
                           label='hh_ethnologue_comment'))
@@ -594,7 +604,8 @@ def select_languoid_hh_ethnologue_comment(languoid_id=Languoid.id, *, sort_keys:
             .scalar_subquery())
 
 
-def select_languoid_iso_retirement(languoid_id=Languoid.id, *, sort_keys: bool = False):
+def select_languoid_iso_retirement(languoid_id=Languoid.id,
+                                   *, sort_keys: bool = False):
     change_to = (select(IsoRetirementChangeTo.code)
                  .select_from(IsoRetirementChangeTo)
                  .filter_by(languoid_id=IsoRetirement.languoid_id)
@@ -615,7 +626,9 @@ def select_languoid_iso_retirement(languoid_id=Languoid.id, *, sort_keys: bool =
             .scalar_subquery())
 
 
-def iterdescendants(parent_level=None, child_level=None, *, bind=ENGINE):
+def iterdescendants(parent_level: typing.Optional[str] = None,
+                    child_level: typing.Optional[str] = None,
+                    *, bind=_globals.ENGINE):
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165

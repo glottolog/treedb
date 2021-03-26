@@ -5,8 +5,7 @@ import logging
 import operator
 import warnings
 
-from ._globals import ENGINE
-
+from . import _globals
 from . import backend as _backend
 
 __all__ = ['pd_read_sql',
@@ -30,7 +29,7 @@ def _import_pandas():
             log.info('pandas version: %s', PANDAS.__version__)
 
 
-def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
+def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
     _import_pandas()
 
     if PANDAS is None:
@@ -45,7 +44,7 @@ def pd_read_sql(sql=None, *args, con=ENGINE, **kwargs):
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 
-def pd_read_json_lines(bind=ENGINE, **kwargs):
+def pd_read_json_lines(bind=_globals.ENGINE, **kwargs):
     _import_pandas()
 
     if PANDAS is None:

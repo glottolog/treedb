@@ -2,8 +2,6 @@
 
 import logging
 
-from ._globals import ROOT
-
 from . import _tools
 from . import files as _files
 
@@ -17,7 +15,7 @@ log = logging.getLogger(__name__)
 
 def checkout_or_clone(tag_or_branch, *, target=None):
     if target is None:
-        target = _files.get_repo_root(ROOT)
+        target = _files.get_repo_root()
 
     target = _tools.path_from_filename(target)
 

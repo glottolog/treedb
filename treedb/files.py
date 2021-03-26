@@ -6,8 +6,6 @@ import logging
 import os
 import typing
 
-from ._globals import ROOT
-
 from . import _globals
 from . import _tools
 from . import fields as _fields
@@ -35,11 +33,12 @@ def set_root(repo_root, *, resolve=False,
     if resolve:
         repo_path = repo_path.resolve(strict=False)
 
+    ROOT = _globals.ROOT
     ROOT.path = repo_path / _tools.path_from_filename(treepath)
     return ROOT
 
 
-def get_repo_root(root,
+def get_repo_root(root=_globals.ROOT,
                   *, treepath=TREE_IN_ROOT):
     repo_root = _tools.path_from_filename(root)
     for _ in treepath.parts:
@@ -101,7 +100,7 @@ class FileInfo(typing.NamedTuple):
         return cls(path.parts[path_slice], config, dentry)
 
 
-def iterfiles(root=ROOT,
+def iterfiles(root=_globals.ROOT,
               *, progress_after: int = _tools.PROGRESS_AFTER
               ) -> typing.Iterator[FileInfo]:
     """Yield triples of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
@@ -132,7 +131,7 @@ RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
                            typing.Iterable[RawRecordItem]]
 
 
-def iterrecords(root=ROOT,
+def iterrecords(root=_globals.ROOT,
                 *, progress_after: int = _tools.PROGRESS_AFTER,
                 raw: bool = False) -> RecordsType:
     fileinfos = iterfiles(root, progress_after=progress_after)
@@ -154,7 +153,7 @@ def _iterrecords(fileinfos: typing.Iterable[FileInfo],
         yield path, cfg
 
 
-def roundtrip(root=ROOT, *, replace=False,
+def roundtrip(root=_globals.ROOT, *, replace: bool = False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
     raw_records = iterrecords(root, raw=True,
@@ -164,7 +163,7 @@ def roundtrip(root=ROOT, *, replace=False,
                        progress_after=progress_after)
 
 
-def write_files(records: RecordsType, root=ROOT,
+def write_files(records: RecordsType, root=_globals.ROOT,
                 *, replace: bool = False,
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME,

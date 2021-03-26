@@ -1,5 +1,7 @@
 # main sqlalchemy schema for sqlite3 db
 
+import typing
+
 import sqlalchemy as sa
 
 from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
@@ -8,8 +10,8 @@ from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
 
 from sqlalchemy.orm import relationship, aliased
 
-from ._globals import (FILE_PATH_SEP,
-                       REGISTRY as registry)
+from . import _globals
+from ._globals import REGISTRY as registry
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -60,7 +62,8 @@ ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html
-def json_object(*, sort_keys_, label_=None, **kwargs):
+def json_object(*, sort_keys_: bool,
+                label_: typing.Optional[str] = None, **kwargs):
     items = sorted(kwargs.items()) if sort_keys_ else kwargs.items()
     obj = sa.func.json_object(*[x for kv in items for x in kv])
     return obj.label(label_) if label_ is not None else obj
@@ -68,8 +71,7 @@ def json_object(*, sort_keys_, label_=None, **kwargs):
 
 def json_datetime(date):
     date = sa.func.replace(date, ' ', 'T')
-    date = sa.func.replace(date, '.000000', '')
-    return date
+    return sa.func.replace(date, '.000000', '')
 
 
 @registry.mapped
@@ -179,7 +181,9 @@ class Languoid:
                                   back_populates='languoid')
 
     @classmethod
-    def _aliased_child_parent(cls, child_root=False, parent_root=False):
+    def _aliased_child_parent(cls, *,
+                              child_root: bool = False,
+                              parent_root: bool = False):
         if child_root and parent_root:
             raise ValueError('child_root and parent_root are mutually exclusive')
 
@@ -188,9 +192,11 @@ class Languoid:
         return Child, Parent
 
     @classmethod
-    def _tree(cls, *, from_parent=False, innerjoin=False,
+    def _tree(cls, *, from_parent: bool = False,
+              innerjoin=False,
               child_root=None, parent_root=None, node_level=None,
-              with_steps=False, with_terminal=False):
+              with_steps: bool = False,
+              with_terminal: bool = False):
         if innerjoin not in (False, True, 'reflexive'):
             raise ValueError(f'invalid innerjoin: {innerjoin!r}')
 
@@ -275,13 +281,18 @@ class Languoid:
         return tree
 
     @classmethod
-    def tree(cls, *, include_self=False, with_steps=False, with_terminal=False):
+    def tree(cls, *, include_self: bool = False,
+             with_steps: bool = False,
+             with_terminal: bool = False):
         return cls._tree(from_parent=False,
                          innerjoin='reflexive' if include_self else True,
                          with_steps=with_steps, with_terminal=with_terminal)
 
     @classmethod
-    def _path_part(cls, label='path_part', include_self=True, bottomup=False, _tree=None):
+    def _path_part(cls, label: str = 'path_part',
+                   include_self: bool = True,
+                   bottomup: bool = False,
+                   _tree=None):
         if _tree is None:
             tree = cls.tree(include_self=include_self, with_steps=True)
         else:
@@ -297,23 +308,28 @@ class Languoid:
         return select_path_part
 
     @classmethod
-    def path(cls, *, label='path', delimiter=FILE_PATH_SEP,
-             include_self=True, bottomup=False, _tree=None):
+    def path(cls, *, label: str = 'path',
+             delimiter: str = _globals.FILE_PATH_SEP,
+             include_self: bool = True,
+             bottomup: bool = False,
+             _tree=None):
         squery = cls._path_part(include_self=include_self, bottomup=bottomup,
                                 _tree=_tree)
         path = sa.func.group_concat(squery.c.path_part, delimiter).label(label)
         return sa.select(path).label(label)
 
     @classmethod
-    def path_as_json(cls, *, label='path'):
+    def path_as_json(cls, *, label: str = 'path'):
         squery = cls._path_part(include_self=True, bottomup=False)
         path = sa.func.json_group_array(squery.c.path_part).label(label)
         return sa.select(path).label(label)
 
     @classmethod
-    def node_relative(cls, *, from_parent=False, innerjoin=False,
+    def node_relative(cls, *, from_parent: bool = False,
+                      innerjoin=False,
                       child_root=None, parent_root=None, node_level=None,
-                      with_steps=False, with_terminal=False):
+                      with_steps: bool = False,
+                      with_terminal: bool = False):
         tree = cls._tree(from_parent=from_parent, innerjoin=innerjoin,
                          child_root=child_root, parent_root=parent_root,
                          node_level=node_level,
@@ -341,7 +357,8 @@ class Languoid:
         return Node, Relative, tree, node_relative
 
     @classmethod
-    def child_ancestor(cls, *, innerjoin=False, child_level=None):
+    def child_ancestor(cls, *, innerjoin=False,
+                       child_level=None):
         Child, Parent, _, child_parent = cls.node_relative(from_parent=False,
                                                            innerjoin=innerjoin,
                                                            node_level=child_level)
@@ -357,9 +374,12 @@ class Languoid:
         return Parent, Child, parent_child
 
     @classmethod
-    def path_family_language(cls, *, path_label='path', path_delimiter=FILE_PATH_SEP,
-                             include_self=True, bottomup=False,
-                             family_label='family_id', language_label='language_id'):
+    def path_family_language(cls, *, path_label: str = 'path',
+                             path_delimiter: str = _globals.FILE_PATH_SEP,
+                             include_self: bool = True,
+                             bottomup: bool = False,
+                             family_label: str = 'family_id',
+                             language_label: str = 'language_id'):
         tree = cls.tree(include_self=include_self, with_steps=True, with_terminal=True)
 
         path = cls.path(label=path_label, delimiter=path_delimiter, bottomup=bottomup, _tree=tree)
@@ -438,12 +458,12 @@ class Country:
                              back_populates='countries')
 
     @classmethod
-    def printf(cls, *, label='printf', minimal=True):
+    def printf(cls, *, minimal: bool = True, label: str = 'printf', ):
         return (sa.func.printf('%s (%s)', cls.name, cls.id)
                 if not minimal else cls.id).label(label)
 
     @classmethod
-    def jsonf(cls, *, sort_keys, label='jsonf'):
+    def jsonf(cls, *, sort_keys: bool, label: str = 'jsonf'):
         return json_object(id=cls.id,
                            name=cls.name,
                            sort_keys_=sort_keys,
@@ -491,13 +511,13 @@ class Link:
                             back_populates='links')
 
     @classmethod
-    def printf(cls, *, label='printf'):
+    def printf(cls, *, label: str = 'printf'):
         return sa.case((cls.title != None,
                         sa.func.printf('[%s](%s)', cls.title, cls.url)),
                        else_=cls.url).label(label)
 
     @classmethod
-    def jsonf(cls, *, sort_keys, label='jsonf'):
+    def jsonf(cls, *, sort_keys: bool, label: str = 'jsonf'):
         return json_object(scheme=cls.scheme,
                            url=cls.url,
                            title=cls.title,
@@ -540,7 +560,7 @@ class Timespan:
                             back_populates='timespan')
 
     @classmethod
-    def jsonf(cls, *, sort_keys, label='jsonf'):
+    def jsonf(cls, *, sort_keys: bool, label: str = 'jsonf'):
         return json_object(start_year=cls.start_year,
                            start_month=cls.start_month,
                            start_day=cls.start_day,
@@ -584,7 +604,8 @@ class Source:
                            back_populates='sources')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, *, label='printf'):
+    def printf(cls, bibfile, bibitem,
+               *, label: str = 'printf'):
         return sa.case((sa.and_(cls.pages != None, cls.trigger != None),
                         sa.func.printf('**%s:%s**:%s<trigger "%s">',
                                        bibfile.name, bibitem.bibkey,
@@ -602,7 +623,8 @@ class Source:
                        ).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, *, sort_keys, label='jsonf'):
+    def jsonf(cls, bibfile, bibitem,
+              *, sort_keys: bool, label: str = 'jsonf'):
         return json_object(bibfile=bibfile.name,
                            bibkey=bibitem.bibkey,
                            pages=cls.pages,
@@ -704,12 +726,12 @@ class Altname:
                             back_populates='altnames')
 
     @classmethod
-    def printf(cls, *, label='printf'):
+    def printf(cls, *, label: str = 'printf'):
         full = sa.func.printf('%s [%s]', cls.name, cls.lang)
         return sa.case((cls.lang == '', cls.name), else_=full).label(label)
 
     @classmethod
-    def jsonf(cls, *, sort_keys, label='jsonf'):
+    def jsonf(cls, *, sort_keys: bool, label: str = 'jsonf'):
         half = json_object(name=cls.name,
                            lang=None,
                            sort_keys_=sort_keys)
@@ -856,13 +878,15 @@ class ClassificationRef:
                            back_populates='classificationrefs')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, *, label='printf'):
+    def printf(cls, bibfile, bibitem,
+               *, label: str = 'printf'):
         return sa.func.printf(sa.case((cls.pages != None, '**%s:%s**:%s'),
                                       else_='**%s:%s**'),
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
     @classmethod
-    def jsonf(cls, bibfile, bibitem, *, sort_keys, label='jsonf'):
+    def jsonf(cls, bibfile, bibitem,
+              *, sort_keys: bool, label: str = 'jsonf'):
         return json_object(bibfile=bibfile.name,
                            bibkey=bibitem.bibkey,
                            pages=cls.pages,
@@ -903,7 +927,8 @@ class Endangerment:
                           back_populates='endangerment')
 
     @classmethod
-    def jsonf(cls, source, bibfile, bibitem, *, sort_keys, label='jsonf'):
+    def jsonf(cls, source, bibfile, bibitem,
+              *, sort_keys: bool, label: str = 'jsonf'):
         source = json_object(name=source.name,
                              bibfile=bibfile.name,
                              bibkey=bibitem.bibkey,
@@ -946,7 +971,8 @@ class EndangermentSource:
                                 back_populates='source')
 
     @classmethod
-    def printf(cls, bibfile, bibitem, *, label='printf'):
+    def printf(cls, bibfile, bibitem,
+               *, label: str = 'printf'):
         return sa.case((cls.bibitem_id == None, cls.name),
                        else_=sa.func.printf('**%s:%s**:%s',
                                             bibfile.name, bibitem.bibkey,
@@ -980,7 +1006,8 @@ class EthnologueComment:
                             back_populates='ethnologue_comment')
 
     @classmethod
-    def jsonf(cls, *, sort_keys, label='jsonf', optional=False):
+    def jsonf(cls, *, sort_keys: bool, optional: bool = False,
+              label: str = 'jsonf', ):
         mapping = json_object(isohid=cls.isohid,
                               comment_type=cls.comment_type,
                               ethnologue_versions=cls.ethnologue_versions,
@@ -1036,7 +1063,9 @@ class IsoRetirement:
                              back_populates='iso_retirement')
 
     @classmethod
-    def jsonf(cls, *, sort_keys, change_to=None, label='jsonf', optional=False):
+    def jsonf(cls, *, sort_keys: bool,
+              change_to=None, optional: bool = False,
+              label: str = 'jsonf'):
         mapping = json_object(code=cls.code,
                               name=cls.name,
                               change_request=cls.change_request,

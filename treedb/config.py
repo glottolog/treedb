@@ -4,16 +4,15 @@ import configparser
 import logging
 import os
 
-from ._globals import CONFIG, DEFAULT_ROOT
-
+from . import _globals
 from . import _tools
 
 __all__ = ['get_default_root',
            'configure']
 
-ROOT = 'glottolog', 'repo_root'
+ROOT_OPTION = ('glottolog', 'repo_root')
 
-ENGINE = 'treedb', 'engine'
+ENGINE_OPTION = ('treedb', 'engine')
 
 NOT_SET = object()
 
@@ -22,15 +21,15 @@ log = logging.getLogger(__name__)
 
 
 def get_default_root(*, env_var,
-                     config_path=CONFIG,
-                     fallback=DEFAULT_ROOT):
+                     config_path=_globals.CONFIG,
+                     fallback=_globals.DEFAULT_ROOT):
     """Return default root from environment variable, config, or fallback."""
     root = os.getenv(env_var)
 
     if root is None:
-        log.debug('get %r from optional config file %r', ROOT, config_path)
+        log.debug('get %r from optional config file %r', ROOT_OPTION, config_path)
         cfg = ConfigParser.from_file(config_path, default_repo_root=fallback)
-        root = cfg.get(*ROOT)
+        root = cfg.get(*ROOT_OPTION)
 
     return root
 
@@ -55,12 +54,14 @@ class ConfigParser(configparser.ConfigParser):
         return inst
 
     def set_default_repo_root(self, repo_root):
-        self.add_section(ROOT[0])
-        self.set(*ROOT, repo_root)
+        self.add_section(ROOT_OPTION[0])
+        self.set(*ROOT_OPTION, repo_root)
 
 
-def configure(config_path=CONFIG, *, engine=NOT_SET, root=NOT_SET,
-              loglevel=None, log_sql=None, default_repo_root=DEFAULT_ROOT):
+def configure(config_path=_globals.CONFIG,
+              *, engine=NOT_SET, root=NOT_SET,
+              loglevel=None, log_sql: bool = None,
+              default_repo_root=_globals.DEFAULT_ROOT):
     """Set root, and engine and configure logging from the given .ini file."""
     log.info('configure from %r', config_path)
     log.debug('default repo root: %r', default_repo_root)
@@ -79,7 +80,7 @@ def configure(config_path=CONFIG, *, engine=NOT_SET, root=NOT_SET,
     logging_.configure_logging_from_file(cfg, level=loglevel, log_sql=log_sql)
 
     if engine is NOT_SET:
-        engine = cfg.get(*ENGINE, fallback=None)
+        engine = cfg.get(*ENGINE_OPTION, fallback=None)
     if engine is not None:
         engine = _tools.path_from_filename(engine)
         if not engine.is_absolute():
@@ -87,7 +88,7 @@ def configure(config_path=CONFIG, *, engine=NOT_SET, root=NOT_SET,
     backend.set_engine(engine)
 
     if root is NOT_SET:
-        root = cfg.get(*ROOT)
+        root = cfg.get(*ROOT_OPTION)
     root = _tools.path_from_filename(root)
     if not root.is_absolute():
         root = config_path.parent / root

@@ -6,6 +6,7 @@ import functools
 import gzip
 import hashlib
 import logging
+import typing
 import warnings
 import zipfile
 
@@ -13,10 +14,8 @@ import csv23
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE, REGISTRY, DEFAULT_HASH
-
+from .. import _globals
 from .. import _tools
-
 from .. import backend as _backend
 
 from .models import Dataset, Producer
@@ -36,7 +35,8 @@ log = logging.getLogger(__name__)
 
 
 def print_dataset(*, ignore_dirty: bool = False,
-                  file=None, bind=ENGINE):
+                  file=None,
+                  bind=_globals.ENGINE):
     with _backend.connect(bind=bind) as conn:
         dataset = (conn.execute(sa.select(Dataset))
                    .mappings()
@@ -50,8 +50,9 @@ def print_dataset(*, ignore_dirty: bool = False,
                           also_print=True, print_file=file)
 
 
-def print_schema(metadata=REGISTRY.metadata, *, file=None,
-                 engine=ENGINE):
+def print_schema(metadata=_globals.REGISTRY.metadata,
+                 *, file=None,
+                 engine=_globals.ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql):
         print(sql.compile(dialect=engine.dialect),
@@ -62,16 +63,16 @@ def print_schema(metadata=REGISTRY.metadata, *, file=None,
     metadata.create_all(mock_engine, checkfirst=False)
 
 
-def print_query_sql(query=None, *,
-                    literal_binds=True, pretty=True,
-                    file=None, flush=True):
+def print_query_sql(query=None, *, literal_binds: bool = True,
+                    pretty: bool = True,
+                    file=None, flush: bool = True):
     """Print the literal SQL for the given query."""
     sql = get_query_sql(query, literal_binds=literal_binds, pretty=pretty)
     print(sql, file=file, flush=flush)
 
 
-def get_query_sql(query=None,
-                  *, literal_binds=True, pretty=False):
+def get_query_sql(query=None, *, literal_binds: bool = True,
+                  pretty: bool = False):
     """Return the literal SQL for the given query."""
     if query is None:
         from .. import queries
@@ -86,8 +87,9 @@ def get_query_sql(query=None,
     return result
 
 
-def backup(filename=None, *, as_new_engine=False,
-           pages=0, engine=ENGINE):
+def backup(filename=None, *, as_new_engine: bool = False,
+           pages: int = 0,
+           engine=_globals.ENGINE):
     """Write the database into another .sqlite3 file and return its engine."""
     log.info('backup database')
     log.info('source: %r', engine)
@@ -125,8 +127,10 @@ def backup(filename=None, *, as_new_engine=False,
     return result
 
 
-def dump_sql(filename=None, *, progress_after=100_000,
-             encoding=_tools.ENCODING, engine=ENGINE):
+def dump_sql(filename=None,
+             *, progress_after: int = 100_000,
+             encoding: str = _tools.ENCODING,
+             engine=_globals.ENGINE):
     """Dump the engine database into a plain-text SQL file."""
     if filename is None:
         filename = engine.file_with_suffix('.sql.gz').name
@@ -154,9 +158,10 @@ def dump_sql(filename=None, *, progress_after=100_000,
     return path
 
 
-def csv_zipfile(filename=None, *, exclude_raw=False,
-                metadata=REGISTRY.metadata,
-                dialect=csv23.DIALECT, encoding=csv23.ENCODING, engine=ENGINE):
+def csv_zipfile(filename=None, *, exclude_raw: bool = False,
+                metadata=_globals.REGISTRY.metadata,
+                dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
+                engine=_globals.ENGINE):
     """Write all tables to <tablename>.csv in <databasename>.zip."""
     log.info('export database')
     log.debug('engine: %r', engine)
@@ -199,8 +204,9 @@ def csv_zipfile(filename=None, *, exclude_raw=False,
     return _tools.path_from_filename(filename)
 
 
-def print_rows(query=None, *, format_=None,
-               verbose=False, file=None, bind=ENGINE):
+def print_rows(query=None, *, format_: typing.Optional[str] = None,
+               verbose: bool = False, file=None,
+               bind=_globals.ENGINE):
     if query is None:
         from .. import queries as _queries
 
@@ -222,8 +228,10 @@ def print_rows(query=None, *, format_=None,
         print(r, file=file)
 
 
-def write_csv(query=None, filename=None, *, verbose=False,
-              dialect=csv23.DIALECT, encoding=csv23.ENCODING, bind=ENGINE):
+def write_csv(query=None, filename=None,
+              *, verbose: bool = False,
+              dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
+              bind=_globals.ENGINE):
     """Write get__example_query() query (or given query) to CSV, return filename."""
     if query is None:
         from .. import queries as _queries
@@ -253,9 +261,10 @@ def write_csv(query=None, filename=None, *, verbose=False,
                                autocompress=True)
 
 
-def hash_csv(query=None, *, hash_name: str = DEFAULT_HASH,
-             dialect=csv23.DIALECT, encoding=csv23.ENCODING,
-             raw: bool = False, bind=ENGINE):
+def hash_csv(query=None, *, hash_name: str = _globals.DEFAULT_HASH,
+             dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
+             raw: bool = False,
+             bind=_globals.ENGINE):
     if query is None:
         from .. import queries as _queries
 
@@ -269,12 +278,12 @@ def hash_csv(query=None, *, hash_name: str = DEFAULT_HASH,
                          dialect=dialect, encoding=encoding)
 
 
-def hash_rows(rows, *, hash_name: str = DEFAULT_HASH,
+def hash_rows(rows, *, hash_name: str = _globals.DEFAULT_HASH,
               header=None,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING,
               raw: bool = False):
     if hash_name is None:
-        hash_name = DEFAULT_HASH
+        hash_name = _globals.DEFAULT_HASH
 
     log.info('hash rows with %r, csv header: %r', hash_name, header)
     result = hashlib.new(hash_name)

@@ -7,10 +7,9 @@ import csv23
 
 import sqlalchemy as sa
 
-from .._globals import DEFAULT_HASH, ENGINE, ROOT
-
+from .. import _globals
 from .. import _tools
-from ..backend import export as _export
+from ..backend import export as _backend_export
 from .. import files as _files
 
 from . import records as _records
@@ -40,12 +39,14 @@ def print_stats(*, file=None):
 
     template = '{section:<22} {option:<22} {n:,}'
 
-    _export.print_rows(select_nvalues, format_=template,
-                       file=file)
+    _backend_export.print_rows(select_nvalues, format_=template,
+                               file=file)
 
 
-def checksum(*, weak: bool = False, hash_name: str = DEFAULT_HASH,
-             dialect: str = csv23.DIALECT, encoding: str = csv23.ENCODING):
+def checksum(*, weak: bool = False,
+             hash_name: str = _globals.DEFAULT_HASH,
+             dialect: str = csv23.DIALECT,
+             encoding: str = csv23.ENCODING):
     kind = {True: 'weak', False: 'strong', 'unordered': 'unordered'}[weak]
     log.info('calculate %r raw checksum', kind)
 
@@ -66,8 +67,10 @@ def checksum(*, weak: bool = False, hash_name: str = DEFAULT_HASH,
         select_rows = (sa.select(File.path, File.sha256)
                        .order_by('path'))
 
-    hashobj = _export.hash_csv(select_rows, hash_name=hash_name,
-                             dialect=dialect, encoding=encoding, raw=True)
+    hashobj = _backend_export.hash_csv(select_rows,
+                                       hash_name=hash_name,
+                                       dialect=dialect, encoding=encoding,
+                                       raw=True)
 
     logging.info('%s: %r', hashobj.name, hashobj.hexdigest())
     return f'{kind}:{hashobj.name}:{hashobj.hexdigest()}'
@@ -77,7 +80,7 @@ def write_raw_csv(filename=None, *,
                   dialect: str = csv23.DIALECT, encoding: str = csv23.ENCODING):
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
-        filename = ENGINE.file_with_suffix('.raw.csv.gz').name
+        filename = _globals.ENGINE.file_with_suffix('.raw.csv.gz').name
     else:
         filename = _tools.path_from_filename(filename)
 
@@ -92,13 +95,13 @@ def write_raw_csv(filename=None, *,
                      .join_from(File, Value).join(Option)
                      .order_by('path', 'section', 'option', 'line'))
 
-    return _export.write_csv(select_values, filename,
-                             dialect=dialect, encoding=encoding)
+    return _backend_export.write_csv(select_values, filename,
+                                     dialect=dialect, encoding=encoding)
 
 
-def write_files(root=ROOT, *, replace: bool = False,
+def write_files(root=_globals.ROOT, *, replace: bool = False,
                 progress_after: int = _tools.PROGRESS_AFTER,
-                bind=ENGINE):
+                bind=_globals.ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
     log.info('write from raw records to tree')
 

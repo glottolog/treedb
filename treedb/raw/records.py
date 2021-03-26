@@ -8,8 +8,7 @@ import typing
 
 import sqlalchemy as sa
 
-from .._globals import LANGUOID_ORDER, ENGINE, RecordItem
-
+from .. import _globals
 from .. import _tools
 from .. import backend as _backend
 
@@ -23,11 +22,11 @@ WINDOWSIZE = 500
 log = logging.getLogger(__name__)
 
 
-def fetch_records(*, order_by: str = LANGUOID_ORDER,
+def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
-                  bind=ENGINE) -> typing.Iterator[RecordItem]:
+                  bind=_globals.ENGINE) -> typing.Iterator[_globals.RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.connection
@@ -69,7 +68,7 @@ def fetch_records(*, order_by: str = LANGUOID_ORDER,
     groupby_file, groupby_section, groupby_option = groupby
 
     n = 0
-    make_item = RecordItem.from_filepath_record
+    make_item = _globals.RecordItem.from_filepath_record
     with _backend.connect(bind=bind) as conn:
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
@@ -96,7 +95,8 @@ def fetch_records(*, order_by: str = LANGUOID_ORDER,
     log.info('%s raw records total', f'{n:_d}')
 
 
-def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
+def window_slices(key_column, *, size: int = WINDOWSIZE,
+                  bind=_globals.ENGINE):
     """Yield where clause making function for key_column windows of size.
 
     adapted from https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
@@ -126,7 +126,8 @@ def window_slices(key_column, *, size=WINDOWSIZE, bind=ENGINE):
     yield lambda c, end=end: (c > end)
 
 
-def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
+def iterkeys(key_column, *, size: int = WINDOWSIZE,
+             bind=_globals.ENGINE):
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_all_keys = (sa.select(key_column.label('key'), row_num)
                        .alias('key_ord'))
@@ -143,7 +144,8 @@ def iterkeys(key_column, *, size=WINDOWSIZE, bind=ENGINE):
 
 
 # Python 3.6 compat
-def iterkeys_compat(key_column, *, size=WINDOWSIZE, bind=ENGINE):
+def iterkeys_compat(key_column, *, size: int = WINDOWSIZE,
+                    bind=_globals.ENGINE):
     select_keys = (sa.select(key_column.label('key'))
                    .order_by(key_column))
 

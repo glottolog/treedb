@@ -9,8 +9,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .._globals import ENGINE, ROOT, REGISTRY
-
+from .. import _globals
 from .. import _tools
 from .. import files as _files
 
@@ -25,7 +24,8 @@ __all__ = ['main']
 log = logging.getLogger(__name__)
 
 
-def get_root(repo_root, *, default, treepath=_files.TREE_IN_ROOT):
+def get_root(repo_root, *, default,
+             treepath=_files.TREE_IN_ROOT):
     if repo_root is not None:
         root = _files.set_root(repo_root, treepath=treepath)
     else:
@@ -38,7 +38,7 @@ def get_root(repo_root, *, default, treepath=_files.TREE_IN_ROOT):
     return root
 
 
-def get_from_raw(from_raw, *, exclude_raw):
+def get_from_raw(from_raw, *, exclude_raw: bool):
     if exclude_raw and from_raw:
         log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
         raise ValueError('exclude_raw and from_raw cannot both be True')
@@ -47,13 +47,13 @@ def get_from_raw(from_raw, *, exclude_raw):
     return from_raw
 
 
-def get_engine(filename_or_engine, *, require):
+def get_engine(filename_or_engine, *, require: bool):
     if hasattr(filename_or_engine, 'execute'):
         return filename_or_engine
     return _backend.set_engine(filename_or_engine, require=require)
 
 
-def get_dataset(engine, *, exclude_raw, force_rebuild):
+def get_dataset(engine, *, exclude_raw: bool, force_rebuild: bool):
     dataset = None
 
     if engine.file is None:
@@ -72,17 +72,17 @@ def get_dataset(engine, *, exclude_raw, force_rebuild):
     return dataset
 
 
-def main(filename=ENGINE, repo_root=None,
+def main(filename=_globals.ENGINE, repo_root=None,
          *, treepath=_files.TREE_IN_ROOT,
-         metadata=REGISTRY.metadata,
-         require=False,
-         rebuild=False,
-         from_raw=None,
-         exclude_raw=False,
-         exclude_views=False,
-         force_rebuild=False):
+         metadata=_globals.REGISTRY.metadata,
+         require: bool = False,
+         rebuild: bool = False,
+         from_raw: bool = None,
+         exclude_raw: bool = False,
+         exclude_views: bool = False,
+         force_rebuild: bool = False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
-    kwargs = {'root': get_root(repo_root, default=ROOT, treepath=treepath),
+    kwargs = {'root': get_root(repo_root, default=_globals.ROOT, treepath=treepath),
               'from_raw': get_from_raw(from_raw, exclude_raw=exclude_raw)}
 
     engine = get_engine(filename, require=require)
@@ -115,7 +115,8 @@ def main(filename=ENGINE, repo_root=None,
     return engine
 
 
-def create_tables(metadata, *, conn, exclude_raw, exclude_views):
+def create_tables(metadata, *, conn,
+                  exclude_raw: bool, exclude_views: bool):
     # import here to register models for create_all()
     log.debug('import module %s.models', __package__)
     from .. import models
@@ -145,7 +146,7 @@ def create_tables(metadata, *, conn, exclude_raw, exclude_views):
 
 
 @contextlib.contextmanager
-def begin(*, bind, pragma_bulk_insert=True):
+def begin(*, bind, pragma_bulk_insert: bool = True):
     """Enter transaction: log boundaries, apply insert optimization, return connection."""
     with _backend.connect(bind=bind) as conn, conn.begin():
         dbapi_conn = conn.connection.connection
@@ -160,7 +161,8 @@ def begin(*, bind, pragma_bulk_insert=True):
     log.debug('end transaction on %r', dbapi_conn)
 
 
-def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
+def load(metadata, *, bind, root,
+         from_raw: bool, exclude_raw: bool, exclude_views: bool):
     log.debug('start load timer')
     start = time.time()
 
@@ -202,7 +204,7 @@ def load(metadata, *, bind, root, from_raw, exclude_raw, exclude_views):
     return dataset
 
 
-def make_dataset(root, *, exclude_raw):
+def make_dataset(root, *, exclude_raw: bool):
     run = functools.partial(_tools.run, cwd=str(root), check=True,
                             capture_output=True, unpack=True)
 
@@ -226,7 +228,7 @@ def write_dataset(conn, *, dataset):
     conn.execute(sa.insert(_models.Dataset), dataset)
 
 
-def write_producer(conn, *, name):
+def write_producer(conn, *, name: str):
     from .. import __version__
 
     params = {'name': name, 'version': __version__}
