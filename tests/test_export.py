@@ -183,7 +183,11 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
      {'source': 'raw'},
      {'source': 'tables'}],
     [{'source': 'raw', 'order_by': 'id'},
-     {'source': 'tables', 'order_by': 'id'}]])
+     {'source': 'tables', 'order_by': 'id'}],
+    [{'source': 'files', 'limit': 10,
+      'expected_prefix': 'path_languoid:path[limit=10]:sha256:'},
+     {'source': 'raw', 'order_by': 'file', 'limit': 10,
+      'expected_prefix': 'path_languoid:file[limit=10]:sha256:'}]])
 def test_checksum_equivalence(treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 
@@ -232,23 +236,28 @@ def test_checksum_equivalence(treedb, kwargs):
     """
     def iterchecksums(kwargs):
         for kw in kwargs:
+            expected_prefix = kw.pop('expected_prefix', None)
             if kw.get('source') == 'raw' and pytest.FLAGS.exclude_raw:
                 pytest.skip('skipped by --exclude-raw')
                 continue
-            yield kw, treedb.checksum(**kw)
+            checksum = treedb.checksum(**kw)
+            prefix, colon, hexdigest = checksum.rpartition(':')
+            prefix += colon
+            yield kw, expected_prefix, prefix, hexdigest
 
     results = list(iterchecksums(kwargs))
 
-    for kw, r in results:
-        prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
-        assert r.startswith(prefix)
-        assert len(r) - len(prefix) == 64
+    for kw, expected_prefix, prefix, hexdigest in results:
+        assert len(hexdigest) == 64
+        if expected_prefix is None:
+            expected_prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
+        assert prefix == expected_prefix
 
     if pytest.FLAGS.glottolog_tag in ('v4.1',
                                       'v4.2', 'v4.2.1',
                                       'v4.3-treedb-fixes'):
         pytest.xfail('format change: minimal countries')
 
-    for (c, cur), (n, nxt) in pairwise(results):
+    for (c, _, _, cur), (n, _, _, nxt) in pairwise(results):
         cur, nxt = (s.rpartition(':')[2] for s in (cur, nxt))
         assert cur == nxt, f'checksum(**{c!r}) == checksum(**{n!r})'
