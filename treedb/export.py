@@ -98,7 +98,9 @@ def iterlanguoids(source: str = 'files',
 
 
 def checksum(source: str = 'tables',
-             *, order_by: str = _globals.LANGUOID_ORDER,
+             *, limit: typing.Optional[int] = None,
+             offset: typing.Optional[int] = 0,
+             order_by: str = _globals.LANGUOID_ORDER,
              hash_name: str = _globals.DEFAULT_HASH,
              bind=_globals.ENGINE):
     """Return checksum over source."""
@@ -108,11 +110,18 @@ def checksum(source: str = 'tables',
     assert hasattr(hashobj, 'hexdigest')
     hashobj, total_lines = write_json_lines(hashobj,
                                             source=source,
+                                            limit=limit,
+                                            offset=offset,
                                             order_by=order_by,
                                             sort_keys=True, bind=bind)
     log.info('%d json lines written', total_lines)
 
-    result = f'{CHECKSUM_NAME}:{order_by}:{hashobj.name}:{hashobj.hexdigest()}'
+    offset = f'offset={offset!r}' if offset else ''
+    limit = f'limit={limit!r}' if limit is not None else ''
+    sliced = ','.join(s for s in (offset, limit) if s)
+    sliced = f'[{sliced}]' if sliced else ''
+    result = (f'{CHECKSUM_NAME}:{order_by}{sliced}'
+              f':{hashobj.name}:{hashobj.hexdigest()}')
     log.info('%s: %r', hashobj.name, result)
     return result
 
@@ -121,6 +130,8 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
                      source: str = 'tables',
+                     limit: typing.Optional[int] = None,
+                     offset: typing.Optional[int] = 0,
                      order_by: str = _globals.LANGUOID_ORDER,
                      sort_keys: bool = True,
                      path_label: str = _globals.PATH_LABEL,
@@ -139,7 +150,9 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
 
     log.info('write json lines: %r', file)
     if source in ('files', 'raw'):
-        items = iterlanguoids(source, order_by=order_by, bind=bind)
+        items = iterlanguoids(source,
+                              limit=limit, offset=offset,
+                              order_by=order_by, bind=bind)
         items = ({path_label: path, languoid_label: languoid}
                  for path, languoid in items)
         return _tools.pipe_json_lines(file, items,
@@ -147,7 +160,9 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                                       delete_present=delete_present,
                                       autocompress=autocompress)
     elif source == 'tables':
-        query = _queries.get_json_query(as_rows=False,
+        query = _queries.get_json_query(limit=limit,
+                                        offset=offset,
+                                        as_rows=False,
                                         load_json=False,
                                         order_by=order_by,
                                         sort_keys=sort_keys,
@@ -172,17 +187,12 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     bind=_globals.ENGINE):
     log.info('fetch languoids from json query, order_by: %r', order_by)
-    query = _queries.get_json_query(order_by=order_by,
+    query = _queries.get_json_query(limit=limit,
+                                    offset=offset,
+                                    order_by=order_by,
                                     as_rows=True,
                                     load_json=True)
-
-    if offset:
-        query = query.offset(offset)
-        del offset
-
-    if limit is not None:
-        query = query.limit(limit)
-        del limit
+    del limit, offset
 
     json_datetime = _compat.datetime_fromisoformat
 

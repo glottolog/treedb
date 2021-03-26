@@ -4,6 +4,7 @@ import functools
 import io
 import logging
 import operator
+import typing
 import warnings
 
 from .. import _globals
@@ -46,7 +47,9 @@ def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 
-def pd_read_json_lines(*, order_by: str = _globals.LANGUOID_ORDER,
+def pd_read_json_lines(*, limit: typing.Optional[int] = None,
+                       offset: typing.Optional[int] = 0,
+                       order_by: str = _globals.LANGUOID_ORDER,
                        sort_keys: bool = True,
                        path_label: str = _globals.PATH_LABEL,
                        languoid_label: str = _globals.LANGUOID_LABEL,
@@ -59,7 +62,9 @@ def pd_read_json_lines(*, order_by: str = _globals.LANGUOID_ORDER,
 
     from .. import queries
 
-    query = queries.get_json_query(as_rows=False,
+    query = queries.get_json_query(limit=limit,
+                                   offset=offset,
+                                   as_rows=False,
                                    load_json=False,
                                    order_by=order_by,
                                    sort_keys=sort_keys,

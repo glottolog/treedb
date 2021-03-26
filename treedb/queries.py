@@ -319,7 +319,9 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
 
 
 @_views.register_view('path_languoid', as_rows=True, load_json=False)
-def get_json_query(*, order_by: str = _globals.LANGUOID_ORDER,
+def get_json_query(*, limit: typing.Optional[int] = None,
+                   offset: typing.Optional[int] = 0,
+                   order_by: str = _globals.LANGUOID_ORDER,
                    as_rows: bool = False,
                    load_json: bool = True,
                    sort_keys: bool = False,
@@ -377,9 +379,15 @@ def get_json_query(*, order_by: str = _globals.LANGUOID_ORDER,
         column_for_path_order = file_path
 
     select_json = select(*columns).select_from(Languoid)
-    return _add_order_by(select_json,
-                         order_by=order_by,
-                         column_for_path_order=column_for_path_order)
+    select_json = _add_order_by(select_json,
+                                order_by=order_by,
+                                column_for_path_order=column_for_path_order)
+
+    if offset:
+        select_json = select_json.offset(offset)
+    if limit is not None:
+        select_json = select_json.limit(limit)
+    return select_json
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html
