@@ -29,12 +29,13 @@ DATE_FORMAT = '%Y-%m-%d'
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
-ISO_8601_INTERVAL = re.compile(r'(?P<start_sign>[+-]?)'
-                               r'(?P<start_date>\d{1,4}-\d{2}-\d{2})'
-                               r'/'
-                               r'(?P<end_sign>[+-]?)'
-                               r'(?P<end_date>\d{1,4}-\d{2}-\d{2})',
-                               flags=re.ASCII)
+ISO_8601_INTERVAL = re.compile(r'''
+(?P<start_sign>[+-]?)
+(?P<start_date>\d{1,4}-\d{2}-\d{2})
+/
+(?P<end_sign>[+-]?)
+(?P<end_date>\d{1,4}-\d{2}-\d{2})
+'''.strip(), flags=(re.ASCII | re.VERBOSE))
 
 
 log = logging.getLogger(__name__)
@@ -333,7 +334,7 @@ _COUNTRY_PATTERN = re.compile(r'''
         (?P<id>[^)]+)
     \)
 )
-'''.strip(), re.VERBOSE)
+'''.strip(), flags=re.VERBOSE)
 
 
 def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
@@ -356,7 +357,7 @@ _LINK_PATTERN = re.compile(r'''
 \(
     (?P<url>[^)]+)
 \)
-'''.strip(), re.VERBOSE)
+'''.strip(), flags=re.VERBOSE)
 
 
 def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
@@ -401,7 +402,7 @@ _SOURCE_PATTERN = re.compile(r'''
         (?P<trigger>[^\"]+)
     ">
 )?
-'''.strip(), re.VERBOSE)
+'''.strip(), flags=re.VERBOSE)
 
 
 def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
@@ -436,7 +437,7 @@ _ALTNAME_PATTERN = re.compile(r'''
          (?P<lang>[a-z]{2,3})
      \]
 )?
-'''.strip(), re.VERBOSE)
+'''.strip(), flags=re.VERBOSE)
 
 
 def splitaltname(s, *, _match=_ALTNAME_PATTERN.fullmatch):

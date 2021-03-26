@@ -134,8 +134,8 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
     """
     if file is None:
-        file = (FALLBACK_ENGINE_PATH if source == 'files'
-                else bind.file).with_name(f'{file.stem}-{source}.languoids{suffix}')
+        file = FALLBACK_ENGINE_PATH if source == 'files' else bind.file
+        file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
 
     log.info('write json lines: %r', file)
     if source in ('files', 'raw'):
