@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.1 (in development)
-----------------------------
+Version 2.1
+-----------
 
 Bump ``pandas`` optional dependency to ``>=1``.
 
