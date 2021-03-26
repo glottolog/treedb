@@ -167,7 +167,7 @@ def insert_languoid(languoid, *, conn,
     if links:
         conn.execute(sa.insert(Link),
                      [dict(languoid_id=lid, ord=i, **link)
-                      for i, link in enumerate(links, 1)])
+                      for i, link in enumerate(links, start=1)])
 
     if timespan:
         conn.execute(sa.insert(Timespan),
@@ -204,7 +204,7 @@ def insert_languoid(languoid, *, conn,
                      [{'languoid_id': lid, 'field': field,
                        'trigger': t, 'ord': i}
                       for field, triggers in triggers.items()
-                      for i, t in enumerate(triggers, 1)])
+                      for i, t in enumerate(triggers, start=1)])
 
     if identifier is not None:
         conn.execute(sa.insert(Identifier),
@@ -221,7 +221,7 @@ def insert_languoid(languoid, *, conn,
                              [dict(languoid_id=lid, kind=kind,
                                    bibitem_id=bibitem_ids.pop_params(r),
                                    ord=i, **r)
-                              for i, r in enumerate(value, 1)])
+                              for i, r in enumerate(value, start=1)])
             else:
                 conn.execute(sa.insert(ClassificationComment),
                              {'languoid_id': lid, 'kind': kind,
@@ -245,4 +245,4 @@ def insert_languoid(languoid, *, conn,
         if change_to:
             conn.execute(sa.insert(IsoRetirementChangeTo),
                          [{'languoid_id': lid, 'code': c, 'ord': i}
-                          for i, c in enumerate(change_to, 1)])
+                          for i, c in enumerate(change_to, start=1)])

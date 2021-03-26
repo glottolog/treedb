@@ -200,7 +200,7 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
 
     n = 0
     make_item = _globals.LanguoidItem.from_filepath_languoid
-    for n, (path, item) in enumerate(rows, 1):
+    for n, (path, item) in enumerate(rows, start=1):
         endangerment = item['endangerment']
         if endangerment is not None:
             endangerment['date'] = json_datetime(endangerment['date'])

@@ -149,7 +149,7 @@ def dump_sql(filename=None,
     n = 0
     with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
          open_path('wt', encoding=encoding) as f:
-        for n, line in enumerate(dbapi_conn.iterdump(), 1):
+        for n, line in enumerate(dbapi_conn.iterdump(), start=1):
             print(line, file=f)
             if not (n % progress_after):
                 log.info('%s lines written', f'{n:_d}')

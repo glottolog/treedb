@@ -81,7 +81,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
             # join in-memory by file_id total order index
             path_values = zip(files, groupby_file(values))
 
-            for count, ((path,), (_, values)) in enumerate(path_values, 1):
+            for count, ((path,), (_, values)) in enumerate(path_values, start=1):
                 record = {
                     s: {o: [l.value for l in lines] if is_lines else next(lines).value
                        for (o, is_lines), lines in groupby_option(sections)}

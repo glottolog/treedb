@@ -203,7 +203,7 @@ def iterslices(iterable, *, size: int):
 def write_lines(file, lines):
     write_line = functools.partial(print, file=file)
     total = 0
-    for total, line in enumerate(lines):
+    for total, line in enumerate(lines, start=1):
         write_line(line)
     return total
 
@@ -360,4 +360,4 @@ class Ordering(dict):
 
     def sorted_enumerate(self, keys, start: int = 0):
         keyed = sorted((self[key], key) for key in keys)
-        return ((i, key) for i, (_, key) in enumerate(keyed, start))
+        return ((i, key) for i, (_, key) in enumerate(keyed, start=start))
