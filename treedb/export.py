@@ -63,9 +63,9 @@ def iterlanguoids(source: str = 'files',
                   root=_globals.ROOT, bind=_globals.ENGINE,
                   ) -> typing.Iterable[_globals.LanguoidItem]:
     """Yield (path, languoid) pairs from diffferent sources."""
-    log.info('generate languoids from %s', source)
+    log.info('generate languoids from %r', source)
     if source in ('files', 'raw'):
-        log.info('extract languoids from %s', source)
+        log.info('extract languoids from %r', source)
         if source == 'files':
             if order_by not in ('path', 'file', True, None, False):
                 raise ValueError(f'order_by={order_by!r} not implemented')
@@ -102,7 +102,7 @@ def checksum(source: str = 'tables',
              hash_name: str = _globals.DEFAULT_HASH,
              bind=_globals.ENGINE):
     """Return checksum over source."""
-    log.info('hash languoids json lines from %s ordered by %s with %s',
+    log.info('hash languoids json lines from %r ordered by %r with %r',
              source, order_by, hash_name)
     hashobj = hashlib.new(hash_name)
     assert hasattr(hashobj, 'hexdigest')
@@ -208,7 +208,7 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                 source: str = 'tables',
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE) -> int:
-    log.info('write from tables to tree')
+    log.info('write from tables to tree %r', root)
 
     from . import files
 
