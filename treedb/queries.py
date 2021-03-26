@@ -105,8 +105,6 @@ def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
 @_views.register_view('example')
 def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
-    group_concat = lambda x: sa.func.group_concat(x, separator)
-
     path, family, language = Languoid.path_family_language()
 
     select_languoid = (select(Languoid.id,
@@ -125,6 +123,9 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     select_languoid = _add_order_by(select_languoid,
                                     order_by=order_by,
                                     column_for_path_order=path)
+
+    def group_concat(x):
+        return sa.func.group_concat(x, separator)
 
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -322,7 +323,7 @@ def get_json_query(*, order_by: str = _globals.LANGUOID_ORDER,
                    as_rows: bool = False,
                    load_json: bool = True,
                    sort_keys: bool = False,
-                   path_label: str  = _globals.PATH_LABEL,
+                   path_label: str = _globals.PATH_LABEL,
                    languoid_label: str = _globals.LANGUOID_LABEL):
     json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
 

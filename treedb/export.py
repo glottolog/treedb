@@ -163,7 +163,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                                             autocompress=autocompress)
         return result
     else:
-         raise ValueError(f'unknown source: {source!r}')
+        raise ValueError(f'unknown source: {source!r}')
 
 
 def fetch_languoids(*, limit: typing.Optional[int] = None,

@@ -24,6 +24,8 @@ if df is not None:
 
 #treedb.write_csv()
 
+#treedb.write_languoids()
+
 #treedb.files.roundtrip()
 
 #import treedb.raw

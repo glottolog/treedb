@@ -93,26 +93,21 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                 'iso_retirement': None}
 
     if SOURCES in cfg:
-        sources = skip_empty({
-            provider: [splitsource(p) for p in _make_lines(sources)]
-            for provider, sources in cfg['sources'].items()
-        })
+        sources = {provider: [splitsource(p) for p in _make_lines(sources)]
+                   for provider, sources in cfg['sources'].items()}
+        sources = skip_empty(sources)
         if sources:
             languoid[SOURCES] = sources
 
     if ALTNAMES in cfg:
-        altnames = {
-            provider: [splitaltname(a) for a in _make_lines(altnames)]
-            for provider, altnames in cfg[ALTNAMES].items()
-        }
+        altnames = {provider: [splitaltname(a) for a in _make_lines(altnames)]
+                    for provider, altnames in cfg[ALTNAMES].items()}
         if altnames:
             languoid[ALTNAMES] = altnames
 
     if TRIGGERS in cfg:
-        triggers = {
-            field: _make_lines(triggers)
-            for field, triggers in cfg[TRIGGERS].items()
-        }
+        triggers = {field: _make_lines(triggers)
+                    for field, triggers in cfg[TRIGGERS].items()}
         if triggers:
             languoid[TRIGGERS] = triggers
 
@@ -123,12 +118,10 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
             languoid[IDENTIFIER] = identifier
 
     if CLASSIFICATION in cfg:
-        classification = skip_empty({
-            c: list(map(splitsource, _make_lines(classifications)))
-               if c.endswith('refs') else
-               classifications
-            for c, classifications in cfg[CLASSIFICATION].items()
-        })
+        classification = {c: (list(map(splitsource, _make_lines(classifications)))
+                              if c.endswith('refs') else classifications)
+                          for c, classifications in cfg[CLASSIFICATION].items()}
+        classification = skip_empty(classification)
         if classification:
             languoid[CLASSIFICATION] = classification
 
@@ -330,15 +323,20 @@ def format_interval(value, year_tmpl='{: 05d}'):
             '{end_year}-{end_month:02d}-{end_day:02d}').format_map(context)
 
 
-def splitcountry(name, *, _match=re.compile(r'(?P<id_only>[A-Z]{2})'
-                                            r'|'
-                                            r'(?:'
-                                            r'(?P<name>.+?)'
-                                                r' '
-                                                r'\('
-                                                r'(?P<id>[^)]+)'
-                                                r'\)'
-                                            r')').fullmatch):
+_COUNTRY_PATTERN = re.compile(r'''
+(?P<id_only>[A-Z]{2})
+|
+(?:
+    (?P<name>.+?)
+    [ ]
+    \(
+        (?P<id>[^)]+)
+    \)
+)
+'''.strip(), re.VERBOSE)
+
+
+def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
     groups = _match(name).groupdict()
     id_only = groups.pop('id_only')
     if id_only:
@@ -351,12 +349,17 @@ def formatcountry(value, minimal=True):
     return ('{name} ({id})' if not minimal else '{id}').format_map(value)
 
 
-def splitlink(markdown, *, _match=re.compile(r'\['
-                                             r'(?P<title>[^]]+)'
-                                             r'\]'
-                                             r'\('
-                                             r'(?P<url>[^)]+)'
-                                             r'\)').fullmatch):
+_LINK_PATTERN = re.compile(r'''
+\[
+    (?P<title>[^]]+)
+\]
+\(
+    (?P<url>[^)]+)
+\)
+'''.strip(), re.VERBOSE)
+
+
+def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -380,23 +383,28 @@ def formatlink(value):
     return '[{title}]({url})'.format_map(value)
 
 
-def splitsource(s, *, _match=re.compile(r'\*{2}'
-                                        r'(?P<bibfile>[a-z0-9_\-]+)'
-                                        r':'
-                                        r"(?P<bibkey>[a-zA-Z0-9_\-/.;:?!'()\[\]]+?)"
-                                        r'\*{2}'
-                                        r'(?:'
-                                            r':'
-                                            r'(?P<pages>'
-                                                r'[0-9]+(?:-[0-9]+)?'
-                                                r'(?:[,;] [0-9]+(?:-[0-9]+)?)*'
-                                           r')'
-                                        r')?'
-                                        r'(?:'
-                                            r'<trigger "'
-                                            r'(?P<trigger>[^\"]+)'
-                                        r'">'
-                                        r')?').match,  # <=v4.1 compat
+_SOURCE_PATTERN = re.compile(r'''
+\*{2}
+    (?P<bibfile>[a-z0-9_\-]+)
+    :
+    (?P<bibkey>[a-zA-Z0-9_\-/.;:?!'()\[\]]+?)
+\*{2}
+(?:
+    :
+    (?P<pages>
+        [0-9]+(?:-[0-9]+)?
+        (?:[,;][ ][0-9]+(?:-[0-9]+)?)*
+    )
+)?
+(?:
+    <trigger[ ]"
+        (?P<trigger>[^\"]+)
+    ">
+)?
+'''.strip(), re.VERBOSE)
+
+
+def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
                 endangerment=False):
     if endangerment and s.isalnum():
         return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
@@ -420,12 +428,18 @@ def formatsource(value, endangerment=False):
     return ''.join(result)
 
 
-def splitaltname(s, *, _match=re.compile(r'(?P<name>.+?)'
-                                         r'(?: '
-                                             r'\['
-                                             r'(?P<lang>[a-z]{2,3})'
-                                             r'\]'
-                                         r')?').fullmatch):
+_ALTNAME_PATTERN = re.compile(r'''
+(?P<name>.+?)
+(?:
+    [ ]
+     \[
+         (?P<lang>[a-z]{2,3})
+     \]
+)?
+'''.strip(), re.VERBOSE)
+
+
+def splitaltname(s, *, _match=_ALTNAME_PATTERN.fullmatch):
     return _match(s).groupdict()
 
 

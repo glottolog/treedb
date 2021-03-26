@@ -32,9 +32,9 @@ REGISTRY = _registry()
 
 SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
 
-__all__ = ['CONFIG', 'DEFAULT_ROOT', 'DEFAULT_ENGINE',
+__all__ = ['CONFIG', 'DEFAULT_ROOT',
            'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
-           'CHECKSUM_NAME', 'DEFAULT_HASH', 'FILE_PATH_SEP',
+           'DEFAULT_HASH', 'FILE_PATH_SEP',
            'ENGINE', 'ROOT',
            'REGISTRY',
            'SESSION',
