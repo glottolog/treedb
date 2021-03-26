@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 2.1.1 (in development)
-------------------------------
+Version 2.1.1
+-------------
 
-
+Fix ``write_files()``.
 
 
 Version 2.1
