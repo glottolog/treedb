@@ -66,14 +66,24 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r" end_year=\d+ end_month=\d+ end_day=\d+>"),
     (_models.Source, None,
      r"<Source languoid_id='\w+' provider_id=\d+ bibitem_id=\d+>"),
+    (_models.SourceProvider, _models.SourceProvider.name == 'glottolog',
+     r"<SourceProvider name='glottolog'>"),
     (_models.Bibfile, _models.Bibfile.name == 'hh',
      r"<Bibfile id=\d+ name='hh'>"),
+    (_models.Bibitem, None,
+     r"<Bibitem bibfile_id=\d+ bibkey='[^']+'>"),
+     (_models.Altname, _models.Altname.lang != None,
+      r"<Altname languoid_id='\w+' provider_id=\d+ name='[^']+' lang='[^']*'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
      "<AltnameProvider name='multitree'>"),
-    (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
-     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
+    (_models.Trigger, None,
+     r"<Trigger languoid_id='\w+' field='[^']+' trigger='[^']+'>"),
+    (_models.Identifier, None,
+     r"<Identifier languoid_id='\w+' site_id=\d+ identifier='[^']+'>"),
     (_models.IdentifierSite, _models.IdentifierSite.name == 'multitree',
-     "<IdentifierSite name='multitree'>")])
+     "<IdentifierSite name='multitree'>"),
+    (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
+     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>")])
 def test_repr(treedb, model, whereclause, expected_repr):
     query = sa.select(model)
     if whereclause is not None:
@@ -82,4 +92,6 @@ def test_repr(treedb, model, whereclause, expected_repr):
     with treedb.Session() as session:
         inst = session.execute(query).scalars().first()
 
-    assert re.fullmatch(expected_repr, repr(inst))
+    result = repr(inst)
+
+    assert re.fullmatch(expected_repr, result)

@@ -718,7 +718,7 @@ class Altname:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
-                f' povider_id={self.provider_id!r}'
+                f' provider_id={self.provider_id!r}'
                 f' name={self.name!r}'
                 f' lang={self.lang!r}>')
 
