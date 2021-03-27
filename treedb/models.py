@@ -87,6 +87,7 @@ class Languoid:
     level = Column(Enum(*LEVEL, create_constraint=True), nullable=False)
 
     parent_id = Column(ForeignKey('languoid.id',
+                                  # do not require to insert parent before child
                                   deferrable=True, initially='DEFERRED'),
                        index=True)
 

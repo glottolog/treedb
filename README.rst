@@ -140,14 +140,14 @@ Execute a simple query with ``sqlalchemy`` core and write it to a CSV file:
     >>> treedb.write_csv(sa.select(treedb.Languoid), filename='languoids.csv')
     ...Path('languoids.csv')
 
-Get one row from the ``languoid`` table via `sqlalchemy` core (ordered by Glottocode):
+Get one row from the ``languoid`` table via `sqlalchemy` core (in Glottocode order):
 
 .. code:: python
 
     >>> next(treedb.iterrows(sa.select(treedb.Languoid)))
     ('3adt1234', '3Ad-Tekles', 'dialect', 'nort3292', None, None, None, None)
 
-Get one ``Languoid`` model instance via ``sqlalchemy`` orm (orderd by Glottocode):
+Get one ``Languoid`` model instance via ``sqlalchemy`` orm (in Glottocode order):
 
 .. code:: python
 

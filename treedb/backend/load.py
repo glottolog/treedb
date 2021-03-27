@@ -259,8 +259,8 @@ def import_languoids(conn, *, root, source: str):
         order_by = True
         root_or_bind = root
     elif source == 'raw':
-        # import_models.insert_languoid() requires parent before child, we use path order for this
-        order_by = 'path'
+        # insert languoids in Glottocode order when reading from raw
+        order_by = 'id'
         root_or_bind = conn
     else:
         ValueError(f'unknown source: {source!r}')
