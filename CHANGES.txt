@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.1.2 (in development)
-------------------------------
+Version 2.1.2
+-------------
 
 Insert languoids in Glottocode order again when loading from raw.
 
