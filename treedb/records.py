@@ -57,8 +57,10 @@ def parse(records: typing.Iterable[_globals.RecordItem],
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def dump(languoids: typing.Iterable[_globals.LanguoidItem]
-         ) -> typing.Iterator[_globals.RecordItem]:
+def dump(languoids: typing.Iterable[_globals.LanguoidItem],
+         *, from_raw: bool) -> typing.Iterator[_globals.RecordItem]:
+    if from_raw:  # pragma: no cover
+        raise NotImplementedError
     for path, l in languoids:
         record = make_record(l)
         yield path, record

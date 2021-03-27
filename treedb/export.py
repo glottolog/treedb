@@ -264,15 +264,23 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                 dry_run: bool = False,
                 require_nwritten: typing.Optional[int] = None,
                 source: str = 'tables',
+                limit: typing.Optional[int] = None,
+                offset: typing.Optional[int] = 0,
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE) -> int:
-    log.info('write from tables to tree %r', root)
+    log.info('write from %r to tree %r', source, root)
+    if source == 'files':  # pragma: no cover
+        raise NotImplementedError('simultaneaous write and read of files')
 
     from . import files
 
-    languoids = iterlanguoids(source, order_by='path', bind=bind)
+    languoids = iterlanguoids(source,
+                              limit=limit,
+                              offset=offset,
+                              order_by='path',
+                              bind=bind)
 
-    records = _records.dump(languoids)
+    records = _records.dump(languoids, from_raw=(source == 'raw'))
 
     return files.write_files(records, root=root, replace=replace,
                              dry_run=dry_run,

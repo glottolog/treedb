@@ -44,6 +44,14 @@ log = logging.getLogger(__name__)
 
 
 def next_count(start: int = 0, step: int = 1):
+    """Return a callable returning descending ints.
+
+    >>> nxt = next_count(1)
+    >>> nxt()
+    1
+    >>> nxt()
+    2
+    """
     count = itertools.count(start, step)
     return functools.partial(next, count)
 
@@ -56,6 +64,17 @@ def groupby_attrgetter(*attrnames):
 def islice_limit(iterable,
                  *, limit: typing.Optional[int] = None,
                  offset: typing.Optional[int] = 0):
+    """Return a slice from iterable applying limit and offset.
+
+    >>> list(islice_limit('spam', limit=3))
+    ['s', 'p', 'a']
+    >>> list(islice_limit('spam', offset=3))
+    ['m']
+    >>> list(islice_limit('spam', offset=2, limit=2))
+    ['p', 'a']
+    >>> list(islice_limit('spam'))
+    ['s', 'p', 'a', 'm']
+    """
     if limit is not None and offset:
         stop = limit + offset
         return itertools.islice(iterable, limit, stop)
@@ -336,11 +355,28 @@ def run(cmd, *, capture_output: bool = False,
 
 
 def uniqued(iterable):
+    """Return list of unique hashable elements preserving order.
+
+    >>> uniqued('spamham')
+    ['s', 'p', 'a', 'm', 'h']
+    """
     seen = set()
-    return [i for i in iterable if i not in seen or not seen.add(i)]
+    return [i for i in iterable if i not in seen and not seen.add(i)]
 
 
 class Ordering(dict):
+    """Dict returning infinity for unknown keys ordering them lexicographically.
+
+    >>> o = Ordering.fromlist(['spam', 'eggs', 'bacon'])
+    >>> o
+     {'spam': 0, 'eggs': 1, 'bacon': 2}
+    >>> o['ham']
+    inf
+    >>> o.sorted(['ham', 'bacon', 'eggs', 'am'])
+    ['eggs', 'bacon', 'am', 'ham']
+    >>> list(o.sorted_enumerate(['ham', 'bacon', 'eggs'], start=1))
+    [(1, 'eggs'), (2, 'bacon'), (3, 'ham')]
+    """
 
     _missing = float('inf')
 

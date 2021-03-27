@@ -16,7 +16,7 @@ def test_pipe(bare_treedb, *, n=100):
 
 def test_dump(bare_treedb, *, n=100):
     languoids = bare_treedb.iterlanguoids()
-    items = bare_treedb.records.dump(languoids)
+    items = bare_treedb.records.dump(languoids, from_raw=False)
 
     for path, record in get_assert_head(items, n=n):
         assert_nonempty_string_tuple(path)
