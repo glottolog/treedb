@@ -70,16 +70,18 @@ def islice_limit(iterable,
     ['s', 'p', 'a']
     >>> list(islice_limit('spam', offset=3))
     ['m']
-    >>> list(islice_limit('spam', offset=2, limit=2))
+    >>> list(islice_limit('spam', offset=1, limit=2))
     ['p', 'a']
     >>> list(islice_limit('spam'))
     ['s', 'p', 'a', 'm']
     """
     if limit is not None and offset:
-        stop = limit + offset
-        return itertools.islice(iterable, limit, stop)
+        stop = offset + limit
+        return itertools.islice(iterable, offset, stop)
     elif limit is not None:
         return itertools.islice(iterable, limit)
+    elif offset:
+        return itertools.islice(iterable, offset, None)
     return iterable
 
 
@@ -369,7 +371,7 @@ class Ordering(dict):
 
     >>> o = Ordering.fromlist(['spam', 'eggs', 'bacon'])
     >>> o
-     {'spam': 0, 'eggs': 1, 'bacon': 2}
+    {'spam': 0, 'eggs': 1, 'bacon': 2}
     >>> o['ham']
     inf
     >>> o.sorted(['ham', 'bacon', 'eggs', 'am'])

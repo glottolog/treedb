@@ -320,12 +320,6 @@ class Languoid:
         return sa.select(path).label(label)
 
     @classmethod
-    def path_as_json(cls, *, label: str = 'path'):
-        squery = cls._path_part(include_self=True, bottomup=False)
-        path = sa.func.json_group_array(squery.c.path_part).label(label)
-        return sa.select(path).label(label)
-
-    @classmethod
     def node_relative(cls, *, from_parent: bool = False,
                       innerjoin=False,
                       child_root=None, parent_root=None, node_level=None,

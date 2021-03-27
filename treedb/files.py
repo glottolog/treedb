@@ -175,7 +175,7 @@ def write_files(records: RecordsType, root=_globals.ROOT,
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
 
-    if replace:
+    if replace:  # pragma: no cover
         if dry_run:
             warnings.warning(f'replace=True ignored by dry_run=True')
         else:

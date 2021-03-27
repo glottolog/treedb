@@ -97,7 +97,7 @@ class Check(object):
         return f'{self.__class__.__name__}: {msg}'
 
     @staticmethod
-    def show_detail(invalid, invalid_count, number=25):
+    def show_detail(invalid, invalid_count, number=25):  # pragma: no cover
         ids = (i.id for i in itertools.islice(invalid, number))
         cont = ', ...' if number < invalid_count else ''
         print(f"    {', '.join(ids)}{cont}")
@@ -251,7 +251,7 @@ def no_empty_files(*, exclude_raw: bool):
 
 
 def compare_languoids(left_source: str = 'files', right_source: str = 'raw',
-                      *, order_by: str = _globals.LANGUOID_ORDER):
+                      *, order_by: str = _globals.LANGUOID_ORDER):  # pragma: no cover
     from . import export
 
     def compare(left, right):
