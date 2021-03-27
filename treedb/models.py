@@ -499,7 +499,7 @@ class Link:
                 f' ord={self.ord!r}'
                 f' url={self.url!r}'
                 f' title={self.title!r}'
-                f' scheme={self.schemme!r}>')
+                f' scheme={self.scheme!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,

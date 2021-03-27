@@ -59,6 +59,8 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Macroarea 'Eurasia'>"),
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
+    (_models.Link, _models.Link.title != None,
+     r"<Link langioid_id='\w+', ord=\d+, url='\w+', title='\w+', scheme='https?'>"),
     (_models.Bibfile, _models.Bibfile.name == 'hh',
      r"<Bibfile id=\d+ name='hh'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
@@ -75,4 +77,4 @@ def test_repr(treedb, model, whereclause, expected_repr):
     with treedb.Session() as session:
         inst = session.execute(query).scalars().first()
 
-    assert re.match(expected_repr, inst)
+    assert re.fullmatch(expected_repr, repr(inst))
