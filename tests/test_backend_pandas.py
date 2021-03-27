@@ -2,6 +2,8 @@ import sqlalchemy as sa
 
 import pytest
 
+INFO_KWARGS = {'memory_usage': 'deep'}
+
 
 @pytest.mark.filterwarnings('ignore'
                             ':the imp module is deprecated'
@@ -19,7 +21,7 @@ def test_pd_read_sql(treedb):
         assert list(df.columns)[:5] == ['name', 'level', 'parent_id',
                                         'hid', 'iso639_3']
         assert df.index.is_unique
-        df.info()
+        df.info(**INFO_KWARGS)
 
 
 def test_pd_read_json_lines(treedb):
@@ -32,4 +34,4 @@ def test_pd_read_json_lines(treedb):
         assert df.index.name == 'id'
         assert list(df.columns) == ['path', 'languoid']
         assert df.index.is_unique
-        df.info()
+        df.info(**INFO_KWARGS)
