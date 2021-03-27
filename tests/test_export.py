@@ -176,6 +176,19 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
         assert treedb.sha256sum(filepath) == expected_checksum
 
 
+def test_pd_read_languoids(treedb):
+    df = treedb.pd_read_languoids()
+
+    if treedb.backend.pandas.PANDAS is None:
+        assert df is None
+    else:
+        assert not df.empty
+        assert df.index.name == 'id'
+        assert list(df.columns) == ['path', 'languoid']
+        assert df.index.is_unique
+        df.info(memory_usage='deep')
+
+
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.parametrize('kwargs', [

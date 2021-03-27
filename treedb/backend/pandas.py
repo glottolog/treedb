@@ -16,6 +16,8 @@ __all__ = ['pd_read_sql',
 
 PANDAS = None
 
+JSON_BUFLINES = 5_000
+
 
 log = logging.getLogger(__name__)
 
@@ -47,48 +49,47 @@ def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 
-def pd_read_json_lines(*, limit: typing.Optional[int] = None,
-                       offset: typing.Optional[int] = 0,
-                       order_by: str = _globals.LANGUOID_ORDER,
-                       sort_keys: bool = True,
-                       path_label: str = _globals.PATH_LABEL,
-                       languoid_label: str = _globals.LANGUOID_LABEL,
-                       buflines: int = 5_000,
-                       bind=_globals.ENGINE, **kwargs):
+def pd_read_json_lines(query,
+                       *, buflines: int = JSON_BUFLINES,
+                       bind=_globals.ENGINE,
+                       **kwargs):
     _import_pandas()
 
     if PANDAS is None:
         return None
 
-    from .. import queries
-
-    query = queries.get_json_query(limit=limit,
-                                   offset=offset,
-                                   as_rows=False,
-                                   load_json=False,
-                                   order_by=order_by,
-                                   sort_keys=sort_keys,
-                                   path_label=path_label,
-                                   languoid_label=languoid_label)
-
-    with _backend.connect(bind=bind) as conn, io.StringIO() as buf:
+    with _backend.connect(bind=bind) as conn:
         result = conn.execute(query)
+        json_lines = result.scalars()
+        return _pd_read_json_lines(json_lines, **kwargs)
+
+
+def _pd_read_json_lines(json_lines: typing.Iterable[str],
+                        *, buflines: int = JSON_BUFLINES,
+                        concat_ignore_index: bool = False,
+                        **kwargs):
+    _import_pandas()
+
+    if PANDAS is None:
+        return None
+
+    with io.StringIO() as buf:
         print_line = functools.partial(print, file=buf)
         df = None
-        # TODO: try result.partitions()
-        for lines in _tools.iterslices(result.scalars(), size=buflines):
-            for line in lines:
+        for chunk in _tools.iterslices(json_lines, size=buflines):
+            for line in chunk:
                 print_line(line)
             buf.seek(0)
-            lines_df = PANDAS.read_json(buf, orient='record', lines=True, **kwargs)
+
+            lines_df = PANDAS.read_json(buf, lines=True, **kwargs)
             buf.seek(0)
             buf.truncate()
+
             if df is None:
                 df = lines_df
             else:
-                df = PANDAS.concat([df, lines_df], copy=False)
+                df = PANDAS.concat([df, lines_df],
+                                   ignore_index=concat_ignore_index,
+                                   copy=False)
 
-    df.rename(columns={_globals.PATH_LABEL: 'path'}, inplace=True)
-    index = df['languoid'].map(operator.itemgetter('id')).rename('id')
-    df.set_index(index, inplace=True, verify_integrity=True)
     return df

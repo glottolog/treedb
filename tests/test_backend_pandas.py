@@ -25,13 +25,34 @@ def test_pd_read_sql(treedb):
 
 
 def test_pd_read_json_lines(treedb):
-    df = treedb.pd_read_languoids()
+    query = sa.select(sa.func.json_object('id', treedb.Languoid.id,
+                                          'name', treedb.Languoid.name))
+    df = treedb.pd_read_json_lines(query, concat_ignore_index=True)
+
+    if treedb.backend.pandas.PANDAS is None:
+        assert df is None
+    else:
+        assert not df.empty
+        assert list(df.columns) == ['id', 'name']
+        assert df.index.is_unique
+        df.info(**INFO_KWARGS)
+
+
+@pytest.mark.xfail(reason="broken pd.read_json(orient='index', lines=True)",
+                   raises=AttributeError)
+def test_pd_read_json_lines_orient_index(treedb):
+    languoid = sa.func.json_object('name', treedb.Languoid.name,
+                                   'level', treedb.Languoid.level)
+    languoid = sa.func.json_object(treedb.Languoid.id, languoid)
+    query = sa.select(languoid)
+
+    df = treedb.pd_read_json_lines(query, orient='index')
 
     if treedb.backend.pandas.PANDAS is None:
         assert df is None
     else:
         assert not df.empty
         assert df.index.name == 'id'
-        assert list(df.columns) == ['path', 'languoid']
+        assert list(df.columns) == ['name', 'level']
         assert df.index.is_unique
         df.info(**INFO_KWARGS)

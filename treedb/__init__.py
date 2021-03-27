@@ -28,7 +28,7 @@ from .backend.models import (Dataset,
                              Producer)
 
 from .backend.pandas import (pd_read_sql,
-                             pd_read_json_lines as pd_read_languoids)
+                             pd_read_json_lines)
 
 from .backend.sqlite_master import (print_table_sql,
                                     select_tables_nrows)
@@ -45,6 +45,7 @@ from .export import (print_languoid_stats,
                      iterlanguoids,
                      checksum,
                      write_json_lines as write_languoids,
+                     pd_read_languoids,
                      write_files)
 
 from .files import (set_root,
@@ -71,7 +72,7 @@ __all__ = ['Session',
            'print_rows', 'write_csv', 'hash_csv',
            'load',
            'Dataset', 'Producer',
-           'pd_read_sql', 'pd_read_languoids',
+           'pd_read_sql', 'pd_read_json_lines',
            'print_table_sql', 'select_tables_nrows',
            'views',
            'check', 'compare_languoids',
@@ -80,6 +81,7 @@ __all__ = ['Session',
            'iterlanguoids',
            'checksum',
            'write_languoids',
+           'pd_read_languoids',
            'write_files',
            'set_root', 'iterfiles',
            'checkout_or_clone',
