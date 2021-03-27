@@ -9,13 +9,20 @@ python:
   - "3.9"
 env:
   - FLAGS=
+  - FLAGS=tests
   - FLAGS=--glottolog-tag=master
 jobs:
   exclude:
     - python: 3.6
+      env: FLAGS=tests
+    - python: 3.6
       env: FLAGS=--glottolog-tag=master
     - python: 3.7
+      env: FLAGS=tests
+    - python: 3.7
       env: FLAGS=--glottolog-tag=master
+    - python: 3.8
+      env: FLAGS=tests
     - python: 3.8
       env: FLAGS=--glottolog-tag=master
 install: pip install .[test,pretty,pandas] codecov

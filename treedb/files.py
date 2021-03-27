@@ -5,6 +5,7 @@ import functools
 import logging
 import os
 import typing
+import warnings
 
 from . import _globals
 from . import _tools
@@ -164,7 +165,9 @@ def roundtrip(root=_globals.ROOT, *, replace: bool = False,
 
 
 def write_files(records: RecordsType, root=_globals.ROOT,
-                *, replace: bool = False,
+                *, replace: bool = False, dry_run: bool = False,
+                quiet: typing.Optional[bool] = None,
+                require_nwritten: typing.Optional[int] = None,
                 progress_after=_tools.PROGRESS_AFTER,
                 basename: str = BASENAME,
                 raw: bool = False) -> int:
@@ -173,7 +176,10 @@ def write_files(records: RecordsType, root=_globals.ROOT,
     log.info(f'start writing {basename} files into %r', root)
 
     if replace:
-        log.warning(f'replace present {basename} files')
+        if dry_run:
+            warnings.warning(f'replace=True ignored by dry_run=True')
+        else:
+            log.warning(f'replace present {basename} files')
 
     joined_records = map(join_lines_inplace, records) if not raw else records
 
@@ -188,9 +194,13 @@ def write_files(records: RecordsType, root=_globals.ROOT,
             cfg.clear()
 
         changed = update_config(cfg, raw_record,
-                                quiet=replace)
+                                quiet=(quiet if quiet is not None
+                                       else dry_run or replace))
 
-        if changed:
+        if dry_run:
+            if changed:
+                files_written += 1
+        elif changed:
             if not replace:
                 log.info('write cfg.to_file(%r)', path)
             cfg.to_file(path)
@@ -199,7 +209,14 @@ def write_files(records: RecordsType, root=_globals.ROOT,
             if not (files_written % progress_after):
                 log.info(f'%s {basename} files written', f'{files_written:_d}')
 
+        if require_nwritten is not None and files_written > require_nwritten:
+            raise ValueError(f'files_written={files_written}'
+                             f' over require_nwritten={require_nwritten}')
+
     log.info(f'%s {basename} files written total', f'{files_written:_d}')
+    if require_nwritten is not None and files_written < require_nwritten:
+            raise ValueError(f'files_written={files_written}'
+                             f' under require_nwritten={require_nwritten}')
     return files_written
 
 

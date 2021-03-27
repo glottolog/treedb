@@ -117,7 +117,7 @@ def checksum(source: str = 'tables',
                                             offset=offset,
                                             order_by=order_by,
                                             sort_keys=True, bind=bind)
-    log.info('%d json lines written', total_lines)
+    log.info('%s json lines written', f'{total_lines:_d}')
 
     offset = f'offset={offset!r}' if offset else ''
     limit = f'limit={limit!r}' if limit is not None else ''
@@ -261,6 +261,8 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
 
 
 def write_files(root=_globals.ROOT, *, replace: bool = False,
+                dry_run: bool = False,
+                require_nwritten: typing.Optional[int] = None,
                 source: str = 'tables',
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE) -> int:
@@ -273,4 +275,6 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
     records = _records.dump(languoids)
 
     return files.write_files(records, root=root, replace=replace,
+                             dry_run=dry_run,
+                             require_nwritten=require_nwritten,
                              progress_after=progress_after)
