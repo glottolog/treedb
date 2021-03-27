@@ -593,7 +593,7 @@ class Source:
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' provider_id={self.provider_id!r}'
-                f' bibitem_id={self.bibitem_id!r}')
+                f' bibitem_id={self.bibitem_id!r}>')
 
     languoid = relationship('Languoid',
                             innerjoin=True,
@@ -649,7 +649,7 @@ class SourceProvider:
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
-                f' name={self.name!r}')
+                f' name={self.name!r}>')
 
     sources = relationship('Source', back_populates='provider')
 
@@ -687,7 +687,7 @@ class Bibitem:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' bibfile_id={self.bibfile_id!r}'
-                f' bibkey={self.bibkey!r}')
+                f' bibkey={self.bibkey!r}>')
 
     bibfile = relationship('Bibfile',
                            innerjoin=True,
@@ -719,8 +719,8 @@ class Altname:
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' povider_id={self.provider_id!r}'
-                f' name={self.name!r}>'
-                f' lang={self.lang!r}')
+                f' name={self.name!r}'
+                f' lang={self.lang!r}>')
 
     languoid = relationship('Languoid', innerjoin=True,
                             back_populates='altnames')
@@ -873,7 +873,7 @@ class ClassificationRef:
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' kind={self.kind!r}'
-                f' bibitem_id={self.bibitem_id!r}')
+                f' bibitem_id={self.bibitem_id!r}>')
 
     languoid = relationship('Languoid', innerjoin=True)
 
