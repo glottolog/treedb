@@ -176,8 +176,9 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
         assert treedb.sha256sum(filepath) == expected_checksum
 
 
-def test_pd_read_languoids(treedb):
-    df = treedb.pd_read_languoids()
+@pytest.mark.parametrize('source', ['files', 'raw', 'tables'])
+def test_pd_read_languoids(treedb, source, limit=1_000):
+    df = treedb.pd_read_languoids(source=source)
 
     if treedb.backend.pandas.PANDAS is None:
         assert df is None

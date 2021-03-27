@@ -142,8 +142,7 @@ def pipe_json(documents, *, dump: bool,
         codec = functools.partial(codec, **dump_kwargs)
 
     def itercodec(docs):
-        for d in docs:
-            yield codec(d)
+        return map(codec, docs)
 
     if dump:
         assert next(itercodec([None])) == 'null'

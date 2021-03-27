@@ -1,4 +1,4 @@
-# write information to stdout, csv, json, etc.
+# yield languoids; write information to stdout, .csv, .jsonl, etc.
 
 import itertools
 import hashlib
@@ -184,23 +184,42 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
         raise ValueError(f'unknown source: {source!r}')
 
 
-def pd_read_languoids(*, limit: typing.Optional[int] = None,
+def pd_read_languoids(*, source: str = 'tables',
+                      limit: typing.Optional[int] = None,
                       offset: typing.Optional[int] = 0,
                       order_by: str = _globals.LANGUOID_ORDER,
                       sort_keys: bool = True,
                       path_label: str = _globals.PATH_LABEL,
                       languoid_label: str = _globals.LANGUOID_LABEL,
-                      bind=_globals.ENGINE, **kwargs):
-    query = _queries.get_json_query(limit=limit,
-                                    offset=offset,
-                                    as_rows=False,
-                                    load_json=False,
-                                    order_by=order_by,
-                                    sort_keys=sort_keys,
-                                    path_label=path_label,
-                                    languoid_label=languoid_label)
+                      bind=_globals.ENGINE,
+                      **kwargs):
+    log.info('read json lines with pd.read_json(lines=True)')
+    if source in ('files', 'raw'):
+        items = iterlanguoids(source,
+                              limit=limit,
+                              offset=offset,
+                              order_by=order_by,
+                              bind=bind)
+        items = ({path_label: path, languoid_label: languoid}
+                 for path, languoid in items)
+        json_lines = _tools.pipe_json(items, dump=True)
+        df = _backend_pandas._pd_read_json_lines(json_lines,
+                                                 orient='record',
+                                                 **kwargs)
+    elif source == 'tables':
+        query = _queries.get_json_query(limit=limit,
+                                        offset=offset,
+                                        as_rows=False,
+                                        load_json=False,
+                                        order_by=order_by,
+                                        sort_keys=sort_keys,
+                                        path_label=path_label,
+                                        languoid_label=languoid_label)
 
-    df = _backend_pandas.pd_read_json_lines(query, orient='record', **kwargs)
+        df = _backend_pandas.pd_read_json_lines(query,
+                                                orient='record',
+                                                bind=bind,
+                                                **kwargs)
     if df is not None:
         df.rename(columns={_globals.PATH_LABEL: 'path'}, inplace=True)
         index = df['languoid'].map(operator.itemgetter('id')).rename('id')
