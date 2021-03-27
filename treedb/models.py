@@ -550,6 +550,15 @@ class Timespan:
     __table_args__ = (CheckConstraint('end_year - start_year >= 0'),
                       {'info': {'without_rowid': True}})
 
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' start_year={self.start_year!r}'
+                f' start_month={self.start_month!r}'
+                f' start_day={self.start_day!r}'
+                f' end_year={self.end_year!r}'
+                f' end_month={self.end_month!r}'
+                f' end_day={self.end_day!r}>')
+
     languoid = relationship('Languoid',
                             innerjoin=True,
                             back_populates='timespan')

@@ -60,7 +60,10 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
     (_models.Link, _models.Link.title != None,
-     r"<Link langioid_id='\w+', ord=\d+, url='\w+', title='\w+', scheme='https?'>"),
+     r"<Link langioid_id='\w+' ord=\d+ url='\w+' title='\w+' scheme='https?'>"),
+    (_models.Timespan, None,
+     r"<Timespan start_year=\d+ start_month=\d+ start_day=\d+"
+     r" end_year=\d+ end_month=\d+, end_day=\d+>"),
     (_models.Bibfile, _models.Bibfile.name == 'hh',
      r"<Bibfile id=\d+ name='hh'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
