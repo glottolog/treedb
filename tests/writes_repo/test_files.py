@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.skip('TODO: improve isolation')
+@pytest.mark.skip('missing test isolation')
 @pytest.mark.xfail(pytest.FLAGS.glottolog_tag == 'master',
                    reason='possibly unnormalized')
 @pytest.mark.xfail(pytest.FLAGS.glottolog_tag == 'v4.1',

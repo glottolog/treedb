@@ -5,8 +5,11 @@ import sys
 
 import pytest
 
-ARGS = ['-s',
+ARGS = [#'tests/writes_repo',
+        #'tests',
+        '-s',
         #'--file-engine',
+        #'--collect-only',
         #'--exitfirst',
         #'--glottolog-tag', 'master',
         #'--glottolog-tag', '4.3-treedb-fixes',
