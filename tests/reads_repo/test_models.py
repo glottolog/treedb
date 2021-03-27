@@ -1,21 +1,24 @@
 import pytest
+import sqlalchemy as sa
+
+import treedb.models as _models
 
 BOOK = 'book1242'
 
 RAMO = 'ramo1244'
 
-TREE = {BOOK: [('book1242', 'book1242', 0, True)],
-        RAMO: [('ramo1244', 'ramo1244', 0, False),
-               ('ramo1244', 'kand1307', 1, False),
-               ('ramo1244', 'stge1234', 2, False),
-               ('ramo1244', 'newi1242', 3, False),
-               ('ramo1244', 'meso1253', 4, False),
-               ('ramo1244', 'west2818', 5, False),
-               ('ramo1244', 'ocea1241', 6, False),
-               ('ramo1244', 'east2712', 7, False),
-               ('ramo1244', 'cent2237', 8, False),
-               ('ramo1244', 'mala1545', 9, False),
-               ('ramo1244', 'aust1307', 10, True)]}
+TREE = {BOOK: [(BOOK, BOOK, 0, True)],
+        RAMO: [(RAMO, RAMO, 0, False),
+               (RAMO, 'kand1307', 1, False),
+               (RAMO, 'stge1234', 2, False),
+               (RAMO, 'newi1242', 3, False),
+               (RAMO, 'meso1253', 4, False),
+               (RAMO, 'west2818', 5, False),
+               (RAMO, 'ocea1241', 6, False),
+               (RAMO, 'east2712', 7, False),
+               (RAMO, 'cent2237', 8, False),
+               (RAMO, 'mala1545', 9, False),
+               (RAMO, 'aust1307', 10, True)]}
 
 FULL = {'include_self': True, 'with_steps': True, 'with_terminal': True}
 
@@ -45,3 +48,27 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
         result = conn.execute(select_tree).all()
 
     assert result == expected
+
+
+@pytest.mark.parametrize('model, whereclause, expected_repr', [
+    (_models.Languoid, _models.Languoid.id == '3adt1234',
+     "<Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>"),
+    (_models.Macroarea, _models.Macroarea.name == 'Eurasia',
+     "<Macroarea 'Eurasia'>"),
+    (_models.Country, _models.Country.id == 'RU',
+     "<Country id='RU' name='Russian Federation'>"),
+    (_models.Bibfile, _models.Bibfile.name == 'hh',
+     "<Bibfile id=2 name='hh'>"),
+    (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
+     "<AltnameProvider name='multitree'>"),
+    (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
+     "<EndangermentSource id=1 name='E23' bibitem_id=None pages=None>"),
+    (_models.IdentifierSite, _models.IdentifierSite.name == 'multitree',
+     "<IdentifierSite name='multitree'>")])
+def test_repr(treedb, model, whereclause, expected_repr):
+    session = treedb.Session()
+    query = sa.select(model)
+    if whereclause is not None:
+        query = query.where(whereclause)
+    inst = session.execute(query).scalars().first()
+    assert repr(inst) == expected_repr

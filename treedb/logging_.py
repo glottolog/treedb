@@ -29,7 +29,7 @@ def configure_logging_from_file(path, *,
 
     package_logger = logging.getLogger(__package__)
 
-    if level is not None:
+    if level is not None:  # pragma: no cover
         if not package_logger.handlers:
             log.debug('set level of %r to %r', package_logger, level)
             package_logger.setLevel(level)
@@ -39,7 +39,7 @@ def configure_logging_from_file(path, *,
                     log.debug('set level of %r to %r', h, level)
                     h.setLevel(level)
 
-    if log_sql is not None:
+    if log_sql is not None:  # pragma: no cover
         sql_logger = logging.getLogger(SQL)
         log.debug('set level of %r to %r', sql_logger, level)
         sql_logger.setLevel('INFO' if log_sql else 'WARNING')
@@ -79,7 +79,7 @@ def configure_logging(*,
                       log_sql=False,
                       format=FORMAT,
                       capture_warnings=True,
-                      reset=True):
+                      reset=True): #  pragma: no cover
     cfg = {'version': 1,
            'root': {'handlers': ['stderr_pretty'], 'level': level},
            'loggers': {WARNINGS: {},

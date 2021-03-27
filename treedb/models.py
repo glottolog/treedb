@@ -658,7 +658,7 @@ class Bibfile:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' id={self.id!r}'
-                f' name={self.name!r}')
+                f' name={self.name!r}>')
 
     bibitems = relationship('Bibitem', back_populates='bibfile')
 
@@ -748,7 +748,7 @@ class AltnameProvider:
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
-                f' name={self.name!r}')
+                f' name={self.name!r}>')
 
     altnames = relationship('Altname', back_populates='provider')
 
@@ -816,7 +816,7 @@ class IdentifierSite:
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
-                f' name={self.name!r}')
+                f' name={self.name!r}>')
 
     identifiers = relationship('Identifier', back_populates='site')
 
