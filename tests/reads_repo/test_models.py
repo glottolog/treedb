@@ -52,23 +52,25 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
 
 @pytest.mark.parametrize('model, whereclause, expected_repr', [
     (_models.Languoid, _models.Languoid.id == '3adt1234',
-     "<Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>"),
+     r"<Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>"),
     (_models.Macroarea, _models.Macroarea.name == 'Eurasia',
-     "<Macroarea 'Eurasia'>"),
+     r"<Macroarea 'Eurasia'>"),
     (_models.Country, _models.Country.id == 'RU',
-     "<Country id='RU' name='Russian Federation'>"),
+     r"<Country id='RU' name='Russian Federation'>"),
     (_models.Bibfile, _models.Bibfile.name == 'hh',
-     "<Bibfile id=2 name='hh'>"),
+     r"<Bibfile id=\d+ name='hh'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
      "<AltnameProvider name='multitree'>"),
     (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
-     "<EndangermentSource id=1 name='E23' bibitem_id=None pages=None>"),
+     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
     (_models.IdentifierSite, _models.IdentifierSite.name == 'multitree',
      "<IdentifierSite name='multitree'>")])
 def test_repr(treedb, model, whereclause, expected_repr):
-    session = treedb.Session()
     query = sa.select(model)
     if whereclause is not None:
         query = query.where(whereclause)
-    inst = session.execute(query).scalars().first()
-    assert repr(inst) == expected_repr
+
+    with treedb.Session() as session:
+        inst = session.execute(query).scalars().first()
+
+    assert re.match(expected_repr, inst)
