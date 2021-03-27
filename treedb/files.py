@@ -301,7 +301,7 @@ def update_config(cfg: ConfigParser,
             if old == value:
                 continue
 
-            if not quiet:
+            if not quiet:  # pragma: no cover
                 if old is None:
                     log.debug('cfg add option (%r, %r)', section, option)
                 log.debug('cfg.set_option(%r, %r, %r)', section, option, value)

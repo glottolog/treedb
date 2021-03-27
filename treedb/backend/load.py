@@ -39,7 +39,7 @@ def get_root(repo_root, *, default,
 
 
 def get_from_raw(from_raw, *, exclude_raw: bool):
-    if exclude_raw and from_raw:
+    if exclude_raw and from_raw:  # pragma: no cover
         log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
         raise ValueError('exclude_raw and from_raw cannot both be True')
     elif from_raw is None:
@@ -65,7 +65,7 @@ def get_dataset(engine, *, exclude_raw: bool, force_rebuild: bool):
 
         if dataset is None:
             warnings.warn(f'force delete {engine.file!r}')
-        elif dataset.exclude_raw != bool(exclude_raw):
+        elif dataset.exclude_raw != bool(exclude_raw):  # pragma: no cover
             dataset = None
             log.warning('rebuild needed from exclude_raw mismatch')
 
@@ -262,7 +262,7 @@ def import_languoids(conn, *, root, source: str):
         # insert languoids in Glottocode order when reading from raw
         order_by = 'id'
         root_or_bind = conn
-    else:
+    else:  # pragma: no cover
         ValueError(f'unknown source: {source!r}')
     log.debug('root_or_bind: %r', root_or_bind)
 

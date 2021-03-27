@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 @sa.event.listens_for(sa.engine.Engine, 'connect')
 def sqlite_engine_connect(dbapi_conn, connection_record):
     """Activate sqlite3 forein key checks."""
-    if not isinstance(dbapi_conn, sqlite3.Connection):
+    if not isinstance(dbapi_conn, sqlite3.Connection):  # pragma: no cover
         return
 
     log.debug('connect sqlalchemy.engine.Engine: enable foreign keys')

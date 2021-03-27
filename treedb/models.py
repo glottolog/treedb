@@ -185,7 +185,7 @@ class Languoid:
     def _aliased_child_parent(cls, *,
                               child_root: bool = False,
                               parent_root: bool = False):
-        if child_root and parent_root:
+        if child_root and parent_root:  # pragma: no cover
             raise ValueError('child_root and parent_root are mutually exclusive')
 
         Child = aliased(cls, name='root' if child_root else 'child')
@@ -198,7 +198,7 @@ class Languoid:
               child_root=None, parent_root=None, node_level=None,
               with_steps: bool = False,
               with_terminal: bool = False):
-        if innerjoin not in (False, True, 'reflexive'):
+        if innerjoin not in (False, True, 'reflexive'):  # pragma: no cover
             raise ValueError(f'invalid innerjoin: {innerjoin!r}')
 
         Child, Parent = cls._aliased_child_parent(child_root=child_root,
@@ -232,7 +232,7 @@ class Languoid:
             tree_1 = tree_1.add_columns(sa.literal(steps).label('steps'))
 
         if with_terminal:
-            if from_parent:
+            if from_parent:  # pragma: no cover
                 raise NotImplementedError
             tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
             terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
@@ -246,7 +246,7 @@ class Languoid:
                                   Parent.parent_id != None)
 
         if node_level is not None:
-            if node_level not in LEVEL:
+            if node_level not in LEVEL:  # pragma: no cover
                 raise ValueError(f'invalid node_level: {node_level!r}')
             tree_1 = tree_1.where(Node.level == node_level)
 
@@ -268,7 +268,7 @@ class Languoid:
             GrandRelative = aliased(cls, name='grand' + ('child'
                                                          if from_parent else
                                                          'parent'))
-            if from_parent:
+            if from_parent:  # pragma: no cover
                 raise NotImplementedError
             tree_2 = tree_2.add_columns((GrandRelative.parent_id == None).label('terminal'))
             tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,

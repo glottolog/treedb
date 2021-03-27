@@ -83,7 +83,7 @@ def walk_scandir(top, *,
 
     while stack:
         root = stack.pop()
-        if verbose:
+        if verbose:  # pragma: no cover
             print(root)
 
         with os.scandir(root) as dentries:
@@ -134,7 +134,7 @@ def pipe_json(documents, *, dump: bool,
                        # json-serialize datetime.datetime
                        'default': operator.methodcaller('isoformat')}
         if compact:
-            if indent:
+            if indent:  # pragma: no cover
                 warnings.warn(f'indent={indent!r} overridden'
                               f' by compact={compact}')
             dump_kwargs.update(indent=None,
@@ -231,7 +231,7 @@ def get_open_result(file, *, write: bool = False,
     path = fobj = hashobj = None
 
     if file is None:
-        if not write:
+        if not write:  # pragma: no cover
             raise TypeError('file cannot be Null for write=False')
         result = fobj = io.StringIO()
     elif file is sys.stdout:
@@ -241,7 +241,7 @@ def get_open_result(file, *, write: bool = False,
     elif hasattr(file, 'write'):
         result = fobj = file
     elif hasattr(file, 'hexdigest'):
-        if not write:
+        if not write:  # pragma: no cover
             raise TypeError('missing lines')
         result = hashobj = file
         fobj = io.TextIOWrapper(io.BytesIO(),
@@ -260,7 +260,7 @@ def get_open_result(file, *, write: bool = False,
                                       **open_kwargs)
 
         if write and path.exists():
-            if not delete_present:
+            if not delete_present:  # pragma: no cover
                 raise RuntimeError('refuse to delete_present file: {path!r}')
             warnings.warn(f'delete present file: {path!r}')
             path.unlink()
@@ -278,7 +278,7 @@ def get_open_module(filepath, autocompress: bool = False):
         result = SUFFIX_OPEN_MODULE.get(suffix, builtins)
     else:
         result = builtins
-        if suffix in SUFFIX_OPEN_MODULE:
+        if suffix in SUFFIX_OPEN_MODULE:  # pragma: no cover
             warnings.warn(f'file {file!r} has suffix {suffix!r}'
                           ' but autocompress=False')
     return result
