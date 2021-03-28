@@ -16,6 +16,7 @@ import pathlib
 import platform
 import subprocess
 import sys
+import types
 import typing
 import warnings
 
@@ -47,8 +48,10 @@ def next_count(start: int = 0, step: int = 1):
     """Return a callable returning descending ints.
 
     >>> nxt = next_count(1)
+
     >>> nxt()
     1
+
     >>> nxt()
     2
     """
@@ -57,6 +60,20 @@ def next_count(start: int = 0, step: int = 1):
 
 
 def groupby_attrgetter(*attrnames):
+    """
+
+    >>> groupby_knight = groupby_attrgetter('knight')
+
+    >>> people = [types.SimpleNamespace(name='Sir Robin', knight=True),
+    ...           types.SimpleNamespace(name='Brian', knight=False),
+    ...           types.SimpleNamespace(name='Sir Lancelot', knight=True)]
+    >>> {knight: [g.name for g in grp] for knight, grp in groupby_knight(people)}
+    {True: ['Sir Lancelot'], False: ['Brian']}
+
+    >>> people_sorted = sorted(people, key=operator.attrgetter('knight'))
+    >>> {knight: [g.name for g in grp] for knight, grp in groupby_knight(people_sorted)}
+    {False: ['Brian'], True: ['Sir Robin', 'Sir Lancelot']}
+    """
     key = operator.attrgetter(*attrnames)
     return functools.partial(itertools.groupby, key=key)
 
@@ -68,10 +85,13 @@ def islice_limit(iterable,
 
     >>> list(islice_limit('spam', limit=3))
     ['s', 'p', 'a']
+
     >>> list(islice_limit('spam', offset=3))
     ['m']
+
     >>> list(islice_limit('spam', offset=1, limit=2))
     ['p', 'a']
+
     >>> list(islice_limit('spam'))
     ['s', 'p', 'a', 'm']
     """
@@ -215,6 +235,11 @@ def write_wrapped(hashsum, f, lines, *, buflines: int = 1_000):
 
 
 def iterslices(iterable, *, size: int):
+    """Yield iterable in chunks of maximal size.
+
+    >>> [tuple(chunk) for chunk in iterslices('bacon', size=2)]
+    [('b', 'a'), ('c', 'o'), ('n',)]
+    """
     iterable = iter(iterable)
     next_slice = functools.partial(itertools.islice, iterable, size)
     return iter(lambda: list(next_slice()), [])
@@ -370,12 +395,16 @@ class Ordering(dict):
     """Dict returning infinity for unknown keys ordering them lexicographically.
 
     >>> o = Ordering.fromlist(['spam', 'eggs', 'bacon'])
+
     >>> o
     {'spam': 0, 'eggs': 1, 'bacon': 2}
+
     >>> o['ham']
     inf
+
     >>> o.sorted(['ham', 'bacon', 'eggs', 'am'])
     ['eggs', 'bacon', 'am', 'ham']
+
     >>> list(o.sorted_enumerate(['ham', 'bacon', 'eggs'], start=1))
     [(1, 'eggs'), (2, 'bacon'), (3, 'ham')]
     """

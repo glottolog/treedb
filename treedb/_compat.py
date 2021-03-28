@@ -23,19 +23,34 @@ if sys.version_info < (3, 7):
                 '%Y-%m-%dT%H:%M:%S.%f',
                 '%Y-%m-%d %H:%M:%S.%f')
 
-    def datetime_fromisoformat(date_string):
-        result = None
-        try:
-            for f in _formats:
-                result = datetime.datetime.strptime(date_string, f)
-                break
-            else:
-                raise RuntimeError(f'cannot match time data: {date_string}')
-        except ValueError as e:
-            warnings.warn(f'date_string {date_string!r} failed'
-                          f' datetime_fromisoformat: {e}')
+    def datetime_fromisoformat(date_string: str):
+        """Return datetime.datetime from isoformat string.
+
+        >>> datetime_fromisoformat('2000-01-01T12:59:30')
+        datetime.datetime(2000, 1, 1, 12, 59, 30)
+
+        >>> datetime_fromisoformat('2000-01-01 12:59:30')
+        datetime.datetime(2000, 1, 1, 12, 59, 30)
+
+        >>> datetime_fromisoformat('2000-01-01T12:59:30.000000')
+        datetime.datetime(2000, 1, 1, 12, 59, 30)
+
+        >>> datetime_fromisoformat('2000-01-01 12:59:30.000000')
+        datetime.datetime(2000, 1, 1, 12, 59, 30)
+
+        >>> datetime_fromisoformat('nondatetime')
+        Traceback (most recent call last):
+            ...
+        RuntimeError: cannot match time data: nondatetime
+        """
+        for f in _formats:
+            try:
+                return datetime.datetime.strptime(date_string, f)
+            except ValueError as e:
+                warnings.warn(f'date_string {date_string!r} failed'
+                              f' datetime_fromisoformat: {e}')
         else:
-            return result
+            raise RuntimeError(f'cannot match time data: {date_string}')
 
     datetime_toisoformat = operator.methodcaller('strftime',
                                                  DATETIME_FORMAT)
