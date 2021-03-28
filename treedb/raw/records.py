@@ -16,7 +16,7 @@ from .models import File, Option, Value
 
 __all__ = ['fetch_records']
 
-WINDOWSIZE = 500
+WINDOWSIZE = 1_000
 
 
 log = logging.getLogger(__name__)
