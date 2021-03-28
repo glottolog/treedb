@@ -327,8 +327,6 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                    sort_keys: bool = False,
                    path_label: str = _globals.PATH_LABEL,
                    languoid_label: str = _globals.LANGUOID_LABEL):
-    json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
-
     languoid = {'id': Languoid.id,
                 'parent_id': Languoid.parent_id,
                 'level': Languoid.level,
@@ -350,6 +348,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'hh_ethnologue_comment': select_languoid_hh_ethnologue_comment(sort_keys=sort_keys),
                 'iso_retirement': select_languoid_iso_retirement(sort_keys=sort_keys)}
 
+    json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
     del sort_keys
 
     value = json_object(**languoid)

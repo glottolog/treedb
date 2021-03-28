@@ -108,7 +108,7 @@ def main(filename=_globals.ENGINE, repo_root=None,
                           exclude_raw=exclude_raw,
                           force_rebuild=force_rebuild)
 
-    if dataset is None or rebuild:
+    if dataset is None or rebuild or _only_create_tables:
         log.info('build new database' if dataset is None else 'rebuild database')
         engine.dispose()
         if engine.file_size():
