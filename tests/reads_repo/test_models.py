@@ -90,7 +90,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Endangerment languoid_id='\w+' status='[^']+'"
      r" source_id=\d+ date=datetime\.datetime\([^)]+\)>"),
     (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
-     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
+     r"<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
     (_models.EthnologueComment, None,
      r"<EthnologueComment languoid_id='\w+' isohid='[^']+' comment_type='[^']+' ethnologue_versions='[^']+'>"),
     (_models.IsoRetirement, None,
