@@ -82,8 +82,23 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Identifier languoid_id='\w+' site_id=\d+ identifier='[^']+'>"),
     (_models.IdentifierSite, _models.IdentifierSite.name == 'multitree',
      "<IdentifierSite name='multitree'>"),
+    (_models.ClassificationComment, None,
+     r"<ClassificationComment languoid_id='\w+' kind='\w+' comment='[^']+'>"),
+    (_models.ClassificationRef, None,
+     r"<ClassificationRef languoid_id='\w+' kind='\w+' bibitem_id=\d+>"),
+    (_models.Endangerment, None,
+     r"<Endangerment languoid_id='\w+' status='[^']+'"
+     r" source_id=\d+ date=datetime\.datetime\([^)]+\)>"),
     (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
-     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>")])
+     "<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
+    (_models.EthnologueComment, None,
+     r"<EthnologueComment languoid_id='\w+' isohid='[^']+' comment_type='[^']+' ethnologue_versions='[^']+'>"),
+    (_models.IsoRetirement, None,
+     r"<IsoRetirement languoid_id='\w+' code='\w+' name='[^']+'"
+     " change_request='[^']+' effective=datetime\.date\([^)]*\)"
+     " reason='[^']*' remedy='[^']*'>"),
+    (_models.IsoRetirementChangeTo, None,
+     r"<IsoRetirementChangeTo languoid_id='\w+' code='\w+'>")])
 def test_repr(treedb, model, whereclause, expected_repr):
     query = sa.select(model)
     if whereclause is not None:
