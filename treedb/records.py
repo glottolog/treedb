@@ -225,22 +225,51 @@ def make_record(languoid: _globals.LanguoidType) -> _globals.RecordType:
 
 
 def make_lines(value):
+    r"""
+
+    >>> make_lines(None)
+    []
+
+    >>> make_lines(' spam\neggs\n  ')
+    ['spam', 'eggs']
+    """
     if value is None:
         return []
     return value.strip().splitlines()
 
 
 def make_lines_raw(value):
+    """
+
+    >>> make_lines_raw(None)
+    []
+
+    >>> make_lines_raw(['spam', 'eggs'])
+    ['spam', 'eggs']
+    """
     if value is None:
         return []
     return value
 
 
 def skip_empty(mapping):
+    """
+
+    >>> skip_empty({'spam': None, 'eggs': [], 'bacon': 'ham'})
+    {'bacon': 'ham'}
+    """
     return {k: v for k, v in mapping.items() if v}
 
 
 def get_float(mapping, key, format_=FLOAT_FORMAT):
+    """
+
+    >>> get_float({'spam': '1.42'}, 'spam')
+    1.42
+
+    >>> assert get_float({}, 'spam') is None
+    >>> assert get_float({'eggs': 42}, 'spam') is None
+    """
     result = mapping.get(key)
     if result is not None:
         result = float(format_ % float(result))
@@ -248,12 +277,24 @@ def get_float(mapping, key, format_=FLOAT_FORMAT):
 
 
 def format_float(value, format_=FLOAT_FORMAT):
+    """
+
+    >>> format_float(1.42)
+    '1.42'
+
+    >>> assert format_float(None) is None
+    """
     if value is None:
         return None
     return str(float(format_ % value))
 
 
 def make_date(value, *, format_=DATE_FORMAT):
+    """
+
+    >>> make_date('2001-12-31')
+    datetime.date(2001, 12, 31)
+    """
     return datetime.datetime.strptime(value, format_).date()
 
 
@@ -267,15 +308,32 @@ def format_date(value, *, format_=DATE_FORMAT):
 
 
 def make_datetime(value, *, format_=DATETIME_FORMAT):
+    """
+
+    >>> make_datetime('2001-12-31T23:59:59')
+    datetime.datetime(2001, 12, 31, 23, 59, 59)
+    """
     return datetime.datetime.strptime(value, format_)
 
 
 def format_datetime(value, *, format_=DATETIME_FORMAT):
+    """
+
+    >>> format_datetime(datetime.datetime(2001, 12, 31, 23, 59, 59))
+    '2001-12-31T23:59:59'
+    """
     return value.strftime(format_)
 
 
 def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
                   _match=ISO_8601_INTERVAL.fullmatch, strict=False):
+    """
+
+    >>> make_interval('-9999-01-01/+9999-12-31')
+    {'start_year': -9999, 'start_month': 1, 'start_day': 1, 'end_year': 9999, 'end_month': 12, 'end_day': 31}
+
+    >>> assert make_interval(None) is None
+    """
     if value is None:
         return None
     value = value.strip()
@@ -315,6 +373,18 @@ def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
 
 
 def format_interval(value, year_tmpl='{: 05d}'):
+    """
+
+    >>> format_interval({'start_year': -9999,
+    ...                  'start_month': 1,
+    ...                  'start_day': 1,
+    ...                  'end_year': 9999,
+    ...                  'end_month': 12,
+    ...                  'end_day': 31})
+    '-9999-01-01/9999-12-31'
+
+    >>> assert format_interval(None) is None
+    """
     if value is None:
         return None
 
@@ -359,6 +429,15 @@ def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
 
 
 def formatcountry(value, minimal=True):
+    """
+
+    >>> formatcountry({'name': 'The Kingdom of Norway', 'id': 'NO'})
+    'NO'
+
+    >>> formatcountry({'name': 'The Kingdom of Norway', 'id': 'NO'},
+    ...               minimal=False)
+    'The Kingdom of Norway (NO)'
+    """
     return ('{name} ({id})' if not minimal else '{id}').format_map(value)
 
 
@@ -374,6 +453,15 @@ _LINK_PATTERN = re.compile(r'''
 
 def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
     """
+
+    >>> splitlink('https://www.example.com')
+    {'url': 'https://www.example.com', 'title': None, 'scheme': 'https'}
+
+    >>> splitlink('http://www.example.com')
+    {'url': 'http://www.example.com', 'title': None, 'scheme': 'http'}
+
+    >>> splitlink('[Example](https://www.example.com)')
+    {'url': 'https://www.example.com', 'title': 'Example', 'scheme': 'https'}
 
     >>> splitlink('www.example.com')
     {'url': 'www.example.com', 'title': None, 'scheme': None}
@@ -396,6 +484,14 @@ def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
 
 
 def formatlink(value):
+    """
+
+    >>> formatlink({'url': 'https://example.com'})
+    'https://example.com'
+
+    >>> formatlink({'url': 'https://example.com', 'title': 'Example'})
+    '[Example](https://example.com)'
+    """
     if value.get('title') is None:
         return value['url']
     return '[{title}]({url})'.format_map(value)
@@ -424,6 +520,20 @@ _SOURCE_PATTERN = re.compile(r'''
 
 def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
                 endangerment=False):
+    """
+
+    >>> splitsource('**hh:42**')
+    {'bibfile': 'hh', 'bibkey': '42', 'pages': None, 'trigger': None}
+
+    >>> splitsource('**hh:42**:23-55')
+    {'bibfile': 'hh', 'bibkey': '42', 'pages': '23-55', 'trigger': None}
+
+    >>> splitsource('**hh:42**:23-55, 123-155')
+    {'bibfile': 'hh', 'bibkey': '42', 'pages': '23-55, 123-155', 'trigger': None}
+
+    >>> splitsource('**hh:42**:23-55; 123-155<trigger "spam">')
+    {'bibfile': 'hh', 'bibkey': '42', 'pages': '23-55; 123-155', 'trigger': 'spam'}
+    """
     if endangerment and s.isalnum():
         return {'name': s, 'bibfile': None, 'bibkey': None, 'pages': None}
 
@@ -437,9 +547,18 @@ def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
 def formatsource(value, endangerment=False):
     """
 
+    >>> formatsource({'bibfile': 'hh', 'bibkey': '23'})
+    '**hh:23**'
+
+    >>> formatsource({'bibfile': 'hh', 'bibkey': '23', 'pages': '1-23'})
+    '**hh:23**:1-23'
+
     >>> formatsource({'bibfile': 'hh', 'bibkey': '23',
     ...               'pages': '1-23', 'trigger': 'spam'})
     '**hh:23**:1-23<trigger "spam">'
+
+    >>> formatsource({'name': 'HH'}, endangerment=True)
+    'HH'
     """
     if endangerment and value.get('bibfile') is None:
         return value['name']
@@ -464,10 +583,38 @@ _ALTNAME_PATTERN = re.compile(r'''
 
 
 def splitaltname(s, *, _match=_ALTNAME_PATTERN.fullmatch):
+    """
+
+    >>> splitaltname('Spam')
+    {'name': 'Spam', 'lang': None}
+
+    >>> splitaltname('Späm [de]')
+    {'name': 'Späm', 'lang': 'de'}
+
+    >>> splitaltname('Späm [deu]')
+    {'name': 'Späm', 'lang': 'deu'}
+    """
     return _match(s).groupdict()
 
 
 def formataltname(value):
+    """
+
+    >>> formataltname({'name': 'Spam'})
+    'Spam'
+
+    >>> formataltname({'name': 'Spam', 'lang': None})
+    'Spam'
+
+    >>> formataltname({'name': 'Spam', 'lang': ''})
+    'Spam'
+
+    >>> formataltname({'name': 'Späm', 'lang': 'de'})
+    'Späm [de]'
+
+    >>> formataltname({'name': 'Späm', 'lang': 'deu'})
+    'Späm [deu]'
+    """
     if value.get('lang') in ('', None):
         return value['name']
     return '{name} [{lang}]'.format_map(value)
