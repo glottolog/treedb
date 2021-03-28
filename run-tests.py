@@ -7,10 +7,15 @@ import pytest
 
 ARGS = [#'tests/writes_repo',
         #'tests',
-        '-s',
-        #'--file-engine',
         #'--collect-only',
-        #'--exitfirst',
+        '-s',  # a.k.a --capture=no
+        #'--verbose',
+        #'--pdb',
+        #'--exitfirst',  # a.k.a. -x
+        #'--loglevel-debug',
+        #'--log-sql',
+        #'-W', 'error',
+        #'--file-engine',
         #'--glottolog-tag', 'master',
         #'--glottolog-tag', '4.3-treedb-fixes',
         #'--glottolog-tag', 'v4.2.1',
@@ -18,9 +23,6 @@ ARGS = [#'tests/writes_repo',
         #'--glottolog-repo-root', './glottolog/',
         #'--rebuild', '--force-rebuild',
         #'--exclude-raw',
-        #'--loglevel-debug',
-        #'--log-sql',
-        #'-W', 'error',
         ]
 
 if 'idlelib' in sys.modules:
