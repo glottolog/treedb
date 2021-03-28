@@ -60,11 +60,11 @@ def pytest_configure(config):
                                           reason='skipped by --skip-slow flag')
 
 
-@pytest.fixture(scope='session')
-def bare_treedb():
-    import treedb as bare_treedb
+def get_configure_kwargs(*, title: str, memory_engine=None):
+    kwargs = {'title': title}
 
-    kwargs = {} if pytest.FLAGS.file_engine else {'engine': None}
+    if not pytest.FLAGS.file_engine:
+        kwargs['engine'] = memory_engine
 
     if pytest.FLAGS.glottolog_repo_root is not None:
         kwargs['root'] = pytest.FLAGS.glottolog_repo_root
@@ -75,6 +75,14 @@ def bare_treedb():
     if pytest.FLAGS.log_sql:
         kwargs['log_sql'] = True
 
+    return kwargs
+
+
+@pytest.fixture(scope='session')
+def bare_treedb():
+    import treedb as bare_treedb
+
+    kwargs = get_configure_kwargs(title='{bare_treedb.__title__}-bare')
     bare_treedb.configure(**kwargs)
 
     bare_treedb.checkout_or_clone(pytest.FLAGS.glottolog_tag)
@@ -83,11 +91,31 @@ def bare_treedb():
 
 
 @pytest.fixture(scope='session')
+def empty_treedb(bare_treedb):
+    empty_treedb = bare_treedb
+
+    kwargs = get_configure_kwargs(title=f'{empty_treedb.__title__}-empty')
+    empty_treedb.configure(**kwargs)
+
+    empty_treedb.load(_only_create_tables=True,
+                      rebuild=pytest.FLAGS.rebuild,
+                      force_rebuild=pytest.FLAGS.force_rebuild,
+                      exclude_raw=pytest.FLAGS.exclude_raw)
+
+    return empty_treedb
+
+
+@pytest.fixture(scope='session')
 def treedb(bare_treedb):
-    bare_treedb.load(rebuild=pytest.FLAGS.rebuild,
-                     force_rebuild=pytest.FLAGS.force_rebuild,
-                     exclude_raw=pytest.FLAGS.exclude_raw)
     treedb = bare_treedb
+
+    kwargs = get_configure_kwargs(title=treedb.__title__)
+    treedb.configure(**kwargs)
+
+    treedb.load(rebuild=pytest.FLAGS.rebuild,
+                force_rebuild=pytest.FLAGS.force_rebuild,
+                exclude_raw=pytest.FLAGS.exclude_raw)
+
     return treedb
 
 

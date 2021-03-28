@@ -3,6 +3,7 @@
 import contextlib
 import logging
 import sqlite3
+import typing
 
 import csv23
 
@@ -60,7 +61,10 @@ def print_versions(*, engine=ENGINE, file=None):
                  engine=engine)
 
 
-def set_engine(filename, *, resolve=False, require=False, title=None):
+def set_engine(filename, *,
+               resolve: bool = False,
+               require: bool = False,
+               title: typing.Optional[str] = None):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('set_engine: %r', filename)
 
@@ -73,10 +77,13 @@ def set_engine(filename, *, resolve=False, require=False, title=None):
         return ENGINE
 
     if filename is None:
-        if title is not None:
-            ENGINE._memory_path = _tools.path_from_filename(f'{title}-memory',
-                                                            expanduser=False)
+        if title is None:
+            raise TypeError(f'filename=None requires title, given: {title!r}')
+        ENGINE.memory_write_path = _tools.path_from_filename(f'{title}-memory',
+                                                             expanduser=False)
     else:
+        del title
+
         filename = _tools.path_from_filename(filename)
         if resolve:
             filename = filename.resolve(strict=False)

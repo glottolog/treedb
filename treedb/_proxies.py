@@ -116,7 +116,7 @@ class EngineProxy(Proxy, sa.engine.Engine):
 
 class SQLiteEngineProxy(EngineProxy):
 
-    _memory_path = None
+    memory_write_path = None
 
     @property
     def file(self):
@@ -146,7 +146,7 @@ class SQLiteEngineProxy(EngineProxy):
                 f' size={self.file_size()!r}>')
 
     def file_with_suffix(self, suffix):
-        path = self.file if self.file is not None else self._memory_path
+        path = self.file if self.file is not None else self.memory_write_path
         return path.with_suffix(suffix)
 
     def file_exists(self):

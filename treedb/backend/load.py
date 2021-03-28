@@ -72,6 +72,22 @@ def get_dataset(engine, *, exclude_raw: bool, force_rebuild: bool):
     return dataset
 
 
+@contextlib.contextmanager
+def begin(*, bind, pragma_bulk_insert: bool = True):
+    """Enter transaction: log boundaries, apply insert optimization, return connection."""
+    with _backend.connect(bind=bind) as conn, conn.begin():
+        dbapi_conn = conn.connection.connection
+        log.debug('begin transaction on %r', dbapi_conn)
+
+        if pragma_bulk_insert:
+            conn.execute(sa.text('PRAGMA synchronous = OFF'))
+            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
+
+        yield conn
+
+    log.debug('end transaction on %r', dbapi_conn)
+
+
 def main(filename=_globals.ENGINE, repo_root=None,
          *, treepath=_files.TREE_IN_ROOT,
          metadata=_globals.REGISTRY.metadata,
@@ -80,7 +96,8 @@ def main(filename=_globals.ENGINE, repo_root=None,
          from_raw: bool = None,
          exclude_raw: bool = False,
          exclude_views: bool = False,
-         force_rebuild: bool = False):
+         force_rebuild: bool = False,
+         _only_create_tables: bool = False):
     """Load languoids/tree/**/md.ini into SQLite3 db, return engine."""
     kwargs = {'root': get_root(repo_root, default=_globals.ROOT, treepath=treepath),
               'from_raw': get_from_raw(from_raw, exclude_raw=exclude_raw)}
@@ -98,11 +115,24 @@ def main(filename=_globals.ENGINE, repo_root=None,
             warnings.warn(f'delete present file: {engine.file!r}')
             engine.file.unlink()
 
+        log.info('create %d tables from %r', len(metadata.tables), metadata)
+        with begin(bind=engine) as conn:
+            create_tables(metadata, conn=conn,
+                          exclude_raw=exclude_raw,
+                          exclude_views=exclude_views)
+
+        if _only_create_tables:
+            return engine
+
+        log.debug('start load timer')
+        start = time.time()
         dataset = load(metadata,
                        bind=engine,
                        exclude_raw=exclude_raw,
-                       exclude_views=exclude_views,
                        **kwargs)
+        walltime = datetime.timedelta(seconds=time.time() - start)
+        log.debug('load timer stopped')
+        print(walltime)
 
         log.info('database loaded')
     else:
@@ -145,33 +175,8 @@ def create_tables(metadata, *, conn,
     metadata.create_all(bind=conn)
 
 
-@contextlib.contextmanager
-def begin(*, bind, pragma_bulk_insert: bool = True):
-    """Enter transaction: log boundaries, apply insert optimization, return connection."""
-    with _backend.connect(bind=bind) as conn, conn.begin():
-        dbapi_conn = conn.connection.connection
-        log.debug('begin transaction on %r', dbapi_conn)
-
-        if pragma_bulk_insert:
-            conn.execute(sa.text('PRAGMA synchronous = OFF'))
-            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
-
-        yield conn
-
-    log.debug('end transaction on %r', dbapi_conn)
-
-
 def load(metadata, *, bind, root,
-         from_raw: bool, exclude_raw: bool, exclude_views: bool):
-    log.debug('start load timer')
-    start = time.time()
-
-    log.info('create %d tables from %r', len(metadata.tables), metadata)
-    with begin(bind=bind) as conn:
-        create_tables(metadata, conn=conn,
-                      exclude_raw=exclude_raw,
-                      exclude_views=exclude_views)
-
+         from_raw: bool, exclude_raw: bool):
     log.info('record git commit in %r', root)
     # pre-create dataset to added as final item marking completeness
     dataset = make_dataset(root, exclude_raw=exclude_raw)
@@ -198,9 +203,6 @@ def load(metadata, *, bind, root,
     with begin(bind=bind) as conn:
         write_dataset(conn, dataset=dataset)
 
-    walltime = datetime.timedelta(seconds=time.time() - start)
-    log.debug('load timer stopped')
-    print(walltime)
     return dataset
 
 

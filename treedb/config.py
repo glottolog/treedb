@@ -3,6 +3,7 @@
 import configparser
 import logging
 import os
+import typing
 
 from . import _globals
 from . import _tools
@@ -61,9 +62,10 @@ class ConfigParser(configparser.ConfigParser):
 def configure(config_path=_globals.CONFIG,
               *, engine=NOT_SET, root=NOT_SET,
               loglevel=None, log_sql: bool = None,
-              default_repo_root=_globals.DEFAULT_ROOT):
+              default_repo_root=_globals.DEFAULT_ROOT,
+              title: typing.Optional[str] = None):
     """Set root, and engine and configure logging from the given .ini file."""
-    log.info('configure from %r', config_path)
+    log.info('configure from %r, title=%r', config_path, title)
     log.debug('default repo root: %r', default_repo_root)
 
     from . import (logging_,
@@ -81,15 +83,19 @@ def configure(config_path=_globals.CONFIG,
 
     if engine is NOT_SET:
         engine = cfg.get(*ENGINE_OPTION, fallback=None)
+
     if engine is not None:
         engine = _tools.path_from_filename(engine)
         if not engine.is_absolute():
             engine = config_path.parent / engine
-    backend.set_engine(engine)
+
+    backend.set_engine(engine, title=title)
 
     if root is NOT_SET:
         root = cfg.get(*ROOT_OPTION)
     root = _tools.path_from_filename(root)
+
     if not root.is_absolute():
         root = config_path.parent / root
+
     files.set_root(root)
