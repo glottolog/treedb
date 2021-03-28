@@ -49,7 +49,7 @@ pytestmark = pytest.FLAGS.skip_exclude_raw
 
 
 def test_print_stats(capsys, treedb_raw):
-    assert treedb_raw.print_stats() is None
+    assert treedb_raw.raw.print_stats() is None
 
     out, err = capsys.readouterr()
     assert not err
@@ -61,7 +61,7 @@ def test_print_stats(capsys, treedb_raw):
 def test_checksum(treedb_raw, weak):
     expected = CHECKSUM.get((pytest.FLAGS.glottolog_tag, weak))
 
-    result = treedb_raw.checksum(weak=weak)
+    result = treedb_raw.raw.checksum(weak=weak)
 
     if expected is None:
         prefix, hash_name, hexdigest = result.split(':')
@@ -73,12 +73,10 @@ def test_checksum(treedb_raw, weak):
 
 
 def test_write_raw_csv(treedb_raw):
-    import treedb
-
     expected = RAW_CSV_SHA256.get(pytest.FLAGS.glottolog_tag)
-    suffix = '-memory' if treedb.engine.file is None else ''
+    suffix = '-memory' if treedb_raw.engine.file is None else ''
 
-    path = treedb_raw.write_raw_csv()
+    path = treedb_raw.raw.write_raw_csv()
 
     assert path.name == f'treedb{suffix}.raw.csv.gz'
     assert_file_size_between(path, 1, 100)
@@ -86,5 +84,5 @@ def test_write_raw_csv(treedb_raw):
     if expected is None:
         pass
     else:
-        shasum = treedb.sha256sum(path)
+        shasum = treedb_raw.sha256sum(path)
         assert shasum == expected

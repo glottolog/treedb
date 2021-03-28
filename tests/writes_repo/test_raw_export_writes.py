@@ -8,11 +8,12 @@ FILES_WRITTEN = {'master': 0,
 
 
 @pytest.mark.xfail(reason='TODO', raises=KeyError)
-def test_write_files(treedb):
+def test_write_files(treedb_raw):
     expected = FILES_WRITTEN.get(pytest.FLAGS.glottolog_tag)
 
-    files_written = treedb.raw.write_files(dry_run=True,
-                                           require_nwritten=expected)
+    files_written = treedb_raw.raw.write_files(dry_run=True,
+                                               require_nwritten=expected,
+                                               bind=treedb_raw.engine)
     if expected is not None:
         assert files_written == expected
     else:

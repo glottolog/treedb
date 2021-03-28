@@ -95,7 +95,7 @@ def treedb(bare_treedb):
 def treedb_raw(treedb):
     import treedb.raw
 
-    return treedb.raw
+    return treedb
 
 
 def pairwise(iterable):
