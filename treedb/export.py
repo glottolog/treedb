@@ -70,7 +70,7 @@ def iterlanguoids(source: str = 'files',
     if source in ('files', 'raw'):
         log.info('extract languoids from %r', source)
         if source == 'files':
-            if order_by not in ('path', 'file', True, None, False):
+            if order_by not in ('path', 'file', True, None, False):  # pragma: no cover
                 raise ValueError(f'order_by={order_by!r} not implemented')
             else:
                 del order_by
@@ -96,7 +96,7 @@ def iterlanguoids(source: str = 'files',
                                order_by=order_by,
                                progress_after=progress_after,
                                bind=bind)
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'unknown source: {source!r}')
 
 
@@ -180,7 +180,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                                             delete_present=delete_present,
                                             autocompress=autocompress)
         return result
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'unknown source: {source!r}')
 
 

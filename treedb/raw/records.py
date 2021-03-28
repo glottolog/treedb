@@ -50,7 +50,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
         else:
             key_column = File.glottocode
         value_key = key_column
-    else:
+    else:  # prarma: no cache
         raise ValueError(f'order_by={order_by!r} not implememted')
 
     log.info('order_by: %r', order_by)

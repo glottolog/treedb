@@ -97,7 +97,7 @@ def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
         select_languoid = select_languoid.order_by(column_for_path_order)
     elif order_by is False:
         pass
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'order_by={order_by!r} not implemented')
     return select_languoid
 

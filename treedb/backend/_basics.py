@@ -109,7 +109,7 @@ def log_versions(*, also_print=False, print_file=None,
               file=print_file)
         print(f'csv23 version: {csv23.__version__}',
               file=print_file)
-    if sqlparse is not None:
+    if sqlparse is not None:  # pragma: no cover
         log.info('sqlparse version: %s', sqlparse.__version__)
         if also_print or print_file is not None:
             print(f'sqlparse version: {sqlparse.__version__}',

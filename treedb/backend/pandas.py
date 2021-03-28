@@ -28,7 +28,7 @@ def _import_pandas():
     if PANDAS is None:
         try:
             import pandas as PANDAS
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             warnings.warn(f'failed to import pandas: {e}')
         else:
             log.info('pandas version: %s', PANDAS.__version__)

@@ -43,14 +43,15 @@ class Dataset:
                 pass
             else:
                 log.exception('error selecting %r', table)
-                if strict:
+                if strict:  # pragma: no cover
                     raise RuntimeError('failed to select %r from %r', table, bind) from e
             return fallback
         except ValueError as e:
             log.exception('error selecting %r', table)
             if 'not enough values to unpack' in e.args[0] and not strict:
                 return fallback
-            raise RuntimeError('failed to select %r from %r', table, bind) from e
+            else:  # pragma: no cover
+                raise RuntimeError('failed to select %r from %r', table, bind) from e
         except Exception as e:  # pragma: no cover
             log.exception('error selecting %r', table)
             raise RuntimeError('failed to select %r from %r', table, bind) from e
