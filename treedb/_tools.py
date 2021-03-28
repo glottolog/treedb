@@ -246,6 +246,16 @@ def iterslices(iterable, *, size: int):
 
 
 def write_lines(file, lines):
+    r"""
+
+    >>> with io.StringIO() as f:
+    ...    write_lines(f, ['spam', 'eggs'])
+    ...    text = f.getvalue()
+    2
+
+    >>> text
+    'spam\neggs\n'
+    """
     write_line = functools.partial(print, file=file)
     total = 0
     for total, line in enumerate(lines, start=1):
@@ -333,6 +343,11 @@ def get_open_module(filepath, autocompress: bool = False):
 def sha256sum(file, *, raw: bool = False, autocompress: bool = True,
               hash_file_string: bool = False,
               file_string_encoding: str = ENCODING):
+    """
+
+    >>> sha256sum('', hash_file_string=True)
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+    """
     hashobj = hashlib.sha256()
 
     if hash_file_string:
