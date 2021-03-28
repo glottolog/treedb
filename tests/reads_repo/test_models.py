@@ -72,10 +72,10 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Bibfile id=\d+ name='hh'>"),
     (_models.Bibitem, None,
      r"<Bibitem bibfile_id=\d+ bibkey='[^']+'>"),
-     (_models.Altname, _models.Altname.lang != None,
-      r"<Altname languoid_id='\w+' provider_id=\d+ name='[^']+' lang='[^']*'>"),
+    (_models.Altname, _models.Altname.lang != None,
+     r"<Altname languoid_id='\w+' provider_id=\d+ name='[^']+' lang='[^']*'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
-     "<AltnameProvider name='multitree'>"),
+     r"<AltnameProvider name='multitree'>"),
     (_models.Trigger, None,
      r"<Trigger languoid_id='\w+' field='[^']+' trigger='[^']+'>"),
     (_models.Identifier, None,
@@ -95,8 +95,8 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<EthnologueComment languoid_id='\w+' isohid='[^']+' comment_type='[^']+' ethnologue_versions='[^']+'>"),
     (_models.IsoRetirement, None,
      r"<IsoRetirement languoid_id='\w+' code='\w+' name='[^']+'"
-     " change_request='[^']+' effective=datetime\.date\([^)]*\)"
-     " reason='[^']*' remedy='[^']*'>"),
+     r" change_request='[^']+' effective=datetime\.date\([^)]*\)"
+     r" reason='[^']*' remedy='[^']*'>"),
     (_models.IsoRetirementChangeTo, None,
      r"<IsoRetirementChangeTo languoid_id='\w+' code='\w+'>")])
 def test_repr(treedb, model, whereclause, expected_repr):
