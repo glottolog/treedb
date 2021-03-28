@@ -67,10 +67,12 @@ def groupby_attrgetter(*attrnames):
     >>> people = [types.SimpleNamespace(name='Sir Robin', knight=True),
     ...           types.SimpleNamespace(name='Brian', knight=False),
     ...           types.SimpleNamespace(name='Sir Lancelot', knight=True)]
+
     >>> {knight: [g.name for g in grp] for knight, grp in groupby_knight(people)}
     {True: ['Sir Lancelot'], False: ['Brian']}
 
     >>> people_sorted = sorted(people, key=operator.attrgetter('knight'))
+
     >>> {knight: [g.name for g in grp] for knight, grp in groupby_knight(people_sorted)}
     {False: ['Brian'], True: ['Sir Robin', 'Sir Lancelot']}
     """
@@ -143,6 +145,25 @@ def walk_scandir(top, *,
 def pipe_json_lines(file, documents=None, *, raw: bool = False,
                     delete_present: bool = True, autocompress: bool = True,
                     sort_keys: bool = True):
+    r"""Load/dump json lines as endpoint pipe.
+
+    >>> with io.StringIO() as f:
+    ...     buf, nwritten = pipe_json_lines(f, [None, {'spam': None}])
+    ...     json_lines = f.getvalue()
+
+    >>> assert buf is f
+
+    >>> nwritten
+    2
+
+    >>> json_lines
+    'null\n{"spam":null}\n'
+
+    >>> with io.StringIO(json_lines) as f:
+    ...     documents = list(pipe_json_lines(f))
+    >>> documents
+    [None, {'spam': None}]
+    """
     lines_kwargs = {'delete_present': delete_present,
                     'autocompress': autocompress,
                     'newline': '\n'}
