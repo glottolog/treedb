@@ -50,7 +50,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
         else:
             key_column = File.glottocode
         value_key = key_column
-    else:  # prarma: no cache
+    else:  # pragma: no cache
         raise ValueError(f'order_by={order_by!r} not implememted')
 
     log.info('order_by: %r', order_by)
@@ -101,7 +101,7 @@ def window_slices(key_column, *, size: int = WINDOWSIZE,
 
     adapted from https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
     """
-    if bind.dialect.dbapi.sqlite_version_info < (3, 25):
+    if bind.dialect.dbapi.sqlite_version_info < (3, 25):  # pragma: no cover
         iterkeys_func = iterkeys_compat
     else:
         iterkeys_func = iterkeys
@@ -145,7 +145,7 @@ def iterkeys(key_column, *, size: int = WINDOWSIZE,
 
 # Python 3.6 compat
 def iterkeys_compat(key_column, *, size: int = WINDOWSIZE,
-                    bind=_globals.ENGINE):
+                    bind=_globals.ENGINE):  # pragma: no cover
     select_keys = (sa.select(key_column.label('key'))
                    .order_by(key_column))
 

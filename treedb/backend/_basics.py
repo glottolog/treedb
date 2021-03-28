@@ -77,7 +77,7 @@ def set_engine(filename, *,
         return ENGINE
 
     if filename is None:
-        if title is None:
+        if title is None:  # pragma: no cover
             raise TypeError(f'filename=None requires title, given: {title!r}')
         ENGINE.memory_write_path = _tools.path_from_filename(f'{title}-memory',
                                                              expanduser=False)

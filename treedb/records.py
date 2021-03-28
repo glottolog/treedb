@@ -258,7 +258,12 @@ def make_date(value, *, format_=DATE_FORMAT):
 
 
 def format_date(value, *, format_=DATE_FORMAT):
-    return value.strftime(format)
+    """
+
+    >>> format_date(datetime.date(2001, 12, 31))
+    '2001-12-31'
+    """
+    return value.strftime(format_)
 
 
 def make_datetime(value, *, format_=DATETIME_FORMAT):
@@ -340,6 +345,11 @@ _COUNTRY_PATTERN = re.compile(r'''
 
 
 def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
+    """
+
+    >>> splitcountry('The Union of the Comoros (KM)')
+    {'name': 'The Union of the Comoros', 'id': 'KM'}
+    """
     groups = _match(name).groupdict()
     id_only = groups.pop('id_only')
     if id_only:
@@ -363,6 +373,11 @@ _LINK_PATTERN = re.compile(r'''
 
 
 def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
+    """
+
+    >>> splitlink('www.example.com')
+    {'url': 'www.example.com', 'title': None, 'scheme': None}
+    """
     ma = _match(markdown)
     if ma is not None:
         title, url = ma.groups()
@@ -420,6 +435,12 @@ def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
 
 
 def formatsource(value, endangerment=False):
+    """
+
+    >>> formatsource({'bibfile': 'hh', 'bibkey': '23',
+    ...               'pages': '1-23', 'trigger': 'spam'})
+    '**hh:23**:1-23<trigger "spam">'
+    """
     if endangerment and value.get('bibfile') is None:
         return value['name']
 

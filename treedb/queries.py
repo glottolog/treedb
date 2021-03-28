@@ -95,7 +95,7 @@ def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
         select_languoid = select_languoid.order_by(Languoid.id)
     elif order_by == 'path':
         select_languoid = select_languoid.order_by(column_for_path_order)
-    elif order_by is False:
+    elif order_by is False:  # pragma: no cover
         pass
     else:  # pragma: no cover
         raise ValueError(f'order_by={order_by!r} not implemented')
@@ -647,7 +647,7 @@ def iterdescendants(parent_level: typing.Optional[str] = None,
         parent_level = None
     elif parent_level in LEVEL:
         pass
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'invalid parent_level: {parent_level!r}')
 
     Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,
@@ -659,7 +659,7 @@ def iterdescendants(parent_level: typing.Optional[str] = None,
                     .order_by('parent_id', 'child_id'))
 
     if child_level is not None:
-        if child_level not in LEVEL:
+        if child_level not in LEVEL:  # pragma: no cover
             raise ValueError(f'invalid child_level: {child_level!r}')
         select_pairs = select_pairs.where(sa.or_(Child.level == None,
                                                  Child.level == child_level))
