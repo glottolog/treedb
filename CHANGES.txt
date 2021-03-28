@@ -2,10 +2,16 @@ Changelog
 =========
 
 
-Version 2.1.3 (in development)
-------------------------------
+Version 2.2 (in development)
+----------------------------
 
+Add ``pd.read_json_lines()``.
 
+Add ``dry_run`` parameter to ``write_files()`` functions.
+
+Improve test environment and increase test coverage.
+
+Improve usage example ``try-treedb.py``.
 
 
 Version 2.1.2
