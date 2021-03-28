@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.2 (in development)
-----------------------------
+Version 2.2
+-----------
 
 Add ``pd.read_json_lines()``.
 
