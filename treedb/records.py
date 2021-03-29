@@ -12,8 +12,7 @@ import pycountry
 from . import _globals
 from . import fields as _fields
 
-__all__ = ['pipe',
-           'parse', 'dump']
+__all__ = ['pipe']
 
 (CORE,
  SOURCES,
@@ -41,14 +40,92 @@ ISO_8601_INTERVAL = re.compile(r'''
 log = logging.getLogger(__name__)
 
 
-def pipe(mode, items, *, from_raw: bool):
-    codec = {'parse': parse, 'dump': dump}[mode]
-    kwargs = {'from_raw': from_raw} if mode == 'parse' else {}
+def pipe(items, *, dump: bool = False,
+         from_raw: bool):
+    codec = _dump if dump else _parse
+    kwargs = {'from_raw': None} if dump else {'from_raw': from_raw}
     return codec(items, **kwargs)
 
 
-def parse(records: typing.Iterable[_globals.RecordItem],
-          *, from_raw: bool) -> typing.Iterator[_globals.LanguoidItem]:
+def _parse(records: typing.Iterable[_globals.RecordItem],
+           *, from_raw: bool) -> typing.Iterator[_globals.LanguoidItem]:
+    r"""Yield languoid items from given record ítems (from raw).
+
+    >>> dict(pipe({('abin1243',):
+    ...            {'core': {'name': 'Abinomn',
+    ...                      'hid': 'bsa',
+    ...                      'level': 'language',
+    ...                      'iso639-3': 'bsa',
+    ...                      'latitude': '-2.92281',
+    ...                      'longitude': '138.891',
+    ...                      'macroareas': '\nPapunesia',
+    ...                      'countries': '\nID',
+    ...                      'links': ('\n[Abinomn](http://endangeredlanguages.com/lang/1763)'
+    ...                                '\nhttps://www.wikidata.org/entity/Q56648'
+    ...                                '\nhttps://en.wikipedia.org/wiki/Abinomn_language')}}}.items(),
+    ...           from_raw=False))  # doctest: +NORMALIZE_WHITESPACE
+    {('abin1243',):
+     {'id': 'abin1243',
+      'parent_id': None,
+      'level': 'language',
+      'name': 'Abinomn',
+      'hid': 'bsa',
+      'iso639_3': 'bsa',
+      'latitude': -2.92281,
+      'longitude': 138.891,
+      'macroareas': ['Papunesia'],
+      'countries': [{'id': 'ID', 'name': 'Indonesia'}],
+      'links': [{'url': 'http://endangeredlanguages.com/lang/1763', 'title': 'Abinomn', 'scheme': 'http'},
+                {'url': 'https://www.wikidata.org/entity/Q56648', 'title': None, 'scheme': 'https'},
+                {'url': 'https://en.wikipedia.org/wiki/Abinomn_language', 'title': None, 'scheme': 'https'}],
+      'timespan': None,
+      'sources': None,
+      'altnames': None,
+      'triggers': None,
+      'identifier': None,
+      'classification': None,
+      'endangerment': None,
+      'hh_ethnologue_comment': None,
+      'iso_retirement': None}}
+
+    >>> dict(pipe({('abin1243',):
+    ...            {'core': {'name': 'Abinomn',
+    ...                      'hid': 'bsa',
+    ...                      'level': 'language',
+    ...                      'iso639-3': 'bsa',
+    ...                      'latitude': '-2.92281',
+    ...                      'longitude': '138.891',
+    ...                      'macroareas': ['Papunesia'],
+    ...                      'countries': ['ID'],
+    ...                      'links': ['[Abinomn](http://endangeredlanguages.com/lang/1763)',
+    ...                                'https://www.wikidata.org/entity/Q56648',
+    ...                                'https://en.wikipedia.org/wiki/Abinomn_language'],
+    ...                      'timespan': None}}}.items(),
+    ...           from_raw=True))  # doctest: +NORMALIZE_WHITESPACE
+    {('abin1243',):
+     {'id': 'abin1243',
+      'parent_id': None,
+      'level': 'language',
+      'name': 'Abinomn',
+      'hid': 'bsa',
+      'iso639_3': 'bsa',
+      'latitude': -2.92281,
+      'longitude': 138.891,
+      'macroareas': ['Papunesia'],
+      'countries': [{'id': 'ID', 'name': 'Indonesia'}],
+      'links': [{'url': 'http://endangeredlanguages.com/lang/1763', 'title': 'Abinomn', 'scheme': 'http'},
+                {'url': 'https://www.wikidata.org/entity/Q56648', 'title': None, 'scheme': 'https'},
+                {'url': 'https://en.wikipedia.org/wiki/Abinomn_language', 'title': None, 'scheme': 'https'}],
+      'timespan': None,
+      'sources': None,
+      'altnames': None,
+      'triggers': None,
+      'identifier': None,
+      'classification': None,
+      'endangerment': None,
+      'hh_ethnologue_comment': None,
+      'iso_retirement': None}}
+    """
     n = 0
     make_item = _globals.LanguoidItem
     for n, (path, cfg) in enumerate(records, 1):
@@ -57,8 +134,53 @@ def parse(records: typing.Iterable[_globals.RecordItem],
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def dump(languoids: typing.Iterable[_globals.LanguoidItem],
-         *, from_raw: bool) -> typing.Iterator[_globals.RecordItem]:
+def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
+          *, from_raw: bool) -> typing.Iterator[_globals.RecordItem]:
+    """
+
+    >>> dict(pipe({('abin1243',): {
+    ...             'id': 'abin1243',
+    ...             'parent_id': None,
+    ...             'level': 'language',
+    ...             'name': 'Abinomn',
+    ...             'hid': 'bsa',
+    ...             'iso639_3': 'bsa',
+    ...             'latitude': -2.92281,
+    ...             'longitude': 138.891,
+    ...             'macroareas': ['Papunesia'],
+    ...             'countries': [{'name': 'Indonesia', 'id': 'ID'}],
+    ...             'links': [{'url': 'http://endangeredlanguages.com/lang/1763',
+    ...                        'title': 'Abinomn', 'scheme': 'http'},
+    ...                       {'url': 'https://www.wikidata.org/entity/Q56648',
+    ...                         'title': None, 'scheme': 'https'},
+    ...                       {'url': 'https://en.wikipedia.org/wiki/Abinomn_language',
+    ...                        'title': None, 'scheme': 'https'}],
+    ...             'timespan': None,
+    ...             'classification': None,
+    ...             }}.items(),
+    ...           dump=True, from_raw=None))  # doctest: +NORMALIZE_WHITESPACE
+    {('abin1243',):
+     {'core': {'name': 'Abinomn',
+               'hid': 'bsa',
+               'level': 'language',
+               'iso639-3': 'bsa',
+               'latitude': '-2.92281',
+               'longitude': '138.891',
+               'macroareas': ['Papunesia'],
+               'countries': ['ID'],
+               'links': ['[Abinomn](http://endangeredlanguages.com/lang/1763)',
+                         'https://www.wikidata.org/entity/Q56648',
+                         'https://en.wikipedia.org/wiki/Abinomn_language'],
+                         'timespan': None},
+               'sources': {},
+               'altnames': {},
+               'triggers': {},
+               'identifier': {},
+               'classification': {},
+               'endangerment': {},
+               'hh_ethnologue_comment': {},
+               'iso_retirement': {}}}
+    """
     if from_raw:  # pragma: no cover
         raise NotImplementedError
     for path, l in languoids:

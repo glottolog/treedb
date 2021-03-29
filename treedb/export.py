@@ -86,7 +86,7 @@ def iterlanguoids(source: str = 'files',
                                         progress_after=progress_after,
                                         bind=bind)
 
-        items = _records.parse(records, from_raw=(source == 'raw'))
+        items = _records.pipe(records, from_raw=(source == 'raw'))
         return _tools.islice_limit(items,
                                    limit=limit,
                                    offset=offset)
