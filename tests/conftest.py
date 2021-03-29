@@ -63,7 +63,9 @@ def pytest_configure(config):
 def get_configure_kwargs(*, title: str, memory_engine=None):
     kwargs = {'title': title}
 
-    if not pytest.FLAGS.file_engine:
+    if pytest.FLAGS.file_engine:
+        kwargs['engine'] = f'{title}.sqlite3'
+    else:
         kwargs['engine'] = memory_engine
 
     if pytest.FLAGS.glottolog_repo_root is not None:
