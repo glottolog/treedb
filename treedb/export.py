@@ -86,7 +86,8 @@ def iterlanguoids(source: str = 'files',
                                         progress_after=progress_after,
                                         bind=bind)
 
-        items = _records.pipe(records, from_raw=(source == 'raw'))
+        items = _records.pipe(records,
+                              from_raw=(source == 'raw'))
         return _tools.islice_limit(items,
                                    limit=limit,
                                    offset=offset)
@@ -280,7 +281,9 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                               order_by='path',
                               bind=bind)
 
-    records = _records.dump(languoids, from_raw=(source == 'raw'))
+    records = _records.pipe(languoids,
+                            dump=True,
+                            from_raw=(source == 'raw'))
 
     return files.write_files(records, root=root, replace=replace,
                              dry_run=dry_run,
