@@ -113,7 +113,7 @@ def iterfiles(root=_globals.ROOT,
                                       path_slice=slice(len(root.parts), -1))
 
     n = 0
-    for n, dentry in enumerate(_tools.walk_scandir(root), 1):
+    for n, dentry in enumerate(_tools.walk_scandir(root), start=1):
         yield make_fileinfo(dentry)
 
         if not (n % progress_after):

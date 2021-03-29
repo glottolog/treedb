@@ -128,7 +128,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     """
     n = 0
     make_item = _globals.LanguoidItem
-    for n, (path, cfg) in enumerate(records, 1):
+    for n, (path, cfg) in enumerate(records, start=1):
         languoid = make_languoid(path, cfg, from_raw=from_raw)
         yield make_item(path, languoid)
     log.info('%s languoids extracted from records', f'{n:_d}')
