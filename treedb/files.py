@@ -132,6 +132,16 @@ RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
                            typing.Iterable[RawRecordItem]]
 
 
+def roundtrip(root=_globals.ROOT, *, replace: bool = False,
+              progress_after: int = _tools.PROGRESS_AFTER) -> int:
+    """Do a load/save cycle with all config files."""
+    raw_records = iterrecords(root, raw=True,
+                              progress_after=progress_after)
+    return write_files(raw_records, root, raw=True,
+                       replace=replace,
+                       progress_after=progress_after)
+
+
 def iterrecords(root=_globals.ROOT,
                 *, progress_after: int = _tools.PROGRESS_AFTER,
                 raw: bool = False) -> RecordsType:
@@ -152,16 +162,6 @@ def _iterrecords(fileinfos: typing.Iterable[FileInfo],
 
     for path, cfg, _ in fileinfos:
         yield path, cfg
-
-
-def roundtrip(root=_globals.ROOT, *, replace: bool = False,
-              progress_after: int = _tools.PROGRESS_AFTER) -> int:
-    """Do a load/save cycle with all config files."""
-    raw_records = iterrecords(root, raw=True,
-                              progress_after=progress_after)
-    return write_files(raw_records, root, raw=True,
-                       replace=replace,
-                       progress_after=progress_after)
 
 
 def write_files(records: RecordsType, root=_globals.ROOT,
