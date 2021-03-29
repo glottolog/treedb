@@ -84,7 +84,7 @@ def get_configure_kwargs(*, title: str, memory_engine=None):
 def bare_treedb():
     import treedb as bare_treedb
 
-    kwargs = get_configure_kwargs(title='{bare_treedb.__title__}-bare')
+    kwargs = get_configure_kwargs(title=f'{bare_treedb.__title__}-bare')
     bare_treedb.configure(**kwargs)
 
     bare_treedb.checkout_or_clone(pytest.FLAGS.glottolog_tag)

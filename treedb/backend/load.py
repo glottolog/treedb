@@ -53,15 +53,14 @@ def get_engine(filename_or_engine, *, require: bool):
     return _backend.set_engine(filename_or_engine, require=require)
 
 
-def get_dataset(engine, *, exclude_raw: bool, force_rebuild: bool):
+def get_dataset(engine, *, exclude_raw: bool, strict: bool):
     dataset = None
 
     if engine.file is None:
         log.warning('connected to a transient in-memory database')
         dataset = _models.Dataset.get_dataset(bind=engine, strict=True)
     elif engine.file_size():
-        dataset = _models.Dataset.get_dataset(bind=engine,
-                                              strict=not force_rebuild)
+        dataset = _models.Dataset.get_dataset(bind=engine, strict=strict)
 
         if dataset is None:
             warnings.warn(f'force delete {engine.file!r}')
@@ -106,7 +105,7 @@ def main(filename=_globals.ENGINE, repo_root=None,
 
     dataset = get_dataset(engine,
                           exclude_raw=exclude_raw,
-                          force_rebuild=force_rebuild)
+                          strict=not force_rebuild and not _only_create_tables)
 
     if dataset is None or rebuild or _only_create_tables:
         log.info('build new database' if dataset is None else 'rebuild database')
