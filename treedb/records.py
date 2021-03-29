@@ -40,7 +40,7 @@ ISO_8601_INTERVAL = re.compile(r'''
 log = logging.getLogger(__name__)
 
 
-def pipe(items, *, dump: bool = False,
+def pipe(items, *, dump: bool,
          from_raw: bool):
     codec = _dump if dump else _parse
     kwargs = {'from_raw': None} if dump else {'from_raw': from_raw}
@@ -63,7 +63,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     ...                      'links': ('\n[Abinomn](http://endangeredlanguages.com/lang/1763)'
     ...                                '\nhttps://www.wikidata.org/entity/Q56648'
     ...                                '\nhttps://en.wikipedia.org/wiki/Abinomn_language')}}}.items(),
-    ...           from_raw=False))  # doctest: +NORMALIZE_WHITESPACE
+    ...           dump=False, from_raw=False))  # doctest: +NORMALIZE_WHITESPACE
     {('abin1243',):
      {'id': 'abin1243',
       'parent_id': None,
@@ -101,7 +101,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     ...                                'https://www.wikidata.org/entity/Q56648',
     ...                                'https://en.wikipedia.org/wiki/Abinomn_language'],
     ...                      'timespan': None}}}.items(),
-    ...           from_raw=True))  # doctest: +NORMALIZE_WHITESPACE
+    ...           dump=False, from_raw=True))  # doctest: +NORMALIZE_WHITESPACE
     {('abin1243',):
      {'id': 'abin1243',
       'parent_id': None,

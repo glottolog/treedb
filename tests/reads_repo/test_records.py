@@ -10,7 +10,7 @@ def test_parse(bare_treedb, *, n=100):
 
     records = _files.iterrecords()
 
-    items = bare_treedb.records.pipe(records,
+    items = bare_treedb.records.pipe(records, dump=False,
                                      from_raw=False)
 
     assert_valid_languoids(items, n=n)
@@ -19,8 +19,7 @@ def test_parse(bare_treedb, *, n=100):
 def test_dump(bare_treedb, *, n=100):
     languoids = bare_treedb.iterlanguoids()
 
-    items = bare_treedb.records.pipe(languoids,
-                                     dump=True,
+    items = bare_treedb.records.pipe(languoids, dump=True,
                                      from_raw=False)
 
     for path, record in get_assert_head(items, n=n):
