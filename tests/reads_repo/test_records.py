@@ -5,18 +5,23 @@ from conftest import (get_assert_head,
                       assert_valid_languoids)
 
 
-def test_pipe(bare_treedb, *, n=100):
+def test_parse(bare_treedb, *, n=100):
     from treedb import files as _files
 
     records = _files.iterrecords()
-    items = bare_treedb.records.pipe('parse', records, from_raw=False)
+
+    items = bare_treedb.records.pipe(records,
+                                     from_raw=False)
 
     assert_valid_languoids(items, n=n)
 
 
 def test_dump(bare_treedb, *, n=100):
     languoids = bare_treedb.iterlanguoids()
-    items = bare_treedb.records.pipe(languoids, dump=True, from_raw=False)
+
+    items = bare_treedb.records.pipe(languoids,
+                                     dump=True,
+                                     from_raw=False)
 
     for path, record in get_assert_head(items, n=n):
         assert_nonempty_string_tuple(path)
