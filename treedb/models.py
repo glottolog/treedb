@@ -27,11 +27,6 @@ SPECIAL_FAMILIES = ('Sign Language',
 
 BOOKKEEPING = 'Bookkeeping'
 
-MACROAREA = {'North America', 'South America',
-             'Eurasia',
-             'Africa',
-             'Australia', 'Papunesia'}
-
 LINK_SCHEME = {'https', 'http'}
 
 SOURCE_PROVIDER = {'glottolog'}
@@ -405,8 +400,10 @@ class Macroarea:
 
     __tablename__ = 'macroarea'
 
-    name = Column(Enum(*sorted(MACROAREA), create_constraint=True),
-                  primary_key=True)
+    name = Column(String, CheckConstraint("name != ''"), primary_key=True)
+
+    description = Column(Text, CheckConstraint("description != ''"),
+                         nullable=False)
 
     __table_args__ = {'info': {'without_rowid': True}}
 

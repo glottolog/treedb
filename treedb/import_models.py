@@ -5,7 +5,8 @@ import logging
 
 import sqlalchemy as sa
 
-from .models import (MACROAREA, CLASSIFICATION,
+from . import files
+from .models import (CLASSIFICATION,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
@@ -20,6 +21,8 @@ from .models import (MACROAREA, CLASSIFICATION,
                      IsoRetirement, IsoRetirementChangeTo)
 
 __all__ = ['main']
+
+MACROAREAS =  'macroareas.ini'
 
 
 log = logging.getLogger(__name__)
@@ -59,9 +62,11 @@ class ModelMap(dict):
 
 
 def main(languoids, *, conn):
-    macroareas = sorted(MACROAREA)
-    log.debug('insert macroareas: %r', macroareas)
-    conn.execute(sa.insert(Macroarea), [{'name': n} for n in macroareas])
+    macroareas = files.load_config(MACROAREAS, sort_sections=True)
+    log.debug('insert macroareas: %r', list(macroareas))
+    conn.execute(sa.insert(Macroarea),
+                 [{'name': m['name'], 'description': m['description']}
+                  for m in macroareas.values()])
 
     def unseen_countries(countries, _seen={}):
         for c in countries:

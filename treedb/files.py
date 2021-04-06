@@ -12,8 +12,11 @@ from . import _tools
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
+           'load_config',
            'iterfiles', 'iterrecords',
            'roundtrip', 'write_files']
+
+CONFIG_IN_ROOT = _tools.path_from_filename('config')
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 
@@ -41,20 +44,29 @@ def set_root(repo_root, *, resolve=False,
 
 def get_repo_root(root=_globals.ROOT,
                   *, treepath=TREE_IN_ROOT):
+    assert root.parts[-len(treepath.parts):] == treepath.parts
     repo_root = _tools.path_from_filename(root)
     for _ in treepath.parts:
         repo_root = repo_root.parent
     return repo_root
 
 
-class ConfigParser(configparser.ConfigParser):
-    """Conservative ConfigParser with encoding header."""
+def load_config(filename, *, sort_sections: bool = False,
+                root=_globals.ROOT,
+                configpath=CONFIG_IN_ROOT,
+                _default_section: str = configparser.DEFAULTSECT
+                ) -> typing.Dict[str, typing.Dict[str, str]]:
+    path = get_repo_root(root) / configpath / filename
+    cfg = BaseConfigParser.from_file(path)
+    items = sorted(cfg.items()) if sort_sections else cfg.items()
+    return {name: dict(section) for name, section in items
+            if name != _default_section}
 
-    _basename = BASENAME
 
-    _header = '# -*- coding: {encoding} -*-\n'
+class BaseConfigParser(configparser.ConfigParser):
+    """Conservative ConfigParser."""
 
-    _newline = '\r\n'
+    _basename = None
 
     _init_defaults = {'delimiters': ('=',),
                       'comment_prefixes': ('#',),
@@ -63,7 +75,7 @@ class ConfigParser(configparser.ConfigParser):
     @classmethod
     def from_file(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
         path = _tools.path_from_filename(filename)
-        if path.name != cls._basename:
+        if cls._basename is not None and path.name != cls._basename:
             raise RuntimeError(f'unexpected filename {path!r}'
                                f' (must end with {cls._basename})')
 
@@ -77,10 +89,21 @@ class ConfigParser(configparser.ConfigParser):
             kwargs.setdefault(k, v)
         super().__init__(defaults=defaults, **kwargs)
 
+
+class ConfigParser(BaseConfigParser):
+    """Conservative ConfigParser with encoding header."""
+
+    _basename = BASENAME
+
+    _newline = '\r\n'
+
+    _header = '# -*- coding: {encoding} -*-\n'
+
     def to_file(self, filename, *, encoding=_tools.ENCODING):
         path = _tools.path_from_filename(filename)
         with path.open('wt', encoding=encoding, newline=self._newline) as f:
-            f.write(self._header.format(encoding=encoding))
+            if self._header is not None:
+                f.write(self._header.format(encoding=encoding))
             self.write(f)
 
 
