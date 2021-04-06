@@ -8,6 +8,15 @@ from sqlalchemy.orm import (registry as _registry,
 
 from . import _proxies
 
+__all__ = ['CONFIG', 'DEFAULT_ROOT',
+           'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
+           'DEFAULT_HASH', 'FILE_PATH_SEP',
+           'ENGINE', 'ROOT',
+           'REGISTRY',
+           'SESSION',
+           'RecordItem',
+           'LanguoidItem']
+
 CONFIG = 'treedb.ini'
 
 DEFAULT_ROOT = './glottolog/'
@@ -31,15 +40,6 @@ ROOT = _proxies.PathProxy()
 REGISTRY = _registry()
 
 SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
-
-__all__ = ['CONFIG', 'DEFAULT_ROOT',
-           'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
-           'DEFAULT_HASH', 'FILE_PATH_SEP',
-           'ENGINE', 'ROOT',
-           'REGISTRY',
-           'SESSION',
-           'RecordItem',
-           'LanguoidItem']
 
 
 assert PATH_LABEL < LANGUOID_LABEL
