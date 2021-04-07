@@ -62,12 +62,6 @@ class ModelMap(dict):
 
 
 def main(languoids, *, conn):
-    macroareas = files.load_config(MACROAREAS, sort_sections=True)
-    log.debug('insert macroareas: %r', list(macroareas))
-    conn.execute(sa.insert(Macroarea),
-                 [{'name': m['name'], 'description': m['description']}
-                  for m in macroareas.values()])
-
     def unseen_countries(countries, _seen={}):
         for c in countries:
             id_, name = (c[k] for k in ('id', 'name'))
@@ -117,14 +111,26 @@ def main(languoids, *, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
+    log.info('insert macroareas')
+    insert_macroareas(conn)
+
     es_ids = EndangermentSourceMap(conn=conn)
 
     kwargs.update(bibfile_ids=bibfile_ids,
                   bibitem_ids=bibitem_ids,
                   es_ids=es_ids)
 
+    log.info('insert languoids')
     for _, l in languoids:
         insert_languoid(l, **kwargs)
+
+
+def insert_macroareas(conn, *, config_file=MACROAREAS):
+    macroareas = files.load_config(config_file, sort_sections=True)
+    log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
+    params = [{'name': m['name'], 'description': m['description']}
+              for m in macroareas.values()]
+    conn.execute(sa.insert(Macroarea), params)
 
 
 def insert_languoid(languoid, *, conn,

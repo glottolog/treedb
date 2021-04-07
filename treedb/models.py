@@ -93,8 +93,7 @@ class Languoid:
     latitude = Column(Float, CheckConstraint('latitude BETWEEN -90 AND 90'))
     longitude = Column(Float, CheckConstraint('longitude BETWEEN -180 AND 180'))
 
-    __table_args__ = (CheckConstraint('(latitude IS NULL)'
-                                      ' = (longitude IS NULL)'),
+    __table_args__ = (CheckConstraint('(latitude IS NULL) = (longitude IS NULL)'),
                       {'info': {'without_rowid': True}})
 
     def __repr__(self):
@@ -409,7 +408,8 @@ class Macroarea:
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
-                f' {self.name!r}>')
+                f' name={self.name!r}'
+                f' description={self.description!r}>')
 
     languoids = relationship('Languoid',
                              secondary='languoid_macroarea',
