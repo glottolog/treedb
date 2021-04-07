@@ -53,14 +53,15 @@ def get_repo_root(root=_globals.ROOT,
 
 def load_config(filename, *, sort_sections: bool = False,
                 root=_globals.ROOT,
-                configpath=CONFIG_IN_ROOT,
-                _default_section: str = configparser.DEFAULTSECT
+                configpath=CONFIG_IN_ROOT
                 ) -> typing.Dict[str, typing.Dict[str, str]]:
     path = get_repo_root(root) / configpath / filename
+
+    log.debug('parse config file from path: %r', path)
     cfg = BaseConfigParser.from_file(path)
-    items = sorted(cfg.items()) if sort_sections else cfg.items()
-    return {name: dict(section) for name, section in items
-            if name != _default_section}
+
+    log.debug('parsed %d section: %r', len(cfg), cfg)
+    return cfg.to_dict(sort_sections=sort_sections)
 
 
 class BaseConfigParser(configparser.ConfigParser):
@@ -88,6 +89,13 @@ class BaseConfigParser(configparser.ConfigParser):
         for k, v in self._init_defaults.items():
             kwargs.setdefault(k, v)
         super().__init__(defaults=defaults, **kwargs)
+
+    def to_dict(self, *, sort_sections: bool = False,
+                _default_section: str = configparser.DEFAULTSECT):
+        items = sorted(self.items()) if sort_sections else self.items()
+        return {name: dict(section) for name, section in items
+                if name != _default_section}
+
 
 
 class ConfigParser(BaseConfigParser):
@@ -174,13 +182,10 @@ def iterrecords(root=_globals.ROOT,
 
 
 def _iterrecords(fileinfos: typing.Iterable[FileInfo],
-                 raw: bool = False,
-                 _default_section: str = configparser.DEFAULTSECT) -> RecordsType:
+                 raw: bool = False) -> RecordsType:
     if raw:
         for path, cfg, _ in fileinfos:
-            raw_record = {name: dict(section) for name, section in cfg.items()
-                          if name != _default_section}
-            yield path, raw_record
+            yield path, cfg.to_dict()
         return
 
     for path, cfg, _ in fileinfos:
