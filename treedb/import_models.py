@@ -5,8 +5,10 @@ import logging
 
 import sqlalchemy as sa
 
+from . import _tools
 from . import files
 from .models import (CLASSIFICATION,
+                     Config,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
@@ -111,6 +113,9 @@ def main(languoids, *, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
+    log.info('insert _config')
+    insert_config(conn)
+
     log.info('insert macroareas')
     insert_macroareas(conn)
 
@@ -123,6 +128,19 @@ def main(languoids, *, conn):
     log.info('insert languoids')
     for _, l in languoids:
         insert_languoid(l, **kwargs)
+
+
+def insert_config(conn):
+    for filename, cfg in files.iterconfigs():
+        get_line = _tools.next_count(start=1)
+        params = [{'filename': filename,
+                   'section': section, 'option': option,
+                   'line': get_line(),
+                   'value': value.strip()}
+                  for section, sec in cfg.items()
+                  for option, value in sec.items()
+                  if value.strip()]
+        conn.execute(sa.insert(Config), params)
 
 
 def insert_macroareas(conn, *, config_file=MACROAREAS):

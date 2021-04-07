@@ -51,17 +51,28 @@ def get_repo_root(root=_globals.ROOT,
     return repo_root
 
 
-def load_config(filename, *, sort_sections: bool = False,
-                root=_globals.ROOT,
-                configpath=CONFIG_IN_ROOT
-                ) -> typing.Dict[str, typing.Dict[str, str]]:
-    path = get_repo_root(root) / configpath / filename
+def get_config_path(root=_globals.ROOT,
+                    *, configpath=CONFIG_IN_ROOT):
+    return get_repo_root(root) / configpath
 
+
+def load_config(filename, *, sort_sections: bool = False
+                ) -> typing.Dict[str, typing.Dict[str, str]]:
+    path = get_config_path() / filename
+    return _load_config(path, sort_sections=sort_sections)
+
+
+def _load_config(path, *, sort_sections: bool = False):
     log.debug('parse config file from path: %r', path)
     cfg = BaseConfigParser.from_file(path)
 
     log.debug('parsed %d section: %r', len(cfg), cfg)
     return cfg.to_dict(sort_sections=sort_sections)
+
+
+def iterconfigs(root=_globals.ROOT, *, glob='*.ini'):
+    for path in get_config_path().glob(glob):
+        yield path.name, _load_config(path)
 
 
 class BaseConfigParser(configparser.ConfigParser):

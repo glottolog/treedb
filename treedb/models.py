@@ -70,6 +70,23 @@ def json_datetime(date):
 
 
 @registry.mapped
+class Config:
+
+    __tablename__ = '_config'
+
+    filename = Column(String, CheckConstraint("filename != ''"), primary_key=True)
+    section = Column(String, CheckConstraint("section != ''"), primary_key=True)
+    option = Column(String, CheckConstraint("option != ''"), primary_key=True)
+
+    value = Column(Text, CheckConstraint("value != ''"), nullable=False)
+
+    line = Column(Integer, CheckConstraint('line > 0'), nullable=False)
+
+    __table_args__ = (UniqueConstraint(filename, line),
+                      {'info': {'without_rowid': True}})
+
+
+@registry.mapped
 class Languoid:
 
     __tablename__ = 'languoid'
