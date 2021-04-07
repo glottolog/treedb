@@ -46,11 +46,6 @@ CLASSIFICATION = {'sub': (False, 'sub'), 'subrefs': (True, 'sub'),
 
 CLASSIFICATION_KIND = {c for _, c in CLASSIFICATION.values()}
 
-ENDANGERMENT_STATUS = ('not endangered',
-                       'threatened', 'shifting',
-                       'moribund', 'nearly extinct',
-                       'extinct')
-
 EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
@@ -716,6 +711,9 @@ class Bibitem:
     classificationrefs = relationship('ClassificationRef',
                                       back_populates='bibitem')
 
+    endangermentstatus = relationship('EndangermentStatus',
+                                      back_populates='bibitem')
+
     endangermentsources = relationship('EndangermentSource',
                                        back_populates='bibitem')
 
@@ -924,8 +922,7 @@ class Endangerment:
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    status = Column(Enum(*ENDANGERMENT_STATUS, create_constraint=True),
-                    nullable=False)
+    status = Column(ForeignKey('endangermentstatus.name'), nullable=False)
 
     source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
     date = Column(DateTime, nullable=False)
@@ -943,6 +940,10 @@ class Endangerment:
     languoid = relationship('Languoid',
                             innerjoin=True,
                             back_populates='endangerment')
+
+    endangermentstatus = relationship('EndangermentStatus',
+                                      innerjoin=True,
+                                      back_populates='endangerments')
 
     source = relationship('EndangermentSource',
                           innerjoin=True,
@@ -962,6 +963,31 @@ class Endangerment:
                            comment=cls.comment,
                            sort_keys_=sort_keys,
                            label_=label)
+
+
+@registry.mapped
+class EndangermentStatus:
+
+    __tablename__ = 'endangermentstatus'
+
+    name = Column(String, CheckConstraint("name != ''"), primary_key=True)
+
+    key = Column(String, CheckConstraint("key != ''"), nullable=False, unique=True)
+
+    ordinal = Column(Integer, CheckConstraint('ordinal >= 1'), nullable=False)
+
+    egids = Column(String, CheckConstraint("egids != ''"), nullable=False)
+    unesco = Column(String, CheckConstraint("unesco != ''"), nullable=False)
+    elcat = Column(String, CheckConstraint("elcat != ''"), nullable=False)
+    icon = Column(String, CheckConstraint("icon != ''"), nullable=False)
+
+    bibitem_id = Column(ForeignKey('bibitem.id'))
+
+    bibitem = relationship('Bibitem',
+                           back_populates='endangermentstatus')
+
+    endangerments = relationship('Endangerment',
+                                 back_populates='endangermentstatus')
 
 
 @registry.mapped

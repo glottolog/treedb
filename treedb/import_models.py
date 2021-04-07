@@ -18,7 +18,7 @@ from .models import (CLASSIFICATION,
                      Altname, AltnameProvider,
                      Trigger, Identifier, IdentifierSite,
                      ClassificationComment, ClassificationRef,
-                     Endangerment, EndangermentSource,
+                     Endangerment, EndangermentStatus, EndangermentSource,
                      EthnologueComment,
                      IsoRetirement, IsoRetirementChangeTo)
 
@@ -117,10 +117,12 @@ def main(languoids, *, conn):
     log.info('insert macroareas')
     insert_macroareas(conn)
 
+    log.info('insert endangermentstatus')
+    insert_endangermentstatus(conn, bibitem_ids=bibitem_ids)
+
     es_ids = EndangermentSourceMap(conn=conn)
 
-    kwargs.update(bibfile_ids=bibfile_ids,
-                  bibitem_ids=bibitem_ids,
+    kwargs.update(bibitem_ids=bibitem_ids,
                   es_ids=es_ids)
 
     log.info('insert languoids')
@@ -157,11 +159,27 @@ def insert_macroareas(conn, *, config_file='macroareas.ini'):
     conn.execute(sa.insert(Macroarea), params)
 
 
+def insert_endangermentstatus(conn, *, bibitem_ids,
+                              config_file='aes_status.ini'):
+    status = load_config(conn, filename=config_file)
+    log.debug('insert %d endangermentstatus: %r', len(status), list(status))
+
+    params = [{'name': s['name'], 'key': section,
+               'ordinal': int(s['ordinal']),
+               'egids': s['egids'],
+               'unesco': s['unesco'],
+               'elcat': s['elcat'],
+               'icon': s['icon'],
+               'bibitem_id': bibitem_ids[s['reference_id'].partition(':')[::2]]}
+              for section, s in status.items()]
+    conn.execute(sa.insert(EndangermentStatus), params)
+
+
 def insert_languoid(languoid, *, conn,
                     insert_lang,
                     unseen_countries,
                     sourceprovider_ids,
-                    bibfile_ids, bibitem_ids,
+                    bibitem_ids,
                     altnameprovider_ids,
                     identifiersite_ids,
                     es_ids):
