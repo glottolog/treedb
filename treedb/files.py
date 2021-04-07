@@ -71,7 +71,7 @@ def _load_config(path, *, sort_sections: bool = False):
 
 
 def iterconfigs(root=_globals.ROOT, *, glob='*.ini'):
-    for path in get_config_path().glob(glob):
+    for path in sorted(get_config_path().glob(glob)):
         yield path.name, _load_config(path)
 
 
