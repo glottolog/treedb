@@ -24,8 +24,6 @@ from .models import (CLASSIFICATION,
 
 __all__ = ['main']
 
-MACROAREAS =  'macroareas.ini'
-
 
 log = logging.getLogger(__name__)
 
@@ -114,7 +112,7 @@ def main(languoids, *, conn):
             return tuple(sorted(params.items()))
 
     log.info('insert _config')
-    insert_config(conn)
+    insert_configs(conn)
 
     log.info('insert macroareas')
     insert_macroareas(conn)
@@ -130,21 +128,29 @@ def main(languoids, *, conn):
         insert_languoid(l, **kwargs)
 
 
-def insert_config(conn):
+def insert_configs(conn):
     for filename, cfg in files.iterconfigs():
         get_line = _tools.next_count(start=1)
-        params = [{'filename': filename,
-                   'section': section, 'option': option,
-                   'line': get_line(),
-                   'value': value.strip()}
+        params = [{'filename': filename, 'section': section, 'option': option,
+                   'value': value.strip(), 'line': get_line()}
                   for section, sec in cfg.items()
                   for option, value in sec.items()
                   if value.strip()]
         conn.execute(sa.insert(Config), params)
 
 
-def insert_macroareas(conn, *, config_file=MACROAREAS):
-    macroareas = files.load_config(config_file, sort_sections=True)
+def load_config(conn, *, filename: str,
+                _groupby_section=_tools.groupby_itemgetter(0)):
+    select_values = (sa.select(Config.section, Config.option, Config.value)
+                     .filter_by(filename=filename)
+                     .order_by('section', 'option'))
+    result = conn.execute(select_values)
+    return {section: {option: value for _, option, value in grp}
+            for section, grp in _groupby_section(result)}
+
+
+def insert_macroareas(conn, *, config_file='macroareas.ini'):
+    macroareas = load_config(conn, filename=config_file)
     log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
     params = [{'name': m['name'], 'key': section, 'description': m['description']}
               for section, m in macroareas.items()]
