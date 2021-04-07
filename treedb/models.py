@@ -983,6 +983,8 @@ class EndangermentStatus:
 
     bibitem_id = Column(ForeignKey('bibitem.id'))
 
+    __table_args__ = {'info': {'without_rowid': True}}
+
     bibitem = relationship('Bibitem',
                            back_populates='endangermentstatus')
 
