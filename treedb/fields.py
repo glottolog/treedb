@@ -2,7 +2,6 @@
 
 """Define known (section, option) pairs and if they are lists of lines."""
 
-import itertools
 import logging
 import warnings
 
@@ -80,7 +79,7 @@ FIELDS = {(CORE, 'name'): False,
           (ISO_RETIREMENT, 'remedy'): False,
           (ISO_RETIREMENT, 'comment'): False}
 
-SECTION_ORDER = [s for s, _ in itertools.groupby(FIELDS, lambda x: x[0])]
+SECTION_ORDER = [s for s, _ in _tools.groupby_itemgetter(0)(FIELDS)]
 SECTION_ORDER = _tools.Ordering.fromlist(SECTION_ORDER, start_index=1)
 
 FIELD_ORDER = _tools.Ordering.fromlist(FIELDS, start_index=1)

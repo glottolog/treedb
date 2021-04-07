@@ -30,10 +30,13 @@ SUFFIX_OPEN_MODULE = {'.bz2': bz2,
                       '.gz': gzip,
                       '.xz': lzma}
 
-__all__ = ['next_count',
-           'groupby_attrgetter',
+__all__ = ['uniqued',
+           'next_count',
+           'groupby_itemgetter', 'groupby_attrgetter',
            'islice_limit',
+           'iterslices',
            'walk_scandir',
+           'pipe_json_lines', 'pipe_json', 'pipe_lines',
            'get_open_module',
            'path_from_filename',
            'sha256sum',
@@ -42,6 +45,16 @@ __all__ = ['next_count',
 
 
 log = logging.getLogger(__name__)
+
+
+def uniqued(iterable):
+    """Return list of unique hashable elements preserving order.
+
+    >>> uniqued('spamham')
+    ['s', 'p', 'a', 'm', 'h']
+    """
+    seen = set()
+    return [i for i in iterable if i not in seen and not seen.add(i)]
 
 
 def next_count(start: int = 0, step: int = 1):
@@ -57,6 +70,27 @@ def next_count(start: int = 0, step: int = 1):
     """
     count = itertools.count(start, step)
     return functools.partial(next, count)
+
+
+def groupby_itemgetter(*indexes):
+    """
+
+    >>> groupby_second = groupby_itemgetter(1)
+
+    >>> people = [('Sir Robin', True),
+    ...           ('Brian', False),
+    ...           ('Sir Lancelot', True)]
+
+    >>> {knight: [name for name, _ in grp] for knight, grp in groupby_second(people)}
+    {True: ['Sir Lancelot'], False: ['Brian']}
+
+    >>> people_sorted = sorted(people, key=operator.itemgetter(1))
+
+    >>> {knight: [name for name, _ in grp] for knight, grp in groupby_second(people_sorted)}
+    {False: ['Brian'], True: ['Sir Robin', 'Sir Lancelot']}
+    """
+    key = operator.itemgetter(*indexes)
+    return functools.partial(itertools.groupby, key=key)
 
 
 def groupby_attrgetter(*attrnames):
@@ -105,6 +139,17 @@ def islice_limit(iterable,
     elif offset:
         return itertools.islice(iterable, offset, None)
     return iterable
+
+
+def iterslices(iterable, *, size: int):
+    """Yield iterable in chunks of maximal size.
+
+    >>> [tuple(chunk) for chunk in iterslices('bacon', size=2)]
+    [('b', 'a'), ('c', 'o'), ('n',)]
+    """
+    iterable = iter(iterable)
+    next_slice = functools.partial(itertools.islice, iterable, size)
+    return iter(lambda: list(next_slice()), [])
 
 
 def walk_scandir(top, *,
@@ -253,17 +298,6 @@ def write_wrapped(hashsum, f, lines, *, buflines: int = 1_000):
         f.seek(0)
         f.truncate()
     return total
-
-
-def iterslices(iterable, *, size: int):
-    """Yield iterable in chunks of maximal size.
-
-    >>> [tuple(chunk) for chunk in iterslices('bacon', size=2)]
-    [('b', 'a'), ('c', 'o'), ('n',)]
-    """
-    iterable = iter(iterable)
-    next_slice = functools.partial(itertools.islice, iterable, size)
-    return iter(lambda: list(next_slice()), [])
 
 
 def write_lines(file, lines):
@@ -415,16 +449,6 @@ def run(cmd, *, capture_output: bool = False,
     else:
         proc = subprocess.run(cmd, check=check, **kwargs)
     return proc
-
-
-def uniqued(iterable):
-    """Return list of unique hashable elements preserving order.
-
-    >>> uniqued('spamham')
-    ['s', 'p', 'a', 'm', 'h']
-    """
-    seen = set()
-    return [i for i in iterable if i not in seen and not seen.add(i)]
 
 
 class Ordering(dict):
