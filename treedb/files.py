@@ -12,7 +12,7 @@ from . import _tools
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
-           'load_config',
+           'iterconfigs',
            'iterfiles', 'iterrecords',
            'roundtrip', 'write_files']
 
@@ -56,23 +56,18 @@ def get_config_path(root=_globals.ROOT,
     return get_repo_root(root) / configpath
 
 
-def load_config(filename, *, sort_sections: bool = False
+def iterconfigs(root=_globals.ROOT, *, glob='*.ini'):
+    for path in get_config_path().glob(glob):
+        yield path.name, load_config(path)
+
+
+def load_config(filepath, *, sort_sections: bool = False
                 ) -> typing.Dict[str, typing.Dict[str, str]]:
-    path = get_config_path() / filename
-    return _load_config(path, sort_sections=sort_sections)
-
-
-def _load_config(path, *, sort_sections: bool = False):
-    log.debug('open config file from path: %r', path)
-    cfg = BaseConfigParser.from_file(path)
+    log.debug('open config file from path: %r', filepath)
+    cfg = BaseConfigParser.from_file(filepath)
 
     log.debug('parsed %d section: %r', len(cfg), cfg)
     return cfg.to_dict(sort_sections=sort_sections)
-
-
-def iterconfigs(root=_globals.ROOT, *, glob='*.ini'):
-    for path in sorted(get_config_path().glob(glob)):
-        yield path.name, _load_config(path)
 
 
 class BaseConfigParser(configparser.ConfigParser):

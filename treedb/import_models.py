@@ -48,6 +48,7 @@ class ModelMap(dict):
             self.key_to_params = key_to_params
         self.log_insert = log_insert
 
+        self.conn = conn
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
     def __missing__(self, key):
@@ -114,10 +115,8 @@ def main(languoids, *, conn):
     log.info('insert _config')
     insert_configs(conn)
 
-    log.info('insert macroareas')
     insert_macroareas(conn)
 
-    log.info('insert endangermentstatus')
     insert_endangermentstatus(conn, bibitem_ids=bibitem_ids)
 
     es_ids = EndangermentSourceMap(conn=conn)
@@ -131,6 +130,7 @@ def main(languoids, *, conn):
 
 
 def insert_configs(conn):
+    log.info('insert %s', Config.__tablename__)
     for filename, cfg in files.iterconfigs():
         get_line = _tools.next_count(start=1)
         params = [{'filename': filename, 'section': section, 'option': option,
@@ -152,7 +152,9 @@ def load_config(conn, *, filename: str,
 
 
 def insert_macroareas(conn, *, config_file='macroareas.ini'):
+    log.info('insert macroareas from: %r', config_file)
     macroareas = load_config(conn, filename=config_file)
+
     log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
     params = [{'name': m['name'], 'key': section, 'description': m['description']}
               for section, m in macroareas.items()]
@@ -161,6 +163,7 @@ def insert_macroareas(conn, *, config_file='macroareas.ini'):
 
 def insert_endangermentstatus(conn, *, bibitem_ids,
                               config_file='aes_status.ini'):
+    log.info('insert endangermentstatus from %r: config_file')
     status = load_config(conn, filename=config_file)
     log.debug('insert %d endangermentstatus: %r', len(status), list(status))
 
