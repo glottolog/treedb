@@ -63,7 +63,7 @@ def load_config(filename, *, sort_sections: bool = False
 
 
 def _load_config(path, *, sort_sections: bool = False):
-    log.debug('parse config file from path: %r', path)
+    log.debug('open config file from path: %r', path)
     cfg = BaseConfigParser.from_file(path)
 
     log.debug('parsed %d section: %r', len(cfg), cfg)
