@@ -128,8 +128,8 @@ def main(languoids, *, conn):
 def insert_macroareas(conn, *, config_file=MACROAREAS):
     macroareas = files.load_config(config_file, sort_sections=True)
     log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
-    params = [{'name': m['name'], 'description': m['description']}
-              for m in macroareas.values()]
+    params = [{'name': m['name'], 'key': section, 'description': m['description']}
+              for section, m in macroareas.items()]
     conn.execute(sa.insert(Macroarea), params)
 
 

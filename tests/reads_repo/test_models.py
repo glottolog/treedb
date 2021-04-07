@@ -56,7 +56,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     (_models.Languoid, _models.Languoid.id == '3adt1234',
      r"<Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>"),
     (_models.Macroarea, _models.Macroarea.name == 'Eurasia',
-     r"<Macroarea name='Eurasia' description='[^']+'>"),
+     r"<Macroarea name='Eurasia' key='[^']+' description='[^']+'>"),
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
     (_models.Link, _models.Link.title != None,

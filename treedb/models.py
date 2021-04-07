@@ -401,6 +401,9 @@ class Macroarea:
 
     name = Column(String, CheckConstraint("name != ''"), primary_key=True)
 
+    key = Column(String, CheckConstraint("key != ''"), nullable=False,
+                 unique=True)
+
     description = Column(Text, CheckConstraint("description != ''"),
                          nullable=False)
 
@@ -409,6 +412,7 @@ class Macroarea:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' name={self.name!r}'
+                f' key={self.key!r}'
                 f' description={self.description!r}>')
 
     languoids = relationship('Languoid',
