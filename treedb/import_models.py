@@ -7,7 +7,7 @@ import warnings
 import sqlalchemy as sa
 
 from .backend.models import Config
-from .models import (LEVEL, BOOKKEEPING,
+from .models import (LEVEL, SPECIAL_FAMILIES, BOOKKEEPING,
                      CLASSIFICATION,
                      Languoid, LanguoidLevel, PseudoFamily,
                      languoid_macroarea, Macroarea,
@@ -152,6 +152,20 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
                       .where(PseudoFamily.languoid_id == Languoid.id)
                       .where(PseudoFamily.name != Languoid.name))
     assert conn.scalar(query), 'pseudo_family_id must be in-sync with category'
+
+    inserted_special_families = {p['name'] for p in params if not p['bookkeeping']}
+    unseen_special_families = inserted_special_families - set(SPECIAL_FAMILIES)
+    missing_special_families = set(SPECIAL_FAMILIES) - inserted_special_families
+    if unseen_special_families:
+         warnings.warn(f'{config_file!r} has extra pseudofamilies:'
+                       f' {unseen_special_families!r}')
+    if missing_special_families:
+         warnings.warn(f'{config_file!r} misses special families:'
+                       f' {missing_special_families!r}')
+    inserted_bookkeeping = {p['name'] for p in params if p['bookkeeping']}
+    if inserted_bookkeeping != {BOOKKEEPING}:
+        warnings.warn(f'inserted bookkeeping: {inserted_bookkeeeping!r}'
+                      f' expected bookkeeping: {expected_bookkeeping!r}')
 
 
 def insert_macroareas(conn, *, config_file='macroareas.ini'):
