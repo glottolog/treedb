@@ -211,7 +211,7 @@ def write_files(records: RecordsType, root=_globals.ROOT,
 
     if replace:  # pragma: no cover
         if dry_run:
-            warnings.warning(f'replace=True ignored by dry_run=True')
+            warnings.warning('replace=True ignored by dry_run=True')
         else:
             log.warning(f'replace present {basename} files')
 

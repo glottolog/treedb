@@ -5,8 +5,6 @@ import sqlalchemy as sa
 
 from conftest import assert_file_size_between
 
-import treedb as _treedb
-
 QUERY_HASH = {'v4.1': ('55e9cab42b012048ae9f6c08353752fd'
                        'ed7054bf531039979c6803ede54b95ac'),
               'v4.2': ('0623ea039d105309ccda567541c5fa8d'

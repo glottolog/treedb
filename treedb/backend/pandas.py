@@ -3,7 +3,6 @@
 import functools
 import io
 import logging
-import operator
 import typing
 import warnings
 

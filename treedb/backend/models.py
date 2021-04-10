@@ -7,6 +7,7 @@ import sqlalchemy as sa
 
 from .._globals import REGISTRY as registry
 
+from .. import _tools
 from .. import backend as _backend
 
 __all__ = ['Dataset', 'Producer']
