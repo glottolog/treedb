@@ -185,6 +185,10 @@ def load(metadata, *, bind, root,
     with begin(bind=bind) as conn:
         write_producer(conn, name=__package__.partition('.')[0])
 
+    log.info('load configs')
+    with begin(bind=bind) as conn:
+        import_configs(conn, root=root)
+
     if not exclude_raw:
         log.info('load raw')
         with begin(bind=bind) as conn:
@@ -203,6 +207,20 @@ def load(metadata, *, bind, root,
         write_dataset(conn, dataset=dataset)
 
     return dataset
+
+
+def import_configs(conn, *, root):
+    log.debug('insert %s', _models.Config.__tablename__)
+    insert_config = functools.partial(conn.execute, sa.insert(_models.Config))
+
+    for filename, cfg in _files.iterconfigs(root):
+        get_line = _tools.next_count(start=1)
+        params = [{'filename': filename, 'section': section, 'option': option,
+                   'value': value.strip(), 'line': get_line()}
+                  for section, sec in cfg.items()
+                  for option, value in sec.items()
+                  if value.strip()]
+        insert_config(params)
 
 
 def make_dataset(root, *, exclude_raw: bool):

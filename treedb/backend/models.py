@@ -10,7 +10,7 @@ from .._globals import REGISTRY as registry
 from .. import _tools
 from .. import backend as _backend
 
-__all__ = ['Dataset', 'Producer']
+__all__ = ['Dataset', 'Producer', 'Config']
 
 
 log = logging.getLogger(__name__)
@@ -111,3 +111,35 @@ class Producer:
         if also_print or print_file is not None:
             print(f"{name}.name: {params['name']}", file=print_file)
             print(f"{name}.version: {params['version']}", file=print_file)
+
+
+@registry.mapped
+class Config:
+
+    __tablename__ = '_config'
+
+    filename = sa.Column(sa.String, sa.CheckConstraint("filename != ''"),
+                         primary_key=True)
+    section = sa.Column(sa.String, sa.CheckConstraint("section != ''"),
+                        primary_key=True)
+    option = sa.Column(sa.String, sa.CheckConstraint("option != ''"),
+                       primary_key=True)
+
+    value = sa.Column(sa.Text, sa.CheckConstraint("value != ''"),
+                      nullable=False)
+
+    line = sa.Column(sa.Integer, sa.CheckConstraint('line > 0'),
+                     nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint(filename, line),
+                      {'info': {'without_rowid': True}})
+
+    @classmethod
+    def load(cls, filename: str, *, bind,
+             _groupby_section=_tools.groupby_itemgetter(0)):
+        select_values = (sa.select(Config.section, Config.option, Config.value)
+                        .filter_by(filename=filename)
+                        .order_by('section', 'option'))
+        result = _backend.iterrows(select_values, bind=bind)
+        return {section: {option: value for _, option, value in grp}
+                for section, grp in _groupby_section(result)}

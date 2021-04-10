@@ -5,10 +5,8 @@ import logging
 
 import sqlalchemy as sa
 
-from . import _tools
-from . import files
+from .backend.models import Config
 from .models import (CLASSIFICATION,
-                     Config,
                      Languoid,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
@@ -112,9 +110,6 @@ def main(languoids, *, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
-    log.info('insert _config')
-    insert_configs(conn)
-
     insert_macroareas(conn)
 
     insert_endangermentstatus(conn, bibitem_ids=bibitem_ids)
@@ -129,31 +124,9 @@ def main(languoids, *, conn):
         insert_languoid(l, **kwargs)
 
 
-def insert_configs(conn):
-    log.info('insert %s', Config.__tablename__)
-    for filename, cfg in files.iterconfigs():
-        get_line = _tools.next_count(start=1)
-        params = [{'filename': filename, 'section': section, 'option': option,
-                   'value': value.strip(), 'line': get_line()}
-                  for section, sec in cfg.items()
-                  for option, value in sec.items()
-                  if value.strip()]
-        conn.execute(sa.insert(Config), params)
-
-
-def load_config(conn, *, filename: str,
-                _groupby_section=_tools.groupby_itemgetter(0)):
-    select_values = (sa.select(Config.section, Config.option, Config.value)
-                     .filter_by(filename=filename)
-                     .order_by('section', 'option'))
-    result = conn.execute(select_values)
-    return {section: {option: value for _, option, value in grp}
-            for section, grp in _groupby_section(result)}
-
-
 def insert_macroareas(conn, *, config_file='macroareas.ini'):
     log.info('insert macroareas from: %r', config_file)
-    macroareas = load_config(conn, filename=config_file)
+    macroareas = Config.load(config_file, bind=conn)
 
     log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
     params = [{'name': m['name'], 'key': section, 'description': m['description']}
@@ -163,10 +136,10 @@ def insert_macroareas(conn, *, config_file='macroareas.ini'):
 
 def insert_endangermentstatus(conn, *, bibitem_ids,
                               config_file='aes_status.ini'):
-    log.info('insert endangermentstatus from %r: config_file')
-    status = load_config(conn, filename=config_file)
-    log.debug('insert %d endangermentstatus: %r', len(status), list(status))
+    log.info('insert endangermentstatus from %r:', config_file)
+    status = Config.load(config_file, bind=conn)
 
+    log.debug('insert %d endangermentstatus: %r', len(status), list(status))
     params = [{'name': s['name'], 'key': section,
                'ordinal': int(s['ordinal']),
                'egids': s['egids'],
