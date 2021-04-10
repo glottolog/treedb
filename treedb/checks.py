@@ -14,6 +14,7 @@ from ._globals import SESSION as Session
 from .backend.models import Dataset
 
 from .models import (FAMILY, LANGUAGE, DIALECT,
+                     SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, PseudoFamily, Altname, AltnameProvider)
 
 __all__ = ['check',
@@ -112,11 +113,11 @@ def docformat(func):
 
 @check
 def valid_pseudofamily_references():
-    """Pseudofamilies languoid_id and languoid_name point to the same languoid."""
+    """Pseudofamilies languoid_id and name point to the same languoid."""
     return (sa.select(PseudoFamily)
             .join_from(PseudoFamily, Languoid,
                        PseudoFamily.languoid_id == Languoid.id)
-            .where(PseudoFamily.languoid_name != Languoid.name))
+            .where(PseudoFamily.name != Languoid.name))
 
 
 @check
@@ -126,6 +127,24 @@ def pseudofamilies_are_roots():
             .join_from(PseudoFamily, Languoid,
                        PseudoFamily.languoid)
             .where(Languoid.parent_id != None))
+
+
+@check
+def treedb_special_families_subset_pseudofamilies():
+    """set(SPECIAL_FAMILIES) <= pseudofamilies.bookkeeping=False."""
+    return (sa.select(PseudoFamily)
+            .filter_by(bookkeeping=False)
+            .where(~PseudoFamily.name.in_(SPECIAL_FAMILIES))
+            .order_by('name'))
+
+
+@check
+def treedb_bookkeeping_subset_pseudofamilies():
+    """{BOOKKEEPING,} <= pseudofamilies.bookkeeping=True."""
+    return (sa.select(PseudoFamily)
+            .filter_by(bookkeeping=True)
+            .where(PseudoFamily.name != BOOKKEEPING)
+            .order_by('name'))
 
 
 @check

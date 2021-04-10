@@ -141,7 +141,7 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
     log.debug('insert %d pseudofamilies: %r', len(pseudofamilies),
               list(pseudofamilies))
     params = [{'languoid_id': p['pseudo_family_id'].strip(),
-               'languoid_name': p['category'].strip(),
+               'name': p['category'].strip(),
                'config_section': section,
                'description': p.get('description', '').strip() or None,
                'bookkeeping': p['category'].strip() == BOOKKEEPING}
@@ -150,7 +150,7 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
 
     query = sa.select(~sa.exists()
                       .where(PseudoFamily.languoid_id == Languoid.id)
-                      .where(PseudoFamily.languoid_name != Languoid.name))
+                      .where(PseudoFamily.name != Languoid.name))
     assert conn.scalar(query), 'pseudo_family_id must be in-sync with category'
 
 

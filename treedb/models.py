@@ -429,8 +429,8 @@ class PseudoFamily:
 
     languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
 
-    languoid_name = Column(ForeignKey('languoid.name'), nullable=False,
-                           unique=True)
+    name = Column(ForeignKey('languoid.name'), nullable=False,
+                  unique=True)
 
     config_section = Column(String, CheckConstraint("config_section != ''"),
                             nullable=False, unique=True)
@@ -445,7 +445,7 @@ class PseudoFamily:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
-                f' languoid_name={self.languoid_name!r}'
+                f' name={self.name!r}'
                 f' config_section={self.config_section!r}'
                 f' description={self.description!r}'
                 f' bookkeeping={self.bookkeeping!r}>')
