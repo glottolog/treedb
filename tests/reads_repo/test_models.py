@@ -59,9 +59,9 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<LanguoidLevel name='language' description='[^']+' ordinal=\d+>"),
     (_models.PseudoFamily, _models.PseudoFamily.languoid_name == 'Bookkeeping',
      r"<PseudoFamily languoid_id='book1242' languoid_name='Bookkeeping'"
-     r" key='bookkeeping' description='[^']+' bookkeeping=True>"),
+     r" config_section='bookkeeping' description='[^']+' bookkeeping=True>"),
     (_models.Macroarea, _models.Macroarea.name == 'Eurasia',
-     r"<Macroarea name='Eurasia' key='[^']+' description='[^']+'>"),
+     r"<Macroarea name='Eurasia' config_section='[^']+' description='[^']+'>"),
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
     (_models.Link, _models.Link.title != None,

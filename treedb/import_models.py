@@ -125,7 +125,8 @@ def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
                       f' {extra_levels!r}')
 
     log.debug('insert %d languoid levels: %r', len(levels), list(levels))
-    params = [{'name': section, 'description': l['description'],
+    params = [{'name': section,
+               'description': l['description'].strip(),
                'ordinal': int(l['ordinal'])}
               for section, l in levels.items()]
     conn.execute(sa.insert(LanguoidLevel), params)
@@ -141,7 +142,7 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
               list(pseudofamilies))
     params = [{'languoid_id': p['pseudo_family_id'].strip(),
                'languoid_name': p['category'].strip(),
-               'key': section,
+               'config_section': section,
                'description': p.get('description', '').strip() or None,
                'bookkeeping': p['category'].strip() == BOOKKEEPING}
               for section, p in pseudofamilies.items()]
@@ -158,7 +159,9 @@ def insert_macroareas(conn, *, config_file='macroareas.ini'):
     macroareas = Config.load(config_file, bind=conn)
 
     log.debug('insert %d macroareas: %r', len(macroareas), list(macroareas))
-    params = [{'name': m['name'], 'key': section, 'description': m['description']}
+    params = [{'name': m['name'].strip(),
+               'config_section': section,
+               'description': m['description'].strip()}
               for section, m in macroareas.items()]
     conn.execute(sa.insert(Macroarea), params)
 
@@ -169,13 +172,15 @@ def insert_endangermentstatus(conn, *, bibitem_ids,
     status = Config.load(config_file, bind=conn)
 
     log.debug('insert %d endangermentstatus: %r', len(status), list(status))
-    params = [{'name': s['name'], 'key': section,
+    params = [{'name': s['name'].strip(),
+               'config_section': section,
                'ordinal': int(s['ordinal']),
-               'egids': s['egids'],
-               'unesco': s['unesco'],
-               'elcat': s['elcat'],
-               'icon': s['icon'],
-               'bibitem_id': bibitem_ids[s['reference_id'].partition(':')[::2]]}
+               'egids': s['egids'].strip(),
+               'unesco': s['unesco'].strip(),
+               'elcat': s['elcat'].strip(),
+               'icon': s['icon'].strip(),
+               'bibitem_id': bibitem_ids[s['reference_id'].strip()
+                                         .partition(':')[::2]]}
               for section, s in status.items()]
     conn.execute(sa.insert(EndangermentStatus), params)
 

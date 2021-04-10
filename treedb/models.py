@@ -428,8 +428,8 @@ class PseudoFamily:
     languoid_name = Column(ForeignKey('languoid.name'), nullable=False,
                            unique=True)
 
-    key = Column(String, CheckConstraint("key != ''"), nullable=False,
-                 unique=True)
+    config_section = Column(String, CheckConstraint("config_section != ''"),
+                            nullable=False, unique=True)
 
     description = Column(Text, CheckConstraint("description != ''"))
 
@@ -442,7 +442,7 @@ class PseudoFamily:
         return (f'<{self.__class__.__name__}'
                 f' languoid_id={self.languoid_id!r}'
                 f' languoid_name={self.languoid_name!r}'
-                f' key={self.key!r}'
+                f' config_section={self.config_section!r}'
                 f' description={self.description!r}'
                 f' bookkeeping={self.bookkeeping!r}>')
 
@@ -456,8 +456,8 @@ class Macroarea:
 
     name = Column(String, CheckConstraint("name != ''"), primary_key=True)
 
-    key = Column(String, CheckConstraint("key != ''"), nullable=False,
-                 unique=True)
+    config_section = Column(String, CheckConstraint("config_section != ''"),
+                            nullable=False, unique=True)
 
     description = Column(Text, CheckConstraint("description != ''"),
                          nullable=False)
@@ -467,7 +467,7 @@ class Macroarea:
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' name={self.name!r}'
-                f' key={self.key!r}'
+                f' config_section={self.config_section!r}'
                 f' description={self.description!r}>')
 
     languoids = relationship('Languoid',
@@ -1015,7 +1015,8 @@ class EndangermentStatus:
 
     name = Column(String, CheckConstraint("name != ''"), primary_key=True)
 
-    key = Column(String, CheckConstraint("key != ''"), nullable=False, unique=True)
+    config_section = Column(String, CheckConstraint("config_section != ''"),
+                            nullable=False, unique=True)
 
     ordinal = Column(Integer, CheckConstraint('ordinal >= 1'), nullable=False)
 
