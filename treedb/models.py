@@ -105,6 +105,10 @@ class Languoid:
     languoidlevel = relationship('LanguoidLevel',
                                  back_populates='languoids')
 
+    pseudofamily = relationship('PseudoFamily',
+                                primaryjoin='PseudoFamily.languoid_id == Languoid.id',
+                                back_populates='languoid')
+
     parent = relationship('Languoid', remote_side=[id])
 
     children = relationship('Languoid', remote_side=[parent_id], order_by=id,
@@ -446,7 +450,8 @@ class PseudoFamily:
                 f' description={self.description!r}'
                 f' bookkeeping={self.bookkeeping!r}>')
 
-    languoid = relationship('Languoid', foreign_keys=[languoid_id])
+    languoid = relationship('Languoid', foreign_keys=[languoid_id],
+                            back_populates='pseudofamily')
 
 
 @registry.mapped

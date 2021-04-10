@@ -14,7 +14,6 @@ from ._globals import SESSION as Session
 from .backend.models import Dataset
 
 from .models import (FAMILY, LANGUAGE, DIALECT,
-                     SPECIAL_FAMILIES, BOOKKEEPING,
                      Languoid, PseudoFamily, Altname, AltnameProvider)
 
 __all__ = ['check',
@@ -233,7 +232,7 @@ def family_languages():
             .where(~Languoid.name.startswith('Unclassified '))
             .where(~sa.select(Family)
                    .filter_by(level=FAMILY)
-                   .where(Family.name.in_(SPECIAL_FAMILIES))
+                   .join(PseudoFamily, Family.pseudofamily)
                    .join(tree, Family.id == tree.c.parent_id)
                    .filter_by(child_id=Languoid.id, terminal=True)
                    .exists())
@@ -248,10 +247,14 @@ def family_languages():
 @check
 def bookkeeping_no_children():
     """Bookkeeping languoids lack children (book1242 is flat)."""
+    parent = sa.orm.aliased(Languoid)
     return (sa.select(Languoid)
             .select_from(Languoid)
             .order_by('id')
-            .where(Languoid.parent.has(name=BOOKKEEPING))
+            .where(sa.exists()
+                   .where(Languoid.parent_id == parent.id)
+                   .where(parent.id == PseudoFamily.languoid_id)
+                   .where(PseudoFamily.bookkeeping))
             .where(Languoid.children.any()))
 
 
