@@ -15,7 +15,7 @@ from .backend.models import Dataset
 
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
-                     Languoid, Altname, AltnameProvider)
+                     Languoid, PseudoFamily, Altname, AltnameProvider)
 
 __all__ = ['check',
            'compare_languoids']
@@ -109,6 +109,15 @@ def docformat(func):
                 if p.default != inspect.Parameter.empty}
     func.__doc__ = func.__doc__.format_map(defaults)
     return func
+
+
+@check
+def valid_pseudofamilies():
+    """Pseudofamilies languoid_id and languoid_name point to the same languoid."""
+    return (sa.select(PseudoFamily)
+            .join_from(PseudoFamily, Languoid,
+                       PseudoFamily.languoid_id == Languoid.id)
+            .where(PseudoFamily.languoid_name != Languoid.name))
 
 
 @check

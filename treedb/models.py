@@ -419,6 +419,37 @@ class LanguoidLevel:
 
 
 @registry.mapped
+class PseudoFamily:
+
+    __tablename__ = 'pseudofamily'
+
+    languoid_id = Column(ForeignKey('languoid.id'), primary_key=True)
+
+    languoid_name = Column(ForeignKey('languoid.name'), nullable=False,
+                           unique=True)
+
+    key = Column(String, CheckConstraint("key != ''"), nullable=False,
+                 unique=True)
+
+    description = Column(Text, CheckConstraint("description != ''"))
+
+    bookkeeping = Column(sa.Boolean(create_constraint=True), nullable=False,
+                         server_default=sa.false())
+
+    __table_args__ = {'info': {'without_rowid': True}}
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' languoid_id={self.languoid_id!r}'
+                f' languoid_name={self.languoid_name!r}'
+                f' key={self.key!r}'
+                f' description={self.description!r}'
+                f' bookkeeping={self.bookkeeping!r}>')
+
+    languoid = relationship('Languoid', foreign_keys=[languoid_id])
+
+
+@registry.mapped
 class Macroarea:
 
     __tablename__ = 'macroarea'

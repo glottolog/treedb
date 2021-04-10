@@ -7,9 +7,9 @@ import warnings
 import sqlalchemy as sa
 
 from .backend.models import Config
-from .models import (LEVEL,
+from .models import (LEVEL, BOOKKEEPING,
                      CLASSIFICATION,
-                     Languoid, LanguoidLevel,
+                     Languoid, LanguoidLevel, PseudoFamily,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
                      Link, Timespan,
@@ -63,21 +63,6 @@ class ModelMap(dict):
 
 
 def main(languoids, *, conn):
-    def unseen_countries(countries, _seen={}):
-        for c in countries:
-            id_, name = (c[k] for k in ('id', 'name'))
-            try:
-                assert _seen[id_] == name
-            except KeyError:
-                _seen[id_] = name
-                yield c
-
-    kwargs = {'conn': conn,
-              'insert_lang': functools.partial(conn.execute, sa.insert(Languoid)),
-              'unseen_countries': unseen_countries,
-              'sourceprovider_ids': ModelMap(conn=conn, model=SourceProvider),
-              'altnameprovider_ids': ModelMap(conn=conn, model=AltnameProvider),
-              'identifiersite_ids': ModelMap(conn=conn, model=IdentifierSite)}
 
     bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
@@ -121,12 +106,11 @@ def main(languoids, *, conn):
 
     es_ids = EndangermentSourceMap(conn=conn)
 
-    kwargs.update(bibitem_ids=bibitem_ids,
-                  es_ids=es_ids)
+    insert_languoids(conn,
+                     languoids=languoids,
+                     bibitem_ids=bibitem_ids, es_ids=es_ids)
 
-    log.info('insert languoids')
-    for _, l in languoids:
-        insert_languoid(l, **kwargs)
+    insert_pseudofamilies(conn)
 
 
 def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
@@ -145,6 +129,28 @@ def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
                'ordinal': int(l['ordinal'])}
               for section, l in levels.items()]
     conn.execute(sa.insert(LanguoidLevel), params)
+
+
+def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
+    log.info('insert pseudofamilies from: %r', config_file)
+    languagetypes = Config.load(config_file, bind=conn)
+    pseudofamilies = {section: l for section, l in languagetypes.items()
+                      if l.get('pseudo_family_id', '').strip()}
+
+    log.debug('insert %d pseudofamilies: %r', len(pseudofamilies),
+              list(pseudofamilies))
+    params = [{'languoid_id': p['pseudo_family_id'].strip(),
+               'languoid_name': p['category'].strip(),
+               'key': section,
+               'description': p.get('description', '').strip() or None,
+               'bookkeeping': p['category'].strip() == BOOKKEEPING}
+              for section, p in pseudofamilies.items()]
+    conn.execute(sa.insert(PseudoFamily), params)
+
+    query = sa.select(~sa.exists()
+                      .where(PseudoFamily.languoid_id == Languoid.id)
+                      .where(PseudoFamily.languoid_name != Languoid.name))
+    assert conn.scalar(query), 'pseudo_family_id must be in-sync with category'
 
 
 def insert_macroareas(conn, *, config_file='macroareas.ini'):
@@ -172,6 +178,31 @@ def insert_endangermentstatus(conn, *, bibitem_ids,
                'bibitem_id': bibitem_ids[s['reference_id'].partition(':')[::2]]}
               for section, s in status.items()]
     conn.execute(sa.insert(EndangermentStatus), params)
+
+
+def insert_languoids(conn, *, languoids, bibitem_ids, es_ids):
+    log.info('insert languoids')
+
+    def unseen_countries(countries, _seen={}):
+        for c in countries:
+            id_, name = (c[k] for k in ('id', 'name'))
+            try:
+                assert _seen[id_] == name
+            except KeyError:
+                _seen[id_] = name
+                yield c
+
+    kwargs = {'conn': conn,
+              'insert_lang': functools.partial(conn.execute, sa.insert(Languoid)),
+              'unseen_countries': unseen_countries,
+              'sourceprovider_ids': ModelMap(conn=conn, model=SourceProvider),
+              'bibitem_ids': bibitem_ids,
+              'altnameprovider_ids': ModelMap(conn=conn, model=AltnameProvider),
+              'identifiersite_ids': ModelMap(conn=conn, model=IdentifierSite),
+              'es_ids': es_ids}
+
+    for _, l in languoids:
+        insert_languoid(l, **kwargs)
 
 
 def insert_languoid(languoid, *, conn,
