@@ -74,7 +74,7 @@ class Languoid:
     name = Column(String, CheckConstraint("name != ''"),
                   nullable=False, unique=True)
 
-    level = Column(Enum(*LEVEL, create_constraint=True), nullable=False)
+    level = Column(ForeignKey('languoidlevel.name'), nullable=False)
 
     parent_id = Column(ForeignKey('languoid.id',
                                   # do not require to insert parent before child
@@ -99,6 +99,9 @@ class Languoid:
                 f' level={self.level!r}'
                 f' name={self.name!r}'
                 f'{hid_iso}>')
+
+    languoidlevel = relationship('LanguoidLevel',
+                                 back_populates='languoids')
 
     parent = relationship('Languoid', remote_side=[id])
 
@@ -387,6 +390,30 @@ class Languoid:
                     .label(language_label))
 
         return path, family, language
+
+
+@registry.mapped
+class LanguoidLevel:
+
+    __tablename__ = 'languoidlevel'
+
+    name = Column(String, CheckConstraint("name != ''"), primary_key=True)
+
+    description = Column(Text, CheckConstraint("description != ''"),
+                         nullable=False)
+
+    ordinal = Column(Integer, CheckConstraint('ordinal >= 1'), nullable=False)
+
+    __table_args__ = {'info': {'without_rowid': True}}
+
+    def __repr__(self):
+        return (f'<{self.__class__.__name__}'
+                f' name={self.name!r}'
+                f' description={self.description!r}'
+                f' ordinal={self.ordinal}>')
+
+    languoids = relationship('Languoid',
+                             back_populates='languoidlevel')
 
 
 @registry.mapped

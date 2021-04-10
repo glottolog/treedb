@@ -2,12 +2,14 @@
 
 import functools
 import logging
+import warnings
 
 import sqlalchemy as sa
 
 from .backend.models import Config
-from .models import (CLASSIFICATION,
-                     Languoid,
+from .models import (LEVEL,
+                     CLASSIFICATION,
+                     Languoid, LanguoidLevel,
                      languoid_macroarea, Macroarea,
                      languoid_country, Country,
                      Link, Timespan,
@@ -92,7 +94,8 @@ def main(languoids, *, conn):
         def pop_params(self, params):
             return self[params.pop('bibfile'), params.pop('bibkey')]
 
-    bibitem_ids = BibitemMap(conn=conn, log_insert=False)  # silence bibitems
+    bibitem_ids = BibitemMap(conn=conn,
+                             log_insert=False)  # silence bibitems
 
     class EndangermentSourceMap(ModelMap):
         # using closure over bibitem_ids
@@ -110,6 +113,8 @@ def main(languoids, *, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
+    insert_languoid_levels(conn)
+
     insert_macroareas(conn)
 
     insert_endangermentstatus(conn, bibitem_ids=bibitem_ids)
@@ -122,6 +127,24 @@ def main(languoids, *, conn):
     log.info('insert languoids')
     for _, l in languoids:
         insert_languoid(l, **kwargs)
+
+
+def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
+    log.info('insert languoid levels from: %r', config_file)
+    levels = Config.load(config_file, bind=conn)
+    levels = dict(sorted(levels.items(), key=lambda x: int(x[1]['ordinal'])))
+
+    assert set(levels) >= set(LEVEL)
+    extra_levels = sorted(set(levels) - set(LEVEL))
+    if extra_levels:
+        warnings.warn(f'{config_file!r} has extra languoid levels:'
+                      f' {extra_levels!r}')
+
+    log.debug('insert %d languoid levels: %r', len(levels), list(levels))
+    params = [{'name': section, 'description': l['description'],
+               'ordinal': int(l['ordinal'])}
+              for section, l in levels.items()]
+    conn.execute(sa.insert(LanguoidLevel), params)
 
 
 def insert_macroareas(conn, *, config_file='macroareas.ini'):

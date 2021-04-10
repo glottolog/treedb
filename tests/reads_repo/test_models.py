@@ -55,6 +55,8 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
 @pytest.mark.parametrize('model, whereclause, expected_repr', [
     (_models.Languoid, _models.Languoid.id == '3adt1234',
      r"<Languoid id='3adt1234' level='dialect' name='3Ad-Tekles'>"),
+    (_models.LanguoidLevel, _models.LanguoidLevel.name == 'language',
+     r"<LanguoidLevel name='language' description='[^']+' ordinal=\d+>"),
     (_models.Macroarea, _models.Macroarea.name == 'Eurasia',
      r"<Macroarea name='Eurasia' key='[^']+' description='[^']+'>"),
     (_models.Country, _models.Country.id == 'RU',
