@@ -112,12 +112,21 @@ def docformat(func):
 
 
 @check
-def valid_pseudofamilies():
+def valid_pseudofamily_references():
     """Pseudofamilies languoid_id and languoid_name point to the same languoid."""
     return (sa.select(PseudoFamily)
             .join_from(PseudoFamily, Languoid,
                        PseudoFamily.languoid_id == Languoid.id)
             .where(PseudoFamily.languoid_name != Languoid.name))
+
+
+@check
+def pseudofamilies_are_roots():
+    """Pseudofamilies are at the root level, i.e. parent_id is NULL."""
+    return (sa.select(PseudoFamily)
+            .join_from(PseudoFamily, Languoid,
+                       PseudoFamily.languoid)
+            .where(Languoid.parent_id != None))
 
 
 @check
