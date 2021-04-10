@@ -41,8 +41,10 @@ TRIGGER_FIELD = {'lgcode', 'inlg'}
 IDENTIFIER_SITE = {'multitree', 'endangeredlanguages',
                    'wals', 'languagelandscape'}
 
-CLASSIFICATION = {'sub': (False, 'sub'), 'subrefs': (True, 'sub'),
-                  'family': (False, 'family'), 'familyrefs': (True, 'family')}
+_SUB, _FAMILY = 'sub', 'family'
+
+CLASSIFICATION = {'sub': (False, _SUB), 'subrefs': (True, _SUB),
+                  'family': (False, _FAMILY), 'familyrefs': (True, _FAMILY)}
 
 CLASSIFICATION_KIND = {c for _, c in CLASSIFICATION.values()}
 
