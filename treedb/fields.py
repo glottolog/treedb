@@ -91,7 +91,8 @@ OMIT_EMPTY_CORE_OPTIONS = frozenset({'timespan'})
 
 KEEP_EMPTY_SECTIONS = CORE_SECTIONS | frozenset({SOURCES})
 
-KEEP_EMPTY_OPTIONS = frozenset({(SOURCES, 'glottolog'),
+KEEP_EMPTY_OPTIONS = frozenset({(CORE, 'countries'),
+                                (SOURCES, 'glottolog'),
                                 (ISO_RETIREMENT, 'change_to')})
 
 
