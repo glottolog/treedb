@@ -278,7 +278,7 @@ def update_config(cfg: ConfigParser,
     for core_section in core_sections:
         s = raw_record[core_section]
         for core_option in omit_empty_core_options:
-            if not s.get(core_option):
+            if core_option in s and not s[core_option]:
                 del s[core_option]
 
     changed = False
