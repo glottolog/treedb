@@ -71,22 +71,6 @@ def get_dataset(engine, *, exclude_raw: bool, strict: bool):
     return dataset
 
 
-@contextlib.contextmanager
-def begin(*, bind, pragma_bulk_insert: bool = True):
-    """Enter transaction: log boundaries, apply insert optimization, return connection."""
-    with _backend.connect(bind=bind) as conn, conn.begin():
-        dbapi_conn = conn.connection.connection
-        log.debug('begin transaction on %r', dbapi_conn)
-
-        if pragma_bulk_insert:
-            conn.execute(sa.text('PRAGMA synchronous = OFF'))
-            conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
-
-        yield conn
-
-    log.debug('end transaction on %r', dbapi_conn)
-
-
 def main(filename=_globals.ENGINE, repo_root=None,
          *, treepath=_files.TREE_IN_ROOT,
          metadata=_globals.REGISTRY.metadata,
@@ -115,20 +99,22 @@ def main(filename=_globals.ENGINE, repo_root=None,
             engine.file.unlink()
 
         log.info('create %d tables from %r', len(metadata.tables), metadata)
-        with begin(bind=engine) as conn:
+        with _backend.connect(bind=engine) as conn:
             create_tables(metadata, conn=conn,
                           exclude_raw=exclude_raw,
                           exclude_views=exclude_views)
+            log.info('COMMIT create_all: %r', conn)
+            conn.commit()
 
         if _only_create_tables:
             return engine
 
         log.debug('start load timer')
         start = time.time()
-        dataset = load(metadata,
-                       bind=engine,
-                       exclude_raw=exclude_raw,
-                       **kwargs)
+        with _backend.connect(bind=engine, pragma_bulk_insert=True) as conn:
+            dataset = load(metadata, conn=conn,
+                           exclude_raw=exclude_raw,
+                           **kwargs)
         walltime = datetime.timedelta(seconds=time.time() - start)
         log.debug('load timer stopped')
         print(walltime)
@@ -174,7 +160,7 @@ def create_tables(metadata, *, conn,
     metadata.create_all(bind=conn)
 
 
-def load(metadata, *, bind, root,
+def load(metadata, *, conn, root,
          from_raw: bool, exclude_raw: bool):
     log.info('record git commit in %r', root)
     # pre-create dataset to added as final item marking completeness
@@ -182,29 +168,36 @@ def load(metadata, *, bind, root,
     _models.Dataset.log_dataset(dataset)
 
     log.info('write %r', _models.Producer.__tablename__)
-    with begin(bind=bind) as conn:
-        write_producer(conn, name=__package__.partition('.')[0])
+    write_producer(conn, name=__package__.partition('.')[0])
 
     log.info('load configs into %r', _models.Config.__tablename__)
-    with begin(bind=bind) as conn:
-        import_configs(conn, root=root)
+    import_configs(conn, root=root)
+
+    log.info('COMMIT producer and configs: %r', conn)
+    conn.commit()
 
     if not exclude_raw:
         log.info('load raw')
-        with begin(bind=bind) as conn:
-            import_raw(conn, root=root)
+        import_raw(conn, root=root)
+
+        log.info('COMMIT raw: %r', conn)
+        conn.commit()
 
     if not (from_raw or exclude_raw):  # pragma: no cover
         warnings.warn('2 tree reads required (use compare_with_files() to verify)')
 
     log.info('load languoids')
-    with begin(bind=bind) as conn:
-        import_languoids(conn, root=root,
-                         source='raw' if from_raw else 'files')
+    import_languoids(conn, root=root,
+                     source='raw' if from_raw else 'files')
+
+    log.info('COMMIT languoids: %r', conn)
+    conn.commit()
 
     log.info('write %r: %r', _models.Dataset.__tablename__, dataset['title'])
-    with begin(bind=bind) as conn:
-        write_dataset(conn, dataset=dataset)
+    write_dataset(conn, dataset=dataset)
+
+    log.info('COMMIT dataset: %r', conn)
+    conn.commit()
 
     return dataset
 

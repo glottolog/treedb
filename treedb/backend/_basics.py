@@ -40,8 +40,6 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
     with contextlib.closing(dbapi_conn.cursor()) as dbapi_cursor:
         dbapi_cursor.execute('PRAGMA foreign_keys = ON')
 
-    log.debug('dbapi_conn: %r', dbapi_conn)
-
 
 @sa.ext.compiler.compiles(sa.schema.CreateTable)
 def compile(element, compiler, **kwargs):
@@ -116,14 +114,31 @@ def log_versions(*, also_print=False, print_file=None,
                   file=print_file)
 
 
-def connect(*, bind=ENGINE):
+def connect(*, bind=ENGINE,
+            pragma_bulk_insert: bool = False,
+            page_size: typing.Optional[int] = None):
+    """Connect, log, apply SQLite insert optimization, return connection."""
     if isinstance(bind, sa.engine.base.Connection):
+        assert not pragma_bulk_insert
+        assert page_size is None
+
         log.debug('nested connect (no-op): %r', bind)
         return _compat.nullcontext(bind)
 
     log.debug('engine connect: %r', bind)
     conn = bind.connect()
     log.debug('conn: %r', conn)
+
+    dbapi_conn = conn.connection.connection
+    log.debug('dbapi_conn: %r', dbapi_conn)
+
+    if page_size is not None:
+        conn.execute(sa.text(f'PRAGMA page_size = {page_size:d}'))
+
+    if pragma_bulk_insert:
+        conn.execute(sa.text('PRAGMA synchronous = OFF'))
+        conn.execute(sa.text('PRAGMA journal_mode = MEMORY'))
+
     return conn
 
 
