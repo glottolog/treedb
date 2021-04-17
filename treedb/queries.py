@@ -531,45 +531,43 @@ def select_languoid_identifier(languoid=Languoid):
 
 def select_languoid_classification(languoid=Languoid,
                                    *, sort_keys: bool = False):
-    classification_comment = (select(ClassificationComment.kind.label('key'),
-                                     sa.func.json_quote(ClassificationComment.comment).label('value'))
-                              .select_from(ClassificationComment)
-                              .filter_by(languoid_id=languoid.id)
-                              .correlate(languoid)
-                              .scalar_subquery())
+    def comment(kind):
+        return (select(ClassificationComment.comment)
+                .select_from(ClassificationComment)
+                .filter_by(kind=kind)
+                .filter_by(languoid_id=languoid.id)
+                .correlate(languoid)
+                .scalar_subquery())
 
-    bibitem = aliased(Bibitem, name='bibitem_cr')
-    bibfile = aliased(Bibfile, name='bibfile_cr')
+    def refs(kind):
+        ref = aliased(ClassificationRef, name=f'cr_{kind}')
+        bibitem = aliased(Bibitem, name=f'bibitem_cr_{kind}')
+        bibfile = aliased(Bibfile, name=f'bibfile_cr_{kind}')
 
-    classification_refs = (select((ClassificationRef.kind + 'refs').label('key'),
-                                  ClassificationRef.jsonf(bibfile, bibitem,
-                                                          sort_keys=sort_keys))
-                           .select_from(ClassificationRef)
-                           .filter_by(languoid_id=languoid.id)
-                           .correlate(languoid)
-                           .join(ClassificationRef.bibitem.of_type(bibitem))
-                           .join(bibitem.bibfile.of_type(bibfile))
-                           .order_by(ClassificationRef.kind, ClassificationRef.ord)
-                           .alias('lang_cref'))
+        refs = (select(ref.jsonf(bibfile, bibitem, sort_keys=sort_keys))
+                .select_from(ref)
+                .filter_by(kind=kind)
+                .filter_by(languoid_id=languoid.id)
+                .correlate(languoid)
+                .join(ref.bibitem.of_type(bibitem))
+                .join(bibitem.bibfile.of_type(bibfile))
+                .order_by(ref.ord)
+                .alias(f'{kind}refs'))
 
-    classification_refs = (select(classification_refs.c.key,
-                                  group_array(sa.func.json(classification_refs.c.jsonf))
-                                  .label('value'))
-                           .group_by(classification_refs.c.key))
+        return (select(group_array(sa.func.json(refs.c.jsonf))
+                       .label(f'classification_{kind}refs'))
+                .scalar_subquery())
 
-    classification = (classification_comment
-                      .union_all(classification_refs)
-                      .alias('lang_classifciation'))
+    classification = (select(models.json_object(family=comment('family'),
+                                                familyrefs=refs('family'),
+                                                sub=comment('sub'),
+                                                subrefs=refs('sub'),
+                                                sort_keys_=sort_keys)
+                             .label('classification_object'))
+                      .alias('lang_classifciation_ordered'))
 
-    classification = (select(classification.c.key,
-                             classification.c.value
-                             .label('value'))
-                      .order_by('key')
-                      .alias('classification_object'))
-
-    return (select(sa.func.nullif(group_object(classification.c.key,
-                                               sa.func.json(classification.c.value)),
-                                  '{}').label('classification'))
+    return (select(sa.func.nullif(classification.c.classification_object, '{}')
+                                  .label('classification'))
             .select_from(classification)
             .scalar_subquery())
 
