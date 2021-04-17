@@ -111,15 +111,15 @@ def backup(filename=None, *, as_new_engine: bool = False,
     def progress(status, remaining, total):
         log.info('%d of %d pages copied', total - remaining, total)
 
-    with contextlib.closing(engine.raw_connection()) as dbapi_source,\
-         contextlib.closing(result.raw_connection()) as dbapi_dest:
-        log.debug('sqlite3.backup(%r)', dbapi_dest.connection)
+    with contextlib.closing(engine.raw_connection()) as source_fairy,\
+         contextlib.closing(result.raw_connection()) as dest_fairy:
+        log.debug('sqlite3.backup(%r)', dest_fairy.connection)
 
-        dbapi_dest.execute('PRAGMA synchronous = OFF')
-        dbapi_dest.execute('PRAGMA journal_mode = MEMORY')
+        dest_fairy.execute('PRAGMA synchronous = OFF')
+        dest_fairy.execute('PRAGMA journal_mode = MEMORY')
 
-        with dbapi_dest.connection as dbapi_conn:
-            dbapi_source.backup(dbapi_conn, pages=pages, progress=progress)
+        with dest_fairy.connection as dbapi_conn:
+            source_fairy.backup(dbapi_conn, pages=pages, progress=progress)
 
     log.info('database backup complete')
     if as_new_engine:
@@ -147,9 +147,9 @@ def dump_sql(filename=None,
         open_path = path.open
 
     n = 0
-    with contextlib.closing(engine.raw_connection()) as dbapi_conn,\
+    with contextlib.closing(engine.raw_connection()) as dbapi_fairy,\
          open_path('wt', encoding=encoding) as f:
-        for n, line in enumerate(dbapi_conn.iterdump(), start=1):
+        for n, line in enumerate(dbapi_fairy.iterdump(), start=1):
             print(line, file=f)
             if not (n % progress_after):
                 log.info('%s lines written', f'{n:_d}')
