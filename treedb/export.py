@@ -279,6 +279,7 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                               limit=limit,
                               offset=offset,
                               order_by='path',
+                              progress_after=progress_after,
                               bind=bind)
 
     records = _records._dump(languoids,
