@@ -94,8 +94,8 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     (_models.Endangerment, None,
      r"<Endangerment languoid_id='\w+' status='[^']+'"
      r" source_id=\d+ date=datetime\.datetime\([^)]+\)>"),
-    (_models.EndangermentSource, _models.EndangermentSource.name == 'E23',
-     r"<EndangermentSource id=\d+ name='E23' bibitem_id=None pages=None>"),
+    (_models.EndangermentSource, _models.EndangermentSource.name == 'E22',
+     r"<EndangermentSource id=\d+ name='E22' bibitem_id=None pages=None>"),
     (_models.EthnologueComment, None,
      r"<EthnologueComment languoid_id='\w+' isohid='[^']+' comment_type='[^']+' ethnologue_versions='[^']+'>"),
     (_models.IsoRetirement, None,
@@ -111,6 +111,10 @@ def test_repr(treedb, model, whereclause, expected_repr):
 
     with treedb.Session() as session:
         inst = session.execute(query).scalars().first()
+
+    if model is _models.Timespan and pytest.FLAGS.glottolog_tag == 'v4.1':
+        assert inst is None
+        pytest.skip('no timespan in Glottolog v4.1')
 
     result = repr(inst)
 
