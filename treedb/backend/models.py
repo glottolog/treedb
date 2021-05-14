@@ -30,6 +30,8 @@ class Dataset:
     git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
     clean = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
+    version = sa.Column(sa.Text, sa.CheckConstraint("version != ''"))
+
     exclude_raw = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
     @classmethod
@@ -67,6 +69,8 @@ class Dataset:
         log.info('git describe %(git_describe)r clean: %(clean)r', params)
         log.debug('%s.title: %r', name, params['title'])
         log.info('%s.git_commit: %r', name, params['git_commit'])
+        if 'version' in params:
+            log.info('%s.version: %r', name, params['version'])
         log.debug('%s.exclude_raw: %r', name, params['exclude_raw'])
         if also_print or print_file is not None:
             print('git describe {git_describe!r}'
@@ -76,6 +80,9 @@ class Dataset:
                   file=print_file)
             print(f"{name}.git_commit: {params['git_commit']!r}",
                   file=print_file)
+            if 'version' in params:
+                print(f"{name}.version: {params['version']!r}",
+                      file=print_file)
             print(f"{name}.exclude_raw: {params['exclude_raw']!r}",
                   file=print_file)
 

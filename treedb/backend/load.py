@@ -173,8 +173,10 @@ def load(metadata, *, conn, root,
     log.info('write %r', _models.Producer.__tablename__)
     write_producer(conn, name=__package__.partition('.')[0])
 
-    log.info('load configs into %r', _models.Config.__tablename__)
-    import_configs(conn, root=root)
+    log.info('load config/*.ini into %r', _models.Config.__tablename__)
+    version = import_configs(conn, root=root)
+    log.info('version from %r: %r', _models.Config.__tablename__, version)
+    dataset['version'] = version
 
     log.info('COMMIT producer and configs: %r', conn)
     conn.commit()
@@ -217,6 +219,11 @@ def import_configs(conn, *, root):
 
         log.debug('insert %d values for %r', len(params), filename)
         insert_config(params)
+
+    select_version = (sa.select(_models.Config.value)
+                      .filter_by(filename='publication.ini',
+                                 section='zenodo', option='version'))
+    return conn.execute(select_version).scalar_one_or_none()
 
 
 def make_dataset(root, *, exclude_raw: bool):
