@@ -25,6 +25,7 @@ CHECKSUM = {'master': None,
             '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
+         'v4.4': '',
          'v4.3-treedb-fixes': '''\
 25,439 languoids
    244 families
