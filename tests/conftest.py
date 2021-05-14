@@ -6,7 +6,7 @@ import types
 
 import pytest
 
-GLOTTOLOG_TAG = 'v4.3-treedb-fixes'
+GLOTTOLOG_TAG = 'v4.4'
 
 MB = 2**20
 

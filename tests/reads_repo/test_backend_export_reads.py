@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from conftest import assert_file_size_between
 
 QUERY_HASH = {'master': None,
-              'v4.4': '',
+              'v4.4': '224691678e1f2e18406d6dd1a278e062c683ac12ec2acf57d501931d3661142e',
               'v4.3-treedb-fixes': 'bf8af9e4840642f4622cec41bf3156afac75317740ff0eef1ac75ec1998d4f78',
               'v4.2.1': '25222b4feb2d89b4edaeecc546280a059ae6ba69da961d56ee4a387ba3b81fc0',
               'v4.2': '0623ea039d105309ccda567541c5fa8deba44c542d89169bff5df2e50eb8cbcf',

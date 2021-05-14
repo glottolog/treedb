@@ -25,7 +25,25 @@ CHECKSUM = {'master': None,
             '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
-         'v4.4': '',
+         'v4.4': '''\
+25,900 languoids
+   245 families
+   182 isolates
+   427 roots
+ 8,533 languages
+ 4,326 subfamilies
+12,796 dialects
+ 7,613 Spoken L1 Languages
+   202 Sign Language
+   122 Unclassifiable
+    83 Pidgin
+    68 Unattested
+    31 Artificial Language
+    11 Mixed Language
+    14 Speech Register
+ 8,144 All
+   389 Bookkeeping
+''',
          'v4.3-treedb-fixes': '''\
 25,439 languoids
    244 families
