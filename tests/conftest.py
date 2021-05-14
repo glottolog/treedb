@@ -77,7 +77,7 @@ def pytest_collection_modifyitems(config, items):
             yield 'writes', pytest.mark.skip(reason=f'require {RUN_WRITES} flag')
         if config.getoption(SKIP_SLOW):
             yield 'slow', pytest.mark.skip(reason=f'skipped by {SKIP_SLOW} flag')
-        if config.getoption('--exclude-raw'):
+        if config.getoption(EXCLUDE_RAW):
             yield 'raw', pytest.mark.skip(reason=f'skipped by {EXCLUDE_RAW} flag')
 
     keyword_markers = dict(itermarkers())
