@@ -5,13 +5,13 @@ import sys
 
 import pytest
 
-ARGS = [#'tests/writes_repo',
-        #'tests',
+ARGS = [#'--run-writes',
+        #'--skip-slow',
         #'--collect-only',
-        '-s',  # a.k.a --capture=no
+        '--capture=no',  # a.k.a '-s'
         #'--verbose',
         #'--pdb',
-        #'--exitfirst',  # a.k.a. -x
+        #'--exitfirst',  # a.k.a. '-x'
         #'--loglevel-debug',
         #'--log-sql',
         #'-W', 'error',

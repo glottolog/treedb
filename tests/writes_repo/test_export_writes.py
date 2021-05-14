@@ -13,6 +13,9 @@ FILES_WRITTEN = {'raw': {'master': 0,
                             'v4.1': 8_540}}
 
 
+pytestmark = pytest.mark.writes
+
+
 @pytest.mark.parametrize('source', [
     pytest.param('raw',
                  marks=pytest.mark.xfail(reason='TODO',

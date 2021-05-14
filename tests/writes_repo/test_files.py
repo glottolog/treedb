@@ -1,6 +1,9 @@
 import pytest
 
 
+pytestmark = pytest.mark.writes
+
+
 @pytest.mark.skip('missing test isolation')
 @pytest.mark.xfail(pytest.FLAGS.glottolog_tag == 'master',
                    reason='possibly unnormalized')

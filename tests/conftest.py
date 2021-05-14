@@ -15,6 +15,9 @@ os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 
 def pytest_addoption(parser):
+    parser.addoption('--run-writes', action='store_true', default=False,
+                     help='run tests that are marked as writes')
+
     parser.addoption('--skip-slow', action='store_true',
                      help='skip tests that are marked as slow')
 
@@ -44,6 +47,9 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
+    config.addinivalue_line('markers',
+                            'writes: skip the test (override with --run-writes)')
+
     options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
                'rebuild', 'force_rebuild', 'exclude_raw',
                'loglevel_debug', 'log_sql')
@@ -58,6 +64,14 @@ def pytest_configure(config):
 
     pytest.skip_slow = pytest.mark.skipif(config.getoption('--skip-slow'),
                                           reason='skipped by --skip-slow flag')
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption('--run-writes'):
+        skip_writes = pytest.mark.skip(reason='require --run-writes')
+        for item in items:
+            if 'writes' in item.keywords:
+                item.add_marker(skip_writes)
 
 
 def get_configure_kwargs(*, title: str, memory_engine=None):

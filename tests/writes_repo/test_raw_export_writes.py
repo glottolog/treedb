@@ -7,6 +7,9 @@ FILES_WRITTEN = {'master': 0,
                  'v4.1': 0}
 
 
+pytestmark = pytest.mark.writes
+
+
 @pytest.mark.xfail(reason='TODO', raises=KeyError)
 @pytest.mark.xfail(bool(pytest.FLAGS.file_engine),
                    reason="FIXME: NameError: name 'open' is not defined'",
