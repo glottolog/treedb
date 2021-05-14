@@ -6,6 +6,9 @@ INFO_KWARGS = {'memory_usage': 'deep'}
 
 
 @pytest.mark.filterwarnings('ignore'
+                            ':The MetaData.bind argument is deprecated'
+                            ':DeprecationWarning')
+@pytest.mark.filterwarnings('ignore'
                             ':the imp module is deprecated'
                             ':DeprecationWarning')
 def test_pd_read_sql(treedb):
