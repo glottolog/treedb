@@ -15,6 +15,7 @@ PREFIX = 'path_languoid:path:sha256:'
 PREFIX_ID = 'path_languoid:id:sha256:'
 
 CHECKSUM = {'master': None,
+            'v4.4': '289247f73d5bf57f0a7dc8e0e2473b5625ace605dbad57b3c06fe93063d47599',
             'v4.3-treedb-fixes': '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
             'v4.2.1': '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
             'v4.2': '91756e0e9150872e71a1c27419a302d229f4b497f5f629d1d98fc40305f8e5ea',
