@@ -16,7 +16,7 @@ import pathlib
 import platform
 import subprocess
 import sys
-import types
+import types  # noqa: F401 (used in doctest)
 import typing
 import warnings
 
@@ -363,7 +363,9 @@ def get_open_result(file, *, write: bool = False,
 
     if path is None:
         log.info('write lines into: %r', fobj)
-        open_func = lambda: _compat.nullcontext(fobj)
+
+        def open_func():
+            return _compat.nullcontext(fobj)
     else:
         log.info('write lines: %r', path)
         open_module = get_open_module(path, autocompress=autocompress)

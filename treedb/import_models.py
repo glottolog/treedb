@@ -157,15 +157,15 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
     unseen_special_families = inserted_special_families - set(SPECIAL_FAMILIES)
     missing_special_families = set(SPECIAL_FAMILIES) - inserted_special_families
     if unseen_special_families:
-         warnings.warn(f'{config_file!r} has extra pseudofamilies:'
-                       f' {unseen_special_families!r}')
+        warnings.warn(f'{config_file!r} has extra pseudofamilies:'
+                      f' {unseen_special_families!r}')
     if missing_special_families:
-         warnings.warn(f'{config_file!r} misses special families:'
-                       f' {missing_special_families!r}')
+        warnings.warn(f'{config_file!r} misses special families:'
+                      f' {missing_special_families!r}')
     inserted_bookkeeping = {p['name'] for p in params if p['bookkeeping']}
     if inserted_bookkeeping != {BOOKKEEPING}:
-        warnings.warn(f'inserted bookkeeping: {inserted_bookkeeeping!r}'
-                      f' expected bookkeeping: {expected_bookkeeping!r}')
+        warnings.warn(f'inserted bookkeeping: {inserted_bookkeeping!r}'
+                      f' expected bookkeeping: {BOOKKEEPING!r}')
 
 
 def insert_macroareas(conn, *, config_file='macroareas.ini'):

@@ -1,6 +1,5 @@
 """Import data into SQLite3 database."""
 
-import contextlib
 import datetime
 import functools
 import logging
@@ -136,10 +135,14 @@ def create_tables(metadata, *, conn,
     log.debug('import module %s.models', __package__)
     from .. import models
 
+    assert models is not None
+
     if not exclude_raw:
         log.debug('import module %s.raw', __package__)
 
         from .. import raw
+
+        assert raw is not None
 
     if not exclude_views:
         log.info('prepare %d views', len(_views.REGISTERED))

@@ -61,7 +61,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
                                'section', Value.line, 'option'))
 
     if skip_unknown:
-        select_values = select_values.where(Option.is_lines != None)
+        select_values = select_values.where(Option.is_lines != sa.null())
 
     groupby = (('file_id',), ('section',), ('option', 'is_lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
@@ -84,7 +84,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
             count = 0
             for count, ((path,), (_, values)) in enumerate(path_values, start=1):
                 record = {
-                    s: {o: [l.value for l in lines] if is_lines else next(lines).value
+                    s: {o: [ln.value for ln in lines] if is_lines else next(lines).value
                        for (o, is_lines), lines in groupby_option(sections)}
                     for s, sections in groupby_section(values)}
                 yield make_item(path, record)

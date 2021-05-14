@@ -50,7 +50,8 @@ def get_stats_query():
             select_nrows = select_nrows.where(cls.level == level)
 
         if is_root is not None:
-            cond = (cls.parent == None) if is_root else (cls.parent != None)
+            cond = ((cls.parent == sa.null()) if is_root
+                    else (cls.parent != sa.null()))
             select_nrows = select_nrows.where(cond)
 
         return select_nrows
@@ -274,8 +275,8 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
         cols = model.__table__.columns
         if ignore:
             ignore_suffix = '_' + ignore
-            cols = [c for c in cols if c.name != ignore
-                    and not c.name.endswith(ignore_suffix)]
+            cols = [c for c in cols
+                    if c.name != ignore and not c.name.endswith(ignore_suffix)]
         return [c.label(label.format(name=c.name)) for c in cols]
 
     select_languoid = (select_languoid
@@ -661,7 +662,7 @@ def iterdescendants(parent_level: typing.Optional[str] = None,
     if child_level is not None:
         if child_level not in LEVEL:  # pragma: no cover
             raise ValueError(f'invalid child_level: {child_level!r}')
-        select_pairs = select_pairs.where(sa.or_(Child.level == None,
+        select_pairs = select_pairs.where(sa.or_(Child.level == sa.null(),
                                                  Child.level == child_level))
 
     rows = _backend.iterrows(select_pairs, bind=bind)

@@ -79,7 +79,7 @@ def configure_logging(*,
                       log_sql=False,
                       format=FORMAT,
                       capture_warnings=True,
-                      reset=True): #  pragma: no cover
+                      reset=True):  # pragma: no cover
     cfg = {'version': 1,
            'root': {'handlers': ['stderr_pretty'], 'level': level},
            'loggers': {WARNINGS: {},

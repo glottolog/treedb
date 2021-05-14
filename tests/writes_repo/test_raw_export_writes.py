@@ -9,7 +9,8 @@ FILES_WRITTEN = {'master': 0,
 
 @pytest.mark.xfail(reason='TODO', raises=KeyError)
 @pytest.mark.xfail(bool(pytest.FLAGS.file_engine),
-                   reason="FIXME: NameError: name 'open' is not defined'", raises=KeyError, run=False)
+                   reason="FIXME: NameError: name 'open' is not defined'",
+                   raises=KeyError, run=False)
 def test_write_files(treedb_raw):
     expected = FILES_WRITTEN.get(pytest.FLAGS.glottolog_tag)
 

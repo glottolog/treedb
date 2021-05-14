@@ -253,7 +253,7 @@ def test_checksum_equivalence(treedb, kwargs):
     Less frequent changes pertain to changing the data format such as
     removing redundancy.
 
-    -- 
+    --
     First shalt thou take out the Holy Pin.
 
     Then shalt thou count to three, no more, no less.

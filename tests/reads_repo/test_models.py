@@ -64,7 +64,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Macroarea name='Eurasia' config_section='[^']+' description='[^']+'>"),
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
-    (_models.Link, _models.Link.title != None,
+    (_models.Link, _models.Link.title != sa.null,
      r"<Link languoid_id='\w+' ord=\d+ url='[^']+' title='[^']+' scheme='https?'>"),
     (_models.Timespan, None,
      r"<Timespan start_year=\d+ start_month=\d+ start_day=\d+"
@@ -77,7 +77,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Bibfile id=\d+ name='hh'>"),
     (_models.Bibitem, None,
      r"<Bibitem bibfile_id=\d+ bibkey='[^']+'>"),
-    (_models.Altname, _models.Altname.lang != None,
+    (_models.Altname, _models.Altname.lang != sa.null(),
      r"<Altname languoid_id='\w+' provider_id=\d+ name='[^']+' lang='[^']*'>"),
     (_models.AltnameProvider, _models.AltnameProvider.name == 'multitree',
      r"<AltnameProvider name='multitree'>"),

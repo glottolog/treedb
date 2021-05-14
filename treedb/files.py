@@ -103,7 +103,6 @@ class BaseConfigParser(configparser.ConfigParser):
                 if name != _default_section}
 
 
-
 class ConfigParser(BaseConfigParser):
     """Conservative ConfigParser with encoding header."""
 
@@ -249,8 +248,8 @@ def write_files(records: RecordsType, root=_globals.ROOT,
 
     log.info(f'%s {basename} files written total', f'{files_written:_d}')
     if require_nwritten is not None and files_written < require_nwritten:
-            raise ValueError(f'files_written={files_written}'
-                             f' under require_nwritten={require_nwritten}')
+        raise ValueError(f'files_written={files_written}'
+                         f' under require_nwritten={require_nwritten}')
     return files_written
 
 

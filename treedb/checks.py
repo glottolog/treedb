@@ -125,7 +125,7 @@ def pseudofamilies_are_roots():
     return (sa.select(PseudoFamily)
             .join_from(PseudoFamily, Languoid,
                        PseudoFamily.languoid)
-            .where(Languoid.parent_id != None))
+            .where(Languoid.parent_id != sa.null()))
 
 
 @check
@@ -277,10 +277,10 @@ def compare_languoids(left_source: str = 'files', right_source: str = 'raw',
 
     def compare(left, right):
         same = True
-        for l, r in itertools.zip_longest(left, right):
-            if l != r:
+        for lt, rt in itertools.zip_longest(left, right):
+            if lt != rt:
                 same = False
-                print('', '', l, '', r, '', '', sep='\n')
+                print('', '', lt, '', rt, '', '', sep='\n')
 
         return same
 
