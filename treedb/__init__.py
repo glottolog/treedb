@@ -25,7 +25,8 @@ from .backend.export import (print_dataset,
 from .backend.load import main as load
 
 from .backend.models import (Dataset,
-                             Producer)
+                             Producer,
+                             Config)
 
 from .backend.pandas import (pd_read_sql,
                              pd_read_json_lines)
@@ -93,7 +94,7 @@ __all__ = ['Session',
            'engine', 'root']
 
 __title__ = 'treedb'
-__version__ = '2.2.1.dev0'
+__version__ = '2.3.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
 __copyright__ = 'Copyright (c) 2017-2021 Sebastian Bank'
