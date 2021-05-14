@@ -307,6 +307,8 @@ def update_config(cfg: ConfigParser,
         changed = True
 
     for section in sorted_sections(raw_record):
+        if section in drop:
+            continue
         s = raw_record[section]
         if section not in old_sections or section in core_sections:
             pass
