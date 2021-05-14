@@ -64,7 +64,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      r"<Macroarea name='Eurasia' config_section='[^']+' description='[^']+'>"),
     (_models.Country, _models.Country.id == 'RU',
      r"<Country id='RU' name='Russian Federation'>"),
-    (_models.Link, _models.Link.title != sa.null,
+    (_models.Link, _models.Link.title != sa.null(),
      r"<Link languoid_id='\w+' ord=\d+ url='[^']+' title='[^']+' scheme='https?'>"),
     (_models.Timespan, None,
      r"<Timespan start_year=\d+ start_month=\d+ start_day=\d+"
