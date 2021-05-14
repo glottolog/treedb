@@ -48,7 +48,13 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.addinivalue_line('markers',
-                            'writes: skip the test (override with --run-writes)')
+                            'writes: skip unless --run-writes is given')
+
+    config.addinivalue_line('markers',
+                            'slow: skip if --skip-slow flag is given')
+
+    config.addinivalue_line('markers',
+                            'raw: skip if --exclude-raw flag is given')
 
     options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
                'rebuild', 'force_rebuild', 'exclude_raw',
@@ -56,22 +62,24 @@ def pytest_configure(config):
 
     FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
 
-    FLAGS.skip_exclude_raw = pytest.mark.skipif(FLAGS.exclude_raw,
-                                                reason='skipped by'
-                                                       '--exclude-raw')
-
     pytest.FLAGS = FLAGS
-
-    pytest.skip_slow = pytest.mark.skipif(config.getoption('--skip-slow'),
-                                          reason='skipped by --skip-slow flag')
 
 
 def pytest_collection_modifyitems(config, items):
-    if not config.getoption('--run-writes'):
-        skip_writes = pytest.mark.skip(reason='require --run-writes')
-        for item in items:
-            if 'writes' in item.keywords:
-                item.add_marker(skip_writes)
+    def itermarkers():
+        if not config.getoption('--run-writes'):
+            yield 'writes', pytest.mark.skip(reason='require --run-writes')
+        if config.getoption('--skip-slow'):
+            yield 'slow', pytest.mark.skip(reason='skipped by --skip-slow flag')
+        if config.getoption('--exclude-raw'):
+            yield 'raw', pytest.mark.skip(reason='skipped by --exclude-raw flag')
+
+    keyword_markers = dict(itermarkers())
+
+    for item in items:
+        for keyword, marker in keyword_markers.items():
+            if keyword in item.keywords:
+                item.add_marker(marker)
 
 
 def get_configure_kwargs(*, title: str, memory_engine=None):

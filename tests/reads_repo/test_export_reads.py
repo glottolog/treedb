@@ -125,7 +125,7 @@ def test_iterlanguoids(bare_treedb, n=100):
 
 @pytest.mark.parametrize('source', [
     'files',
-    pytest.param('raw', marks=pytest.FLAGS.skip_exclude_raw),
+    pytest.param('raw', marks=pytest.mark.raw),
     'tables'])
 def test_checksum(treedb, source):
     expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
@@ -197,7 +197,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
 
 @pytest.mark.parametrize('source', [
     'files',
-    pytest.param('raw', marks=pytest.FLAGS.skip_exclude_raw),
+    pytest.param('raw', marks=pytest.mark.raw),
     'tables'])
 def test_pd_read_languoids(treedb, source, limit=1_000):
     df = treedb.pd_read_languoids(source=source)
@@ -214,7 +214,7 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
 
 @pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
-@pytest.FLAGS.skip_exclude_raw
+@pytest.mark.raw
 @pytest.mark.parametrize('kwargs', [
     [{'source': 'files'},
      {'source': 'raw'},

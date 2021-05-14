@@ -6,6 +6,6 @@ def test_check(treedb):
 
 
 @pytest.mark.skip('TODO: improve output on failiure')
-@pytest.FLAGS.skip_exclude_raw
+@pytest.mark.raw
 def test_compare_languoids(treedb):
     assert treedb.compare_languoids()

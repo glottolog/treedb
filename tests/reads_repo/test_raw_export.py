@@ -24,7 +24,7 @@ RAW_CSV_SHA256 = {'master': None,
 MB = 2**20
 
 
-pytestmark = pytest.FLAGS.skip_exclude_raw
+pytestmark = pytest.mark.raw
 
 
 def test_print_stats(capsys, treedb_raw):

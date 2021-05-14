@@ -22,7 +22,7 @@ def test_print_dataset(capsys, treedb):
     assert out.startswith("git describe '")
 
 
-@pytest.skip_slow
+@pytest.mark.slow
 @pytest.mark.skipif(sys.version_info < (3, 7), reason='requires Python 3.7+')
 def test_backup(treedb):
     path = treedb.engine.file_with_suffix('.backup.sqlite3')
@@ -45,7 +45,7 @@ def test_backup(treedb):
     assert len(engine.file_sha256()) == 64
 
 
-@pytest.skip_slow
+@pytest.mark.slow
 def test_dump_sql(treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
 
@@ -55,7 +55,7 @@ def test_dump_sql(treedb):
     assert_file_size_between(path, 1, 20)
 
 
-@pytest.skip_slow
+@pytest.mark.slow
 def test_csv_zipfile(treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
 
