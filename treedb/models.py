@@ -437,8 +437,8 @@ class PseudoFamily:
 
     description = Column(Text, CheckConstraint("description != ''"))
 
-    bookkeeping = Column(sa.Boolean(create_constraint=True), nullable=False,
-                         server_default=sa.false())
+    bookkeeping = Column(sa.Boolean(create_constraint=False), CheckConstraint('bookkeeping = 1'),
+                         unique=True)
 
     __table_args__ = {'info': {'without_rowid': True}}
 

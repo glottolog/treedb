@@ -144,7 +144,7 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
                'name': p['category'].strip(),
                'config_section': section,
                'description': p.get('description', '').strip() or None,
-               'bookkeeping': p['category'].strip() == BOOKKEEPING}
+               'bookkeeping': p['category'].strip() == BOOKKEEPING or None}
               for section, p in pseudofamilies.items()]
     conn.execute(sa.insert(PseudoFamily), params)
 
