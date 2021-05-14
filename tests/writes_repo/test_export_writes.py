@@ -18,7 +18,7 @@ pytestmark = pytest.mark.writes
 
 @pytest.mark.parametrize('source', [
     pytest.param('raw',
-                 marks=pytest.mark.xfail(reason='TODO',
+                 marks=pytest.mark.xfail(reason='TODO: not implemented yet',
                                          raises=NotImplementedError)),
     'tables'])
 def test_write_files(treedb, source):
