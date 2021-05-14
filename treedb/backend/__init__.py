@@ -1,4 +1,4 @@
-# backend - sqlite3 database engine
+"""SQLite3 database engine."""
 
 try:
     import sqlparse

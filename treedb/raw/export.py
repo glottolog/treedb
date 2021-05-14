@@ -1,4 +1,4 @@
-# write information to stdout, csv, files
+"""Write information to stdout, csv, files."""
 
 import logging
 import typing

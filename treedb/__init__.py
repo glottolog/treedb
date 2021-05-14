@@ -1,6 +1,4 @@
-# load glottolog/languoids/tree/**/md.ini into sqlite3
-
-"""Load Glottolog lanuoid tree md.ini files into SQLite3 database."""
+"""Load Glottolog lanuoid tree ``md.ini`` files into SQLite3 database."""
 
 from ._globals import SESSION as Session
 

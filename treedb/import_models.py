@@ -1,4 +1,4 @@
-# load glottolog languoid model tables
+"""Load Glottolog languoid model tables."""
 
 import functools
 import logging

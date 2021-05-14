@@ -1,4 +1,4 @@
-# main sqlalchemy schema for sqlite3 db
+"""Main ``sqlalchemy`` schema for SQLite3 database."""
 
 import typing
 

@@ -1,4 +1,4 @@
-# load.py - load sqlite3 database
+"""Import data into SQLite3 database."""
 
 import contextlib
 import datetime

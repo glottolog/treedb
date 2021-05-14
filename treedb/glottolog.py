@@ -1,4 +1,4 @@
-# clone/checkout the Glottolog master repo
+"""Clone/checkout the Glottolog master repo."""
 
 import logging
 

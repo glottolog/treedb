@@ -1,4 +1,4 @@
-# batteries-included sqlalchemy queries for sqlite3 db
+"""Batteries-included ``sqlalchemy`` queries for SQLite3 database."""
 
 import functools
 import logging

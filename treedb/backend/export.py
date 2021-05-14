@@ -1,4 +1,4 @@
-# export.py - sqlite3 database export functions
+"""SQLite3 database export functions."""
 
 import contextlib
 import datetime

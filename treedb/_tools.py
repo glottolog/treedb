@@ -1,4 +1,4 @@
-# generic re-useable self-contained helpers
+"""Generic re-useable self-contained helpers."""
 
 import builtins
 import bz2

@@ -1,4 +1,4 @@
-# sqlite_master.py - read sqlite3 sqlite_master tables
+"""Read ``sqlite3`` ``sqlite_master`` tables."""
 
 import sqlalchemy as sa
 

@@ -1,4 +1,4 @@
-# fetch records from the raw tables
+"""Fetch records from raw tables."""
 
 import contextlib
 import functools

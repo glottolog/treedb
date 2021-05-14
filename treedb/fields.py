@@ -1,6 +1,4 @@
-# define known md.ini (section, option) pairs
-
-"""Define known (section, option) pairs and if they are lists of lines."""
+"""Define known ``md.ini`` (section, option) pairs and if they are lists of lines."""
 
 import logging
 import warnings

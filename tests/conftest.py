@@ -1,4 +1,4 @@
-# pytest command-line flags and fixtures
+"""``pytest`` command-line flags and fixtures."""
 
 import os
 import itertools

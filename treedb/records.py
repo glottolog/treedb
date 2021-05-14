@@ -1,4 +1,4 @@
-# load languoids/tree/**/md.ini into dicts
+"""Load ``glottolog/languoids/tree/**/md.ini`` into dicts."""
 
 import datetime
 import logging

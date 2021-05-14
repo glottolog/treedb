@@ -1,4 +1,4 @@
-# stdlib logging configuration short-cuts
+"""Stdlib logging configuration short-cuts."""
 
 import logging
 import logging.config

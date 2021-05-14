@@ -1,4 +1,4 @@
-#  load configuration from treedb.ini
+"""Load configuration from ``treedb.ini``."""
 
 import configparser
 import logging

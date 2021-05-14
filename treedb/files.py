@@ -1,4 +1,4 @@
-# load/write ../../languoids/tree/**/md.ini
+"""Load and write ``glottolog/languoids/tree/**/md.ini``."""
 
 import configparser
 import functools

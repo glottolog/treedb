@@ -1,4 +1,4 @@
-# proxies for global default variables that can be updated
+"""Proxies for global default variables that can be updated."""
 
 import datetime
 import logging

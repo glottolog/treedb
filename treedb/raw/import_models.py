@@ -1,4 +1,4 @@
-# insert raw model tables
+"""Insert raw model tables."""
 
 import functools
 import logging

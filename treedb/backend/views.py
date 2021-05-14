@@ -1,6 +1,4 @@
-# views.py - limited sqlalchemy support for views
-
-"""Based on https://github.com/sqlalchemy/sqlalchemy/wiki/Views"""
+"""Limited ``sqlalchemy`` support for views based on https://github.com/sqlalchemy/sqlalchemy/wiki/Views."""
 
 import functools
 import logging

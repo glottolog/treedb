@@ -1,4 +1,4 @@
-# yield languoids; write information to stdout, .csv, .jsonl, etc.
+"""Yield languoids, write information to stdout, .csv, .jsonl, etc."""
 
 import itertools
 import hashlib

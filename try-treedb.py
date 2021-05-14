@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# usage example(s)
+
+"""Usage examples."""
 
 import pprint
 

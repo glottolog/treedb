@@ -1,4 +1,4 @@
-# _basics.py - sqlite3 database sub-module level globals
+"""SQLite3 database sub-module level globals."""
 
 import contextlib
 import logging

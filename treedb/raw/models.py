@@ -1,4 +1,4 @@
-# raw tables schema
+"""Raw tables schema."""
 
 import sqlalchemy as sa
 

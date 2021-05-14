@@ -1,4 +1,4 @@
-# package-level globals
+"""Package-level globals."""
 
 import datetime
 import typing

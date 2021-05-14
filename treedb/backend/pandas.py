@@ -1,4 +1,4 @@
-# pandas convenience short-cut functions
+"""Optional pandas dependency convenience short-cut functions."""
 
 import functools
 import io

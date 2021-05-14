@@ -1,4 +1,4 @@
-# models.py - dataset and producer metadata
+"""Dataset, producer, and config metadata."""
 
 import logging
 import warnings
@@ -115,6 +115,7 @@ class Producer:
 
 @registry.mapped
 class Config:
+    """Configuration setting from ``glottolog/config/*.ini``."""
 
     __tablename__ = '_config'
 
