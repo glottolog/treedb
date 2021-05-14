@@ -10,15 +10,21 @@ GLOTTOLOG_TAG = 'v4.4'
 
 MB = 2**20
 
+RUN_WRITES = '--run-writes'
+
+SKIP_SLOW = '--skip-slow'
+
+EXCLUDE_RAW = '--exclude-raw'
+
 
 os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 
 def pytest_addoption(parser):
-    parser.addoption('--run-writes', action='store_true', default=False,
+    parser.addoption(RUN_WRITES, action='store_true',
                      help='run tests that are marked as writes')
 
-    parser.addoption('--skip-slow', action='store_true',
+    parser.addoption(SKIP_SLOW, action='store_true',
                      help='skip tests that are marked as slow')
 
     parser.addoption('--file-engine', action='store_true',
@@ -36,7 +42,7 @@ def pytest_addoption(parser):
     parser.addoption('--force-rebuild', action='store_true',
                      help='pass force_rebuild=True to treedb.load()')
 
-    parser.addoption('--exclude-raw', dest='exclude_raw', action='store_true',
+    parser.addoption(EXCLUDE_RAW, action='store_true',
                      help='pass exlcude_raw=True to treedb.load()')
 
     parser.addoption('--loglevel-debug', action='store_true',
@@ -48,13 +54,13 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.addinivalue_line('markers',
-                            'writes: skip unless --run-writes is given')
+                            f'writes: skip unless {RUN_WRITES} is given')
 
     config.addinivalue_line('markers',
-                            'slow: skip if --skip-slow flag is given')
+                            f'slow: skip if SKIP_SLOW flag is given')
 
     config.addinivalue_line('markers',
-                            'raw: skip if --exclude-raw flag is given')
+                            f'raw: skip if {EXCLUDE_RAW} flag is given')
 
     options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
                'rebuild', 'force_rebuild', 'exclude_raw',
@@ -67,12 +73,12 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     def itermarkers():
-        if not config.getoption('--run-writes'):
-            yield 'writes', pytest.mark.skip(reason='require --run-writes')
-        if config.getoption('--skip-slow'):
-            yield 'slow', pytest.mark.skip(reason='skipped by --skip-slow flag')
+        if not config.getoption(RUN_WRITES):
+            yield 'writes', pytest.mark.skip(reason=f'require {RUN_WRITES} flag')
+        if config.getoption(SKIP_SLOW):
+            yield 'slow', pytest.mark.skip(reason=f'skipped by {SKIP_SLOW} flag')
         if config.getoption('--exclude-raw'):
-            yield 'raw', pytest.mark.skip(reason='skipped by --exclude-raw flag')
+            yield 'raw', pytest.mark.skip(reason=f'skipped by {EXCLUDE_RAW} flag')
 
     keyword_markers = dict(itermarkers())
 
