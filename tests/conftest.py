@@ -57,7 +57,7 @@ def pytest_configure(config):
                             f'writes: skip unless {RUN_WRITES} is given')
 
     config.addinivalue_line('markers',
-                            f'slow: skip if SKIP_SLOW flag is given')
+                            f'slow: skip if {SKIP_SLOW} flag is given')
 
     config.addinivalue_line('markers',
                             f'raw: skip if {EXCLUDE_RAW} flag is given')
