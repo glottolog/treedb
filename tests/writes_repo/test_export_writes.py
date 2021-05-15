@@ -17,9 +17,11 @@ FILES_WRITTEN = {'raw_lines': ZeroDict(),
 pytestmark = pytest.mark.writes
 
 
-@pytest.mark.parametrize('source', [pytest.param('raw_lines', marks=pytest.mark.raw),
-                                    pytest.param('raw', marks=pytest.mark.raw),
-                                    'tables'])
+@pytest.mark.parametrize('source',
+                         [pytest.param('raw_lines', marks=pytest.mark.raw),
+                          pytest.param('raw', marks=pytest.mark.raw),
+                          'tables'],
+                         ids=lambda x: f'source={x}')
 def test_write_files(treedb, source):
     expected = FILES_WRITTEN[source].get(pytest.ARGS.glottolog_tag)
 

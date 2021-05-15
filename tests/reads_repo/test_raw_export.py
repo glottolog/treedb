@@ -36,7 +36,9 @@ def test_print_stats(capsys, treedb_raw):
     assert out.strip()
 
 
-@pytest.mark.parametrize('weak', [False, True, 'unordered'])
+@pytest.mark.parametrize('weak',
+                         [False, True, 'unordered'],
+                         ids=lambda x: f'weak={x}')
 def test_checksum(treedb_raw, weak):
     expected = CHECKSUM.get((pytest.ARGS.glottolog_tag, weak))
 

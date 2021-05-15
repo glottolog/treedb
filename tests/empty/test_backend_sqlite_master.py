@@ -4,9 +4,10 @@ import pytest
 
 
 @pytest.mark.parametrize('table, expected', [
-    ('__dataset__', re.compile(r'CREATE TABLE __dataset__ \(\n'
-                               r'.+\n'
-                               r'0', re.DOTALL)),
+    pytest.param('__dataset__', re.compile(r'CREATE TABLE __dataset__ \(\n'
+                                           r'.+\n'
+                                           r'0', re.DOTALL),
+                 id='table=__dataset__'),
 ])
 def test_print_table_sql(capsys, empty_treedb, table, expected):
     assert empty_treedb.print_table_sql(table) is None

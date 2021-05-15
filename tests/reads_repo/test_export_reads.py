@@ -123,10 +123,10 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-@pytest.mark.parametrize('source', [
-    'files',
-    pytest.param('raw', marks=pytest.mark.raw),
-    'tables'])
+@pytest.mark.parametrize('source', ['files',
+                                    pytest.param('raw', marks=pytest.mark.raw),
+                                    'tables'],
+                         ids=lambda x: f'source={x}')
 def test_checksum(treedb, source):
     expected = CHECKSUM.get(pytest.ARGS.glottolog_tag)
 
@@ -154,7 +154,9 @@ def test_write_json_lines_checksum(treedb):
         assert result == expected
 
 
-@pytest.mark.parametrize('suffix', ['.jsonl', '.jsonl.gz'])
+@pytest.mark.parametrize('suffix',
+                         ['.jsonl', '.jsonl.gz'],
+                         ids=lambda x: f'suffix={x}')
 def test_write_json_lines(capsys, treedb, suffix, n=100):
     name_suffix = '-memory' if treedb.engine.file is None else ''
     args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
@@ -195,10 +197,11 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
         assert treedb.sha256sum(filepath) == expected_checksum
 
 
-@pytest.mark.parametrize('source', [
-    'files',
-    pytest.param('raw', marks=pytest.mark.raw),
-    'tables'])
+@pytest.mark.parametrize('source',
+                         ['files',
+                          pytest.param('raw', marks=pytest.mark.raw),
+                          'tables'],
+                         ids=lambda x: f'source={x}')
 def test_pd_read_languoids(treedb, source, limit=1_000):
     df = treedb.pd_read_languoids(source=source)
 
@@ -216,15 +219,19 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.raw
 @pytest.mark.parametrize('kwargs', [
-    [{'source': 'files'},
-     {'source': 'raw'},
-     {'source': 'tables'}],
-    [{'source': 'raw', 'order_by': 'id'},
-     {'source': 'tables', 'order_by': 'id'}],
-    [{'source': 'files', 'limit': 10,
-      'expected_prefix': 'path_languoid:path[limit=10]:sha256:'},
-     {'source': 'raw', 'order_by': 'file', 'limit': 10,
-      'expected_prefix': 'path_languoid:file[limit=10]:sha256:'}]])
+    pytest.param([{'source': 'files'},
+                  {'source': 'raw'},
+                  {'source': 'tables'}],
+                 id='files, raw, tables'),
+    pytest.param([{'source': 'raw', 'order_by': 'id'},
+                  {'source': 'tables', 'order_by': 'id'}],
+                 id='raw(order_by=id), tables(order_by=id)'),
+    pytest.param([{'source': 'files', 'limit': 10,
+                   'expected_prefix': 'path_languoid:path[limit=10]:sha256:'},
+                  {'source': 'raw', 'order_by': 'file', 'limit': 10,
+                   'expected_prefix': 'path_languoid:file[limit=10]:sha256:'}],
+                 id='files, raw(order_by=file)'),
+])
 def test_checksum_equivalence(treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 
