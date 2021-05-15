@@ -38,7 +38,7 @@ def test_print_stats(capsys, treedb_raw):
 
 @pytest.mark.parametrize('weak', [False, True, 'unordered'])
 def test_checksum(treedb_raw, weak):
-    expected = CHECKSUM.get((pytest.FLAGS.glottolog_tag, weak))
+    expected = CHECKSUM.get((pytest.ARGS.glottolog_tag, weak))
 
     result = treedb_raw.raw.checksum(weak=weak)
 
@@ -52,7 +52,7 @@ def test_checksum(treedb_raw, weak):
 
 
 def test_write_raw_csv(treedb_raw):
-    expected = RAW_CSV_SHA256.get(pytest.FLAGS.glottolog_tag)
+    expected = RAW_CSV_SHA256.get(pytest.ARGS.glottolog_tag)
     suffix = '-memory' if treedb_raw.engine.file is None else ''
 
     path = treedb_raw.raw.write_raw_csv()

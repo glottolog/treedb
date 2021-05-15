@@ -11,7 +11,7 @@ pytestmark = pytest.mark.writes
 
 
 def test_write_files(treedb_raw):
-    expected = FILES_WRITTEN.get(pytest.FLAGS.glottolog_tag)
+    expected = FILES_WRITTEN.get(pytest.ARGS.glottolog_tag)
 
     files_written = treedb_raw.raw.write_files(dry_run=True,
                                                require_nwritten=expected,

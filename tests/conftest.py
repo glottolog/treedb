@@ -1,4 +1,4 @@
-"""``pytest`` command-line flags and fixtures."""
+"""``pytest`` command-line args and fixtures."""
 
 import os
 import itertools
@@ -66,9 +66,10 @@ def pytest_configure(config):
                'rebuild', 'force_rebuild', 'exclude_raw',
                'loglevel_debug', 'log_sql')
 
-    FLAGS = types.SimpleNamespace(**{o: config.getoption(o) for o in options})
+    options = {o: config.getoption(o) for o in options}
 
-    pytest.FLAGS = FLAGS
+    assert not hasattr(pytest, 'ARGS')
+    pytest.ARGS = types.SimpleNamespace(**options)
 
 
 def pytest_collection_modifyitems(config, items):
@@ -91,18 +92,18 @@ def pytest_collection_modifyitems(config, items):
 def get_configure_kwargs(*, title: str, memory_engine=None):
     kwargs = {'title': title}
 
-    if pytest.FLAGS.file_engine:
+    if pytest.ARGS.file_engine:
         kwargs['engine'] = f'{title}.sqlite3'
     else:
         kwargs['engine'] = memory_engine
 
-    if pytest.FLAGS.glottolog_repo_root is not None:
-        kwargs['root'] = pytest.FLAGS.glottolog_repo_root
+    if pytest.ARGS.glottolog_repo_root is not None:
+        kwargs['root'] = pytest.ARGS.glottolog_repo_root
 
-    if pytest.FLAGS.loglevel_debug:
+    if pytest.ARGS.loglevel_debug:
         kwargs['loglevel'] = 'DEBUG'
 
-    if pytest.FLAGS.log_sql:
+    if pytest.ARGS.log_sql:
         kwargs['log_sql'] = True
 
     return kwargs
@@ -115,7 +116,7 @@ def bare_treedb():
     kwargs = get_configure_kwargs(title=f'{bare_treedb.__title__}-bare')
     bare_treedb.configure(**kwargs)
 
-    bare_treedb.checkout_or_clone(pytest.FLAGS.glottolog_tag)
+    bare_treedb.checkout_or_clone(pytest.ARGS.glottolog_tag)
 
     return bare_treedb
 
@@ -128,9 +129,9 @@ def empty_treedb(bare_treedb):
     empty_treedb.configure(**kwargs)
 
     empty_treedb.load(_only_create_tables=True,
-                      rebuild=pytest.FLAGS.rebuild,
-                      force_rebuild=pytest.FLAGS.force_rebuild,
-                      exclude_raw=pytest.FLAGS.exclude_raw)
+                      rebuild=pytest.ARGS.rebuild,
+                      force_rebuild=pytest.ARGS.force_rebuild,
+                      exclude_raw=pytest.ARGS.exclude_raw)
 
     return empty_treedb
 
@@ -142,9 +143,9 @@ def treedb(bare_treedb):
     kwargs = get_configure_kwargs(title=treedb.__title__)
     treedb.configure(**kwargs)
 
-    treedb.load(rebuild=pytest.FLAGS.rebuild,
-                force_rebuild=pytest.FLAGS.force_rebuild,
-                exclude_raw=pytest.FLAGS.exclude_raw)
+    treedb.load(rebuild=pytest.ARGS.rebuild,
+                force_rebuild=pytest.ARGS.force_rebuild,
+                exclude_raw=pytest.ARGS.exclude_raw)
 
     return treedb
 

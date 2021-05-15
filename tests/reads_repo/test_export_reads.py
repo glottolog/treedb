@@ -105,7 +105,7 @@ MB = 2**20
 
 
 def test_print_languoid_stats(capsys, treedb):
-    expected = STATS.get(pytest.FLAGS.glottolog_tag)
+    expected = STATS.get(pytest.ARGS.glottolog_tag)
 
     assert treedb.print_languoid_stats() is None
 
@@ -128,7 +128,7 @@ def test_iterlanguoids(bare_treedb, n=100):
     pytest.param('raw', marks=pytest.mark.raw),
     'tables'])
 def test_checksum(treedb, source):
-    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+    expected = CHECKSUM.get(pytest.ARGS.glottolog_tag)
 
     result = treedb.checksum()
 
@@ -140,7 +140,7 @@ def test_checksum(treedb, source):
 
 
 def test_write_json_lines_checksum(treedb):
-    expected = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+    expected = CHECKSUM.get(pytest.ARGS.glottolog_tag)
 
     with io.StringIO() as buf:
         treedb.write_languoids(buf)
@@ -190,7 +190,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
     assert not out
     assert not err
 
-    expected_checksum = CHECKSUM.get(pytest.FLAGS.glottolog_tag)
+    expected_checksum = CHECKSUM.get(pytest.ARGS.glottolog_tag)
     if expected_checksum is not None:
         assert treedb.sha256sum(filepath) == expected_checksum
 
@@ -212,7 +212,7 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
-@pytest.mark.skipif(pytest.FLAGS.glottolog_tag == 'v4.1',
+@pytest.mark.skipif(pytest.ARGS.glottolog_tag == 'v4.1',
                     reason='requires https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.raw
 @pytest.mark.parametrize('kwargs', [
@@ -274,7 +274,7 @@ def test_checksum_equivalence(treedb, kwargs):
     def iterchecksums(kwargs):
         for kw in kwargs:
             expected_prefix = kw.pop('expected_prefix', None)
-            if kw.get('source') == 'raw' and pytest.FLAGS.exclude_raw:
+            if kw.get('source') == 'raw' and pytest.ARGS.exclude_raw:
                 pytest.skip('skipped by --exclude-raw')
                 continue
             checksum = treedb.checksum(**kw)
@@ -290,9 +290,9 @@ def test_checksum_equivalence(treedb, kwargs):
             expected_prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
         assert prefix == expected_prefix
 
-    if pytest.FLAGS.glottolog_tag in ('v4.1',
-                                      'v4.2', 'v4.2.1',
-                                      'v4.3-treedb-fixes'):
+    if pytest.ARGS.glottolog_tag in ('v4.1',
+                                     'v4.2', 'v4.2.1',
+                                     'v4.3-treedb-fixes'):
         pytest.xfail('format change: minimal countries')
 
     for (c, _, _, cur), (n, _, _, nxt) in pairwise(results):

@@ -112,7 +112,7 @@ def test_repr(treedb, model, whereclause, expected_repr):
     with treedb.Session() as session:
         inst = session.execute(query).scalars().first()
 
-    if model is _models.Timespan and pytest.FLAGS.glottolog_tag == 'v4.1':
+    if model is _models.Timespan and pytest.ARGS.glottolog_tag == 'v4.1':
         assert inst is None
         pytest.skip('no timespan in Glottolog v4.1')
 

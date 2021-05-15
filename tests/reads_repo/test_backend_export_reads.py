@@ -85,7 +85,7 @@ abin1243: Abinomn (language) [bsa]
 
 
 def test_write_csv(treedb):
-    expected = QUERY_HASH.get(pytest.FLAGS.glottolog_tag)
+    expected = QUERY_HASH.get(pytest.ARGS.glottolog_tag)
     suffix = '-memory' if treedb.engine.file is None else ''
 
     path = treedb.write_csv()
@@ -101,7 +101,7 @@ def test_write_csv(treedb):
 
 
 def test_hash_csv(treedb):
-    expected = QUERY_HASH.get(pytest.FLAGS.glottolog_tag)
+    expected = QUERY_HASH.get(pytest.ARGS.glottolog_tag)
 
     result = treedb.hash_csv()
 

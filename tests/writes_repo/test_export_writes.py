@@ -22,7 +22,7 @@ pytestmark = pytest.mark.writes
                                          raises=NotImplementedError)),
     'tables'])
 def test_write_files(treedb, source):
-    expected = FILES_WRITTEN[source].get(pytest.FLAGS.glottolog_tag)
+    expected = FILES_WRITTEN[source].get(pytest.ARGS.glottolog_tag)
 
     files_written = treedb.write_files(source=source,
                                        dry_run=True,
