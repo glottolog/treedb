@@ -36,4 +36,7 @@ if '--installed' in sys.argv[1:]:
     sys.argv[1:] = [a for a in sys.argv[1:] if a != '--installed']
     sys.path.pop(0)
 
-sys.exit(pytest.main(ARGS + sys.argv[1:]))
+args = ARGS + sys.argv[1:]
+
+print(f'pytest.main({args!r})')
+sys.exit(pytest.main(args))
