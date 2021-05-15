@@ -108,9 +108,12 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""
-    log.info('write from raw records to tree')
+    log.info('write from raw record lines to tree')
 
-    records = _records.fetch_records(bind=bind)
+    records = _records.fetch_records(order_by='path',
+                                     progress_after=progress_after,
+                                     bind=bind)
+
     records = _tools.islice_limit(records,
                                   limit=limit,
                                   offset=offset)

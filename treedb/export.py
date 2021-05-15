@@ -273,6 +273,17 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
     if source == 'files':  # pragma: no cover
         raise NotImplementedError('simultaneaous write and read of files')
 
+    if source == 'raw_lines':
+        from . import raw
+
+        return raw.write_files(root, replace=replace,
+                               dry_run=dry_run,
+                               require_nwritten=require_nwritten,
+                               limit=limit,
+                               offset=offset,
+                               progress_after=progress_after,
+                               bind=bind)
+
     from . import files
 
     languoids = iterlanguoids(source,
