@@ -25,6 +25,17 @@ class Proxy(object):
 
 
 class PathProxy(Proxy):
+    """
+
+    >>> PathProxy()
+    <treedb._proxies.PathProxy>
+    >>> assert PathProxy().inode() is None
+    >>> import pathlib
+    >>> PathProxy(pathlib.Path())
+    <treedb._proxies.PathProxy path='.' inode=...>
+    >>> print(PathProxy(pathlib.Path()))
+    .
+    """
 
     def __init__(self, path=None):
         self.path = path
@@ -62,7 +73,11 @@ class PathProxy(Proxy):
 
 
 class EngineProxy(Proxy, sa.engine.Engine):
+    """
 
+    >>> EngineProxy(future=True)
+    <treedb._proxies.EngineProxy>
+    """
     def __init__(self, engine=None, *, future):
         self.engine = engine
         self.future = future

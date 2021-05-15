@@ -61,6 +61,11 @@ def filepath_tuple(file_path: str,
 
 
 class RecordItem(typing.NamedTuple):
+    """Pair of path and record.
+
+    >>> RecordItem.from_filepath_record('spam/eggs', {'core': {'id': 'abin1243'}})
+    RecordItem(path=('spam', 'eggs'), record={'core': {'id': 'abin1243'}})
+    """
 
     path: PathType
 
@@ -99,6 +104,11 @@ LanguoidType = typing.Mapping[str, LanguoidValueType]
 
 
 class LanguoidItem(typing.NamedTuple):
+    """Pair of path and languoid.
+
+    >>> LanguoidItem.from_filepath_languoid('spam/eggs', {'id': 'abin1243'})
+    LanguoidItem(path=('spam', 'eggs'), languoid={'id': 'abin1243'})
+    """
 
     path: PathType
 

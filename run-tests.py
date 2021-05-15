@@ -9,6 +9,7 @@ ARGS = [#'--run-writes',
         #'--skip-slow',
         #'--skip-pandas',
         #'--skip-sqlparse',
+        #'-k', 'not reads',
         #'--collect-only',
         '--capture=no',  # a.k.a '-s'
         #'--verbose',
