@@ -96,8 +96,9 @@ def pytest_collection_modifyitems(config, items):
                                    'pandas': SKIP_PANDAS,
                                    'sqlparse': SKIP_SQLPARSE,
                                    'raw': EXCLUDE_RAW}.items():
-            marker = pytest.mark.skip(reason=f'skipped by {flag_name} flag')
-            yield keyword, marker
+            if config.getoption(flag_name):
+                marker = pytest.mark.skip(reason=f'skipped by {flag_name} flag')
+                yield keyword, marker
 
     keyword_markers = dict(itermarkers())
 
