@@ -135,7 +135,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
 
 def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
           *, convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
-    """
+    r"""
 
     >>> dict(pipe({('abin1243',): {
     ...             'id': 'abin1243',
@@ -171,19 +171,57 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
                          'https://www.wikidata.org/entity/Q56648',
                          'https://en.wikipedia.org/wiki/Abinomn_language'],
                          'timespan': None},
-               'sources': {},
-               'altnames': {},
-               'triggers': {},
-               'identifier': {},
-               'classification': {},
-               'endangerment': {},
-               'hh_ethnologue_comment': {},
-               'iso_retirement': {}}}
+      'sources': {},
+      'altnames': {},
+      'triggers': {},
+      'identifier': {},
+      'classification': {},
+      'endangerment': {},
+      'hh_ethnologue_comment': {},
+      'iso_retirement': {}}}
+    >>> dict(pipe({('abin1243',): {
+    ...             'id': 'abin1243',
+    ...             'parent_id': None,
+    ...             'level': 'language',
+    ...             'name': 'Abinomn',
+    ...             'hid': 'bsa',
+    ...             'iso639_3': 'bsa',
+    ...             'latitude': -2.92281,
+    ...             'longitude': 138.891,
+    ...             'macroareas': ['Papunesia'],
+    ...             'countries': [{'name': 'Indonesia', 'id': 'ID'}],
+    ...             'links': [{'url': 'http://endangeredlanguages.com/lang/1763',
+    ...                        'title': 'Abinomn', 'scheme': 'http'},
+    ...                       {'url': 'https://www.wikidata.org/entity/Q56648',
+    ...                         'title': None, 'scheme': 'https'},
+    ...                       {'url': 'https://en.wikipedia.org/wiki/Abinomn_language',
+    ...                        'title': None, 'scheme': 'https'}],
+    ...             'timespan': None,
+    ...             'classification': None,
+    ...             }}.items(),
+    ...           dump=True, convert_lines=True))  # doctest: +NORMALIZE_WHITESPACE
+    {('abin1243',):
+     {'core': {'name': 'Abinomn',
+               'hid': 'bsa',
+               'level': 'language',
+               'iso639-3': 'bsa',
+               'latitude': '-2.92281',
+               'longitude': '138.891',
+               'macroareas': '\nPapunesia',
+               'countries': '\nID',
+               'links': '\n[Abinomn](http://endangeredlanguages.com/lang/1763)\nhttps://www.wikidata.org/entity/Q56648\nhttps://en.wikipedia.org/wiki/Abinomn_language',
+               'timespan': None},
+      'sources': {},
+      'altnames': {},
+      'triggers': {},
+      'identifier': {},
+      'classification': {},
+      'endangerment': {},
+      'hh_ethnologue_comment': {},
+      'iso_retirement': {}}}
     """
-    if convert_lines:  # pragma: no cover
-        raise NotImplementedError
     for path, l in languoids:
-        record = make_record(l)
+        record = make_record(l, convert_lines=convert_lines)
         yield path, record
 
 
@@ -278,7 +316,9 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
     return languoid
 
 
-def make_record(languoid: _globals.LanguoidType) -> _globals.RecordType:
+def make_record(languoid: _globals.LanguoidType,
+                *, convert_lines: bool,
+                is_lines=_fields.is_lines) -> _globals.RecordType:
     core = {'name': languoid['name'],
             'hid': languoid['hid'],
             'level': languoid['level'],
@@ -342,6 +382,13 @@ def make_record(languoid: _globals.LanguoidType) -> _globals.RecordType:
                    HH_ETHNOLOGUE_COMMENT: hh_ethnologue_comment,
                    ISO_RETIREMENT: iso_retirement})
 
+    if convert_lines:
+        for name, section in record.items():
+            for option in section:
+                if is_lines(name, option):
+                    lines = format_lines(section[option])
+                    section[option] = lines
+
     return record
 
 
@@ -360,7 +407,7 @@ def make_lines(value):
 
 
 def make_lines_raw(value):
-    """
+    """No-op.
 
     >>> make_lines_raw(None)
     []
@@ -371,6 +418,19 @@ def make_lines_raw(value):
     if value is None:
         return []
     return value
+
+
+def format_lines(value):
+    r"""
+
+    >>> format_lines(['spam', 'eggs'])
+    '\nspam\neggs'
+
+    >>> format_lines([])
+    ''
+    """
+    lines = [''] + value
+    return '\n'.join(lines)
 
 
 def skip_empty(mapping):
