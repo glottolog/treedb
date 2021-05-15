@@ -11,7 +11,7 @@ ARGS = [#'--run-writes',
         #'--skip-sqlparse',
         #'-k', 'not reads',
         #'--collect-only',
-        '--capture=no',  # a.k.a '-s'
+        #'--capture=no',  # a.k.a '-s'
         #'--verbose',
         #'--showlocals',  # a.k.a. '-l'
         #'--pdb',
