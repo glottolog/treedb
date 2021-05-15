@@ -328,7 +328,7 @@ def make_record(languoid: _globals.LanguoidType) -> _globals.RecordType:
 
     iso_retirement = languoid.get('iso_retirement')
     if iso_retirement:
-        if False:  # FIXME
+        if isinstance(iso_retirement['effective'], datetime.date):
             iso_retirement['effective'] = format_date(iso_retirement['effective'])
     else:
         iso_retirement = {}
