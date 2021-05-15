@@ -37,7 +37,7 @@ def test_print_schema(capsys, bare_treedb):
                   '       languoid.latitude,\n'
                   '       languoid.longitude\n'
                   'FROM languoid\n'),
-                 id='query=Languoid, pretty'),
+                 id='query=Languoid, pretty', marks=pytest.mark.sqlparse),
     pytest.param(None, False, None, id='query=None'),
     pytest.param(None, True, None, id='query=None, pretty'),
 ])

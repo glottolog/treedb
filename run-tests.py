@@ -7,6 +7,8 @@ import pytest
 
 ARGS = [#'--run-writes',
         #'--skip-slow',
+        #'--skip-pandas',
+        #'--skip-sqlparse',
         #'--collect-only',
         '--capture=no',  # a.k.a '-s'
         #'--verbose',

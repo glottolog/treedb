@@ -197,6 +197,7 @@ def test_write_json_lines(capsys, treedb, suffix, n=100):
         assert treedb.sha256sum(filepath) == expected_checksum
 
 
+@pytest.mark.pandas
 @pytest.mark.parametrize('source',
                          ['files',
                           pytest.param('raw', marks=pytest.mark.raw),

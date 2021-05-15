@@ -14,6 +14,10 @@ RUN_WRITES = '--run-writes'
 
 SKIP_SLOW = '--skip-slow'
 
+SKIP_PANDAS = '--skip-pandas'
+
+SKIP_SQLPARSE = '--skip-sqlparse'
+
 EXCLUDE_RAW = '--exclude-raw'
 
 
@@ -26,6 +30,12 @@ def pytest_addoption(parser):
 
     parser.addoption(SKIP_SLOW, action='store_true',
                      help='skip tests that are marked as slow')
+
+    parser.addoption(SKIP_PANDAS, action='store_true',
+                     help='skip tests that require optional pandas')
+
+    parser.addoption(SKIP_SQLPARSE, action='store_true',
+                     help='skip tests that require optional sqlparse')
 
     parser.addoption('--file-engine', action='store_true',
                      help='use configured file engine instead of in-memory db')
@@ -60,6 +70,12 @@ def pytest_configure(config):
                             f'slow: skip if {SKIP_SLOW} flag is given')
 
     config.addinivalue_line('markers',
+                            f'pandas: skip if {SKIP_PANDAS} flag is given')
+
+    config.addinivalue_line('markers',
+                            f'sqlparse: skip if {SKIP_SQLPARSE} flag is given')
+
+    config.addinivalue_line('markers',
                             f'raw: skip if {EXCLUDE_RAW} flag is given')
 
     options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
@@ -76,10 +92,12 @@ def pytest_collection_modifyitems(config, items):
     def itermarkers():
         if not config.getoption(RUN_WRITES):
             yield 'writes', pytest.mark.skip(reason=f'require {RUN_WRITES} flag')
-        if config.getoption(SKIP_SLOW):
-            yield 'slow', pytest.mark.skip(reason=f'skipped by {SKIP_SLOW} flag')
-        if config.getoption(EXCLUDE_RAW):
-            yield 'raw', pytest.mark.skip(reason=f'skipped by {EXCLUDE_RAW} flag')
+        for keyword, flag_name in {'slow': SKIP_SLOW,
+                                   'pandas': SKIP_PANDAS,
+                                   'sqlparse': SKIP_SQLPARSE,
+                                   'raw': EXCLUDE_RAW}.items():
+            marker = pytest.mark.skip(reason=f'skipped by {flag_name} flag')
+            yield keyword, marker
 
     keyword_markers = dict(itermarkers())
 

@@ -5,6 +5,9 @@ import pytest
 INFO_KWARGS = {'memory_usage': 'deep'}
 
 
+pytestmark = pytest.mark.pandas
+
+
 @pytest.mark.filterwarnings('ignore'
                             ':The MetaData.bind argument is deprecated'
                             ':DeprecationWarning')
