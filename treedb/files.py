@@ -161,27 +161,19 @@ def iterfiles(root=_globals.ROOT,
 def roundtrip(root=_globals.ROOT, *, replace: bool = False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
+    log.info(f'start roundtripping {BASENAME} files in %r', root)
     raw_records = iterrecords(root, raw=True,
                               progress_after=progress_after)
-    return write_files(raw_records, root, raw=True,
-                       replace=replace,
-                       progress_after=progress_after)
+    return _write_files(raw_records, root, replace=replace,
+                        progress_after=progress_after)
 
-
-RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
-                           typing.Iterable[_fields.RawRecordItem]]
 
 
 def iterrecords(root=_globals.ROOT,
                 *, progress_after: int = _tools.PROGRESS_AFTER,
-                raw: bool = False) -> RecordsType:
+                raw: bool = False) -> typing.Iterable[_globals.RecordItem]:
     fileinfos = iterfiles(root, progress_after=progress_after)
-    record_items = _iterrecords(fileinfos, raw=raw)
-    return record_items
 
-
-def _iterrecords(fileinfos: typing.Iterable[FileInfo],
-                 raw: bool = False) -> RecordsType:
     if raw:
         for path, cfg, _ in fileinfos:
             yield path, cfg.to_dict()
@@ -191,30 +183,40 @@ def _iterrecords(fileinfos: typing.Iterable[FileInfo],
         yield path, cfg
 
 
-def write_files(records: RecordsType, root=_globals.ROOT,
-                *, replace: bool = False, dry_run: bool = False,
-                quiet: typing.Optional[bool] = None,
+def write_files(records: typing.Iterable[_globals.RecordItem],
+                root=_globals.ROOT, *, replace: bool = False,
+                dry_run: bool = False, quiet: typing.Optional[bool] = None,
                 require_nwritten: typing.Optional[int] = None,
-                progress_after=_tools.PROGRESS_AFTER,
-                basename: str = BASENAME,
-                raw: bool = False) -> int:
+                progress_after: typing.Optional[int] = _tools.PROGRESS_AFTER,
+                basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     root = _tools.path_from_filename(root)
     log.info(f'start writing {basename} files into %r', root)
+    raw_records = map(_fields.join_lines_inplace, records)
+    return _write_files(raw_records, root, replace=replace,
+                        dry_run=dry_run, quiet=quiet,
+                        require_nwritten=require_nwritten,
+                        progress_after=progress_after,
+                        basename=basename)
 
+
+def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
+                 root, *, replace: bool,
+                 dry_run: bool = False, quiet: typing.Optional[bool] = None,
+                 require_nwritten: typing.Optional[int] = None,
+                 progress_after: typing.Optional[int] = _tools.PROGRESS_AFTER,
+                 basename: str = BASENAME) -> int:
     if replace:  # pragma: no cover
         if dry_run:
             warnings.warn('replace=True ignored by dry_run=True')
         else:
             log.warning(f'replace present {basename} files')
 
-    joined_records = map(_fields.join_lines_inplace, records) if not raw else records
-
     load_config = ConfigParser.from_file
 
     files_written = 0
 
-    for path_tuple, raw_record in joined_records:
+    for path_tuple, raw_record in raw_records:
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
         if replace:
