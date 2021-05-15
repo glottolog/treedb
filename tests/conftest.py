@@ -119,8 +119,7 @@ def get_configure_kwargs(*, title: str, memory_engine=None):
     if pytest.ARGS.glottolog_repo_root is not None:
         kwargs['root'] = pytest.ARGS.glottolog_repo_root
 
-    if pytest.ARGS.loglevel_debug:
-        kwargs['loglevel'] = 'DEBUG'
+    kwargs['loglevel'] = 'DEBUG' if pytest.ARGS.loglevel_debug else 'WARNING'
 
     if pytest.ARGS.log_sql:
         kwargs['log_sql'] = True
