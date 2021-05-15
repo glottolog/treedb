@@ -25,6 +25,8 @@ jobs:
       env: FLAGS=--glottolog-tag=master
     - python: 3.8
       env: FLAGS=--glottolog-tag=master
+    - python: 3.9
+      env: FLAGS=
 install: pip install .[test,pretty,pandas] codecov
 script: ./run-tests.py --loglevel-debug $FLAGS
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
