@@ -41,14 +41,13 @@ log = logging.getLogger(__name__)
 
 
 def pipe(items, *, dump: bool,
-         from_raw: bool):
+         convert_lines: bool):
     codec = _dump if dump else _parse
-    kwargs = {'from_raw': None} if dump else {'from_raw': from_raw}
-    return codec(items, **kwargs)
+    return codec(items, convert_lines=convert_lines)
 
 
 def _parse(records: typing.Iterable[_globals.RecordItem],
-           *, from_raw: bool) -> typing.Iterator[_globals.LanguoidItem]:
+           *, convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
     r"""Yield languoid items from given record ítems (from raw).
 
     >>> dict(pipe({('abin1243',):
@@ -63,7 +62,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     ...                      'links': ('\n[Abinomn](http://endangeredlanguages.com/lang/1763)'
     ...                                '\nhttps://www.wikidata.org/entity/Q56648'
     ...                                '\nhttps://en.wikipedia.org/wiki/Abinomn_language')}}}.items(),
-    ...           dump=False, from_raw=False))  # doctest: +NORMALIZE_WHITESPACE
+    ...           dump=False, convert_lines=True))  # doctest: +NORMALIZE_WHITESPACE
     {('abin1243',):
      {'id': 'abin1243',
       'parent_id': None,
@@ -101,7 +100,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     ...                                'https://www.wikidata.org/entity/Q56648',
     ...                                'https://en.wikipedia.org/wiki/Abinomn_language'],
     ...                      'timespan': None}}}.items(),
-    ...           dump=False, from_raw=True))  # doctest: +NORMALIZE_WHITESPACE
+    ...           dump=False, convert_lines=False))  # doctest: +NORMALIZE_WHITESPACE
     {('abin1243',):
      {'id': 'abin1243',
       'parent_id': None,
@@ -129,13 +128,13 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     n = 0
     make_item = _globals.LanguoidItem
     for n, (path, cfg) in enumerate(records, start=1):
-        languoid = make_languoid(path, cfg, from_raw=from_raw)
+        languoid = make_languoid(path, cfg, convert_lines=convert_lines)
         yield make_item(path, languoid)
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
 def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
-          *, from_raw: bool) -> typing.Iterator[_globals.RecordItem]:
+          *, convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
     """
 
     >>> dict(pipe({('abin1243',): {
@@ -158,7 +157,7 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
     ...             'timespan': None,
     ...             'classification': None,
     ...             }}.items(),
-    ...           dump=True, from_raw=None))  # doctest: +NORMALIZE_WHITESPACE
+    ...           dump=True, convert_lines=False))  # doctest: +NORMALIZE_WHITESPACE
     {('abin1243',):
      {'core': {'name': 'Abinomn',
                'hid': 'bsa',
@@ -181,7 +180,7 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
                'hh_ethnologue_comment': {},
                'iso_retirement': {}}}
     """
-    if from_raw:  # pragma: no cover
+    if convert_lines:  # pragma: no cover
         raise NotImplementedError
     for path, l in languoids:
         record = make_record(l)
@@ -189,8 +188,8 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
 
 
 def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
-                  *, from_raw: bool) -> _globals.LanguoidType:
-    _make_lines = make_lines_raw if from_raw else make_lines
+                  *, convert_lines: bool) -> _globals.LanguoidType:
+    _make_lines = make_lines if convert_lines else make_lines_raw
 
     core = cfg[CORE]
 
