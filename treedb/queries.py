@@ -286,10 +286,10 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
 
-    endangerment_source = (EndangermentSource.printf(e_bibfile, e_bibitem)
-                           .label('endangerment_source'))
+    endangermentsource = (EndangermentSource.printf(e_bibfile, e_bibitem)
+                          .label('endangerment_source'))
 
-    select_languoid = (select_languoid.add_columns(endangerment_source)
+    select_languoid = (select_languoid.add_columns(endangermentsource)
                        .outerjoin(sa.join(Endangerment, EndangermentSource))
                        .outerjoin(sa.join(e_bibitem, e_bibfile)))
 

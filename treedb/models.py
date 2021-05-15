@@ -972,7 +972,7 @@ class Endangerment:
 
     status = Column(ForeignKey('endangermentstatus.name'), nullable=False)
 
-    source_id = Column(ForeignKey('endangerment_source.id'), nullable=False)
+    source_id = Column(ForeignKey('endangermentsource.id'), nullable=False)
     date = Column(DateTime, nullable=False)
     comment = Column(Text, CheckConstraint("comment != ''"), nullable=False)
 
@@ -1044,7 +1044,7 @@ class EndangermentStatus:
 @registry.mapped
 class EndangermentSource:
 
-    __tablename__ = 'endangerment_source'
+    __tablename__ = 'endangermentsource'
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), nullable=False, unique=True)
