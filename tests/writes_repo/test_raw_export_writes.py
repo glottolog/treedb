@@ -19,4 +19,4 @@ def test_write_files(treedb_raw):
     if expected is not None:
         assert files_written == expected
     else:
-        assert files_written > -1
+        assert 0 <= files_written <= 40_000

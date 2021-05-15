@@ -16,11 +16,7 @@ FILES_WRITTEN = {'raw': {'master': 0,
 pytestmark = pytest.mark.writes
 
 
-@pytest.mark.parametrize('source', [
-    pytest.param('raw',
-                 marks=pytest.mark.xfail(reason='TODO: not implemented yet',
-                                         raises=NotImplementedError)),
-    'tables'])
+@pytest.mark.parametrize('source', ['raw', 'tables'])
 def test_write_files(treedb, source):
     expected = FILES_WRITTEN[source].get(pytest.ARGS.glottolog_tag)
 
@@ -30,4 +26,4 @@ def test_write_files(treedb, source):
     if expected is not None:
         assert files_written == expected
     else:
-        assert files_written > -1
+        assert 0 <= files_written <= 40_000
