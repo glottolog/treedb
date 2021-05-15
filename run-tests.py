@@ -10,6 +10,7 @@ ARGS = [#'--run-writes',
         #'--collect-only',
         '--capture=no',  # a.k.a '-s'
         #'--verbose',
+        #'--showlocals',  # a.k.a. '-l'
         #'--pdb',
         #'--exitfirst',  # a.k.a. '-x'
         #'--loglevel-debug',
