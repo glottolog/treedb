@@ -28,6 +28,6 @@ jobs:
     - python: 3.6
       env: ARGS=--glottolog-tag=master
 install: pip install .[test,pretty,pandas] codecov
-script: ./run-tests.py --loglevel-debug $ARGS
+script: ./run-tests.py $ARGS --loglevel-debug
 before_cache: rm -f $HOME/.cache/pip/log/debug.log
 after_success: codecov
