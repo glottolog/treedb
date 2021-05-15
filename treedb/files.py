@@ -158,16 +158,6 @@ def iterfiles(root=_globals.ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
-
-
-RawRecordItem = typing.Tuple[_globals.PathType, RawRecordType]
-
-
-RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
-                           typing.Iterable[RawRecordItem]]
-
-
 def roundtrip(root=_globals.ROOT, *, replace: bool = False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
@@ -176,6 +166,10 @@ def roundtrip(root=_globals.ROOT, *, replace: bool = False,
     return write_files(raw_records, root, raw=True,
                        replace=replace,
                        progress_after=progress_after)
+
+
+RecordsType = typing.Union[typing.Iterable[_globals.RecordItem],
+                           typing.Iterable[_fields.RawRecordItem]]
 
 
 def iterrecords(root=_globals.ROOT,
@@ -214,7 +208,7 @@ def write_files(records: RecordsType, root=_globals.ROOT,
         else:
             log.warning(f'replace present {basename} files')
 
-    joined_records = map(join_lines_inplace, records) if not raw else records
+    joined_records = map(_fields.join_lines_inplace, records) if not raw else records
 
     load_config = ConfigParser.from_file
 
@@ -253,19 +247,8 @@ def write_files(records: RecordsType, root=_globals.ROOT,
     return files_written
 
 
-def join_lines_inplace(record_item: _globals.RecordItem,
-                       *, is_lines=_fields.is_lines) -> RawRecordItem:
-    path, record = record_item
-    for name, section in record.items():
-        for option in section:
-            if is_lines(name, option):
-                lines = [''] + section[option]
-                section[option] = '\n'.join(lines)
-    return path, record
-
-
 def update_config(cfg: ConfigParser,
-                  raw_record: RawRecordType,
+                  raw_record: _fields.RawRecordType,
                   *, quiet: bool = False,
                   is_lines=_fields.is_lines,
                   core_sections=_fields.CORE_SECTIONS,

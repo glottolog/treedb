@@ -227,7 +227,7 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
 
 def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
                   *, convert_lines: bool) -> _globals.LanguoidType:
-    _make_lines = make_lines if convert_lines else make_lines_raw
+    _make_lines = _fields.parse_lines if convert_lines else make_lines_raw
 
     core = cfg[CORE]
 
@@ -383,27 +383,9 @@ def make_record(languoid: _globals.LanguoidType,
                    ISO_RETIREMENT: iso_retirement})
 
     if convert_lines:
-        for name, section in record.items():
-            for option in section:
-                if is_lines(name, option):
-                    lines = format_lines(section[option])
-                    section[option] = lines
+        _, record = _fields.join_lines_inplace((None, record))
 
     return record
-
-
-def make_lines(value):
-    r"""
-
-    >>> make_lines(None)
-    []
-
-    >>> make_lines(' spam\neggs\n  ')
-    ['spam', 'eggs']
-    """
-    if value is None:
-        return []
-    return value.strip().splitlines()
 
 
 def make_lines_raw(value):
@@ -418,19 +400,6 @@ def make_lines_raw(value):
     if value is None:
         return []
     return value
-
-
-def format_lines(value):
-    r"""
-
-    >>> format_lines(['spam', 'eggs'])
-    '\nspam\neggs'
-
-    >>> format_lines([])
-    ''
-    """
-    lines = [''] + value
-    return '\n'.join(lines)
 
 
 def skip_empty(mapping):

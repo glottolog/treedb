@@ -1,13 +1,17 @@
 """Define known ``md.ini`` (section, option) pairs and if they are lists of lines."""
 
 import logging
+import typing
 import warnings
 
+from . import _globals
 from . import _tools
 
 __all__ = ['is_lines',
            'sorted_sections',
-           'sorted_options']
+           'sorted_options',
+           'parse_lines', 'format_lines',
+           'join_lines_inplace']
 
 SECTIONS = ('core',
             'sources',
@@ -134,3 +138,46 @@ def sorted_options(section, options):
     """Return the given section options as sorted list in canonical order."""
     fields = FIELD_ORDER.sorted((section, o) for o in options)
     return [o for _, o in fields]
+
+
+def parse_lines(value):
+    r"""
+
+    >>> parse_lines(None)
+    []
+
+    >>> parse_lines(' spam\neggs\n  ')
+    ['spam', 'eggs']
+    """
+    if value is None:
+        return []
+    return value.strip().splitlines()
+
+
+def format_lines(value):
+    r"""
+
+    >>> format_lines(['spam', 'eggs'])
+    '\nspam\neggs'
+
+    >>> format_lines([])
+    ''
+    """
+    lines = [''] + value
+    return '\n'.join(lines)
+
+
+RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
+
+
+RawRecordItem = typing.Tuple[typing.Optional[_globals.PathType], RawRecordType]
+
+
+def join_lines_inplace(record_item: _globals.RecordItem) -> RawRecordItem:
+    path, record = record_item
+    for name, section in record.items():
+        for option in section:
+            if is_lines(name, option):
+                lines = format_lines(section[option])
+                section[option] = lines
+    return path, record
