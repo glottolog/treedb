@@ -158,7 +158,9 @@ class SQLiteEngineProxy(EngineProxy):
                 f' size={self.file_size()!r}>')
 
     def file_with_suffix(self, suffix):
-        path = self.file if self.file is not None else self.memory_write_path
+        if self.file is None:
+            name = '{self.memory_write_path.name}{suffix}'
+            return self.memory_write_path.with_name(name)
         return path.with_suffix(suffix)
 
     def file_exists(self):
