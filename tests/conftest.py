@@ -1,8 +1,7 @@
-"""``pytest`` command-line args and fixtures."""
+"""``pytest`` command-line options and fixtures."""
 
 import os
 import itertools
-import types
 
 import pytest
 
@@ -63,41 +62,28 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    config.addinivalue_line('markers',
-                            f'writes: skip unless {RUN_WRITES} is given')
+    config.addinivalue_line('markers', f'writes: skip unless {RUN_WRITES} is given')
+    config.addinivalue_line('markers', f'slow: skip if {SKIP_SLOW} flag is given')
+    config.addinivalue_line('markers', f'pandas: skip if {SKIP_PANDAS} flag is given')
+    config.addinivalue_line('markers', f'sqlparse: skip if {SKIP_SQLPARSE} flag is given')
+    config.addinivalue_line('markers', f'raw: skip if {EXCLUDE_RAW} flag is given')
 
-    config.addinivalue_line('markers',
-                            f'slow: skip if {SKIP_SLOW} flag is given')
-
-    config.addinivalue_line('markers',
-                            f'pandas: skip if {SKIP_PANDAS} flag is given')
-
-    config.addinivalue_line('markers',
-                            f'sqlparse: skip if {SKIP_SQLPARSE} flag is given')
-
-    config.addinivalue_line('markers',
-                            f'raw: skip if {EXCLUDE_RAW} flag is given')
-
-    options = ('file_engine', 'glottolog_tag', 'glottolog_repo_root',
-               'rebuild', 'force_rebuild', 'exclude_raw',
-               'loglevel_debug', 'log_sql')
-
-    options = {o: config.getoption(o) for o in options}
-
-    assert not hasattr(pytest, 'ARGS')
-    pytest.ARGS = types.SimpleNamespace(**options)
+    assert not hasattr(pytest, 'CONFIG')
+    pytest.CONFIG = config
 
 
 def pytest_collection_modifyitems(config, items):
     def itermarkers():
-        if not config.getoption(RUN_WRITES):
-            yield 'writes', pytest.mark.skip(reason=f'require {RUN_WRITES} flag')
-        for keyword, flag_name in {'slow': SKIP_SLOW,
-                                   'pandas': SKIP_PANDAS,
-                                   'sqlparse': SKIP_SQLPARSE,
-                                   'raw': EXCLUDE_RAW}.items():
-            if config.getoption(flag_name):
-                marker = pytest.mark.skip(reason=f'skipped by {flag_name} flag')
+        for keyword, option in {'writes': RUN_WRITES}.items():
+            if not config.getoption(option):
+                marker = pytest.mark.skip(reason=f'require {option} flag')
+                yield keyword, marker
+        for keyword, option in {'slow': SKIP_SLOW,
+                                'pandas': SKIP_PANDAS,
+                                'sqlparse': SKIP_SQLPARSE,
+                                'raw': EXCLUDE_RAW}.items():
+            if config.getoption(option):
+                marker = pytest.mark.skip(reason=f'skipped by {option} flag')
                 yield keyword, marker
 
     keyword_markers = dict(itermarkers())
@@ -108,62 +94,58 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(marker)
 
 
-def get_configure_kwargs(*, title: str, memory_engine=None):
-    kwargs = {'title': title}
+def get_configure_kwargs(pytestconfig, *, title: str, memory_engine=None):
+    kwargs = {'title': title,
+              'engine': (f'{title}.sqlite3' if pytestconfig.option.file_engine
+                         else memory_engine),
+              'loglevel': 'DEBUG' if pytestconfig.option.loglevel_debug else 'WARNING'}
 
-    if pytest.ARGS.file_engine:
-        kwargs['engine'] = f'{title}.sqlite3'
-    else:
-        kwargs['engine'] = memory_engine
+    if pytestconfig.option.glottolog_repo_root is not None:
+        kwargs['root'] = pytestconfig.option.glottolog_repo_root
 
-    if pytest.ARGS.glottolog_repo_root is not None:
-        kwargs['root'] = pytest.ARGS.glottolog_repo_root
-
-    kwargs['loglevel'] = 'DEBUG' if pytest.ARGS.loglevel_debug else 'WARNING'
-
-    if pytest.ARGS.log_sql:
+    if pytest.CONFIG.option.log_sql:
         kwargs['log_sql'] = True
 
     return kwargs
 
 
 @pytest.fixture(scope='session')
-def bare_treedb():
+def bare_treedb(pytestconfig):
     import treedb as bare_treedb
 
-    kwargs = get_configure_kwargs(title=f'{bare_treedb.__title__}-bare')
+    kwargs = get_configure_kwargs(pytestconfig, title=f'{bare_treedb.__title__}-bare')
     bare_treedb.configure(**kwargs)
 
-    bare_treedb.checkout_or_clone(pytest.ARGS.glottolog_tag)
+    bare_treedb.checkout_or_clone(pytestconfig.option.glottolog_tag)
 
     return bare_treedb
 
 
 @pytest.fixture(scope='session')
-def empty_treedb(bare_treedb):
+def empty_treedb(pytestconfig, bare_treedb):
     empty_treedb = bare_treedb
 
-    kwargs = get_configure_kwargs(title=f'{empty_treedb.__title__}-empty')
+    kwargs = get_configure_kwargs(pytestconfig, title=f'{empty_treedb.__title__}-empty')
     empty_treedb.configure(**kwargs)
 
     empty_treedb.load(_only_create_tables=True,
-                      rebuild=pytest.ARGS.rebuild,
-                      force_rebuild=pytest.ARGS.force_rebuild,
-                      exclude_raw=pytest.ARGS.exclude_raw)
+                      rebuild=pytestconfig.option.rebuild,
+                      force_rebuild=pytestconfig.option.force_rebuild,
+                      exclude_raw=pytestconfig.option.exclude_raw)
 
     return empty_treedb
 
 
 @pytest.fixture(scope='session')
-def treedb(bare_treedb):
+def treedb(pytestconfig, bare_treedb):
     treedb = bare_treedb
 
-    kwargs = get_configure_kwargs(title=treedb.__title__)
+    kwargs = get_configure_kwargs(pytestconfig, title=treedb.__title__)
     treedb.configure(**kwargs)
 
-    treedb.load(rebuild=pytest.ARGS.rebuild,
-                force_rebuild=pytest.ARGS.force_rebuild,
-                exclude_raw=pytest.ARGS.exclude_raw)
+    treedb.load(rebuild=pytestconfig.option.rebuild,
+                force_rebuild=pytestconfig.option.force_rebuild,
+                exclude_raw=pytestconfig.option.exclude_raw)
 
     return treedb
 
