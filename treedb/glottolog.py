@@ -6,7 +6,8 @@ from . import _tools
 from . import files as _files
 
 __all__ = ['checkout_or_clone',
-           'git_rev_parse', 'git_describe', 'git_status_is_clean']
+           'git_rev_parse', 'git_describe',
+           'git_status', 'git_status_is_clean']
 
 REPO_URL = 'https://github.com/glottolog/glottolog.git'
 
@@ -73,12 +74,18 @@ def git_describe(repo_root) -> str:
     return describe
 
 
+def git_status(repo_root) -> str:
+    log.debug('get status from %r', repo_root)
+    cmd = ['git', 'status', '--porcelain']
+    return _tools.run(cmd, cwd=repo_root, check=True,
+                      capture_output=True, unpack=True)
+
+
 def git_status_is_clean(repo_root) -> bool:
     """Return if there are neither changes in the index nor untracked files."""
     log.info('get clean from %r', repo_root)
     cmd = ['git', 'status', '--porcelain']
-    stdout = _tools.run(cmd, cwd=repo_root, check=True,
-                        capture_output=True, unpack=True)
-    clean = not stdout
+    status = git_status(repo_root)
+    clean = not status
     log.info('clean: %r', clean)
     return clean

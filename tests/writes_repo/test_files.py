@@ -8,25 +8,20 @@ pytestmark = pytest.mark.writes
 
 @pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized',
                                  raises=AssertionError)
-def test_roundtrip_dry_run(treedb):
+@pytest.mark.parametrize('kwargs', [
+    pytest.param({'dry_run': True}, id='dry_run'),
+    # needs to be run at the end (no cleanup on fail)
+    pytest.param({'dry_run': False}, id='default'),  
+])
+def test_roundtrip(treedb, kwargs):
     if not glottolog.git_status_is_clean(treedb.root):
         raise RuntimeError
 
-    files_written = treedb.files.roundtrip(dry_run=True)
+    files_written = treedb.files.roundtrip(**kwargs)
+
+    clean = glottolog.git_status_is_clean(treedb.root)
+    if not clean:
+        print(glottolog.git_status(treedb.root))
 
     assert files_written == 0
-    assert glottolog.git_status_is_clean(treedb.root)
-
-
-@pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized',
-                                 raises=AssertionError)
-@pytest.mark.xfail_glottolog_tag('v4.1', reason='float normalization: https://github.com/glottolog/glottolog/pull/495',
-                                 raises=AssertionError)
-def test_roundtrip(treedb):
-    if not glottolog.git_status_is_clean(treedb.root):
-        raise RuntimeError
-
-    files_written = treedb.files.roundtrip()
-
-    assert files_written == 0
-    assert glottolog.git_status_is_clean(treedb.root)
+    assert clean
