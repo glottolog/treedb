@@ -5,7 +5,8 @@ import logging
 from . import _tools
 from . import files as _files
 
-__all__ = ['checkout_or_clone']
+__all__ = ['checkout_or_clone',
+           'git_rev_parse', 'git_describe', 'git_status_is_clean']
 
 REPO_URL = 'https://github.com/glottolog/glottolog.git'
 
@@ -13,7 +14,7 @@ REPO_URL = 'https://github.com/glottolog/glottolog.git'
 log = logging.getLogger(__name__)
 
 
-def checkout_or_clone(tag_or_branch, *, target=None):
+def checkout_or_clone(tag_or_branch: str, *, target=None):
     if target is None:
         target = _files.get_repo_root()
 
@@ -28,7 +29,8 @@ def checkout_or_clone(tag_or_branch, *, target=None):
     return clone, checkout
 
 
-def git_clone(tag_or_branch, *, target, depth=1):
+def git_clone(tag_or_branch: str, *, target,
+              depth: int = 1):
     log.info('clone Glottolog master repo at %r into %r', tag_or_branch, target)
     cmd = ['git', 'clone',
            '-c', 'advice.detachedHead=false',
@@ -39,10 +41,44 @@ def git_clone(tag_or_branch, *, target, depth=1):
     return _tools.run(cmd, check=True)
 
 
-def git_checkout(tag_or_branch, *, target, set_branch=__package__):
+def git_checkout(tag_or_branch: str, *, target,
+                 set_branch: str = __package__):
     log.info('checkout %r and (re)set branch %r', tag_or_branch, set_branch)
     cmd = ['git', 'checkout']
     if set_branch is not None:
         cmd += ['-B', set_branch]
     cmd.append(tag_or_branch)
     return _tools.run(cmd, cwd=target, check=True)
+
+
+def git_rev_parse(repo_root, revision: str = 'HEAD',
+                  *, verify: bool = True) -> str:
+    log.info('get %r git_commit from %r', revision, repo_root)
+    cmd = ['git', 'rev-parse']
+    if verify:
+        cmd.append('--verify')
+    cmd.append(revision)
+    commit = _tools.run(cmd, cwd=repo_root, check=True,
+                        capture_output=True, unpack=True)
+    log.info('git_commit: %r', commit)
+    return commit
+
+
+def git_describe(repo_root) -> str:
+    log.info('get git_describe from %r', repo_root)
+    cmd = ['git', 'describe', '--tags', '--always']
+    describe = _tools.run(cmd, cwd=repo_root, check=True,
+                          capture_output=True, unpack=True)
+    log.info('git_describe: %r', describe)
+    return describe
+
+
+def git_status_is_clean(repo_root) -> bool:
+    """Return if there are neither changes in the index nor untracked files."""
+    log.info('get clean from %r', repo_root)
+    cmd = ['git', 'status', '--porcelain']
+    stdout = _tools.run(cmd, cwd=repo_root, check=True,
+                        capture_output=True, unpack=True)
+    clean = not stdout
+    log.info('clean: %r', clean)
+    return clean

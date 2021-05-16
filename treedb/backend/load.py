@@ -11,6 +11,7 @@ import sqlalchemy as sa
 from .. import _globals
 from .. import _tools
 from .. import files as _files
+from .. import glottolog as _glottolog
 
 from .. import backend as _backend
 
@@ -227,15 +228,12 @@ def import_configs(conn, *, root):
 
 
 def make_dataset(root, *, exclude_raw: bool):
-    run = functools.partial(_tools.run, cwd=str(root), check=True,
-                            capture_output=True, unpack=True)
-
     try:
         dataset = {'title': 'Glottolog treedb',
-                   'git_commit': run(['git', 'rev-parse', 'HEAD']),
-                   'git_describe': run(['git', 'describe', '--tags', '--always']),
+                   'git_commit': _glottolog.git_rev_parse(root),
+                   'git_describe': _glottolog.git_describe(root),
                    # clean = neither changes in index nor untracked files
-                   'clean': not run(['git', 'status', '--porcelain']),
+                   'clean': _glottolog.git_status_is_clean(root),
                    'exclude_raw': exclude_raw}
     except Exception as e:  # pragma: no cover
         log.exception('error running git command in %r', str(root))
