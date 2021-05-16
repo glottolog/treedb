@@ -399,11 +399,11 @@ def select_languoid_countries(languoid_id=Languoid.id, *, as_json: bool,
         del sort_keys
 
         countries = (select(languoid_country.c.country_id)
-                 .select_from(languoid_country)
-                 .filter_by(languoid_id=Languoid.id)
-                 .correlate(Languoid)
-                 .order_by('country_id')
-                 .alias('lang_country'))
+                     .select_from(languoid_country)
+                     .filter_by(languoid_id=languoid_id)
+                     .correlate(Languoid)
+                     .order_by('country_id')
+                     .alias('lang_country'))
 
         countries = group_concat(countries.c.country_id)
 
