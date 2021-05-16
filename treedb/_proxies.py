@@ -161,7 +161,7 @@ class SQLiteEngineProxy(EngineProxy):
         if self.file is None:
             name = f'{self.memory_write_path.name}{suffix}'
             return self.memory_write_path.with_name(name)
-        return path.with_suffix(suffix)
+        return self.file.with_suffix(suffix)
 
     def file_exists(self):
         return self.file is not None and self.file.exists()
