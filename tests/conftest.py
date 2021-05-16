@@ -5,7 +5,7 @@ import itertools
 
 import pytest
 
-GLOTTOLOG_TAG = 'v4.4'
+DEFAULT_GLOTTOLOG_TAG = 'v4.4'
 
 MB = 2**20
 
@@ -17,6 +17,8 @@ SKIP_PANDAS = '--skip-pandas'
 
 SKIP_SQLPARSE = '--skip-sqlparse'
 
+GLOTTOLOG_TAG = '--glottolog-tag'
+
 EXCLUDE_RAW = '--exclude-raw'
 
 
@@ -25,22 +27,22 @@ os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 def pytest_addoption(parser):
     parser.addoption(RUN_WRITES, action='store_true',
-                     help='run tests that are marked as writes')
+                     help='run tests with pytest.mark.writes')
 
     parser.addoption(SKIP_SLOW, action='store_true',
-                     help='skip tests that are marked as slow')
+                     help='skip tests with pytest.mark.slow')
 
     parser.addoption(SKIP_PANDAS, action='store_true',
-                     help='skip tests that require optional pandas')
+                     help='skip tests with optional pandas dependency')
 
     parser.addoption(SKIP_SQLPARSE, action='store_true',
-                     help='skip tests that require optional sqlparse')
+                     help='skip tests with optional sqlparse dependency')
 
     parser.addoption('--file-engine', action='store_true',
                      help='use configured file engine instead of in-memory db')
 
-    parser.addoption('--glottolog-tag', default=GLOTTOLOG_TAG,
-                     help='tag or branch to clone from Glottolog master repo')
+    parser.addoption(GLOTTOLOG_TAG, metavar='GIT_TAG', default=DEFAULT_GLOTTOLOG_TAG,
+                     help='tag or branch to clone/checkout from Glottolog master repo')
 
     parser.addoption('--glottolog-repo-root', metavar='PATH',
                      help='pass root=PATH to treedb.configure()')
@@ -52,7 +54,7 @@ def pytest_addoption(parser):
                      help='pass force_rebuild=True to treedb.load()')
 
     parser.addoption(EXCLUDE_RAW, action='store_true',
-                     help='pass exlcude_raw=True to treedb.load()')
+                     help='pass exclude_raw=True to treedb.load()')
 
     parser.addoption('--loglevel-debug', action='store_true',
                      help='pass loglevel=DEBUG to treedb.configure()')
@@ -66,24 +68,24 @@ def pytest_configure(config):
     config.addinivalue_line('markers', f'slow: skip if {SKIP_SLOW} flag is given')
     config.addinivalue_line('markers', f'pandas: skip if {SKIP_PANDAS} flag is given')
     config.addinivalue_line('markers', f'sqlparse: skip if {SKIP_SQLPARSE} flag is given')
-    config.addinivalue_line('markers', f'raw: skip if {EXCLUDE_RAW} flag is given')
 
-    assert not hasattr(pytest, 'CONFIG')
-    pytest.CONFIG = config
+    config.addinivalue_line('markers', f'skipif_glottolog_tag: skip for specific {GLOTTOLOG_TAG}')
+    config.addinivalue_line('markers', f'xfail_glottolog_tag: xfail for given {GLOTTOLOG_TAG}')
+
+    config.addinivalue_line('markers', f'raw: skip if {EXCLUDE_RAW} flag is given')
 
 
 def pytest_collection_modifyitems(config, items):
     def itermarkers():
-        for keyword, option in {'writes': RUN_WRITES}.items():
-            if not config.getoption(option):
-                marker = pytest.mark.skip(reason=f'require {option} flag')
-                yield keyword, marker
-        for keyword, option in {'slow': SKIP_SLOW,
+        for keyword, option in {'writes': RUN_WRITES,
+                                'slow': SKIP_SLOW,
                                 'pandas': SKIP_PANDAS,
                                 'sqlparse': SKIP_SQLPARSE,
                                 'raw': EXCLUDE_RAW}.items():
-            if config.getoption(option):
-                marker = pytest.mark.skip(reason=f'skipped by {option} flag')
+            skip = not option.startswith('--run-')
+            if config.getoption(option) == skip:
+                reason = 'require' if not skip else 'skipped by'
+                marker = pytest.mark.skip(reason=f'{reason} {option} flag')
                 yield keyword, marker
 
     keyword_markers = dict(itermarkers())
@@ -92,6 +94,12 @@ def pytest_collection_modifyitems(config, items):
         for keyword, marker in keyword_markers.items():
             if keyword in item.keywords:
                 item.add_marker(marker)
+        for option in ('skipif_glottolog_tag', 'xfail_glottolog_tag'):
+            for marker in item.iter_markers(option):
+                if config.getoption(GLOTTOLOG_TAG) in marker.args:
+                    marker_cls = {'skipif': pytest.mark.skip,
+                                  'xfail': pytest.mark.xfail}[option.partition('_')[0]]
+                    item.add_marker(marker_cls(**marker.kwargs))
 
 
 def get_configure_kwargs(pytestconfig, *, title: str, memory_engine=None):
@@ -103,7 +111,7 @@ def get_configure_kwargs(pytestconfig, *, title: str, memory_engine=None):
     if pytestconfig.option.glottolog_repo_root is not None:
         kwargs['root'] = pytestconfig.option.glottolog_repo_root
 
-    if pytest.CONFIG.option.log_sql:
+    if pytestconfig.option.log_sql:
         kwargs['log_sql'] = True
 
     return kwargs

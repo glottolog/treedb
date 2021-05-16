@@ -216,8 +216,10 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
-@pytest.mark.skipif(pytest.CONFIG.option.glottolog_tag == 'v4.1',
-                    reason='requires https://github.com/glottolog/glottolog/pull/495')
+@pytest.mark.xfail_glottolog_tag('v4.3-treedb-fixes', 'v4.2.1', 'v4.2', 'v4.1',
+                                 reason='format change: minimal countries',
+                                 raises=AssertionError)
+@pytest.mark.skipif_glottolog_tag('v4.1', reason='float format: https://github.com/glottolog/glottolog/pull/495')
 @pytest.mark.parametrize('kwargs', [
     pytest.param([{'source': 'files'},
                   {'source': 'raw'},
@@ -253,7 +255,7 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
 
     Changing the export formatting breaks this intentionally for older versions,
     i.e. for glottolog commits before the change was applied to the
-    glottolog repository md.ini files (see xfails below).
+    glottolog repository md.ini files (see xfails above).
 
     Intended changes usually pertain to normalization/canonicalization,
     ordering, formatting.
@@ -281,7 +283,8 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     def iterchecksums(kwargs):
         for kw in kwargs:
             expected_prefix = kw.pop('expected_prefix', None)
-            if kw.get('source') == 'raw' and pytestconfig.option.exclude_raw:
+            # --exclude-raw: filter out raw sources instead of skipping
+            if pytestconfig.option.exclude_raw and kw.get('source') == 'raw':
                 continue
             checksum = treedb.checksum(**kw)
             prefix, colon, hexdigest = checksum.rpartition(':')
@@ -295,12 +298,6 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
         if expected_prefix is None:
             expected_prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
         assert prefix == expected_prefix
-
-    if pytestconfig.option.glottolog_tag in ('v4.3-treedb-fixes',
-                                             'v4.2.1',
-                                             'v4.2', 
-                                             'v4.1'):
-        pytest.xfail('format change: minimal countries')
 
     for (c, _, _, cur), (n, _, _, nxt) in pairwise(results):
         cur, nxt = (s.rpartition(':')[2] for s in (cur, nxt))
