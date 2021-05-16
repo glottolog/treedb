@@ -114,7 +114,7 @@ def get_configure_kwargs(pytestconfig, *, title: str):
     memory_tag = '' if pytestconfig.option.file_engine else '-memory'
     title = f'{title}{memory_tag}{pytestconfig.option.file_engine_tag}'
     kwargs = {'title': title,
-              'title_memory_tag': None,
+              'title_memory_tag': '',
               'engine': f'{title}.sqlite3'
                         if pytestconfig.option.file_engine else None,
               'loglevel': 'DEBUG' if pytestconfig.option.loglevel_debug else 'WARNING'}
