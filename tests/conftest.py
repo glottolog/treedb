@@ -110,10 +110,13 @@ def pytest_collection_modifyitems(config, items):
                     item.add_marker(marker_cls(**marker.kwargs))
 
 
-def get_configure_kwargs(pytestconfig, *, title: str, memory_engine=None):
+def get_configure_kwargs(pytestconfig, *, title: str):
+    memory_tag = '' if pytestconfig.option.file_engine else '-memory'
+    title = f'{title}{memory_tag}{pytestconfig.option.file_engine_tag}'
     kwargs = {'title': title,
-              'engine': (f'{title}{pytestconfig.option.file_engine_tag}.sqlite3'
-                         if pytestconfig.option.file_engine else memory_engine),
+              'title_memory_tag': None,
+              'engine': f'{title}.sqlite3'
+                        if pytestconfig.option.file_engine else None,
               'loglevel': 'DEBUG' if pytestconfig.option.loglevel_debug else 'WARNING'}
 
     if pytestconfig.option.glottolog_repo_root is not None:

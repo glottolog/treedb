@@ -13,6 +13,7 @@ import sqlalchemy.ext.compiler
 from .._globals import ENGINE
 
 from .. import _compat
+from .. import _globals
 from .. import _proxies
 from .. import _tools
 from .. import logging_
@@ -53,7 +54,7 @@ def compile(element, compiler, **kwargs):
     return text
 
 
-def print_versions(*, engine=ENGINE, file=None):
+def print_versions(*, engine=ENGINE, file=None) -> None:
     logging_.log_version(also_print=True, print_file=file)
     log_versions(also_print=True, print_file=file,
                  engine=engine)
@@ -62,7 +63,8 @@ def print_versions(*, engine=ENGINE, file=None):
 def set_engine(filename, *,
                resolve: bool = False,
                require: bool = False,
-               title: typing.Optional[str] = None):
+               title: typing.Optional[str] = None,
+               title_memory_tag: str = _globals.MEMORY_TAG):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('set_engine: %r', filename)
 
@@ -77,7 +79,7 @@ def set_engine(filename, *,
     if filename is None:
         if title is None:  # pragma: no cover
             raise TypeError(f'filename=None requires title, given: {title!r}')
-        ENGINE.memory_write_path = _tools.path_from_filename(f'{title}-memory',
+        ENGINE.memory_write_path = _tools.path_from_filename(f'{title}{title_memory_tag}',
                                                              expanduser=False)
     else:
         del title
