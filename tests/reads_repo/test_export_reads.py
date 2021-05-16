@@ -159,6 +159,7 @@ def test_write_json_lines_checksum(pytestconfig, treedb):
                          ids=lambda x: f'suffix={x}')
 def test_write_json_lines(pytestconfig, capsys, treedb, suffix, n=100):
     name_suffix = '-memory' if treedb.engine.file is None else ''
+    name_suffix += pytestconfig.option.file_engine_tag
     args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
             else [])
 

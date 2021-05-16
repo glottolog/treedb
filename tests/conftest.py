@@ -1,7 +1,8 @@
 """``pytest`` command-line options and fixtures."""
 
-import os
 import itertools
+import os
+import string
 
 import pytest
 
@@ -41,6 +42,9 @@ def pytest_addoption(parser):
     parser.addoption('--file-engine', action='store_true',
                      help='use configured file engine instead of in-memory db')
 
+    parser.addoption('--file-engine-tag', metavar='TMPL', default='-$glottolog_tag',
+                     help='filename extra tag template rendered with pytestconfig.option')
+
     parser.addoption(GLOTTOLOG_TAG, metavar='GIT_TAG', default=DEFAULT_GLOTTOLOG_TAG,
                      help='tag or branch to clone/checkout from Glottolog master repo')
 
@@ -64,6 +68,10 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
+    file_engine_tag = string.Template(config.option.file_engine_tag)
+    file_engine_tag = file_engine_tag.substitute(config.option.__dict__)
+    config.option.file_engine_tag = file_engine_tag
+
     config.addinivalue_line('markers', f'writes: skip unless {RUN_WRITES} is given')
     config.addinivalue_line('markers', f'slow: skip if {SKIP_SLOW} flag is given')
     config.addinivalue_line('markers', f'pandas: skip if {SKIP_PANDAS} flag is given')
@@ -104,8 +112,8 @@ def pytest_collection_modifyitems(config, items):
 
 def get_configure_kwargs(pytestconfig, *, title: str, memory_engine=None):
     kwargs = {'title': title,
-              'engine': (f'{title}.sqlite3' if pytestconfig.option.file_engine
-                         else memory_engine),
+              'engine': (f'{title}{pytestconfig.option.file_engine_tag}.sqlite3'
+                         if pytestconfig.option.file_engine else memory_engine),
               'loglevel': 'DEBUG' if pytestconfig.option.loglevel_debug else 'WARNING'}
 
     if pytestconfig.option.glottolog_repo_root is not None:

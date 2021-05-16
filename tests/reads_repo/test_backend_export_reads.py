@@ -46,8 +46,9 @@ def test_backup(treedb):
 
 
 @pytest.mark.slow
-def test_dump_sql(treedb):
+def test_dump_sql(pytestconfig, treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
+    suffix += pytestconfig.option.file_engine_tag
 
     path = treedb.dump_sql()
 
@@ -56,8 +57,9 @@ def test_dump_sql(treedb):
 
 
 @pytest.mark.slow
-def test_csv_zipfile(treedb):
+def test_csv_zipfile(pytestconfig, treedb):
     suffix = '-memory' if treedb.engine.file is None else ''
+    suffix += pytestconfig.option.file_engine_tag
 
     path = treedb.csv_zipfile()
 
@@ -87,6 +89,7 @@ abin1243: Abinomn (language) [bsa]
 def test_write_csv(pytestconfig, treedb):
     expected = QUERY_HASH.get(pytestconfig.option.glottolog_tag)
     suffix = '-memory' if treedb.engine.file is None else ''
+    suffix += pytestconfig.option.file_engine_tag
 
     path = treedb.write_csv()
 

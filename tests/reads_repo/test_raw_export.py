@@ -56,6 +56,7 @@ def test_checksum(pytestconfig, treedb_raw, weak):
 def test_write_raw_csv(pytestconfig, treedb_raw):
     expected = RAW_CSV_SHA256.get(pytestconfig.option.glottolog_tag)
     suffix = '-memory' if treedb_raw.engine.file is None else ''
+    suffix += pytestconfig.option.file_engine_tag
 
     path = treedb_raw.raw.write_raw_csv()
 
