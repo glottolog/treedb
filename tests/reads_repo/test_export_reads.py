@@ -216,10 +216,10 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
-@pytest.mark.xfail_glottolog_tag('v4.3-treedb-fixes', 'v4.2.1', 'v4.2', 'v4.1',
-                                 reason='format change: minimal countries',
+@pytest.mark.xfail_glottolog_tag('v4.3-treedb-fixes', 'v4.2.1', 'v4.2', 'v4.1', reason='format change: minimal countries',
                                  raises=AssertionError)
-@pytest.mark.skipif_glottolog_tag('v4.1', reason='float format: https://github.com/glottolog/glottolog/pull/495')
+@pytest.mark.xfail_glottolog_tag('v4.1', reason='float normalization: https://github.com/glottolog/glottolog/pull/495',
+                                 raises=AssertionError)
 @pytest.mark.parametrize('kwargs', [
     pytest.param([{'source': 'files'},
                   {'source': 'raw'},
@@ -230,9 +230,9 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
                  id='raw(order_by=id), tables(order_by=id)'),
     pytest.param([{'source': 'files', 'limit': 10,
                    'expected_prefix': 'path_languoid:path[limit=10]:sha256:'},
-                  {'source': 'raw', 'order_by': 'file', 'limit': 10,
-                   'expected_prefix': 'path_languoid:file[limit=10]:sha256:'}],
-                 id='files(limit=10), raw(order_by=file, limit=10)'),
+                  {'source': 'raw', 'order_by': 'file', 'limit': 2_000,
+                   'expected_prefix': 'path_languoid:file[limit=2000]:sha256:'}],
+                 id='files(limit=2_000), raw(order_by=file, limit=2_000)'),
 ])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.

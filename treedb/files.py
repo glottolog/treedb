@@ -159,13 +159,14 @@ def iterfiles(root=_globals.ROOT,
 
 
 def roundtrip(root=_globals.ROOT, *, replace: bool = False,
+              dry_run: bool = False,
               progress_after: int = _tools.PROGRESS_AFTER) -> int:
     """Do a load/save cycle with all config files."""
     log.info(f'start roundtripping {BASENAME} files in %r', root)
     raw_records = iterrecords(root, raw=True,
                               progress_after=progress_after)
     return _write_files(raw_records, root, replace=replace,
-                        progress_after=progress_after)
+                        dry_run=dry_run, progress_after=progress_after)
 
 
 
