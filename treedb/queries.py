@@ -122,32 +122,15 @@ def get_example_query(*, order_by: str = 'id'):
                               Languoid.hid,
                               Languoid.iso639_3,
                               Languoid.latitude,
-                              Languoid.longitude)
+                              Languoid.longitude,
+                              select_languoid_macroareas(as_json=False),
+                              select_languoid_countries(as_json=False),
+                              select_languoid_links(as_json=False))
                        .select_from(Languoid))
 
     select_languoid = _add_order_by(select_languoid,
                                     order_by=order_by,
                                     column_for_path_order=path)
-
-    macroareas = select_languoid_macroareas(as_json=False)
-
-    select_languoid = select_languoid.add_columns(macroareas)
-
-    countries = select_languoid_countries(as_json=False)
-
-    select_languoid = select_languoid.add_columns(countries)
-
-    links = (select(Link.printf())
-             .select_from(Link)
-             .filter_by(languoid_id=Languoid.id)
-             .correlate(Languoid)
-             .order_by(Link.ord)
-             .alias('lang_link'))
-
-    links = (select(group_concat(links.c.printf).label('links'))
-             .label('links'))
-
-    select_languoid = select_languoid.add_columns(links)
 
     source_gl = aliased(Source, name='source_glottolog')
     s_provider = aliased(SourceProvider, name='source_provider')
@@ -330,7 +313,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'longitude': Languoid.longitude,
                 'macroareas': select_languoid_macroareas(as_json=True),
                 'countries': select_languoid_countries(as_json=True, sort_keys=sort_keys),
-                'links': select_languoid_links(sort_keys=sort_keys),
+                'links': select_languoid_links(as_json=True, sort_keys=sort_keys),
                 'timespan': select_languoid_timespan(sort_keys=sort_keys),
                 'sources': select_languoid_sources(sort_keys=sort_keys),
                 'altnames': select_languoid_altnames(sort_keys=sort_keys),
@@ -413,6 +396,8 @@ def select_languoid_countries(languoid_id=Languoid.id, *, as_json: bool,
         countries = group_array(sa.func.json(countries.c.jsonf))
 
     else:
+        del sort_keys
+
         countries = (select(languoid_country.c.country_id)
                  .select_from(languoid_country)
                  .filter_by(languoid_id=Languoid.id)
@@ -425,17 +410,19 @@ def select_languoid_countries(languoid_id=Languoid.id, *, as_json: bool,
     return select(countries.label(label)).label(label)
 
 
-def select_languoid_links(languoid_id=Languoid.id,
-                          *, sort_keys: bool = False):
-    links = (select(Link.jsonf(sort_keys=sort_keys))
+def select_languoid_links(languoid_id=Languoid.id, *, as_json: bool,
+                          label: str = 'links',
+                          sort_keys: bool = False):
+    links = (select( Link.jsonf(sort_keys=sort_keys) if as_json else Link.printf())
              .select_from(Link)
              .filter_by(languoid_id=languoid_id)
              .correlate(Languoid)
              .order_by(Link.ord)
              .alias('lang_link'))
 
-    return (select(group_array(links.c.jsonf).label('links'))
-            .scalar_subquery())
+    links = group_array(links.c.jsonf) if as_json else group_concat(links.c.printf)
+
+    return select(links.label(label)).label(label)
 
 
 def select_languoid_timespan(languoid_id=Languoid.id,
