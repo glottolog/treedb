@@ -20,7 +20,7 @@ def test_roundtrip(treedb, kwargs):
     files_written = treedb.files.roundtrip(**kwargs)
 
     clean = glottolog.git_status_is_clean(treedb.root)
-    if not clean:
+    if files_written or not clean:
         print(glottolog.git_status(treedb.root))
 
     assert files_written == 0
