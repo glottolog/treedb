@@ -159,7 +159,7 @@ class SQLiteEngineProxy(EngineProxy):
 
     def file_with_suffix(self, suffix):
         if self.file is None:
-            name = '{self.memory_write_path.name}{suffix}'
+            name = f'{self.memory_write_path.name}{suffix}'
             return self.memory_write_path.with_name(name)
         return path.with_suffix(suffix)
 
