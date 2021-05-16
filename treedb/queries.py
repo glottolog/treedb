@@ -103,8 +103,12 @@ def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
     return select_languoid
 
 
+def group_concat(x, *, separator: str = ', '):
+    return sa.func.group_concat(x, separator)
+
+
 @_views.register_view('example')
-def get_example_query(*, order_by: str = 'id', separator: str = ', '):
+def get_example_query(*, order_by: str = 'id'):
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     path, family, language = Languoid.path_family_language()
 
@@ -125,22 +129,11 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
                                     order_by=order_by,
                                     column_for_path_order=path)
 
-    def group_concat(x):
-        return sa.func.group_concat(x, separator)
-
-    macroareas = select_languoid_macroareas(aggregate=group_concat)
+    macroareas = select_languoid_macroareas(as_json=False)
 
     select_languoid = select_languoid.add_columns(macroareas)
 
-    countries = (select(languoid_country.c.country_id)
-                 .select_from(languoid_country)
-                 .filter_by(languoid_id=Languoid.id)
-                 .correlate(Languoid)
-                 .order_by('country_id')
-                 .alias('lang_country'))
-
-    countries = (select(group_concat(countries.c.country_id).label('countries'))
-                 .label('countries'))
+    countries = select_languoid_countries(as_json=False)
 
     select_languoid = select_languoid.add_columns(countries)
 
@@ -335,8 +328,8 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'iso639_3': Languoid.iso639_3,
                 'latitude': Languoid.latitude,
                 'longitude': Languoid.longitude,
-                'macroareas': select_languoid_macroareas(aggregate=group_array),
-                'countries': select_languoid_countries(sort_keys=sort_keys),
+                'macroareas': select_languoid_macroareas(as_json=True),
+                'countries': select_languoid_countries(as_json=True, sort_keys=sort_keys),
                 'links': select_languoid_links(sort_keys=sort_keys),
                 'timespan': select_languoid_timespan(sort_keys=sort_keys),
                 'sources': select_languoid_sources(sort_keys=sort_keys),
@@ -389,7 +382,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
     return select_json
 
 
-def select_languoid_macroareas(languoid_id=Languoid.id,*, aggregate,
+def select_languoid_macroareas(languoid_id=Languoid.id,*, as_json: bool,
                                label: str = 'macroareas'):
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
@@ -398,24 +391,38 @@ def select_languoid_macroareas(languoid_id=Languoid.id,*, aggregate,
                   .order_by('macroarea_name')
                   .alias('lang_ma'))
 
-    return (select(aggregate(macroareas.c.macroarea_name)
-                   .label(label))
-            .label(label))
+    aggregate = group_array if as_json else group_concat
+
+    macroareas = aggregate(macroareas.c.macroarea_name)
+
+    return select(macroareas.label(label)).label(label)
 
 
-def select_languoid_countries(languoid_id=Languoid.id,
-                              *, sort_keys: bool = False):
-    countries = (select(Country.jsonf(sort_keys=sort_keys))
+def select_languoid_countries(languoid_id=Languoid.id, *, as_json: bool,
+                              label: str = 'countries',
+                              sort_keys: bool = False):
+    if as_json:
+        countries = (select(Country.jsonf(sort_keys=sort_keys))
+                     .select_from(languoid_country)
+                     .filter_by(languoid_id=languoid_id)
+                     .correlate(Languoid)
+                     .join(Country)
+                     .order_by(Country.printf())
+                     .alias('lang_country'))
+
+        countries = group_array(sa.func.json(countries.c.jsonf))
+
+    else:
+        countries = (select(languoid_country.c.country_id)
                  .select_from(languoid_country)
-                 .filter_by(languoid_id=languoid_id)
+                 .filter_by(languoid_id=Languoid.id)
                  .correlate(Languoid)
-                 .join(Country)
-                 .order_by(Country.printf())
+                 .order_by('country_id')
                  .alias('lang_country'))
 
-    return (select(group_array(sa.func.json(countries.c.jsonf))
-                   .label('countries'))
-            .scalar_subquery())
+        countries = group_concat(countries.c.country_id)
+
+    return select(countries.label(label)).label(label)
 
 
 def select_languoid_links(languoid_id=Languoid.id,
