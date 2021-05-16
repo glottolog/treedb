@@ -128,16 +128,7 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     def group_concat(x):
         return sa.func.group_concat(x, separator)
 
-    macroareas = (select(languoid_macroarea.c.macroarea_name)
-                  .select_from(languoid_macroarea)
-                  .filter_by(languoid_id=Languoid.id)
-                  .correlate(Languoid)
-                  .order_by('macroarea_name')
-                  .alias('lang_ma'))
-
-    macroareas = (select(group_concat(macroareas.c.macroarea_name)
-                         .label('macroareas'))
-                  .label('macroareas'))
+    macroareas = select_languoid_macroareas(aggregate=group_concat)
 
     select_languoid = select_languoid.add_columns(macroareas)
 
@@ -319,6 +310,14 @@ def get_example_query(*, order_by: str = 'id', separator: str = ', '):
     return select_languoid
 
 
+
+# Windows, Python < 3.9: https://www.sqlite.org/download.html
+group_array = sa.func.json_group_array
+
+
+group_object = sa.func.json_group_object
+
+
 @_views.register_view('path_languoid', as_rows=True, load_json=False)
 def get_json_query(*, limit: typing.Optional[int] = None,
                    offset: typing.Optional[int] = 0,
@@ -336,7 +335,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'iso639_3': Languoid.iso639_3,
                 'latitude': Languoid.latitude,
                 'longitude': Languoid.longitude,
-                'macroareas': select_languoid_macroareas(),
+                'macroareas': select_languoid_macroareas(aggregate=group_array),
                 'countries': select_languoid_countries(sort_keys=sort_keys),
                 'links': select_languoid_links(sort_keys=sort_keys),
                 'timespan': select_languoid_timespan(sort_keys=sort_keys),
@@ -390,14 +389,8 @@ def get_json_query(*, limit: typing.Optional[int] = None,
     return select_json
 
 
-# Windows, Python < 3.9: https://www.sqlite.org/download.html
-group_array = sa.func.json_group_array
-
-
-group_object = sa.func.json_group_object
-
-
-def select_languoid_macroareas(languoid_id=Languoid.id):
+def select_languoid_macroareas(languoid_id=Languoid.id,*, aggregate,
+                               label: str = 'macroareas'):
     macroareas = (select(languoid_macroarea.c.macroarea_name)
                   .select_from(languoid_macroarea)
                   .filter_by(languoid_id=languoid_id)
@@ -405,9 +398,9 @@ def select_languoid_macroareas(languoid_id=Languoid.id):
                   .order_by('macroarea_name')
                   .alias('lang_ma'))
 
-    return (select(group_array(macroareas.c.macroarea_name)
-                   .label('macroareas'))
-            .scalar_subquery())
+    return (select(aggregate(macroareas.c.macroarea_name)
+                   .label(label))
+            .label(label))
 
 
 def select_languoid_countries(languoid_id=Languoid.id,
