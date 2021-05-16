@@ -229,7 +229,7 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
                   {'source': 'tables', 'order_by': 'id'}],
                  id='raw(order_by=id), tables(order_by=id)'),
     pytest.param([{'source': 'files', 'limit': 2_000,
-                   'expected_prefix': 'path_languoid:path[limit=2_000]:sha256:'},
+                   'expected_prefix': 'path_languoid:path[limit=2000]:sha256:'},
                   {'source': 'raw', 'order_by': 'file', 'limit': 2_000,
                    'expected_prefix': 'path_languoid:file[limit=2000]:sha256:'}],
                  id='files(limit=2_000), raw(order_by=file, limit=2_000)'),
