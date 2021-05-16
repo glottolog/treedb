@@ -10,7 +10,7 @@ FILES_WRITTEN = {'raw_lines': ZeroDict(),
                  'tables': ZeroDict({# replace 'Country Name (ID)' with 'ID'
                                      'v4.3-treedb-fixes': 8_528,
                                      'v4.2.1': 8_528,
-                                     'v4.2': 8_529,
+                                     'v4.2': None,
                                      'v4.1': 8_540})}
 
 

@@ -18,7 +18,6 @@ CHECKSUM = {'master': None,
             'v4.4': '289247f73d5bf57f0a7dc8e0e2473b5625ace605dbad57b3c06fe93063d47599',
             'v4.3-treedb-fixes': '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
             'v4.2.1': '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
-            'v4.2': '91756e0e9150872e71a1c27419a302d229f4b497f5f629d1d98fc40305f8e5ea',
             'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
@@ -98,8 +97,6 @@ STATS = {'master': None,
  8,111 All
    395 Bookkeeping
 '''}
-
-STATS['v4.2'] = STATS['v4.2.1']
 
 MB = 2**20
 
