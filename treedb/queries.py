@@ -388,27 +388,23 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
                               label: str = 'countries',
                               sort_keys: bool = False,
                               alias: str = 'lang_country'):
+    field = (Country.jsonf(sort_keys=sort_keys) if as_json
+             else languoid_country.c.country_id)
+
+    countries = (select(field)
+                 .select_from(languoid_country)
+                 .filter_by(languoid_id=languoid.id)
+                 .correlate(languoid))
+
     if as_json:
-        countries = (select(Country.jsonf(sort_keys=sort_keys))
-                     .select_from(languoid_country)
-                     .filter_by(languoid_id=languoid.id)
-                     .correlate(languoid)
-                     .join(Country)
+        countries = (countries.join(Country)
                      .order_by(Country.printf())
                      .alias(alias))
 
         countries = group_array(sa.func.json(countries.c.jsonf))
-
     else:
-        del sort_keys
-
-        country_id = languoid_country.c.country_id
-
-        countries = (select(country_id)
-                     .select_from(languoid_country)
-                     .filter_by(languoid_id=languoid.id)
-                     .correlate(languoid)
-                     .order_by(country_id)
+        countries = (countries
+                     .order_by(field)
                      .alias(alias))
 
         countries = group_concat(countries.c.country_id)
@@ -465,7 +461,7 @@ def select_languoid_sources(languoid=Languoid,
                .alias(alias))
 
     sources = (select(sources.c.provider.label('key'),
-                     group_array(sa.func.json(sources.c.jsonf)).label('value'))
+                      group_array(sa.func.json(sources.c.jsonf)).label('value'))
                .group_by(sources.c.provider)
                .alias(alias))
 
