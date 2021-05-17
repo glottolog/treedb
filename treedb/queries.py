@@ -366,14 +366,16 @@ def get_json_query(*, limit: typing.Optional[int] = None,
 
 
 def select_languoid_macroareas(languoid=Languoid,*, as_json: bool,
-                               label: str = 'macroareas'):
+                               label: str = 'macroareas',
+                               alias: str = 'lang_ma'):
     name = languoid_macroarea.c.macroarea_name
+
     macroareas = (select(name)
                   .select_from(languoid_macroarea)
                   .filter_by(languoid_id=languoid.id)
                   .correlate(languoid)
                   .order_by(name)
-                  .alias('lang_ma'))
+                  .alias(alias))
 
     aggregate = group_array if as_json else group_concat
 
@@ -401,6 +403,7 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
         del sort_keys
 
         country_id = languoid_country.c.country_id
+
         countries = (select(country_id)
                      .select_from(languoid_country)
                      .filter_by(languoid_id=languoid.id)
@@ -415,13 +418,14 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
 
 def select_languoid_links(languoid=Languoid, *, as_json: bool,
                           label: str = 'links',
-                          sort_keys: bool = False):
+                          sort_keys: bool = False,
+                          alias: str = 'lang_link'):
     links = (select(Link.jsonf(sort_keys=sort_keys) if as_json else Link.printf())
              .select_from(Link)
              .filter_by(languoid_id=languoid.id)
              .correlate(languoid)
              .order_by(Link.ord)
-             .alias('lang_link'))
+             .alias(alias))
 
     links = group_array(links.c.jsonf) if as_json else group_concat(links.c.printf)
 
@@ -429,21 +433,26 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
 
 
 def select_languoid_timespan(languoid=Languoid,
-                             *, sort_keys: bool = False):
+                             *, label: str = 'timespan',
+                             sort_keys: bool = False):
     return (select(Timespan.jsonf(sort_keys=sort_keys))
             .select_from(Timespan)
             .correlate(languoid)
             .filter_by(languoid_id=languoid.id)
-            .scalar_subquery())
+            .label(label))
 
 
 def select_languoid_sources(languoid=Languoid,
-                            *, sort_keys: bool = False):
+                            *, label: str = 'sources',
+                            sort_keys: bool = False,
+                            alias: str = 'lang_source'):
     provider = aliased(SourceProvider, name='source_provider')
     bibitem = aliased(Bibitem, name='source_bibitem')
     bibfile = aliased(Bibfile, name='source_bibfile')
 
-    sources = (select(provider.name.label('provider'),
+    name = provider.name
+
+    sources = (select(name.label('provider'),
                       Source.jsonf(bibfile, bibitem,
                                    sort_keys=sort_keys))
                .select_from(Source)
@@ -452,22 +461,25 @@ def select_languoid_sources(languoid=Languoid,
                .join(Source.provider.of_type(provider))
                .join(Source.bibitem.of_type(bibitem))
                .join(bibitem.bibfile.of_type(bibfile))
-               .order_by(provider.name, bibfile.name, bibitem.bibkey)
-               .alias('lang_source'))
+               .order_by(name, bibfile.name, bibitem.bibkey)
+               .alias(alias))
 
     sources = (select(sources.c.provider.label('key'),
                      group_array(sa.func.json(sources.c.jsonf)).label('value'))
                .group_by(sources.c.provider)
-               .alias('lang_sources'))
+               .alias(alias))
 
-    return (select(sa.func.nullif(group_object(sources.c.key,
-                                  sa.func.json(sources.c.value)), '{}')
-                   .label('sources'))
-            .scalar_subquery())
+    sources = sa.func.nullif(group_object(sources.c.key,
+                                          sa.func.json(sources.c.value)),
+                             '{}')
+
+    return select(sources.label(label)).label(label)
 
 
 def select_languoid_altnames(languoid=Languoid,
-                             *, sort_keys: bool = False):
+                             *, label: str = 'altnames',
+                             sort_keys: bool = False,
+                             alias: str = 'lang_altname'):
     provider = aliased(AltnameProvider, name='altname_provider')
 
     altnames = (select(provider.name.label('provider'),
@@ -477,26 +489,30 @@ def select_languoid_altnames(languoid=Languoid,
                 .correlate(languoid)
                 .join(Altname.provider.of_type(provider))
                 .order_by(provider.name, Altname.printf())
-                .alias('lang_altname'))
+                .alias(alias))
 
     altnames = (select(altnames.c.provider.label('key'),
                        group_array(sa.func.json(altnames.c.jsonf))
                        .label('value'))
                 .group_by(altnames.c.provider)
-                .alias('lang_altnames'))
+                .alias(alias))
 
-    return (select(sa.func.nullif(group_object(altnames.c.key,
-                                  sa.func.json(altnames.c.value)), '{}')
-                   .label('altnames'))
-            .scalar_subquery())
+    altnames = sa.func.nullif(group_object(altnames.c.key,
+                                           sa.func.json(altnames.c.value)),
+                              '{}')
+
+    return select(altnames.label(label)).label(label)
 
 
-def select_languoid_triggers(languoid=Languoid):
-    triggers = (select(Trigger.field, Trigger.trigger)
+def select_languoid_triggers(languoid=Languoid,
+                             *, label: str = 'triggers'):
+    field = Trigger.field
+
+    triggers = (select(field, Trigger.trigger)
                 .select_from(Trigger)
                 .filter_by(languoid_id=languoid.id)
                 .correlate(languoid)
-                .order_by('field', Trigger.ord)
+                .order_by(field, Trigger.ord)
                 .alias('lang_trigger'))
 
     triggers = (select(triggers.c.field.label('key'),
@@ -504,13 +520,15 @@ def select_languoid_triggers(languoid=Languoid):
                 .group_by(triggers.c.field)
                 .alias('lang_triggers'))
 
-    return (select(sa.func.nullif(group_object(triggers.c.key,
-                                               triggers.c.value),
-                                  '{}').label('triggers'))
-            .scalar_subquery())
+    triggers = sa.func.nullif(group_object(triggers.c.key,
+                                           triggers.c.value),
+                              '{}')
+
+    return select(triggers.label(label)).label(label)
 
 
-def select_languoid_identifier(languoid=Languoid):
+def select_languoid_identifier(languoid=Languoid,
+                               *, label: str = 'identifiers'):
     identifier = (select(IdentifierSite.name.label('site'),
                          Identifier.identifier.label('identifier'))
                   .select_from(Identifier)
@@ -519,18 +537,22 @@ def select_languoid_identifier(languoid=Languoid):
                   .join(Identifier.site.of_type(IdentifierSite))
                   .alias('lang_identifiers'))
 
-    identifier = (select(identifier.c.site, identifier.c.identifier)
-                  .order_by('site')
+    site = identifier.c.site
+
+    identifier = (select(site, identifier.c.identifier)
+                  .order_by(site)
                   .alias('lang_identifiers_ordered'))
 
-    return (select(sa.func.nullif(group_object(identifier.c.site,
-                                               identifier.c.identifier),
-                                  '{}').label('identifiers'))
-            .scalar_subquery())
+    identifier = sa.func.nullif(group_object(identifier.c.site,
+                                             identifier.c.identifier),
+                                '{}')
+
+    return select(identifier.label(label)).label(label)
 
 
 def select_languoid_classification(languoid=Languoid,
-                                   *, sort_keys: bool = False):
+                                   *, label: str = 'classification',
+                                   sort_keys: bool = False):
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
@@ -541,7 +563,9 @@ def select_languoid_classification(languoid=Languoid,
     bibitem = aliased(Bibitem, name='bibitem_cr')
     bibfile = aliased(Bibfile, name='bibfile_cr')
 
-    classification_refs = (select((ClassificationRef.kind + 'refs').label('key'),
+    kind = ClassificationRef.kind
+
+    classification_refs = (select((kind + 'refs').label('key'),
                                   ClassificationRef.jsonf(bibfile, bibitem,
                                                           sort_keys=sort_keys))
                            .select_from(ClassificationRef)
@@ -549,7 +573,7 @@ def select_languoid_classification(languoid=Languoid,
                            .correlate(languoid)
                            .join(ClassificationRef.bibitem.of_type(bibitem))
                            .join(bibitem.bibfile.of_type(bibfile))
-                           .order_by(ClassificationRef.kind, ClassificationRef.ord)
+                           .order_by(kind, ClassificationRef.ord)
                            .alias('lang_cref'))
 
     classification_refs = (select(classification_refs.c.key,
@@ -561,67 +585,73 @@ def select_languoid_classification(languoid=Languoid,
                       .union_all(classification_refs)
                       .alias('lang_classifciation'))
 
-    classification = (select(classification.c.key,
-                             classification.c.value
-                             .label('value'))
-                      .order_by('key')
+    key = classification.c.key
+
+    classification = (select(key, classification.c.value.label('value'))
+                      .order_by(key)
                       .alias('classification_object'))
 
-    return (select(sa.func.nullif(group_object(classification.c.key,
-                                               sa.func.json(classification.c.value)),
-                                  '{}').label('classification'))
+    nullification = sa.func.nullif(group_object(classification.c.key,
+                                                sa.func.json(classification.c.value)),
+                                   '{}')
+
+    return (select(nullification.label(label))
             .select_from(classification)
-            .scalar_subquery())
+            .label(label))
 
 
 def select_languoid_endangerment(languoid=Languoid,
-                                 *, sort_keys: bool = False):
+                                 *, label: str = 'endangerment',
+                                 sort_keys: bool = False):
     bibitem = aliased(Bibitem, name='bibitem_e')
     bibfile = aliased(Bibfile, name='bibfile_e')
 
     return (select(Endangerment.jsonf(EndangermentSource,
                                       bibfile, bibitem,
                                       sort_keys=sort_keys,
-                                      label='endangerment'))
+                                      label=label))
             .select_from(Endangerment)
             .filter_by(languoid_id=languoid.id)
             .correlate(languoid)
             .join(Endangerment.source)
             .outerjoin(sa.join(bibitem, bibfile))
-            .scalar_subquery())
+            .label(label))
 
 
 def select_languoid_hh_ethnologue_comment(languoid=Languoid,
-                                          *, sort_keys: bool = False):
+                                          *, label: str = 'hh_ethnologue_comment',
+                                          sort_keys: bool = False):
     return (select(EthnologueComment
-                   .jsonf(sort_keys=sort_keys,
-                          label='hh_ethnologue_comment'))
+                   .jsonf(sort_keys=sort_keys, label=label))
             .select_from(EthnologueComment)
             .filter_by(languoid_id=languoid.id)
             .correlate(languoid)
-            .scalar_subquery())
+            .label(label))
 
 
 def select_languoid_iso_retirement(languoid=Languoid,
-                                   *, sort_keys: bool = False):
+                                   *, label: str = 'iso_retirement',
+                                   sort_keys: bool = False,
+                                   alias: str = 'lang_irct',
+                                   alias_label: str = 'change_to'):
     change_to = (select(IsoRetirementChangeTo.code)
                  .select_from(IsoRetirementChangeTo)
                  .filter_by(languoid_id=IsoRetirement.languoid_id)
                  .correlate(IsoRetirement)
                  .order_by(IsoRetirementChangeTo.ord)
-                 .alias('lang_irct'))
+                 .alias(alias))
 
-    change_to = (select(group_array(change_to.c.code).label('change_to'))
-                 .scalar_subquery())
+    change_to = (select(group_array(change_to.c.code).label(alias_label))
+                 .label(alias_label))
 
     return (select(IsoRetirement.jsonf(change_to=change_to,
                                        sort_keys=sort_keys,
                                        optional=True,
-                                       label='iso_retirement'))
+                                       label=label))
             .select_from(IsoRetirement)
             .filter_by(languoid_id=languoid.id)
             .correlate(languoid)
-            .scalar_subquery())
+            .label(label))
 
 
 def iterdescendants(parent_level: typing.Optional[str] = None,
