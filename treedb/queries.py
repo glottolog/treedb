@@ -437,9 +437,7 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
 
     order_by = [bibfile.name, bibitem.bibkey]
 
-    if provider_name is not None:
-        alias = f'{alias}_{provider_name}'
-    else:
+    if provider_name is None:
         name = provider.name
         columns.insert(0, name.label('provider'))
         order_by.insert(0, name)
@@ -455,6 +453,7 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
 
     if provider_name is not None:
         sources = sources.where(provider.name == provider_name)
+        alias = f'{alias}_{provider_name}'
 
     sources = sources.alias(alias)
 
