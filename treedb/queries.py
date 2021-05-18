@@ -125,34 +125,14 @@ def get_example_query(*, order_by: str = 'id'):
                               Languoid.longitude,
                               select_languoid_macroareas(as_json=False),
                               select_languoid_countries(as_json=False),
-                              select_languoid_links(as_json=False))
+                              select_languoid_links(as_json=False),
+                              select_languoid_sources(as_json=False,
+                                                      provider_name='glottolog'))
                        .select_from(Languoid))
 
     select_languoid = _add_order_by(select_languoid,
                                     order_by=order_by,
                                     column_for_path_order=path)
-
-    source_gl = aliased(Source, name='source_glottolog')
-    s_provider = aliased(SourceProvider, name='source_provider')
-    s_bibfile = aliased(Bibfile, name='source_bibfile')
-    s_bibitem = aliased(Bibitem, name='source_bibitem')
-
-    sources_glottolog = (select(source_gl.printf(s_bibfile, s_bibitem))
-                         .select_from(source_gl)
-                         .filter_by(languoid_id=Languoid.id)
-                         .correlate(Languoid)
-                         .filter_by(provider_id=s_provider.id)
-                         .where(s_provider.name == 'glottolog')
-                         .filter_by(bibitem_id=s_bibitem.id)
-                         .where(s_bibitem.bibfile_id == s_bibfile.id)
-                         .order_by(s_bibfile.name, s_bibitem.bibkey)
-                         .alias('lang_source_glottolog'))
-
-    sources_glottolog = (select(group_concat(sources_glottolog.c.printf)
-                                .label('sources_glottolog'))
-                         .label('sources_glottolog'))
-
-    select_languoid = select_languoid.add_columns(sources_glottolog)
 
     altnames = {p: (aliased(Altname, name='altname_' + p),
                     aliased(AltnameProvider, name='altname_' + p + '_provider'))
@@ -315,7 +295,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'countries': select_languoid_countries(as_json=True, sort_keys=sort_keys),
                 'links': select_languoid_links(as_json=True, sort_keys=sort_keys),
                 'timespan': select_languoid_timespan(sort_keys=sort_keys),
-                'sources': select_languoid_sources(sort_keys=sort_keys),
+                'sources': select_languoid_sources(as_json=True, sort_keys=sort_keys),
                 'altnames': select_languoid_altnames(sort_keys=sort_keys),
                 'triggers': select_languoid_triggers(),
                 'identifier': select_languoid_identifier(),
@@ -388,8 +368,8 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
                               label: str = 'countries',
                               sort_keys: bool = False,
                               alias: str = 'lang_country'):
-    field = (Country.jsonf(sort_keys=sort_keys) if as_json
-             else languoid_country.c.country_id)
+    field = (Country.jsonf(sort_keys=sort_keys) if as_json else
+             languoid_country.c.country_id)
 
     countries = (select(field)
                  .select_from(languoid_country)
@@ -416,7 +396,8 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
                           label: str = 'links',
                           sort_keys: bool = False,
                           alias: str = 'lang_link'):
-    links = (select(Link.jsonf(sort_keys=sort_keys) if as_json else Link.printf())
+    links = (select(Link.jsonf(sort_keys=sort_keys) if as_json else
+                    Link.printf())
              .select_from(Link)
              .filter_by(languoid_id=languoid.id)
              .correlate(languoid)
@@ -438,36 +419,65 @@ def select_languoid_timespan(languoid=Languoid,
             .label(label))
 
 
-def select_languoid_sources(languoid=Languoid,
-                            *, label: str = 'sources',
+def select_languoid_sources(languoid=Languoid, *, as_json: bool,
+                            provider_name: typing.Optional[str] = None,
+                            label: str = 'sources',
                             sort_keys: bool = False,
                             alias: str = 'lang_source'):
+    source = (aliased(Source, name=f'source_{provider_name}')
+              if provider_name is not None else Source)
+
     provider = aliased(SourceProvider, name='source_provider')
+
     bibitem = aliased(Bibitem, name='source_bibitem')
     bibfile = aliased(Bibfile, name='source_bibfile')
 
-    name = provider.name
+    columns = [source.jsonf(bibfile, bibitem, sort_keys=sort_keys)
+               if as_json else source.printf(bibfile, bibitem)]
 
-    sources = (select(name.label('provider'),
-                      Source.jsonf(bibfile, bibitem,
-                                   sort_keys=sort_keys))
-               .select_from(Source)
+    order_by = [bibfile.name, bibitem.bibkey]
+
+    if provider_name is not None:
+        alias = f'{alias}_{provider_name}'
+    else:
+        name = provider.name
+        columns.insert(0, name.label('provider'))
+        order_by.insert(0, name)
+
+    sources = (select(*columns)
+               .select_from(source)
                .filter_by(languoid_id=languoid.id)
                .correlate(languoid)
                .join(Source.provider.of_type(provider))
                .join(Source.bibitem.of_type(bibitem))
                .join(bibitem.bibfile.of_type(bibfile))
-               .order_by(name, bibfile.name, bibitem.bibkey)
+               .order_by(*order_by))
+
+    if provider_name is not None:
+        sources = sources.where(provider.name == provider_name)
+
+    sources = sources.alias(alias)
+
+    sub_label = f'{label}_{provider_name}' if provider_name else label
+
+    field = (group_array(sa.func.json(sources.c.jsonf)).label('value')
+             if as_json else group_concat(sources.c.printf).label(sub_label))
+
+    if provider_name is not None:
+        return select(field).label(sub_label)
+
+    key = sources.c.provider
+
+    sources = (select(key.label('key'), field)
+               .group_by(key)
                .alias(alias))
 
-    sources = (select(sources.c.provider.label('key'),
-                      group_array(sa.func.json(sources.c.jsonf)).label('value'))
-               .group_by(sources.c.provider)
-               .alias(alias))
-
-    sources = sa.func.nullif(group_object(sources.c.key,
-                                          sa.func.json(sources.c.value)),
-                             '{}')
+    if as_json:
+        sources = sa.func.nullif(group_object(sources.c.key,
+                                              sa.func.json(sources.c.value)),
+                                 '{}')
+    else:  # pragma: no cover
+        raise NotImplementedError
 
     return select(sources.label(label)).label(label)
 
