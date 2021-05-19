@@ -170,7 +170,7 @@ def get_example_query(*, order_by: str = 'id'):
     triggers = list(map(select_triggers, ('lgcode', 'inlg')))
     select_languoid = select_languoid.add_columns(*triggers)
 
-    def select_identifiers(site_name: str) -> sa.sql.Select:
+    def select_identifiers(site_name: str):
         nonlocal select_languoid
 
         identifier = aliased(Identifier, name=f'ident_{site_name}')
@@ -186,39 +186,38 @@ def get_example_query(*, order_by: str = 'id'):
     identifiers = list(map(select_identifiers, sorted(IDENTIFIER_SITE)))
     select_languoid = select_languoid.add_columns(*identifiers)
 
-    subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
+    def select_classification(kind: str):
+        nonlocal select_languoid
 
-    classification_sub = subc.comment.label('classification_sub')
-    classification_family = famc.comment.label('classification_family')
+        comment = aliased(ClassificationComment, name=f'cc_{kind}')
 
-    def crefs(kind):
-        ref = aliased(ClassificationRef, name='cr_' + kind)
-        r_bibfile = aliased(Bibfile, name='bibfile_cr_' + kind)
-        r_bibitem = aliased(Bibitem, name='bibitem_cr_' + kind)
+        select_languoid = (select_languoid
+                           .outerjoin(comment,
+                                      sa.and_(comment.kind == kind,
+                                              comment.languoid_id == Languoid.id)))
 
-        refs = (select(ref.printf(r_bibfile, r_bibitem))
+        yield comment.comment.label(f'classification_{kind}')
+
+        ref = aliased(ClassificationRef, name=f'cr_{kind}')
+        bibfile = aliased(Bibfile, name=f'bibfile_cr_{kind}')
+        bibitem = aliased(Bibitem, name=f'bibitem_cr_{kind}')
+
+        refs = (select(ref.printf(bibfile, bibitem))
                 .select_from(ref)
                 .filter_by(kind=kind)
                 .filter_by(languoid_id=Languoid.id)
                 .correlate(Languoid)
-                .filter_by(bibitem_id=r_bibitem.id)
-                .where(r_bibitem.bibfile_id == r_bibfile.id)
+                .join(ref.bibitem.of_type(bibitem))
+                .join(bibitem.bibfile.of_type(bibfile))
                 .order_by(ref.ord)
-                .alias('lang_cref_' + kind))
+                .alias(f'lang_cref_{kind}'))
 
         label = f'classification_{kind}refs'
-        return select(group_concat(refs.c.printf).label(label)).label(label)
+        yield select(group_concat(refs.c.printf).label(label)).label(label)
 
-    classification_subrefs, classification_familyrefs = map(crefs, ('sub', 'family'))
-
-    select_languoid = (select_languoid.add_columns(classification_sub,
-                                                   classification_subrefs,
-                                                   classification_family,
-                                                   classification_familyrefs)
-                       .outerjoin(subc, sa.and_(subc.kind == 'sub',
-                                                subc.languoid_id == Languoid.id))
-                       .outerjoin(famc, sa.and_(famc.kind == 'family',
-                                                famc.languoid_id == Languoid.id)))
+    classifications = map(select_classification, ('sub', 'family'))
+    classifications = [col for sub, family in classifications for col in (sub, family)]
+    select_languoid = select_languoid.add_columns(*classifications)
 
     def get_cols(model, label='{name}', ignore='id'):
         cols = model.__table__.columns
