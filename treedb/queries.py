@@ -227,9 +227,8 @@ def get_example_query(*, order_by: str = 'id'):
                     if c.name != ignore and not c.name.endswith(ignore_suffix)]
         return [c.label(label.format(name=c.name)) for c in cols]
 
-    select_languoid = (select_languoid
-                       .add_columns(*get_cols(Endangerment,
-                                              label='endangerment_{name}')))
+    endangerment = get_cols(Endangerment, label='endangerment_{name}')
+    select_languoid = select_languoid.add_columns(*endangerment)
 
     e_bibfile = aliased(Bibfile, name='bibfile_e')
     e_bibitem = aliased(Bibitem, name='bibitem_e')
@@ -241,14 +240,12 @@ def get_example_query(*, order_by: str = 'id'):
                        .outerjoin(sa.join(Endangerment, EndangermentSource))
                        .outerjoin(sa.join(e_bibitem, e_bibfile)))
 
-    select_languoid = (select_languoid
-                       .add_columns(*get_cols(EthnologueComment,
-                                              label='elcomment_{name}'))
+    ethnologue_comment = get_cols(EthnologueComment, label='elcomment_{name}')
+    select_languoid = (select_languoid.add_columns(*ethnologue_comment)
                        .outerjoin(EthnologueComment))
 
-    select_languoid = (select_languoid
-                       .add_columns(*get_cols(IsoRetirement,
-                                             label='iso_retirement_{name}'))
+    iso_retirement = get_cols(IsoRetirement, label='iso_retirement_{name}')
+    select_languoid = (select_languoid.add_columns(*iso_retirement)
                        .outerjoin(IsoRetirement))
 
     iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
@@ -258,14 +255,12 @@ def get_example_query(*, order_by: str = 'id'):
                                 .order_by(IsoRetirementChangeTo.ord)
                                 .alias('lang_irct'))
 
-    iso_retirement_change_to = (select(group_concat(iso_retirement_change_to.c.code)
-                                       .label('iso_retirement_change_to'))
-                                .label('iso_retirement_change_to'))
-
+    code = group_concat(iso_retirement_change_to.c.code)
+    label = 'iso_retirement_change_to'
+    iso_retirement_change_to = select(code.label(label)).label(label)
     select_languoid = select_languoid.add_columns(iso_retirement_change_to)
 
     return select_languoid
-
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html
