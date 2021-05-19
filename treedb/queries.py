@@ -150,8 +150,8 @@ def get_example_query(*, order_by: str = 'id'):
         label = f'altnames_{provider_name}'
         return select(group_concat(altnames.c.printf).label(label)).label(label)
 
-    for provider_name in sorted(ALTNAME_PROVIDER):
-        select_languoid = select_languoid.add_columns(select_altnames(provider_name))
+    altnames = list(map(select_altnames, sorted(ALTNAME_PROVIDER)))
+    select_languoid = select_languoid.add_columns(*altnames)
 
     def select_triggers(field: str) -> sa.sql.Select:
         trigger = aliased(Trigger, name=f'trigger_{field}')
@@ -167,8 +167,8 @@ def get_example_query(*, order_by: str = 'id'):
         label = f'triggers_{field}'
         return select(group_concat(triggers.c.trigger).label(label)).label(label)
 
-    for field in ('lgcode', 'inlg'):
-        select_languoid = select_languoid.add_columns(select_triggers(field))
+    triggers = list(map(select_triggers, ('lgcode', 'inlg')))
+    select_languoid = select_languoid.add_columns(*triggers)
 
     def select_identifiers(site_name: str) -> sa.sql.Select:
         nonlocal select_languoid
@@ -416,8 +416,8 @@ def select_languoid_timespan(languoid=Languoid,
                              sort_keys: bool = False):
     return (select(Timespan.jsonf(sort_keys=sort_keys))
             .select_from(Timespan)
-            .correlate(languoid)
             .filter_by(languoid_id=languoid.id)
+            .correlate(languoid)
             .label(label))
 
 
