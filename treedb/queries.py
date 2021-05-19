@@ -215,8 +215,8 @@ def get_example_query(*, order_by: str = 'id'):
         label = f'classification_{kind}refs'
         yield select(group_concat(refs.c.printf).label(label)).label(label)
 
-    classifications = map(select_classification, ('sub', 'family'))
-    classifications = [col for sub, family in classifications for col in (sub, family)]
+    classifications = [col for kind in ('sub', 'family')
+                       for col in select_classification(kind)]
     select_languoid = select_languoid.add_columns(*classifications)
 
     def get_cols(model, label='{name}', ignore='id'):
