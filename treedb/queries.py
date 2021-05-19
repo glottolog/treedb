@@ -134,24 +134,24 @@ def get_example_query(*, order_by: str = 'id'):
                                     order_by=order_by,
                                     column_for_path_order=path)
 
-    altnames = {p: (aliased(Altname, name='altname_' + p),
-                    aliased(AltnameProvider, name='altname_' + p + '_provider'))
-                for p in sorted(ALTNAME_PROVIDER)}
+    def select_altnames(provider_name: str) -> sa.sql.Select:
+        altname = aliased(Altname, name=f'altname_{provider_name}')
+        provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
 
-    altnames = {p: (select(a.printf())
-                    .select_from(a)
+        altnames = (select(altname.printf())
+                    .select_from(altname)
                     .filter_by(languoid_id=Languoid.id)
                     .correlate(Languoid)
-                    .filter_by(provider_id=ap.id)
-                    .where(ap.name == p)
-                    .order_by(a.name, a.lang)
-                    .alias('lang_altname_' + p))
-                for p, (a, ap) in altnames.items()}
+                    .join(altname.provider.of_type(provider))
+                    .where(provider.name == provider_name)
+                    .order_by(altname.name, altname.lang)
+                    .alias(f'lang_altname_{provider_name}'))
 
-    altnames = [select(group_concat(a.c.printf).label('altnames_' + p))
-                .label('altnames_' + p) for p, a in altnames.items()]
+        label = f'altnames_{provider_name}'
+        return select(group_concat(altnames.c.printf).label(label)).label(label)
 
-    select_languoid = select_languoid.add_columns(*altnames)
+    for provider_name in sorted(ALTNAME_PROVIDER):
+        select_languoid = select_languoid.add_columns(select_altnames(provider_name))
 
     triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
 
