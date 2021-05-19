@@ -170,20 +170,21 @@ def get_example_query(*, order_by: str = 'id'):
     for field in ('lgcode', 'inlg'):
         select_languoid = select_languoid.add_columns(select_triggers(field))
 
-    idents = {s: (aliased(Identifier, name='ident_' + s),
-                  aliased(IdentifierSite, name='ident_' + s + '_site'))
-              for s in sorted(IDENTIFIER_SITE)}
+    def select_identifiers(site_name: str) -> sa.sql.Select:
+        nonlocal select_languoid
 
-    identifiers = [i.identifier.label('identifier_' + s)
-                   for s, (i, _) in idents.items()]
+        identifier = aliased(Identifier, name=f'ident_{site_name}')
+        site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
 
-    select_languoid = select_languoid.add_columns(*identifiers)
-
-    for s, (i, is_) in idents.items():
         select_languoid = (select_languoid
-                           .outerjoin(sa.join(i, is_, i.site_id == is_.id),
-                                      sa.and_(is_.name == s,
-                                              i.languoid_id == Languoid.id)))
+                           .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
+                                      sa.and_(site.name == site_name,
+                                              identifier.languoid_id == Languoid.id)))
+
+        return identifier.identifier.label(f'identifier_{site_name}')
+
+    identifiers = list(map(select_identifiers, sorted(IDENTIFIER_SITE)))
+    select_languoid = select_languoid.add_columns(*identifiers)
 
     subc, famc = (aliased(ClassificationComment, name='cc_' + n) for n in ('sub', 'fam'))
 
