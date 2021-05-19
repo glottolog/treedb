@@ -168,8 +168,8 @@ def get_example_query(*, order_by: str = 'id'):
         label = label.format(field=field)
         return select(group_concat(triggers.c.trigger).label(label)).label(label)
 
-    triggers = [select_triggers(kind, label='triggers_{field}')
-                for kind in ('lgcode', 'inlg')]
+    triggers = [select_triggers(field, label='triggers_{field}')
+                for field in ('lgcode', 'inlg')]
     select_languoid = select_languoid.add_columns(*triggers)
 
     def add_identifiers(site_name: str, *, label: str):
