@@ -153,21 +153,22 @@ def get_example_query(*, order_by: str = 'id'):
     for provider_name in sorted(ALTNAME_PROVIDER):
         select_languoid = select_languoid.add_columns(select_altnames(provider_name))
 
-    triggers = {f: aliased(Trigger, name='trigger_' + f) for f in ('lgcode', 'inlg')}
+    def select_triggers(field: str) -> sa.sql.Select:
+        trigger = aliased(Trigger, name=f'trigger_{field}')
 
-    triggers = {f: (select(t.trigger)
-                    .select_from(t)
-                    .filter_by(field=f)
+        triggers = (select(trigger.trigger)
+                    .select_from(trigger)
+                    .filter_by(field=field)
                     .filter_by(languoid_id=Languoid.id)
                     .correlate(Languoid)
-                    .order_by(t.ord)
-                    .alias(f'lang_trigger_{f}'))
-                for f, t in triggers.items()}
+                    .order_by(trigger.ord)
+                    .alias(f'lang_trigger_{field}'))
 
-    triggers = [select(group_concat(t.c.trigger).label('triggers_' + f))
-                .label('triggers_' + f) for f, t in triggers.items()]
+        label = f'triggers_{field}'
+        return select(group_concat(triggers.c.trigger).label(label)).label(label)
 
-    select_languoid = select_languoid.add_columns(*triggers)
+    for field in ('lgcode', 'inlg'):
+        select_languoid = select_languoid.add_columns(select_triggers(field))
 
     idents = {s: (aliased(Identifier, name='ident_' + s),
                   aliased(IdentifierSite, name='ident_' + s + '_site'))
