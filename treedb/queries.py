@@ -134,7 +134,7 @@ def get_example_query(*, order_by: str = 'id'):
                                     order_by=order_by,
                                     column_for_path_order=path)
 
-    def select_altnames(provider_name: str) -> sa.sql.Select:
+    def select_altnames(provider_name: str, *, label: str) -> sa.sql.Select:
         altname = aliased(Altname, name=f'altname_{provider_name}')
         provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
 
@@ -147,13 +147,14 @@ def get_example_query(*, order_by: str = 'id'):
                     .order_by(altname.name, altname.lang)
                     .alias(f'lang_altname_{provider_name}'))
 
-        label = f'altnames_{provider_name}'
+        label = label.format(provider_name=provider_name)
         return select(group_concat(altnames.c.printf).label(label)).label(label)
 
-    altnames = list(map(select_altnames, sorted(ALTNAME_PROVIDER)))
+    altnames = [select_altnames(provider_name, label='altnames_{provider_name}')
+                for provider_name in sorted(ALTNAME_PROVIDER)]
     select_languoid = select_languoid.add_columns(*altnames)
 
-    def select_triggers(field: str) -> sa.sql.Select:
+    def select_triggers(field: str, *, label: str) -> sa.sql.Select:
         trigger = aliased(Trigger, name=f'trigger_{field}')
 
         triggers = (select(trigger.trigger)
@@ -164,28 +165,30 @@ def get_example_query(*, order_by: str = 'id'):
                     .order_by(trigger.ord)
                     .alias(f'lang_trigger_{field}'))
 
-        label = f'triggers_{field}'
+        label = label.format(field=field)
         return select(group_concat(triggers.c.trigger).label(label)).label(label)
 
-    triggers = list(map(select_triggers, ('lgcode', 'inlg')))
+    triggers = [select_triggers(kind, label='triggers_{field}')
+                for kind in ('lgcode', 'inlg')]
     select_languoid = select_languoid.add_columns(*triggers)
 
-    def add_identifiers(site_name: str):
+    def add_identifiers(site_name: str, *, label: str):
         nonlocal select_languoid
 
         identifier = aliased(Identifier, name=f'ident_{site_name}')
         site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
 
-        site_identifier = identifier.identifier.label(f'identifier_{site_name}')
+        label = label.format(site_name=site_name)
+        site_identifier = identifier.identifier.label(label)
         select_languoid = (select_languoid.add_columns(site_identifier)
                            .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
                                       sa.and_(site.name == site_name,
                                               identifier.languoid_id == Languoid.id)))
 
     for site_name in sorted(IDENTIFIER_SITE):
-        add_identifiers(site_name)
+        add_identifiers(site_name, label='identifier_{site_name}')
 
-    def add_classification(kind: str):
+    def add_classification(kind: str, *, bib_suffix='_cr'):
         nonlocal select_languoid
 
         comment = aliased(ClassificationComment, name=f'cc_{kind}')
@@ -197,8 +200,8 @@ def get_example_query(*, order_by: str = 'id'):
                                               comment.languoid_id == Languoid.id)))
 
         ref = aliased(ClassificationRef, name=f'cr_{kind}')
-        bibfile = aliased(Bibfile, name=f'bibfile_cr_{kind}')
-        bibitem = aliased(Bibitem, name=f'bibitem_cr_{kind}')
+        bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
+        bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}_{kind}')
 
         refs = (select(ref.printf(bibfile, bibitem))
                 .select_from(ref)
@@ -233,20 +236,20 @@ def get_example_query(*, order_by: str = 'id'):
 
     add_cols(Endangerment, label='endangerment_{name}')
 
-    def add_endangermentsource():
+    def add_endangermentsource(*, label: str, bib_suffix: str = '_e'):
         nonlocal select_languoid
 
-        bibfile = aliased(Bibfile, name='bibfile_e')
-        bibitem = aliased(Bibitem, name='bibitem_e')
+        bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
+        bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
 
         endangermentsource = (EndangermentSource.printf(bibfile, bibitem)
-                              .label('endangerment_source'))
+                              .label(label))
 
         select_languoid = (select_languoid.add_columns(endangermentsource)
                            .outerjoin(sa.join(Endangerment, EndangermentSource))
                            .outerjoin(sa.join(bibitem, bibfile)))
 
-    add_endangermentsource()
+    add_endangermentsource(label='endangerment_source')
 
     add_cols(EthnologueComment, label='elcomment_{name}',
              add_outerjoin=EthnologueComment)
@@ -254,7 +257,7 @@ def get_example_query(*, order_by: str = 'id'):
     add_cols(IsoRetirement, label='iso_retirement_{name}',
              add_outerjoin=IsoRetirement)
 
-    def select_change_to():
+    def select_change_to(*, label: str):
         iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
                                     .select_from(IsoRetirementChangeTo)
                                     .filter_by(languoid_id=Languoid.id)
@@ -263,10 +266,10 @@ def get_example_query(*, order_by: str = 'id'):
                                     .alias('lang_irct'))
 
         code = group_concat(iso_retirement_change_to.c.code)
-        label = 'iso_retirement_change_to'
         return select(code.label(label)).label(label)
 
-    select_languoid = select_languoid.add_columns(select_change_to())
+    code = select_change_to(label='iso_retirement_change_to')
+    select_languoid = select_languoid.add_columns(code)
 
     return select_languoid
 
@@ -427,14 +430,15 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
                             provider_name: typing.Optional[str] = None,
                             label: str = 'sources',
                             sort_keys: bool = False,
-                            alias: str = 'lang_source'):
+                            alias: str = 'lang_source',
+                            bib_prefix: str = 'source_'):
     source = (aliased(Source, name=f'source_{provider_name}')
               if provider_name is not None else Source)
 
     provider = aliased(SourceProvider, name='source_provider')
 
-    bibitem = aliased(Bibitem, name='source_bibitem')
-    bibfile = aliased(Bibfile, name='source_bibfile')
+    bibitem = aliased(Bibitem, name=f'{bib_prefix}source_bibitem')
+    bibfile = aliased(Bibfile, name=f'{bib_prefix}bibfile')
 
     columns = [source.jsonf(bibfile, bibitem, sort_keys=sort_keys)
                if as_json else source.printf(bibfile, bibitem)]
@@ -561,7 +565,8 @@ def select_languoid_identifier(languoid=Languoid,
 
 def select_languoid_classification(languoid=Languoid,
                                    *, label: str = 'classification',
-                                   sort_keys: bool = False):
+                                   sort_keys: bool = False,
+                                   bib_suffix: str = '_cr'):
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
@@ -569,8 +574,8 @@ def select_languoid_classification(languoid=Languoid,
                               .correlate(languoid)
                               .scalar_subquery())
 
-    bibitem = aliased(Bibitem, name='bibitem_cr')
-    bibfile = aliased(Bibfile, name='bibfile_cr')
+    bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
+    bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
 
     kind = ClassificationRef.kind
 
@@ -611,9 +616,10 @@ def select_languoid_classification(languoid=Languoid,
 
 def select_languoid_endangerment(languoid=Languoid,
                                  *, label: str = 'endangerment',
-                                 sort_keys: bool = False):
-    bibitem = aliased(Bibitem, name='bibitem_e')
-    bibfile = aliased(Bibfile, name='bibfile_e')
+                                 sort_keys: bool = False,
+                                 bib_suffix: str = '_e'):
+    bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
+    bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
 
     return (select(Endangerment.jsonf(EndangermentSource,
                                       bibfile, bibitem,
