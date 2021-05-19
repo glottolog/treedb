@@ -217,47 +217,56 @@ def get_example_query(*, order_by: str = 'id'):
     for kind in ('sub', 'family'):
         add_classification(kind)
 
-    def get_cols(model, label='{name}', ignore='id'):
+    def add_cols(model, *, add_outerjoin=None, label: str = '{name}', ignore: str = 'id'):
+        nonlocal select_languoid
+
         cols = model.__table__.columns
         if ignore:
-            ignore_suffix = '_' + ignore
+            ignore_suffix = f'_{ignore}'
             cols = [c for c in cols
                     if c.name != ignore and not c.name.endswith(ignore_suffix)]
-        return [c.label(label.format(name=c.name)) for c in cols]
+        cols = [c.label(label.format(name=c.name)) for c in cols]
 
-    endangerment = get_cols(Endangerment, label='endangerment_{name}')
-    select_languoid = select_languoid.add_columns(*endangerment)
+        select_languoid = select_languoid.add_columns(*cols)
+        if add_outerjoin is not None:
+            select_languoid = select_languoid.outerjoin(add_outerjoin)
 
-    e_bibfile = aliased(Bibfile, name='bibfile_e')
-    e_bibitem = aliased(Bibitem, name='bibitem_e')
+    add_cols(Endangerment, label='endangerment_{name}')
 
-    endangermentsource = (EndangermentSource.printf(e_bibfile, e_bibitem)
-                          .label('endangerment_source'))
+    def add_endangermentsource():
+        nonlocal select_languoid
 
-    select_languoid = (select_languoid.add_columns(endangermentsource)
-                       .outerjoin(sa.join(Endangerment, EndangermentSource))
-                       .outerjoin(sa.join(e_bibitem, e_bibfile)))
+        bibfile = aliased(Bibfile, name='bibfile_e')
+        bibitem = aliased(Bibitem, name='bibitem_e')
 
+        endangermentsource = (EndangermentSource.printf(bibfile, bibitem)
+                              .label('endangerment_source'))
 
-    ethnologue_comment = get_cols(EthnologueComment, label='elcomment_{name}')
-    select_languoid = (select_languoid.add_columns(*ethnologue_comment)
-                       .outerjoin(EthnologueComment))
+        select_languoid = (select_languoid.add_columns(endangermentsource)
+                           .outerjoin(sa.join(Endangerment, EndangermentSource))
+                           .outerjoin(sa.join(bibitem, bibfile)))
 
-    iso_retirement = get_cols(IsoRetirement, label='iso_retirement_{name}')
-    select_languoid = (select_languoid.add_columns(*iso_retirement)
-                       .outerjoin(IsoRetirement))
+    add_endangermentsource()
 
-    iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
-                                .select_from(IsoRetirementChangeTo)
-                                .filter_by(languoid_id=Languoid.id)
-                                .correlate(Languoid)
-                                .order_by(IsoRetirementChangeTo.ord)
-                                .alias('lang_irct'))
+    add_cols(EthnologueComment, label='elcomment_{name}',
+             add_outerjoin=EthnologueComment)
 
-    code = group_concat(iso_retirement_change_to.c.code)
-    label = 'iso_retirement_change_to'
-    iso_retirement_change_to = select(code.label(label)).label(label)
-    select_languoid = select_languoid.add_columns(iso_retirement_change_to)
+    add_cols(IsoRetirement, label='iso_retirement_{name}',
+             add_outerjoin=IsoRetirement)
+
+    def select_change_to():
+        iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
+                                    .select_from(IsoRetirementChangeTo)
+                                    .filter_by(languoid_id=Languoid.id)
+                                    .correlate(Languoid)
+                                    .order_by(IsoRetirementChangeTo.ord)
+                                    .alias('lang_irct'))
+
+        code = group_concat(iso_retirement_change_to.c.code)
+        label = 'iso_retirement_change_to'
+        return select(code.label(label)).label(label)
+
+    select_languoid = select_languoid.add_columns(select_change_to())
 
     return select_languoid
 
