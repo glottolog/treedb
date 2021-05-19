@@ -170,33 +170,31 @@ def get_example_query(*, order_by: str = 'id'):
     triggers = list(map(select_triggers, ('lgcode', 'inlg')))
     select_languoid = select_languoid.add_columns(*triggers)
 
-    def select_identifiers(site_name: str):
+    def add_identifiers(site_name: str):
         nonlocal select_languoid
 
         identifier = aliased(Identifier, name=f'ident_{site_name}')
         site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
 
-        select_languoid = (select_languoid
+        site_identifier = identifier.identifier.label(f'identifier_{site_name}')
+        select_languoid = (select_languoid.add_columns(site_identifier)
                            .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
                                       sa.and_(site.name == site_name,
                                               identifier.languoid_id == Languoid.id)))
 
-        return identifier.identifier.label(f'identifier_{site_name}')
+    for site_name in sorted(IDENTIFIER_SITE):
+        add_identifiers(site_name)
 
-    identifiers = list(map(select_identifiers, sorted(IDENTIFIER_SITE)))
-    select_languoid = select_languoid.add_columns(*identifiers)
-
-    def select_classification(kind: str):
+    def add_classification(kind: str):
         nonlocal select_languoid
 
         comment = aliased(ClassificationComment, name=f'cc_{kind}')
 
-        select_languoid = (select_languoid
+        kind_comment = comment.comment.label(f'classification_{kind}')
+        select_languoid = (select_languoid.add_columns(kind_comment)
                            .outerjoin(comment,
                                       sa.and_(comment.kind == kind,
                                               comment.languoid_id == Languoid.id)))
-
-        yield comment.comment.label(f'classification_{kind}')
 
         ref = aliased(ClassificationRef, name=f'cr_{kind}')
         bibfile = aliased(Bibfile, name=f'bibfile_cr_{kind}')
@@ -213,11 +211,11 @@ def get_example_query(*, order_by: str = 'id'):
                 .alias(f'lang_cref_{kind}'))
 
         label = f'classification_{kind}refs'
-        yield select(group_concat(refs.c.printf).label(label)).label(label)
+        refs = select(group_concat(refs.c.printf).label(label)).label(label)
+        select_languoid = select_languoid.add_columns(refs)
 
-    classifications = [col for kind in ('sub', 'family')
-                       for col in select_classification(kind)]
-    select_languoid = select_languoid.add_columns(*classifications)
+    for kind in ('sub', 'family'):
+        add_classification(kind)
 
     def get_cols(model, label='{name}', ignore='id'):
         cols = model.__table__.columns
@@ -239,6 +237,7 @@ def get_example_query(*, order_by: str = 'id'):
     select_languoid = (select_languoid.add_columns(endangermentsource)
                        .outerjoin(sa.join(Endangerment, EndangermentSource))
                        .outerjoin(sa.join(e_bibitem, e_bibfile)))
+
 
     ethnologue_comment = get_cols(EthnologueComment, label='elcomment_{name}')
     select_languoid = (select_languoid.add_columns(*ethnologue_comment)
