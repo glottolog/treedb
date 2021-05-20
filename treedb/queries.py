@@ -134,67 +134,74 @@ def get_example_query(*, order_by: str = 'id'):
                                     order_by=order_by,
                                     column_for_path_order=path)
 
-    def select_altnames(provider_name: str, *, label: str) -> sa.sql.Select:
+    def add_altnames(provider_name: str, *, label: str):
+        nonlocal select_languoid
+
         altname = aliased(Altname, name=f'altname_{provider_name}')
         provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
-
-        altnames = (select(altname.printf())
-                    .select_from(altname)
-                    .filter_by(languoid_id=Languoid.id)
-                    .correlate(Languoid)
-                    .join(altname.provider.of_type(provider))
-                    .where(provider.name == provider_name)
-                    .order_by(altname.name, altname.lang)
-                    .alias(f'lang_altname_{provider_name}'))
-
         label = label.format(provider_name=provider_name)
-        return select(group_concat(altnames.c.printf).label(label)).label(label)
 
-    altnames = [select_altnames(provider_name, label='altnames_{provider_name}')
-                for provider_name in sorted(ALTNAME_PROVIDER)]
-    select_languoid = select_languoid.add_columns(*altnames)
+        altname = (select(altname.printf())
+                   .select_from(altname)
+                   .filter_by(languoid_id=Languoid.id)
+                   .correlate(Languoid)
+                   .join(altname.provider.of_type(provider))
+                   .where(provider.name == provider_name)
+                   .order_by(altname.name, altname.lang)
+                   .alias(f'lang_altname_{provider_name}'))
 
-    def select_triggers(field: str, *, label: str) -> sa.sql.Select:
+        names = select(group_concat(altname.c.printf).label(label)).label(label)
+
+        select_languoid = select_languoid.add_columns(names)
+        
+    for provider_name in sorted(ALTNAME_PROVIDER):
+        add_altnames(provider_name, label='altnames_{provider_name}')
+
+    def add_triggers(field: str, *, label: str):
+        nonlocal select_languoid
+
         trigger = aliased(Trigger, name=f'trigger_{field}')
-
-        triggers = (select(trigger.trigger)
-                    .select_from(trigger)
-                    .filter_by(field=field)
-                    .filter_by(languoid_id=Languoid.id)
-                    .correlate(Languoid)
-                    .order_by(trigger.ord)
-                    .alias(f'lang_trigger_{field}'))
-
         label = label.format(field=field)
-        return select(group_concat(triggers.c.trigger).label(label)).label(label)
 
-    triggers = [select_triggers(field, label='triggers_{field}')
-                for field in ('lgcode', 'inlg')]
-    select_languoid = select_languoid.add_columns(*triggers)
+        trigger = (select(trigger.trigger)
+                   .select_from(trigger)
+                   .filter_by(field=field)
+                   .filter_by(languoid_id=Languoid.id)
+                   .correlate(Languoid)
+                   .order_by(trigger.ord)
+                   .alias(f'lang_trigger_{field}'))
 
-    def add_identifiers(site_name: str, *, label: str):
+        triggers = select(group_concat(trigger.c.trigger).label(label)).label(label)
+
+        select_languoid = select_languoid.add_columns(triggers)
+
+    for field in ('lgcode', 'inlg'):
+        add_triggers(field, label='triggers_{field}')
+
+    def add_identifier(site_name: str, *, label: str):
         nonlocal select_languoid
 
         identifier = aliased(Identifier, name=f'ident_{site_name}')
         site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
-
         label = label.format(site_name=site_name)
-        site_identifier = identifier.identifier.label(label)
-        select_languoid = (select_languoid.add_columns(site_identifier)
+
+        select_languoid = (select_languoid
+                           .add_columns(identifier.identifier.label(label))
                            .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
                                       sa.and_(site.name == site_name,
                                               identifier.languoid_id == Languoid.id)))
 
     for site_name in sorted(IDENTIFIER_SITE):
-        add_identifiers(site_name, label='identifier_{site_name}')
+        add_identifier(site_name, label='identifier_{site_name}')
 
     def add_classification(kind: str, *, bib_suffix='_cr'):
         nonlocal select_languoid
 
         comment = aliased(ClassificationComment, name=f'cc_{kind}')
+        label = f'classification_{kind}'
 
-        kind_comment = comment.comment.label(f'classification_{kind}')
-        select_languoid = (select_languoid.add_columns(kind_comment)
+        select_languoid = (select_languoid
+                           .add_columns(comment.comment.label(label))
                            .outerjoin(comment,
                                       sa.and_(comment.kind == kind,
                                               comment.languoid_id == Languoid.id)))
@@ -203,38 +210,40 @@ def get_example_query(*, order_by: str = 'id'):
         bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
         bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}_{kind}')
 
-        refs = (select(ref.printf(bibfile, bibitem))
-                .select_from(ref)
-                .filter_by(kind=kind)
-                .filter_by(languoid_id=Languoid.id)
-                .correlate(Languoid)
-                .join(ref.bibitem.of_type(bibitem))
-                .join(bibitem.bibfile.of_type(bibfile))
-                .order_by(ref.ord)
-                .alias(f'lang_cref_{kind}'))
+        ref = (select(ref.printf(bibfile, bibitem))
+               .select_from(ref)
+               .filter_by(kind=kind)
+               .filter_by(languoid_id=Languoid.id)
+               .correlate(Languoid)
+               .join(ref.bibitem.of_type(bibitem))
+               .join(bibitem.bibfile.of_type(bibfile))
+               .order_by(ref.ord)
+               .alias(f'lang_cref_{kind}'))
 
         label = f'classification_{kind}refs'
-        refs = select(group_concat(refs.c.printf).label(label)).label(label)
+        refs = select(group_concat(ref.c.printf).label(label)).label(label)
+
         select_languoid = select_languoid.add_columns(refs)
 
     for kind in ('sub', 'family'):
         add_classification(kind)
 
-    def add_cols(model, *, add_outerjoin=None, label: str = '{name}', ignore: str = 'id'):
+    def add_model_columns(model, *, add_outerjoin=None,
+                          label: str = '{name}', ignore: str = 'id'):
         nonlocal select_languoid
 
-        cols = model.__table__.columns
+        columns = model.__table__.columns
         if ignore:
             ignore_suffix = f'_{ignore}'
-            cols = [c for c in cols
+            columns = [c for c in columns
                     if c.name != ignore and not c.name.endswith(ignore_suffix)]
-        cols = [c.label(label.format(name=c.name)) for c in cols]
+        columns = [c.label(label.format(name=c.name)) for c in columns]
 
-        select_languoid = select_languoid.add_columns(*cols)
+        select_languoid = select_languoid.add_columns(*columns)
         if add_outerjoin is not None:
             select_languoid = select_languoid.outerjoin(add_outerjoin)
 
-    add_cols(Endangerment, label='endangerment_{name}')
+    add_model_columns(Endangerment, label='endangerment_{name}')
 
     def add_endangermentsource(*, label: str, bib_suffix: str = '_e'):
         nonlocal select_languoid
@@ -251,13 +260,15 @@ def get_example_query(*, order_by: str = 'id'):
 
     add_endangermentsource(label='endangerment_source')
 
-    add_cols(EthnologueComment, label='elcomment_{name}',
-             add_outerjoin=EthnologueComment)
+    add_model_columns(EthnologueComment, label='elcomment_{name}',
+                      add_outerjoin=EthnologueComment)
 
-    add_cols(IsoRetirement, label='iso_retirement_{name}',
-             add_outerjoin=IsoRetirement)
+    add_model_columns(IsoRetirement, label='iso_retirement_{name}',
+                      add_outerjoin=IsoRetirement)
 
-    def select_change_to(*, label: str):
+    def add_change_to(*, label: str):
+        nonlocal select_languoid
+
         iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
                                     .select_from(IsoRetirementChangeTo)
                                     .filter_by(languoid_id=Languoid.id)
@@ -265,11 +276,12 @@ def get_example_query(*, order_by: str = 'id'):
                                     .order_by(IsoRetirementChangeTo.ord)
                                     .alias('lang_irct'))
 
-        code = group_concat(iso_retirement_change_to.c.code)
-        return select(code.label(label)).label(label)
+        change_to = group_concat(iso_retirement_change_to.c.code)
+        change_to = select(change_to.label(label)).label(label)
 
-    code = select_change_to(label='iso_retirement_change_to')
-    select_languoid = select_languoid.add_columns(code)
+        select_languoid = select_languoid.add_columns(change_to)
+
+    add_change_to(label='iso_retirement_change_to')
 
     return select_languoid
 
