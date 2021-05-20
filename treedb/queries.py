@@ -194,11 +194,11 @@ def get_example_query(*, order_by: str = 'id'):
     for site_name in sorted(IDENTIFIER_SITE):
         add_identifier(site_name, label='identifier_{site_name}')
 
-    def add_classification(kind: str, *, bib_suffix='_cr'):
+    def add_classification_comment(kind: str, *, label: str, bib_suffix='_cr'):
         nonlocal select_languoid
 
         comment = aliased(ClassificationComment, name=f'cc_{kind}')
-        label = f'classification_{kind}'
+        label = label.format(kind=kind)
 
         select_languoid = (select_languoid
                            .add_columns(comment.comment.label(label))
@@ -206,9 +206,13 @@ def get_example_query(*, order_by: str = 'id'):
                                       sa.and_(comment.kind == kind,
                                               comment.languoid_id == Languoid.id)))
 
+    def add_classification_refs(kind: str, *, label: str, bib_suffix='_cr'):
+        nonlocal select_languoid
+
         ref = aliased(ClassificationRef, name=f'cr_{kind}')
         bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
         bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}_{kind}')
+        label = label.format(kind=kind)
 
         ref = (select(ref.printf(bibfile, bibitem))
                .select_from(ref)
@@ -220,13 +224,13 @@ def get_example_query(*, order_by: str = 'id'):
                .order_by(ref.ord)
                .alias(f'lang_cref_{kind}'))
 
-        label = f'classification_{kind}refs'
         refs = select(group_concat(ref.c.printf).label(label)).label(label)
 
         select_languoid = select_languoid.add_columns(refs)
 
     for kind in ('sub', 'family'):
-        add_classification(kind)
+        add_classification_comment(kind, label='classification_{kind}')
+        add_classification_refs(kind, label='classification_{kind}refs')
 
     def add_model_columns(model, *, add_outerjoin=None,
                           label: str = '{name}', ignore: str = 'id'):
