@@ -370,19 +370,19 @@ def get_json_query(*, limit: typing.Optional[int] = None,
 
 def select_languoid_macroareas(languoid=Languoid,*, as_json: bool,
                                label: str = 'macroareas',
-                               alias: str = 'lang_ma'):
+                               alias: str = 'lang_ma') -> sa.sql.Select:
     name = languoid_macroarea.c.macroarea_name
 
-    macroareas = (select(name)
-                  .select_from(languoid_macroarea)
-                  .filter_by(languoid_id=languoid.id)
-                  .correlate(languoid)
-                  .order_by(name)
-                  .alias(alias))
+    macroarea = (select(name)
+                 .select_from(languoid_macroarea)
+                 .filter_by(languoid_id=languoid.id)
+                 .correlate(languoid)
+                 .order_by(name)
+                 .alias(alias))
 
     aggregate = group_array if as_json else group_concat
 
-    macroareas = aggregate(macroareas.c.macroarea_name)
+    macroareas = aggregate(macroarea.c.macroarea_name)
 
     return select(macroareas.label(label)).label(label)
 
@@ -390,27 +390,27 @@ def select_languoid_macroareas(languoid=Languoid,*, as_json: bool,
 def select_languoid_countries(languoid=Languoid, *, as_json: bool,
                               label: str = 'countries',
                               sort_keys: bool = False,
-                              alias: str = 'lang_country'):
+                              alias: str = 'lang_country') -> sa.sql.Select:
     field = (Country.jsonf(sort_keys=sort_keys) if as_json else
              languoid_country.c.country_id)
 
-    countries = (select(field)
-                 .select_from(languoid_country)
-                 .filter_by(languoid_id=languoid.id)
-                 .correlate(languoid))
+    country = (select(field)
+               .select_from(languoid_country)
+               .filter_by(languoid_id=languoid.id)
+               .correlate(languoid))
 
     if as_json:
-        countries = (countries.join(Country)
-                     .order_by(Country.printf())
-                     .alias(alias))
+        country = (country.join(Country)
+                   .order_by(Country.printf())
+                   .alias(alias))
 
-        countries = group_array(sa.func.json(countries.c.jsonf))
+        countries = group_array(sa.func.json(country.c.jsonf))
     else:
-        countries = (countries
-                     .order_by(field)
-                     .alias(alias))
+        country = (country
+                   .order_by(field)
+                   .alias(alias))
 
-        countries = group_concat(countries.c.country_id)
+        countries = group_concat(country.c.country_id)
 
     return select(countries.label(label)).label(label)
 
@@ -418,23 +418,23 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
 def select_languoid_links(languoid=Languoid, *, as_json: bool,
                           label: str = 'links',
                           sort_keys: bool = False,
-                          alias: str = 'lang_link'):
-    links = (select(Link.jsonf(sort_keys=sort_keys) if as_json else
-                    Link.printf())
-             .select_from(Link)
-             .filter_by(languoid_id=languoid.id)
-             .correlate(languoid)
-             .order_by(Link.ord)
-             .alias(alias))
+                          alias: str = 'lang_link') -> sa.sql.Select:
+    link = (select(Link.jsonf(sort_keys=sort_keys) if as_json else
+                   Link.printf())
+            .select_from(Link)
+            .filter_by(languoid_id=languoid.id)
+            .correlate(languoid)
+            .order_by(Link.ord)
+            .alias(alias))
 
-    links = group_array(links.c.jsonf) if as_json else group_concat(links.c.printf)
+    links = group_array(link.c.jsonf) if as_json else group_concat(link.c.printf)
 
     return select(links.label(label)).label(label)
 
 
 def select_languoid_timespan(languoid=Languoid,
                              *, label: str = 'timespan',
-                             sort_keys: bool = False):
+                             sort_keys: bool = False) -> sa.sql.Select:
     return (select(Timespan.jsonf(sort_keys=sort_keys))
             .select_from(Timespan)
             .filter_by(languoid_id=languoid.id)
@@ -447,7 +447,7 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
                             label: str = 'sources',
                             sort_keys: bool = False,
                             alias: str = 'lang_source',
-                            bib_prefix: str = 'source_'):
+                            bib_prefix: str = 'source_') -> sa.sql.Select:
     source = (aliased(Source, name=f'source_{provider_name}')
               if provider_name is not None else Source)
 
@@ -466,30 +466,30 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
         columns.insert(0, name.label('provider'))
         order_by.insert(0, name)
 
-    sources = (select(*columns)
-               .select_from(source)
-               .filter_by(languoid_id=languoid.id)
-               .correlate(languoid)
-               .join(Source.provider.of_type(provider))
-               .join(Source.bibitem.of_type(bibitem))
-               .join(bibitem.bibfile.of_type(bibfile))
-               .order_by(*order_by))
+    source = (select(*columns)
+              .select_from(source)
+              .filter_by(languoid_id=languoid.id)
+              .correlate(languoid)
+              .join(Source.provider.of_type(provider))
+              .join(Source.bibitem.of_type(bibitem))
+              .join(bibitem.bibfile.of_type(bibfile))
+              .order_by(*order_by))
 
     if provider_name is not None:
-        sources = sources.where(provider.name == provider_name)
+        source = source.where(provider.name == provider_name)
         alias = f'{alias}_{provider_name}'
 
-    sources = sources.alias(alias)
+    source = source.alias(alias)
 
     sub_label = f'{label}_{provider_name}' if provider_name else label
 
-    field = (group_array(sa.func.json(sources.c.jsonf)).label('value')
-             if as_json else group_concat(sources.c.printf).label(sub_label))
+    field = (group_array(sa.func.json(source.c.jsonf)).label('value')
+             if as_json else group_concat(source.c.printf).label(sub_label))
 
     if provider_name is not None:
         return select(field).label(sub_label)
 
-    key = sources.c.provider
+    key = source.c.provider
 
     sources = (select(key.label('key'), field)
                .group_by(key)
@@ -508,22 +508,22 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
 def select_languoid_altnames(languoid=Languoid,
                              *, label: str = 'altnames',
                              sort_keys: bool = False,
-                             alias: str = 'lang_altname'):
+                             alias: str = 'lang_altname') -> sa.sql.Select:
     provider = aliased(AltnameProvider, name='altname_provider')
 
-    altnames = (select(provider.name.label('provider'),
-                       Altname.jsonf(sort_keys=sort_keys))
-                .select_from(Altname)
-                .filter_by(languoid_id=languoid.id)
-                .correlate(languoid)
-                .join(Altname.provider.of_type(provider))
-                .order_by(provider.name, Altname.printf())
-                .alias(alias))
+    altname = (select(provider.name.label('provider'),
+                      Altname.jsonf(sort_keys=sort_keys))
+               .select_from(Altname)
+               .filter_by(languoid_id=languoid.id)
+               .correlate(languoid)
+               .join(Altname.provider.of_type(provider))
+               .order_by(provider.name, Altname.printf())
+               .alias(alias))
 
-    altnames = (select(altnames.c.provider.label('key'),
-                       group_array(sa.func.json(altnames.c.jsonf))
+    altnames = (select(altname.c.provider.label('key'),
+                       group_array(sa.func.json(altname.c.jsonf))
                        .label('value'))
-                .group_by(altnames.c.provider)
+                .group_by(altname.c.provider)
                 .alias(alias))
 
     altnames = sa.func.nullif(group_object(altnames.c.key,
@@ -534,19 +534,19 @@ def select_languoid_altnames(languoid=Languoid,
 
 
 def select_languoid_triggers(languoid=Languoid,
-                             *, label: str = 'triggers'):
+                             *, label: str = 'triggers') -> sa.sql.Select:
     field = Trigger.field
 
-    triggers = (select(field, Trigger.trigger)
-                .select_from(Trigger)
-                .filter_by(languoid_id=languoid.id)
-                .correlate(languoid)
-                .order_by(field, Trigger.ord)
-                .alias('lang_trigger'))
+    trigger = (select(field, Trigger.trigger)
+               .select_from(Trigger)
+               .filter_by(languoid_id=languoid.id)
+               .correlate(languoid)
+               .order_by(field, Trigger.ord)
+               .alias('lang_trigger'))
 
-    triggers = (select(triggers.c.field.label('key'),
-                       group_array(triggers.c.trigger).label('value'))
-                .group_by(triggers.c.field)
+    triggers = (select(trigger.c.field.label('key'),
+                       group_array(trigger.c.trigger).label('value'))
+                .group_by(trigger.c.field)
                 .alias('lang_triggers'))
 
     triggers = sa.func.nullif(group_object(triggers.c.key,
@@ -557,7 +557,7 @@ def select_languoid_triggers(languoid=Languoid,
 
 
 def select_languoid_identifier(languoid=Languoid,
-                               *, label: str = 'identifiers'):
+                               *, label: str = 'identifiers') -> sa.sql.Select:
     identifier = (select(IdentifierSite.name.label('site'),
                          Identifier.identifier.label('identifier'))
                   .select_from(Identifier)
@@ -582,7 +582,7 @@ def select_languoid_identifier(languoid=Languoid,
 def select_languoid_classification(languoid=Languoid,
                                    *, label: str = 'classification',
                                    sort_keys: bool = False,
-                                   bib_suffix: str = '_cr'):
+                                   bib_suffix: str = '_cr') -> sa.sql.Select:
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
@@ -595,21 +595,21 @@ def select_languoid_classification(languoid=Languoid,
 
     kind = ClassificationRef.kind
 
-    classification_refs = (select((kind + 'refs').label('key'),
-                                  ClassificationRef.jsonf(bibfile, bibitem,
-                                                          sort_keys=sort_keys))
-                           .select_from(ClassificationRef)
-                           .filter_by(languoid_id=languoid.id)
-                           .correlate(languoid)
-                           .join(ClassificationRef.bibitem.of_type(bibitem))
-                           .join(bibitem.bibfile.of_type(bibfile))
-                           .order_by(kind, ClassificationRef.ord)
-                           .alias('lang_cref'))
+    classification_ref = (select((kind + 'refs').label('key'),
+                                 ClassificationRef.jsonf(bibfile, bibitem,
+                                                         sort_keys=sort_keys))
+                          .select_from(ClassificationRef)
+                          .filter_by(languoid_id=languoid.id)
+                          .correlate(languoid)
+                          .join(ClassificationRef.bibitem.of_type(bibitem))
+                          .join(bibitem.bibfile.of_type(bibfile))
+                          .order_by(kind, ClassificationRef.ord)
+                          .alias('lang_cref'))
 
-    classification_refs = (select(classification_refs.c.key,
-                                  group_array(sa.func.json(classification_refs.c.jsonf))
+    classification_refs = (select(classification_ref.c.key,
+                                  group_array(sa.func.json(classification_ref.c.jsonf))
                                   .label('value'))
-                           .group_by(classification_refs.c.key))
+                           .group_by(classification_ref.c.key))
 
     classification = (classification_comment
                       .union_all(classification_refs)
@@ -633,7 +633,7 @@ def select_languoid_classification(languoid=Languoid,
 def select_languoid_endangerment(languoid=Languoid,
                                  *, label: str = 'endangerment',
                                  sort_keys: bool = False,
-                                 bib_suffix: str = '_e'):
+                                 bib_suffix: str = '_e') -> sa.sql.Select:
     bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
     bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
 
@@ -651,7 +651,7 @@ def select_languoid_endangerment(languoid=Languoid,
 
 def select_languoid_hh_ethnologue_comment(languoid=Languoid,
                                           *, label: str = 'hh_ethnologue_comment',
-                                          sort_keys: bool = False):
+                                          sort_keys: bool = False) -> sa.sql.Select:
     return (select(EthnologueComment
                    .jsonf(sort_keys=sort_keys, label=label))
             .select_from(EthnologueComment)
@@ -664,18 +664,18 @@ def select_languoid_iso_retirement(languoid=Languoid,
                                    *, label: str = 'iso_retirement',
                                    sort_keys: bool = False,
                                    alias: str = 'lang_irct',
-                                   alias_label: str = 'change_to'):
-    change_to = (select(IsoRetirementChangeTo.code)
-                 .select_from(IsoRetirementChangeTo)
-                 .filter_by(languoid_id=IsoRetirement.languoid_id)
-                 .correlate(IsoRetirement)
-                 .order_by(IsoRetirementChangeTo.ord)
-                 .alias(alias))
+                                   alias_label: str = 'change_to') -> sa.sql.Select:
+    code = (select(IsoRetirementChangeTo.code)
+            .select_from(IsoRetirementChangeTo)
+            .filter_by(languoid_id=IsoRetirement.languoid_id)
+            .correlate(IsoRetirement)
+            .order_by(IsoRetirementChangeTo.ord)
+            .alias(alias))
 
-    change_to = (select(group_array(change_to.c.code).label(alias_label))
-                 .label(alias_label))
+    codes = (select(group_array(code.c.code).label(alias_label))
+             .label(alias_label))
 
-    return (select(IsoRetirement.jsonf(change_to=change_to,
+    return (select(IsoRetirement.jsonf(change_to=codes,
                                        sort_keys=sort_keys,
                                        optional=True,
                                        label=label))
@@ -687,7 +687,7 @@ def select_languoid_iso_retirement(languoid=Languoid,
 
 def iterdescendants(parent_level: typing.Optional[str] = None,
                     child_level: typing.Optional[str] = None,
-                    *, bind=_globals.ENGINE):
+                    *, bind=_globals.ENGINE) -> typing.Iterator[typing.Tuple[str, typing.List[str]]]:
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165
