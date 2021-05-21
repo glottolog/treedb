@@ -91,24 +91,8 @@ def get_stats_query():
     return sa.union_all(*iterselects())
 
 
-def _add_order_by(select_languoid, *, order_by: str, column_for_path_order):
-    if order_by in (True, None, 'id'):
-        select_languoid = select_languoid.order_by(Languoid.id)
-    elif order_by == 'path':
-        select_languoid = select_languoid.order_by(column_for_path_order)
-    elif order_by is False:  # pragma: no cover
-        pass
-    else:  # pragma: no cover
-        raise ValueError(f'order_by={order_by!r} not implemented')
-    return select_languoid
-
-
-def group_concat(x, *, separator: str = ', '):
-    return sa.func.group_concat(x, separator)
-
-
 @_views.register_view('example')
-def get_example_query(*, order_by: str = 'id'):
+def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
     path, family, language = Languoid.path_family_language()
 
@@ -130,164 +114,186 @@ def get_example_query(*, order_by: str = 'id'):
                                                       provider_name='glottolog'))
                        .select_from(Languoid))
 
-    select_languoid = _add_order_by(select_languoid,
-                                    order_by=order_by,
-                                    column_for_path_order=path)
-
-    def add_altnames(provider_name: str, *, label: str):
-        nonlocal select_languoid
-
-        altname = aliased(Altname, name=f'altname_{provider_name}')
-        provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
-        label = label.format(provider_name=provider_name)
-
-        altname = (select(altname.printf())
-                   .select_from(altname)
-                   .filter_by(languoid_id=Languoid.id)
-                   .correlate(Languoid)
-                   .join(altname.provider.of_type(provider))
-                   .where(provider.name == provider_name)
-                   .order_by(altname.name, altname.lang)
-                   .alias(f'lang_altname_{provider_name}'))
-
-        names = select(group_concat(altname.c.printf).label(label)).label(label)
-
-        select_languoid = select_languoid.add_columns(names)
-        
     for provider_name in sorted(ALTNAME_PROVIDER):
-        add_altnames(provider_name, label='altnames_{provider_name}')
-
-    def add_triggers(field: str, *, label: str):
-        nonlocal select_languoid
-
-        trigger = aliased(Trigger, name=f'trigger_{field}')
-        label = label.format(field=field)
-
-        trigger = (select(trigger.trigger)
-                   .select_from(trigger)
-                   .filter_by(field=field)
-                   .filter_by(languoid_id=Languoid.id)
-                   .correlate(Languoid)
-                   .order_by(trigger.ord)
-                   .alias(f'lang_trigger_{field}'))
-
-        triggers = select(group_concat(trigger.c.trigger).label(label)).label(label)
-
-        select_languoid = select_languoid.add_columns(triggers)
+        select_languoid = add_altnames(select_languoid, provider_name,
+                                       label='altnames_{provider_name}')
 
     for field in ('lgcode', 'inlg'):
-        add_triggers(field, label='triggers_{field}')
-
-    def add_identifier(site_name: str, *, label: str):
-        nonlocal select_languoid
-
-        identifier = aliased(Identifier, name=f'ident_{site_name}')
-        site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
-        label = label.format(site_name=site_name)
-
-        select_languoid = (select_languoid
-                           .add_columns(identifier.identifier.label(label))
-                           .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
-                                      sa.and_(site.name == site_name,
-                                              identifier.languoid_id == Languoid.id)))
+        select_languoid = add_triggers(select_languoid, field,
+                                       label='triggers_{field}')
 
     for site_name in sorted(IDENTIFIER_SITE):
-        add_identifier(site_name, label='identifier_{site_name}')
-
-    def add_classification_comment(kind: str, *, label: str, bib_suffix='_cr'):
-        nonlocal select_languoid
-
-        comment = aliased(ClassificationComment, name=f'cc_{kind}')
-        label = label.format(kind=kind)
-
-        select_languoid = (select_languoid
-                           .add_columns(comment.comment.label(label))
-                           .outerjoin(comment,
-                                      sa.and_(comment.kind == kind,
-                                              comment.languoid_id == Languoid.id)))
-
-    def add_classification_refs(kind: str, *, label: str, bib_suffix='_cr'):
-        nonlocal select_languoid
-
-        ref = aliased(ClassificationRef, name=f'cr_{kind}')
-        bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
-        bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}_{kind}')
-        label = label.format(kind=kind)
-
-        ref = (select(ref.printf(bibfile, bibitem))
-               .select_from(ref)
-               .filter_by(kind=kind)
-               .filter_by(languoid_id=Languoid.id)
-               .correlate(Languoid)
-               .join(ref.bibitem.of_type(bibitem))
-               .join(bibitem.bibfile.of_type(bibfile))
-               .order_by(ref.ord)
-               .alias(f'lang_cref_{kind}'))
-
-        refs = select(group_concat(ref.c.printf).label(label)).label(label)
-
-        select_languoid = select_languoid.add_columns(refs)
+        select_languoid = add_identifier(select_languoid, site_name,
+                                         label='identifier_{site_name}')
 
     for kind in ('sub', 'family'):
-        add_classification_comment(kind, label='classification_{kind}')
-        add_classification_refs(kind, label='classification_{kind}refs')
+        select_languoid = add_classification_comment(select_languoid, kind,
+                                                     label='classification_{kind}')
+        select_languoid = add_classification_refs(select_languoid, kind,
+                                                  label='classification_{kind}refs')
 
-    def add_model_columns(model, *, add_outerjoin=None,
-                          label: str = '{name}', ignore: str = 'id'):
-        nonlocal select_languoid
+    select_languoid = add_model_columns(select_languoid, Endangerment,
+                                        label='endangerment_{name}')
 
-        columns = model.__table__.columns
-        if ignore:
-            ignore_suffix = f'_{ignore}'
-            columns = [c for c in columns
-                    if c.name != ignore and not c.name.endswith(ignore_suffix)]
-        columns = [c.label(label.format(name=c.name)) for c in columns]
+    select_languoid = add_endangermentsource(select_languoid,
+                                             label='endangerment_source')
 
-        select_languoid = select_languoid.add_columns(*columns)
-        if add_outerjoin is not None:
-            select_languoid = select_languoid.outerjoin(add_outerjoin)
+    select_languoid = add_model_columns(select_languoid, EthnologueComment,
+                                        label='elcomment_{name}',
+                                        add_outerjoin=EthnologueComment)
 
-    add_model_columns(Endangerment, label='endangerment_{name}')
+    select_languoid = add_model_columns(select_languoid, IsoRetirement,
+                                        label='iso_retirement_{name}',
+                                        add_outerjoin=IsoRetirement)
 
-    def add_endangermentsource(*, label: str, bib_suffix: str = '_e'):
-        nonlocal select_languoid
+    select_languoid = add_change_to(select_languoid,
+                                    label='iso_retirement_change_to')
 
-        bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
-        bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
-
-        endangermentsource = (EndangermentSource.printf(bibfile, bibitem)
-                              .label(label))
-
-        select_languoid = (select_languoid.add_columns(endangermentsource)
-                           .outerjoin(sa.join(Endangerment, EndangermentSource))
-                           .outerjoin(sa.join(bibitem, bibfile)))
-
-    add_endangermentsource(label='endangerment_source')
-
-    add_model_columns(EthnologueComment, label='elcomment_{name}',
-                      add_outerjoin=EthnologueComment)
-
-    add_model_columns(IsoRetirement, label='iso_retirement_{name}',
-                      add_outerjoin=IsoRetirement)
-
-    def add_change_to(*, label: str):
-        nonlocal select_languoid
-
-        iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
-                                    .select_from(IsoRetirementChangeTo)
-                                    .filter_by(languoid_id=Languoid.id)
-                                    .correlate(Languoid)
-                                    .order_by(IsoRetirementChangeTo.ord)
-                                    .alias('lang_irct'))
-
-        change_to = group_concat(iso_retirement_change_to.c.code)
-        change_to = select(change_to.label(label)).label(label)
-
-        select_languoid = select_languoid.add_columns(change_to)
-
-    add_change_to(label='iso_retirement_change_to')
+    select_languoid = add_order_by(select_languoid,
+                                   order_by=order_by,
+                                   column_for_path_order=path)
 
     return select_languoid
+
+
+def add_order_by(select_languoid: sa.sql.Select,
+                 *, order_by: str, column_for_path_order) -> sa.sql.Select:
+    if order_by in (True, None, 'id'):
+        return select_languoid.order_by(Languoid.id)
+    elif order_by == 'path':
+        return select_languoid.order_by(column_for_path_order)
+    elif order_by is False:  # pragma: no cover
+        return select_languoid
+    raise ValueError(f'order_by={order_by!r} not implemented')  # pragma: no cover
+
+
+def add_model_columns(select_languoid: sa.sql.Select, model,
+                      *, add_outerjoin=None, label: str = '{name}',
+                      ignore: str = 'id') -> sa.sql.Select:
+    columns = model.__table__.columns
+    if ignore:
+        ignore_suffix = f'_{ignore}'
+        columns = [c for c in columns
+                   if c.name != ignore and not c.name.endswith(ignore_suffix)]
+
+    columns = [c.label(label.format(name=c.name)) for c in columns]
+    select_languoid = select_languoid.add_columns(*columns)
+    if add_outerjoin is not None:
+        select_languoid = select_languoid.outerjoin(add_outerjoin)
+    return select_languoid
+
+
+def group_concat(x, *, separator: str = ', '):
+    return sa.func.group_concat(x, separator)
+
+
+def add_altnames(select_languoid: sa.sql.Select, provider_name: str,
+                 *, label: str) -> sa.sql.Select:
+    altname = aliased(Altname, name=f'altname_{provider_name}')
+    provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
+    label = label.format(provider_name=provider_name)
+
+    altname = (select(altname.printf())
+               .select_from(altname)
+               .filter_by(languoid_id=Languoid.id)
+               .correlate(Languoid)
+               .join(altname.provider.of_type(provider))
+               .where(provider.name == provider_name)
+               .order_by(altname.name, altname.lang)
+               .alias(f'lang_altname_{provider_name}'))
+
+    names = select(group_concat(altname.c.printf).label(label)).label(label)
+    return select_languoid.add_columns(names)
+
+
+def add_triggers(select_languoid: sa.sql.Select, field: str,
+                 *, label: str) -> sa.sql.Select:
+    trigger = aliased(Trigger, name=f'trigger_{field}')
+    label = label.format(field=field)
+
+    trigger = (select(trigger.trigger)
+               .select_from(trigger)
+               .filter_by(field=field)
+               .filter_by(languoid_id=Languoid.id)
+               .correlate(Languoid)
+               .order_by(trigger.ord)
+               .alias(f'lang_trigger_{field}'))
+
+    triggers = select(group_concat(trigger.c.trigger).label(label)).label(label)
+    return select_languoid.add_columns(triggers)
+
+
+def add_identifier(select_languoid: sa.sql.Select, site_name: str,
+                   *, label: str) -> sa.sql.Select:
+    identifier = aliased(Identifier, name=f'ident_{site_name}')
+    site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
+    label = label.format(site_name=site_name)
+
+    return (select_languoid.add_columns(identifier.identifier.label(label))
+            .outerjoin(sa.join(identifier, site, identifier.site_id == site.id),
+                       sa.and_(site.name == site_name,
+                               identifier.languoid_id == Languoid.id)))
+
+
+def add_classification_comment(select_languoid: sa.sql.Select, kind: str,
+                               *, label: str,
+                               bib_suffix: str = '_cr') -> sa.sql.Select:
+    comment = aliased(ClassificationComment, name=f'cc_{kind}')
+    label = label.format(kind=kind)
+
+    return (select_languoid.add_columns(comment.comment.label(label))
+            .outerjoin(comment, sa.and_(comment.kind == kind,
+                                        comment.languoid_id == Languoid.id)))
+
+
+def add_classification_refs(select_languoid: sa.sql.Select, kind: str,
+                            *, label: str,
+                            bib_suffix: str = '_cr') -> sa.sql.Select:
+    ref = aliased(ClassificationRef, name=f'cr_{kind}')
+    bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
+    bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}_{kind}')
+    label = label.format(kind=kind)
+
+    ref = (select(ref.printf(bibfile, bibitem))
+           .select_from(ref)
+           .filter_by(kind=kind)
+           .filter_by(languoid_id=Languoid.id)
+           .correlate(Languoid)
+           .join(ref.bibitem.of_type(bibitem))
+           .join(bibitem.bibfile.of_type(bibfile))
+           .order_by(ref.ord)
+           .alias(f'lang_cref_{kind}'))
+
+    refs = select(group_concat(ref.c.printf).label(label)).label(label)
+    return select_languoid.add_columns(refs)
+
+
+def add_endangermentsource(select_languoid: sa.sql.Select,
+                           *, label: str,
+                           bib_suffix: str = '_e') -> sa.sql.Select:
+    bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
+    bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
+
+    endangermentsource = (EndangermentSource.printf(bibfile, bibitem)
+                          .label(label))
+
+    return (select_languoid.add_columns(endangermentsource)
+            .outerjoin(sa.join(Endangerment, EndangermentSource))
+            .outerjoin(sa.join(bibitem, bibfile)))
+
+
+def add_change_to(select_languoid: sa.sql.Select,
+                  *, label: str) -> sa.sql.Select:
+    iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
+                                .select_from(IsoRetirementChangeTo)
+                                .filter_by(languoid_id=Languoid.id)
+                                .correlate(Languoid)
+                                .order_by(IsoRetirementChangeTo.ord)
+                                .alias('lang_irct'))
+
+    change_to = group_concat(iso_retirement_change_to.c.code)
+    change_to = select(change_to.label(label)).label(label)
+    return select_languoid.add_columns(change_to)
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html
@@ -305,7 +311,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                    load_json: bool = True,
                    sort_keys: bool = False,
                    path_label: str = _globals.PATH_LABEL,
-                   languoid_label: str = _globals.LANGUOID_LABEL):
+                   languoid_label: str = _globals.LANGUOID_LABEL) -> sa.sql.Select:
     languoid = {'id': Languoid.id,
                 'parent_id': Languoid.parent_id,
                 'level': Languoid.level,
@@ -357,9 +363,9 @@ def get_json_query(*, limit: typing.Optional[int] = None,
         column_for_path_order = file_path
 
     select_json = select(*columns).select_from(Languoid)
-    select_json = _add_order_by(select_json,
-                                order_by=order_by,
-                                column_for_path_order=column_for_path_order)
+    select_json = add_order_by(select_json,
+                               order_by=order_by,
+                               column_for_path_order=column_for_path_order)
 
     if offset:
         select_json = select_json.offset(offset)
@@ -368,7 +374,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
     return select_json
 
 
-def select_languoid_macroareas(languoid=Languoid,*, as_json: bool,
+def select_languoid_macroareas(languoid=Languoid, *, as_json: bool,
                                label: str = 'macroareas',
                                alias: str = 'lang_ma') -> sa.sql.Select:
     name = languoid_macroarea.c.macroarea_name
