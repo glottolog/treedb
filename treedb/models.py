@@ -514,7 +514,7 @@ class Country:
                              back_populates='countries')
 
     @classmethod
-    def printf(cls, *, minimal: bool = True, label: str = 'printf', ):
+    def printf(cls, *, minimal: bool = True, label: str = 'printf'):
         return (sa.func.printf('%s (%s)', cls.name, cls.id)
                 if not minimal else cls.id).label(label)
 
@@ -623,6 +623,12 @@ class Timespan:
     languoid = relationship('Languoid',
                             innerjoin=True,
                             back_populates='timespan')
+
+    @classmethod
+    def printf(cls, *,label: str = 'printf'):
+        return sa.func.printf('%s-%s-%s/%s-%s-%s',
+                              cls.start_year, cls.start_month, cls.start_day,
+                              cls.end_year, cls.end_month, cls.end_day)
 
     @classmethod
     def jsonf(cls, *, sort_keys: bool, label: str = 'jsonf'):
@@ -1106,7 +1112,7 @@ class EthnologueComment:
 
     @classmethod
     def jsonf(cls, *, sort_keys: bool, optional: bool = False,
-              label: str = 'jsonf', ):
+              label: str = 'jsonf'):
         mapping = json_object(isohid=cls.isohid,
                               comment_type=cls.comment_type,
                               ethnologue_versions=cls.ethnologue_versions,

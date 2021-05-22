@@ -538,13 +538,13 @@ def format_interval(value, year_tmpl='{: 05d}'):
     if value is None:
         return None
 
+    year_values = [value.pop(key) for key in ('start_year', 'end_year')]
     # https://en.wikipedia.org/wiki/ISO_8601#Years
-    assert -9999 <= value['start_year'] <= 9999
-    assert -9999 <= value['end_year'] <= 9999
+    for year in year_values:
+        assert -9999 <= year <= 9999
 
-    context = dict(value,
-                   start_year=year_tmpl.format(value.pop('start_year')).strip(),
-                   end_year=year_tmpl.format(value.pop('end_year')).strip())
+    start_year, end_year = (year_tmpl.format(y).strip() for y in year_values)
+    context = dict(value, start_year=start_year, end_year=end_year)
 
     return ('{start_year}-{start_month:02d}-{start_day:02d}'
             '/'

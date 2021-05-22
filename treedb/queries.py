@@ -323,7 +323,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'macroareas': select_languoid_macroareas(as_json=True),
                 'countries': select_languoid_countries(as_json=True, sort_keys=sort_keys),
                 'links': select_languoid_links(as_json=True, sort_keys=sort_keys),
-                'timespan': select_languoid_timespan(sort_keys=sort_keys),
+                'timespan': select_languoid_timespan(as_json=True, sort_keys=sort_keys),
                 'sources': select_languoid_sources(as_json=True, sort_keys=sort_keys),
                 'altnames': select_languoid_altnames(sort_keys=sort_keys),
                 'triggers': select_languoid_triggers(),
@@ -438,10 +438,11 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
     return select(links.label(label)).label(label)
 
 
-def select_languoid_timespan(languoid=Languoid,
-                             *, label: str = 'timespan',
+def select_languoid_timespan(languoid=Languoid, *, as_json: bool,
+                             label: str = 'timespan',
                              sort_keys: bool = False) -> sa.sql.Select:
-    return (select(Timespan.jsonf(sort_keys=sort_keys))
+    return (select(Timespan.jsonf(sort_keys=sort_keys) if as_json else
+                   Timespan.printf())
             .select_from(Timespan)
             .filter_by(languoid_id=languoid.id)
             .correlate(languoid)
