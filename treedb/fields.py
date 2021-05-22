@@ -46,7 +46,6 @@ FIELDS = {(CORE, 'name'): False,
           (CORE, 'speakers'): False,
 
           (CORE, 'links'): True,
-
           (CORE, 'timespan'): False,
 
           (SOURCES, ALL_OPTIONS): True,
