@@ -115,12 +115,16 @@ def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
                        .select_from(Languoid))
 
     for provider_name in sorted(ALTNAME_PROVIDER):
-        select_languoid = add_altnames(select_languoid, provider_name,
-                                       label='altnames_{provider_name}')
+        altnames = select_languoid_altnames(provider_name=provider_name,
+                                            label='altnames_{provider_name}',
+                                            as_json=False)
+        select_languoid = select_languoid.add_columns(altnames)
 
-    for field in ('lgcode', 'inlg'):
-        select_languoid = add_triggers(select_languoid, field,
-                                       label='triggers_{field}')
+    for field_name in ('lgcode', 'inlg'):
+        triggers = select_languoid_triggers(field_name=field_name,
+                                            label='triggers_{field_name}',
+                                            as_json=False)
+        select_languoid = select_languoid.add_columns(triggers)
 
     for site_name in sorted(IDENTIFIER_SITE):
         select_languoid = add_identifier(select_languoid, site_name,
@@ -185,42 +189,6 @@ def add_model_columns(select_languoid: sa.sql.Select, model,
 
 def group_concat(x, *, separator: str = ', '):
     return sa.func.group_concat(x, separator)
-
-
-def add_altnames(select_languoid: sa.sql.Select, provider_name: str,
-                 *, label: str) -> sa.sql.Select:
-    altname = aliased(Altname, name=f'altname_{provider_name}')
-    provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
-    label = label.format(provider_name=provider_name)
-
-    altname = (select(altname.printf())
-               .select_from(altname)
-               .filter_by(languoid_id=Languoid.id)
-               .correlate(Languoid)
-               .join(altname.provider.of_type(provider))
-               .where(provider.name == provider_name)
-               .order_by(altname.name, altname.lang)
-               .alias(f'lang_altname_{provider_name}'))
-
-    names = select(group_concat(altname.c.printf).label(label)).label(label)
-    return select_languoid.add_columns(names)
-
-
-def add_triggers(select_languoid: sa.sql.Select, field: str,
-                 *, label: str) -> sa.sql.Select:
-    trigger = aliased(Trigger, name=f'trigger_{field}')
-    label = label.format(field=field)
-
-    trigger = (select(trigger.trigger)
-               .select_from(trigger)
-               .filter_by(field=field)
-               .filter_by(languoid_id=Languoid.id)
-               .correlate(Languoid)
-               .order_by(trigger.ord)
-               .alias(f'lang_trigger_{field}'))
-
-    triggers = select(group_concat(trigger.c.trigger).label(label)).label(label)
-    return select_languoid.add_columns(triggers)
 
 
 def add_identifier(select_languoid: sa.sql.Select, site_name: str,
@@ -325,8 +293,8 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'links': select_languoid_links(as_json=True, sort_keys=sort_keys),
                 'timespan': select_languoid_timespan(as_json=True, sort_keys=sort_keys),
                 'sources': select_languoid_sources(as_json=True, sort_keys=sort_keys),
-                'altnames': select_languoid_altnames(sort_keys=sort_keys),
-                'triggers': select_languoid_triggers(),
+                'altnames': select_languoid_altnames(as_json=True, sort_keys=sort_keys),
+                'triggers': select_languoid_triggers(as_json=True),
                 'identifier': select_languoid_identifier(),
                 'classification': select_languoid_classification(sort_keys=sort_keys),
                 'endangerment': select_languoid_endangerment(sort_keys=sort_keys),
@@ -397,10 +365,10 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
                               label: str = 'countries',
                               sort_keys: bool = False,
                               alias: str = 'lang_country') -> sa.sql.Select:
-    field = (Country.jsonf(sort_keys=sort_keys) if as_json else
+    value = (Country.jsonf(sort_keys=sort_keys) if as_json else
              languoid_country.c.country_id)
 
-    country = (select(field)
+    country = (select(value)
                .select_from(languoid_country)
                .filter_by(languoid_id=languoid.id)
                .correlate(languoid))
@@ -413,7 +381,7 @@ def select_languoid_countries(languoid=Languoid, *, as_json: bool,
         countries = group_array(sa.func.json(country.c.jsonf))
     else:
         country = (country
-                   .order_by(field)
+                   .order_by(value)
                    .alias(alias))
 
         countries = group_concat(country.c.country_id)
@@ -490,15 +458,14 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
 
     sub_label = f'{label}_{provider_name}' if provider_name else label
 
-    field = (group_array(sa.func.json(source.c.jsonf)).label('value')
+    value = (group_array(sa.func.json(source.c.jsonf)).label('value')
              if as_json else group_concat(source.c.printf).label(sub_label))
 
     if provider_name is not None:
-        return select(field).label(sub_label)
+        return select(value).label(sub_label)
 
     key = source.c.provider
-
-    sources = (select(key.label('key'), field)
+    sources = (select(key.label('key'), value)
                .group_by(key)
                .alias(alias))
 
@@ -512,53 +479,100 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
     return select(sources.label(label)).label(label)
 
 
-def select_languoid_altnames(languoid=Languoid,
-                             *, label: str = 'altnames',
+def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
+                             provider_name: typing.Optional[str] = None,
+                             label: str = 'altnames',
                              sort_keys: bool = False,
                              alias: str = 'lang_altname') -> sa.sql.Select:
-    provider = aliased(AltnameProvider, name='altname_provider')
+    if provider_name is not None:
+        altname = aliased(Altname, name=f'altname_{provider_name}')
+        provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
+        columns  = []
+        order_by = [altname.name, altname.lang]
+        label = label.format(provider_name=provider_name)
+    else:
+        altname = Altname
+        provider = aliased(AltnameProvider, name='altname_provider')
+        columns = [provider.name.label('provider')]
+        order_by = [provider.name, altname.printf()]
+    
+    columns.append(altname.jsonf(sort_keys=sort_keys) if as_json
+                   else altname.printf())
 
-    altname = (select(provider.name.label('provider'),
-                      Altname.jsonf(sort_keys=sort_keys))
-               .select_from(Altname)
+    altname = (select(*columns)
+               .select_from(altname)
                .filter_by(languoid_id=languoid.id)
                .correlate(languoid)
-               .join(Altname.provider.of_type(provider))
-               .order_by(provider.name, Altname.printf())
-               .alias(alias))
+               .join(altname.provider.of_type(provider))
+               .order_by(*order_by))
 
-    altnames = (select(altname.c.provider.label('key'),
-                       group_array(sa.func.json(altname.c.jsonf))
-                       .label('value'))
-                .group_by(altname.c.provider)
+    if provider_name is not None:
+        altname = altname.where(provider.name == provider_name)
+
+    altname = altname.alias(alias)
+
+    value = (group_array(sa.func.json(altname.c.jsonf)).label('value')
+             if as_json else group_concat(altname.c.printf).label(label))
+
+    if provider_name is not None:
+        return select(value).label(label)
+
+    key = altname.c.provider
+    altnames = (select(key.label('key'), value)
+                .group_by(key)
                 .alias(alias))
 
-    altnames = sa.func.nullif(group_object(altnames.c.key,
+    if as_json:
+        altnames = sa.func.nullif(group_object(altnames.c.key,
                                            sa.func.json(altnames.c.value)),
-                              '{}')
+                                  '{}')
+    else:  # pragma: no cover
+        raise NotImplementedError
 
     return select(altnames.label(label)).label(label)
 
 
-def select_languoid_triggers(languoid=Languoid,
-                             *, label: str = 'triggers') -> sa.sql.Select:
-    field = Trigger.field
-
-    trigger = (select(field, Trigger.trigger)
-               .select_from(Trigger)
+def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
+                             field_name:  typing.Optional[str] = None,
+                             label: str = 'triggers') -> sa.sql.Select:
+    if field_name is not None:
+        trigger = aliased(Trigger, name=f'trigger_{field_name}')
+        columns = [trigger.trigger]
+        order_by = [trigger.ord]
+        label = label.format(field_name=field_name)
+    else:
+        trigger = Trigger
+        columns = [trigger.field, trigger.trigger]
+        order_by = [trigger.field, trigger.ord]
+        
+    trigger = (select(*columns)
+               .select_from(trigger)
                .filter_by(languoid_id=languoid.id)
                .correlate(languoid)
-               .order_by(field, Trigger.ord)
-               .alias('lang_trigger'))
+               .order_by(*order_by))
 
-    triggers = (select(trigger.c.field.label('key'),
-                       group_array(trigger.c.trigger).label('value'))
-                .group_by(trigger.c.field)
+    if field_name is not None:
+        trigger = trigger.filter_by(field=field_name)
+
+    trigger = trigger.alias('lang_trigger')
+
+    value = (group_array(trigger.c.trigger).label('value')
+             if as_json else group_concat(trigger.c.trigger).label(label))
+
+    if field_name is not None:
+        return select(value).label(label)
+
+    key = trigger.c.field
+    triggers = (select(key.label('key'), value)
+                .group_by(key)
                 .alias('lang_triggers'))
 
-    triggers = sa.func.nullif(group_object(triggers.c.key,
-                                           triggers.c.value),
-                              '{}')
+    if as_json:
+        triggers = sa.func.nullif(group_object(triggers.c.key,
+                                               triggers.c.value),
+                                  '{}')
+    else:  # pragma no cover
+        raise NotImplementedError
 
     return select(triggers.label(label)).label(label)
 
