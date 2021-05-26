@@ -150,8 +150,9 @@ def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
                                         label='iso_retirement_{name}',
                                         add_outerjoin=IsoRetirement)
 
-    select_languoid = add_change_to(select_languoid,
-                                    label='iso_retirement_change_to')
+    change_to = select_iso_retirement_change_to(as_json=False,
+                                                label='iso_retirement_change_to')
+    select_languoid = select_languoid.add_columns(change_to)
 
     select_languoid = add_order_by(select_languoid,
                                    order_by=order_by,
@@ -248,20 +249,6 @@ def add_endangermentsource(select_languoid: sa.sql.Select,
     return (select_languoid.add_columns(endangermentsource)
             .outerjoin(sa.join(Endangerment, EndangermentSource))
             .outerjoin(sa.join(bibitem, bibfile)))
-
-
-def add_change_to(select_languoid: sa.sql.Select,
-                  *, label: str) -> sa.sql.Select:
-    iso_retirement_change_to = (select(IsoRetirementChangeTo.code)
-                                .select_from(IsoRetirementChangeTo)
-                                .filter_by(languoid_id=Languoid.id)
-                                .correlate(Languoid)
-                                .order_by(IsoRetirementChangeTo.ord)
-                                .alias('lang_irct'))
-
-    change_to = group_concat(iso_retirement_change_to.c.code)
-    change_to = select(change_to.label(label)).label(label)
-    return select_languoid.add_columns(change_to)
 
 
 # Windows, Python < 3.9: https://www.sqlite.org/download.html
@@ -686,15 +673,8 @@ def select_languoid_iso_retirement(languoid=Languoid,
                                    sort_keys: bool = False,
                                    alias: str = 'lang_irct',
                                    alias_label: str = 'change_to') -> sa.sql.Select:
-    code = (select(IsoRetirementChangeTo.code)
-            .select_from(IsoRetirementChangeTo)
-            .filter_by(languoid_id=IsoRetirement.languoid_id)
-            .correlate(IsoRetirement)
-            .order_by(IsoRetirementChangeTo.ord)
-            .alias(alias))
-
-    codes = (select(group_array(code.c.code).label(alias_label))
-             .label(alias_label))
+    codes = select_iso_retirement_change_to(as_json=True,
+                                            label=alias_label)
 
     return (select(IsoRetirement.jsonf(change_to=codes,
                                        sort_keys=sort_keys,
@@ -704,6 +684,23 @@ def select_languoid_iso_retirement(languoid=Languoid,
             .filter_by(languoid_id=languoid.id)
             .correlate(languoid)
             .label(label))
+
+
+def select_iso_retirement_change_to(iso_retirement=IsoRetirement, *,
+                                    as_json: bool, label: str,
+                                    alias: str = 'lang_irct') -> sa.sql.Select:
+    code = (select(IsoRetirementChangeTo.code)
+            .select_from(IsoRetirementChangeTo)
+            .filter_by(languoid_id=iso_retirement.languoid_id)
+            .correlate(IsoRetirement)
+            .order_by(IsoRetirementChangeTo.ord)
+            .alias(alias))
+
+    aggregate = group_array if as_json else group_concat
+
+    codes = aggregate(code.c.code)
+
+    return select(codes.label(label)).label(label)
 
 
 def iterdescendants(parent_level: typing.Optional[str] = None,
