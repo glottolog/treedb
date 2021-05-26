@@ -169,7 +169,6 @@ def roundtrip(root=_globals.ROOT, *, replace: bool = False,
                         dry_run=dry_run, progress_after=progress_after)
 
 
-
 def iterrecords(root=_globals.ROOT,
                 *, progress_after: int = _tools.PROGRESS_AFTER,
                 raw: bool = False) -> typing.Iterable[_globals.RecordItem]:

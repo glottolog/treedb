@@ -110,8 +110,8 @@ def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
                               select_languoid_macroareas(as_json=False),
                               select_languoid_countries(as_json=False),
                               select_languoid_links(as_json=False),
-                              select_languoid_sources(as_json=False,
-                                                      provider_name='glottolog'))
+                              select_languoid_sources(provider_name='glottolog',
+                                                      as_json=False))
                        .select_from(Languoid))
 
     for provider_name in sorted(ALTNAME_PROVIDER):
@@ -150,8 +150,8 @@ def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
                                         label='iso_retirement_{name}',
                                         add_outerjoin=IsoRetirement)
 
-    change_to = select_iso_retirement_change_to(as_json=False,
-                                                label='iso_retirement_change_to')
+    change_to = select_iso_retirement_change_to(label='iso_retirement_change_to',
+                                                as_json=False)
     select_languoid = select_languoid.add_columns(change_to)
 
     select_languoid = add_order_by(select_languoid,
@@ -474,7 +474,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
     if provider_name is not None:
         altname = aliased(Altname, name=f'altname_{provider_name}')
         provider = aliased(AltnameProvider, name=f'altname_{provider_name}_provider')
-        columns  = []
+        columns = []
         order_by = [altname.name, altname.lang]
         label = label.format(provider_name=provider_name)
     else:
@@ -482,7 +482,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
         provider = aliased(AltnameProvider, name='altname_provider')
         columns = [provider.name.label('provider')]
         order_by = [provider.name, altname.printf()]
-    
+
     columns.append(altname.jsonf(sort_keys=sort_keys) if as_json
                    else altname.printf())
 
@@ -520,7 +520,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
 
 
 def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
-                             field_name:  typing.Optional[str] = None,
+                             field_name: typing.Optional[str] = None,
                              label: str = 'triggers') -> sa.sql.Select:
     if field_name is not None:
         trigger = aliased(Trigger, name=f'trigger_{field_name}')
@@ -531,7 +531,7 @@ def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
         trigger = Trigger
         columns = [trigger.field, trigger.trigger]
         order_by = [trigger.field, trigger.ord]
-        
+
     trigger = (select(*columns)
                .select_from(trigger)
                .filter_by(languoid_id=languoid.id)

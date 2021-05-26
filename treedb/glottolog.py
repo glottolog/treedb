@@ -84,7 +84,6 @@ def git_status(repo_root) -> str:
 def git_status_is_clean(repo_root) -> bool:
     """Return if there are neither changes in the index nor untracked files."""
     log.info('get clean from %r', repo_root)
-    cmd = ['git', 'status', '--porcelain']
     status = git_status(repo_root)
     clean = not status
     log.info('clean: %r', clean)

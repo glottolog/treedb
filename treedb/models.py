@@ -625,7 +625,7 @@ class Timespan:
                             back_populates='timespan')
 
     @classmethod
-    def printf(cls, *,label: str = 'printf'):
+    def printf(cls, *, label: str = 'printf'):
         return sa.func.printf('%s-%s-%s/%s-%s-%s',
                               cls.start_year, cls.start_month, cls.start_day,
                               cls.end_year, cls.end_month, cls.end_day)
