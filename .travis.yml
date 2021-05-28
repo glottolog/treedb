@@ -10,11 +10,11 @@ python:
 env:
   - ARGS=--run-writes
   - ARGS="--glottolog-tag=master --run-writes"
-  - ARGS=
+  - ARGS="--skip-slow --exclude-raw"
 jobs:
   exclude:
     - python: 3.9
-      env: ARGS=
+      env: ARGS="--skip-slow --exclude-raw"
     - python: 3.8
       env: ARGS=--run-writes
     - python: 3.7
