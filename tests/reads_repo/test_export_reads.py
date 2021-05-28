@@ -3,12 +3,12 @@ import json
 
 import pytest
 
-from conftest import (pairwise,
-                      get_assert_head,
-                      assert_nonempty_string,
-                      assert_nonempty_dict,
-                      assert_file_size_between,
-                      assert_valid_languoids)
+from helpers import (MB, pairwise,
+                     get_assert_head,
+                     assert_nonempty_string,
+                     assert_nonempty_dict,
+                     assert_file_size_between,
+                     assert_valid_languoids)
 
 PREFIX = 'path_languoid:path:sha256:'
 
@@ -97,8 +97,6 @@ STATS = {'master': None,
  8,111 All
    395 Bookkeeping
 '''}
-
-MB = 2**20
 
 
 def test_print_languoid_stats(pytestconfig, capsys, treedb):

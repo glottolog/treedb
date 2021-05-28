@@ -1,4 +1,4 @@
-from conftest import assert_valid_languoids
+from helpers import assert_valid_languoids
 
 
 def test_load(treedb, n=100):

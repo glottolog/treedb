@@ -3,7 +3,7 @@ import sys
 import pytest
 import sqlalchemy as sa
 
-from conftest import assert_file_size_between
+from helpers import assert_file_size_between
 
 QUERY_HASH = {'master': None,
               'v4.4': '224691678e1f2e18406d6dd1a278e062c683ac12ec2acf57d501931d3661142e',

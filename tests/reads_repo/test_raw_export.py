@@ -1,6 +1,6 @@
 import pytest
 
-from conftest import assert_file_size_between
+from helpers import MB, assert_file_size_between
 
 CHECKSUM = {('v4.4', False): 'strong:sha256:3c95e5081c8d689980637506e363f99904798aa1a5ceb69eb1187b8eaff53709',
             ('v4.4', True): 'weak:sha256:690dd35d5de6a0841f3d3f8cc8c9853382797c73e082a418c1b9ad77bd7495bb',
@@ -17,8 +17,6 @@ RAW_CSV_SHA256 = {'master': None,
                   'v4.3-treedb-fixes': '1ef6923a94d19c708fd0e7ae87b6ee24c69d1d82fa9f81b16eaa5067e61ab1b6',
                   'v4.2.1': 'ab9d4339f3c0fa3acb0faf0f7306dc5409640ecd46e451de9a76445519f5157e',
                   'v4.1': '963163852e7f4ee34b516bc459bdbb908f2f4aab64bda58087a1a23a731921fd'}
-
-MB = 2**20
 
 
 pytestmark = pytest.mark.raw

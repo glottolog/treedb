@@ -1,4 +1,4 @@
-from conftest import assert_valid_languoids
+from helpers import assert_valid_languoids
 
 import pytest
 

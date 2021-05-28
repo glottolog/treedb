@@ -1,8 +1,8 @@
-from conftest import (get_assert_head,
-                      assert_nonempty_string,
-                      assert_nonempty_string_tuple,
-                      assert_nonempty_dict,
-                      assert_valid_languoids)
+from helpers import (get_assert_head,
+                     assert_nonempty_string,
+                     assert_nonempty_string_tuple,
+                     assert_nonempty_dict,
+                     assert_valid_languoids)
 
 
 def test_parse(bare_treedb, *, n=100):
