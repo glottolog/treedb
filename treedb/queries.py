@@ -225,9 +225,9 @@ def add_classification_refs(select_languoid: sa.sql.Select, kind: str,
 
     ref = (select(ref.printf(bibfile, bibitem))
            .select_from(ref)
-           .filter_by(kind=kind)
            .filter_by(languoid_id=Languoid.id)
            .correlate(Languoid)
+           .filter_by(kind=kind)
            .join(ref.bibitem.of_type(bibitem))
            .join(bibitem.bibfile.of_type(bibfile))
            .order_by(ref.ord)
@@ -415,7 +415,7 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
 
     provider = aliased(SourceProvider, name='source_provider')
 
-    bibitem = aliased(Bibitem, name=f'{bib_prefix}source_bibitem')
+    bibitem = aliased(Bibitem, name=f'{bib_prefix}bibitem')
     bibfile = aliased(Bibfile, name=f'{bib_prefix}bibfile')
 
     columns = [source.jsonf(bibfile, bibitem, sort_keys=sort_keys)
@@ -477,6 +477,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
         columns = []
         order_by = [altname.name, altname.lang]
         label = label.format(provider_name=provider_name)
+        alias = f'{alias}_{provider_name}'
     else:
         altname = Altname
         provider = aliased(AltnameProvider, name='altname_provider')
@@ -521,12 +522,14 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
 
 def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
                              field_name: typing.Optional[str] = None,
-                             label: str = 'triggers') -> sa.sql.Select:
+                             label: str = 'triggers',
+                             alias: str = 'lang_trigger') -> sa.sql.Select:
     if field_name is not None:
         trigger = aliased(Trigger, name=f'trigger_{field_name}')
         columns = [trigger.trigger]
         order_by = [trigger.ord]
         label = label.format(field_name=field_name)
+        alias = f'{alias}_{field_name}'
     else:
         trigger = Trigger
         columns = [trigger.field, trigger.trigger]
@@ -541,7 +544,7 @@ def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
     if field_name is not None:
         trigger = trigger.filter_by(field=field_name)
 
-    trigger = trigger.alias('lang_trigger')
+    trigger = trigger.alias(alias)
 
     value = (group_array(trigger.c.trigger).label('value')
              if as_json else group_concat(trigger.c.trigger).label(label))
