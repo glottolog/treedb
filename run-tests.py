@@ -11,7 +11,7 @@ ARGS = [#'--run-writes',
         #'--skip-sqlparse',
         #'-k', 'not reads',
         #'--collect-only',
-        #'--capture=no',  # a.k.a '-s'
+        #'--capture', 'no',  # a.k.a '-s'
         #'--verbose',
         #'--showlocals',  # a.k.a. '-l'
         #'--pdb',
@@ -32,14 +32,16 @@ ARGS = [#'--run-writes',
         ]
 
 if 'idlelib' in sys.modules:
-    ARGS += ['--capture=sys', '--color=no']
+    ARGS += ['--capture', 'sys', '--color', 'no']
 
 if platform.system() == 'Windows':
     ARGS.append('--pdb')
 
 if '--installed' in sys.argv[1:]:
     sys.argv[1:] = [a for a in sys.argv[1:] if a != '--installed']
-    sys.path.pop(0)
+    path_item = sys.path.pop(0)
+    print(f'removed {path_item!r} from sys.path')
+    ARGS += ['--import-mode', 'append']
 
 args = sys.argv[1:] + ARGS
 
