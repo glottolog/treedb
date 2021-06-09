@@ -212,6 +212,9 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
         else:
             log.warning(f'replace present {basename} files')
 
+    if quiet is None:
+        quiet = dry_run or replace
+
     load_config = ConfigParser.from_file
 
     files_written = 0
@@ -219,23 +222,21 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
     for path_tuple, raw_record in raw_records:
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
+
         if replace:
             cfg.clear()
 
-        changed = update_config(cfg, raw_record,
-                                quiet=(quiet if quiet is not None
-                                       else dry_run or replace))
+        changed = update_config(cfg, raw_record, quiet=quiet)
 
-        if dry_run:
-            if changed:
-                files_written += 1
-        elif changed:
-            if not replace:
-                log.info('write cfg.to_file(%r)', path)
-            cfg.to_file(path)
+        if changed:
+            if not dry_run:
+                if not replace:
+                    log.info('write cfg.to_file(%r)', path)
+                cfg.to_file(path)
 
             files_written += 1
-            if not (files_written % progress_after):
+
+            if not dry_run and (files_written % progress_after):
                 log.info(f'%s {basename} files written', f'{files_written:_d}')
 
         if require_nwritten is not None and files_written > require_nwritten:
@@ -293,7 +294,9 @@ def update_config(cfg: ConfigParser,
     for section in sorted_sections(raw_record):
         if section in drop:
             continue
+
         s = raw_record[section]
+
         if section not in old_sections or section in core_sections:
             pass
         elif section in leave:
@@ -325,6 +328,7 @@ def update_config(cfg: ConfigParser,
                 if old is None:
                     log.debug('cfg add option (%r, %r)', section, option)
                 log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
+
             cfg.set(section, option, value)
             changed = True
 
