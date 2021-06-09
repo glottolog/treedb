@@ -158,29 +158,22 @@ def iterfiles(root=_globals.ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def roundtrip(root=_globals.ROOT, *, replace: bool = False,
-              dry_run: bool = False,
-              progress_after: int = _tools.PROGRESS_AFTER) -> int:
-    """Do a load/save cycle with all config files."""
+def roundtrip(root=_globals.ROOT,
+              *, progress_after: int = _tools.PROGRESS_AFTER,
+              basename: str = BASENAME) -> None:
+    """Load/save all config files (drops leading/trailing whitespace)."""
     log.info(f'start roundtripping {BASENAME} files in %r', root)
-    raw_records = iterrecords(root, raw=True,
-                              progress_after=progress_after)
-    return _write_files(raw_records, root, replace=replace,
-                        dry_run=dry_run, progress_after=progress_after)
+    for path_tuple, cfg, _ in iterfiles(root, progress_after=progress_after):
+        path = root.joinpath(*path_tuple + (basename,))
+        cfg.to_file(path)
 
 
 def iterrecords(root=_globals.ROOT,
                 *, progress_after: int = _tools.PROGRESS_AFTER,
-                raw: bool = False) -> typing.Iterable[_globals.RecordItem]:
+                basename: str = BASENAME) -> typing.Iterable[_globals.RecordItem]:
     fileinfos = iterfiles(root, progress_after=progress_after)
-
-    if raw:
-        for path, cfg, _ in fileinfos:
-            yield path, cfg.to_dict()
-        return
-
-    for path, cfg, _ in fileinfos:
-        yield path, cfg
+    for path_tuple, cfg, _ in fileinfos:
+        yield path_tuple, cfg
 
 
 def write_files(records: typing.Iterable[_globals.RecordItem],
