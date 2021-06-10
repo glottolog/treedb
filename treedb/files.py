@@ -71,13 +71,17 @@ def load_config(filepath, *, sort_sections: bool = False
 
 
 class BaseConfigParser(configparser.ConfigParser):
-    """Conservative ConfigParser."""
+    """Conservative ConfigParser with optional encoding header."""
 
     _basename = None
 
     _init_defaults = {'delimiters': ('=',),
                       'comment_prefixes': ('#',),
                       'interpolation': None}
+
+    _newline = None
+
+    _header = None
 
     @classmethod
     def from_file(cls, filename, *, encoding=_tools.ENCODING, **kwargs):
@@ -102,9 +106,16 @@ class BaseConfigParser(configparser.ConfigParser):
         return {name: dict(section) for name, section in items
                 if name != _default_section}
 
+    def to_file(self, filename, *, encoding=_tools.ENCODING):
+        path = _tools.path_from_filename(filename)
+        with path.open('wt', encoding=encoding, newline=self._newline) as f:
+            if self._header is not None:
+                f.write(self._header.format(encoding=encoding))
+            self.write(f)
+
 
 class ConfigParser(BaseConfigParser):
-    """Conservative ConfigParser with encoding header."""
+    """ConfigParser for ``glottolog/languoids/tree/**/md.ini``."""
 
     _basename = BASENAME
 
@@ -112,12 +123,89 @@ class ConfigParser(BaseConfigParser):
 
     _header = '# -*- coding: {encoding} -*-\n'
 
-    def to_file(self, filename, *, encoding=_tools.ENCODING):
-        path = _tools.path_from_filename(filename)
-        with path.open('wt', encoding=encoding, newline=self._newline) as f:
-            if self._header is not None:
-                f.write(self._header.format(encoding=encoding))
-            self.write(f)
+    def update_config(self,
+                      raw_record: _fields.RawRecordType,
+                      *, quiet: bool = False,
+                      is_lines=_fields.is_lines,
+                      core_sections=_fields.CORE_SECTIONS,
+                      omit_empty_core_options=_fields.OMIT_EMPTY_CORE_OPTIONS,
+                      keep_empty_sections=_fields.KEEP_EMPTY_SECTIONS,
+                      keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
+                      sorted_sections=_fields.sorted_sections,
+                      sorted_options=_fields.sorted_options) -> bool:
+        for core_section in core_sections:
+            s = raw_record[core_section]
+            for core_option in omit_empty_core_options:
+                if core_option in s and not s[core_option]:
+                    del s[core_option]
+
+        changed = False
+
+        old_sections = set(self.sections())
+        old_empty = {s for s in old_sections if not any(v for _, v in self.items(s))}
+
+        new_sections = {sec for sec, s in raw_record.items() if s}
+        leave = (old_empty - new_sections) & keep_empty_sections
+
+        drop = old_sections - core_sections - leave - new_sections
+        if drop:
+            drop = sorted_sections(drop)
+            log.debug('cfg.remove_section(s) for s in %r', drop)
+            for s in drop:
+                self.remove_section(s)
+            changed = True
+
+        add = new_sections - old_sections
+        if add:
+            add = sorted_sections(add)
+            if not quiet:
+                log.debug('cfg.add_section(s) for s in %r', add)
+            for s in add:
+                self.add_section(s)
+            changed = True
+
+        for section in sorted_sections(raw_record):
+            if section in drop:
+                continue
+
+            s = raw_record[section]
+
+            if section not in old_sections or section in core_sections:
+                pass
+            elif section in leave:
+                continue
+            else:
+                old_options = {o for o in self.options(section)
+                               if (section, o) not in keep_empty_options}
+                new_options = {k for k, v in s.items() if v}
+                drop_options = old_options - new_options
+
+                if drop_options:
+                    drop_options = sorted_options(section, drop_options)
+                    log.debug('cfg.remove_option(%r, o) for o in %r',
+                              section, drop_options)
+                    for o in drop_options:
+                        self.remove_option(section, o)
+                    changed = True
+
+            for option in sorted_options(section, s):
+                value = s[option]
+                if value is None or (not value and is_lines(section, option)):
+                    continue
+
+                old = self.get(section, option, fallback=None)
+                if old == value:
+                    continue
+
+                if not quiet:  # pragma: no cover
+                    if old is None:
+                        log.debug('cfg add option (%r, %r)', section, option)
+                    log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
+
+                self.set(section, option, value)
+                changed = True
+
+        return changed
 
 
 class FileInfo(typing.NamedTuple):
@@ -216,7 +304,7 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
         if replace:
             cfg.clear()
 
-        changed = update_config(cfg, raw_record, quiet=quiet)
+        changed = cfg.update_config(raw_record, quiet=quiet)
 
         if changed:
             if not dry_run:
@@ -238,88 +326,3 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
         raise ValueError(f'files_written={files_written}'
                          f' under require_nwritten={require_nwritten}')
     return files_written
-
-
-def update_config(cfg: ConfigParser,
-                  raw_record: _fields.RawRecordType,
-                  *, quiet: bool = False,
-                  is_lines=_fields.is_lines,
-                  core_sections=_fields.CORE_SECTIONS,
-                  omit_empty_core_options=_fields.OMIT_EMPTY_CORE_OPTIONS,
-                  keep_empty_sections=_fields.KEEP_EMPTY_SECTIONS,
-                  keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
-                  sorted_sections=_fields.sorted_sections,
-                  sorted_options=_fields.sorted_options) -> bool:
-    for core_section in core_sections:
-        s = raw_record[core_section]
-        for core_option in omit_empty_core_options:
-            if core_option in s and not s[core_option]:
-                del s[core_option]
-
-    changed = False
-
-    old_sections = set(cfg.sections())
-    old_empty = {s for s in old_sections if not any(v for _, v in cfg.items(s))}
-
-    new_sections = {sec for sec, s in raw_record.items() if s}
-    leave = (old_empty - new_sections) & keep_empty_sections
-
-    drop = old_sections - core_sections - leave - new_sections
-    if drop:
-        drop = sorted_sections(drop)
-        log.debug('cfg.remove_section(s) for s in %r', drop)
-        for s in drop:
-            cfg.remove_section(s)
-        changed = True
-
-    add = new_sections - old_sections
-    if add:
-        add = sorted_sections(add)
-        if not quiet:
-            log.debug('cfg.add_section(s) for s in %r', add)
-        for s in add:
-            cfg.add_section(s)
-        changed = True
-
-    for section in sorted_sections(raw_record):
-        if section in drop:
-            continue
-
-        s = raw_record[section]
-
-        if section not in old_sections or section in core_sections:
-            pass
-        elif section in leave:
-            continue
-        else:
-            old_options = {o for o in cfg.options(section)
-                           if (section, o) not in keep_empty_options}
-            new_options = {k for k, v in s.items() if v}
-            drop_options = old_options - new_options
-
-            if drop_options:
-                drop_options = sorted_options(section, drop_options)
-                log.debug('cfg.remove_option(%r, o) for o in %r',
-                          section, drop_options)
-                for o in drop_options:
-                    cfg.remove_option(section, o)
-                changed = True
-
-        for option in sorted_options(section, s):
-            value = s[option]
-            if value is None or (not value and is_lines(section, option)):
-                continue
-
-            old = cfg.get(section, option, fallback=None)
-            if old == value:
-                continue
-
-            if not quiet:  # pragma: no cover
-                if old is None:
-                    log.debug('cfg add option (%r, %r)', section, option)
-                log.debug('cfg.set_option(%r, %r, %r)', section, option, value)
-
-            cfg.set(section, option, value)
-            changed = True
-
-    return changed
