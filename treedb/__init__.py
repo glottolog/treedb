@@ -34,9 +34,7 @@ from .backend.sqlite_master import (print_table_sql,
 
 from .backend.views import TABLES as views
 
-from .md import iterfiles
-
-from .md.files import set_root
+from .md import set_root, iterfiles
 
 from .checks import (check,
                      compare_languoids)

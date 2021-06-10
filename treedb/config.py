@@ -6,7 +6,7 @@ import typing
 from . import _globals
 from . import _tools
 
-from .md import files as _files
+from . import md as _md
 
 __all__ = ['iterconfigs',
            'load_config']
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 def get_config_path(root=_globals.ROOT,
                     *, configpath=CONFIG_IN_ROOT):
-    return _files.get_repo_root(root) / configpath
+    return _md.get_repo_root(root) / configpath
 
 
 def iterconfigs(root=_globals.ROOT, *, glob='*.ini'):

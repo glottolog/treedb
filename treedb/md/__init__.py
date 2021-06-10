@@ -2,12 +2,12 @@
 
 import typing
 
-from .. import _globals
-from .. import _tools
-
+from ._root import set_root, get_repo_root
 from .files import iterfiles
 
-__all__ = ['iterfiles', 'iterrecords']
+__all__ = ['set_root', 'get_repo_root',
+           'iterfiles',
+           'iterrecords']
 
 
 def iterrecords(root=_globals.ROOT,

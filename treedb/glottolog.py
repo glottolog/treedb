@@ -3,7 +3,8 @@
 import logging
 
 from . import _tools
-from .md import files as _files
+
+from . import md as _md
 
 __all__ = ['checkout_or_clone',
            'git_rev_parse', 'git_describe',
@@ -17,7 +18,7 @@ log = logging.getLogger(__name__)
 
 def checkout_or_clone(tag_or_branch: str, *, target=None):
     if target is None:
-        target = _files.get_repo_root()
+        target = _md.get_repo_root()
 
     target = _tools.path_from_filename(target)
 
