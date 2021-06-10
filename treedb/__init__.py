@@ -34,8 +34,9 @@ from .backend.sqlite_master import (print_table_sql,
 
 from .backend.views import TABLES as views
 
-from .md.files import (set_root,
-                       iterfiles)
+from .md import iterfiles
+
+from .md.files import set_root
 
 from .checks import (check,
                      compare_languoids)
@@ -74,6 +75,7 @@ __all__ = ['Session',
            'pd_read_sql', 'pd_read_json_lines',
            'print_table_sql', 'select_tables_nrows',
            'views',
+           'set_root', 'iterfiles',
            'check', 'compare_languoids',
            'configure',
            'print_languoid_stats',
@@ -82,7 +84,6 @@ __all__ = ['Session',
            'write_languoids',
            'pd_read_languoids',
            'write_files',
-           'set_root', 'iterfiles',
            'checkout_or_clone',
            'configure_logging',
            'LEVEL', 'Languoid',

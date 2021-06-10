@@ -75,10 +75,9 @@ def iterlanguoids(source: str = 'files',
             else:
                 del order_by
 
-            from .md import files
+            from . import md
 
-            records = files.iterrecords(root=root,
-                                        progress_after=progress_after)
+            records = md.iterrecords(root=root, progress_after=progress_after)
         elif source == 'raw':
             from . import raw
 

@@ -1,4 +1,4 @@
-"""Parse an ``md.ini`` file into a nested dict record and serialize it."""
+"""Parse an ``md.ini`` record into a languoid and serialize it."""
 
 import datetime
 import logging
@@ -10,6 +10,7 @@ import typing
 import pycountry
 
 from .. import _globals
+
 from . import fields as _fields
 
 __all__ = ['pipe']

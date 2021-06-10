@@ -9,11 +9,12 @@ import warnings
 
 from .. import _globals
 from .. import _tools
+
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
            'iterconfigs',
-           'iterfiles', 'iterrecords',
+           'iterfiles',
            'roundtrip', 'write_files']
 
 CONFIG_IN_ROOT = _tools.path_from_filename('config')
@@ -255,13 +256,6 @@ def roundtrip(root=_globals.ROOT,
     log.info(f'start roundtripping {BASENAME} files in %r', root)
     for path_tuple, dentry, cfg in iterfiles(root, progress_after=progress_after):
         cfg.to_file(dentry.path)
-
-
-def iterrecords(root=_globals.ROOT,
-                *, progress_after: int = _tools.PROGRESS_AFTER
-                ) -> typing.Iterable[_globals.RecordItem]:
-    for path_tuple, _, cfg in iterfiles(root, progress_after=progress_after):
-        yield path_tuple, cfg
 
 
 def write_files(records: typing.Iterable[_globals.RecordItem],

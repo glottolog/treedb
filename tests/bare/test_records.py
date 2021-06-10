@@ -6,9 +6,7 @@ from helpers import (get_assert_head,
 
 
 def test_parse(bare_treedb, *, n=100):
-    from treedb.md import files as _files
-
-    records = _files.iterrecords()
+    records = bare_treedb.md.iterrecords()
 
     items = bare_treedb.md.records.pipe(records, dump=False,
                                         convert_lines=True)
