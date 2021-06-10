@@ -41,9 +41,6 @@ from .md.files import set_root
 from .checks import (check,
                      compare_languoids)
 
-from .config import (configure,
-                     get_default_root)
-
 from .export import (print_languoid_stats,
                      iterlanguoids,
                      checksum,
@@ -62,6 +59,10 @@ from .queries import (get_example_query,
                       get_json_query as get_languoids_query,
                       iterdescendants)
 
+from .settings import (configure,
+                       get_default_root)
+
+
 __all__ = ['Session',
            'sha256sum',
            'print_versions',
@@ -77,7 +78,6 @@ __all__ = ['Session',
            'views',
            'set_root', 'iterfiles',
            'check', 'compare_languoids',
-           'configure',
            'print_languoid_stats',
            'iterlanguoids',
            'checksum',
@@ -90,6 +90,7 @@ __all__ = ['Session',
            'get_example_query',
            'get_languoids_query',
            'iterdescendants',
+           'configure',
            'engine', 'root']
 
 __title__ = 'treedb'
