@@ -123,9 +123,9 @@ class ConfigParser(BaseConfigParser):
 
     _header = '# -*- coding: {encoding} -*-\n'
 
-    def update_config(self,
-                      raw_record: _fields.RawRecordType,
-                      *, quiet: bool = False,
+    def update_config(self, raw_record: _fields.RawRecordType,
+                      *, replace: bool = False,
+                      quiet: bool = False,
                       is_lines=_fields.is_lines,
                       core_sections=_fields.CORE_SECTIONS,
                       omit_empty_core_options=_fields.OMIT_EMPTY_CORE_OPTIONS,
@@ -133,6 +133,9 @@ class ConfigParser(BaseConfigParser):
                       keep_empty_options=_fields.KEEP_EMPTY_OPTIONS,
                       sorted_sections=_fields.sorted_sections,
                       sorted_options=_fields.sorted_options) -> bool:
+        if replace:
+            self.clear()
+
         for core_section in core_sections:
             s = raw_record[core_section]
             for core_option in omit_empty_core_options:
@@ -300,11 +303,7 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
     for path_tuple, raw_record in raw_records:
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
-
-        if replace:
-            cfg.clear()
-
-        changed = cfg.update_config(raw_record, quiet=quiet)
+        changed = cfg.update_config(raw_record, replace=replace, quiet=quiet)
 
         if changed:
             if not dry_run:
