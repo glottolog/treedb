@@ -5,7 +5,8 @@ import pytest
 
 ZeroDict = functools.partial(collections.defaultdict, int)
 
-FILES_WRITTEN = {'raw_lines': ZeroDict(),
+FILES_WRITTEN = {'files': ZeroDict(),
+                 'raw_lines': ZeroDict(),
                  'raw': ZeroDict(),
                  'tables': ZeroDict({# replace 'Country Name (ID)' with 'ID'
                                      'v4.3-treedb-fixes': 8_528,
@@ -18,7 +19,8 @@ pytestmark = pytest.mark.writes
 
 
 @pytest.mark.parametrize('source',
-                         [pytest.param('raw_lines', marks=pytest.mark.raw),
+                         ['files',
+                          pytest.param('raw_lines', marks=pytest.mark.raw),
                           pytest.param('raw', marks=pytest.mark.raw),
                           'tables'],
                          ids=lambda x: f'source={x}')

@@ -271,22 +271,6 @@ def write_files(records: typing.Iterable[_globals.RecordItem],
                 progress_after: typing.Optional[int] = _tools.PROGRESS_AFTER,
                 basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
-    root = _tools.path_from_filename(root)
-    log.info(f'start writing {basename} files into %r', root)
-    raw_records = map(_fields.join_lines_inplace, records)
-    return _write_files(raw_records, root, replace=replace,
-                        dry_run=dry_run, quiet=quiet,
-                        require_nwritten=require_nwritten,
-                        progress_after=progress_after,
-                        basename=basename)
-
-
-def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
-                 root, *, replace: bool,
-                 dry_run: bool = False, quiet: typing.Optional[bool] = None,
-                 require_nwritten: typing.Optional[int] = None,
-                 progress_after: typing.Optional[int] = _tools.PROGRESS_AFTER,
-                 basename: str = BASENAME) -> int:
     if replace:  # pragma: no cover
         if dry_run:
             warnings.warn('replace=True ignored by dry_run=True')
@@ -296,11 +280,14 @@ def _write_files(raw_records: typing.Iterable[_fields.RawRecordItem],
     if quiet is None:
         quiet = dry_run or replace
 
+    root = _tools.path_from_filename(root)
+    log.info(f'start writing {basename} files into %r', root)
+
     load_config = ConfigParser.from_file
 
     files_written = 0
 
-    for path_tuple, raw_record in raw_records:
+    for path_tuple, raw_record in map(_fields.join_lines_inplace, records):
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)
         changed = cfg.update_config(raw_record, replace=replace, quiet=quiet)

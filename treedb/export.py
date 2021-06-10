@@ -270,9 +270,6 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE) -> int:
     log.info('write from %r to tree %r', source, root)
-    if source == 'files':  # pragma: no cover
-        raise NotImplementedError('simultaneaous write and read of files')
-
     if source == 'raw_lines':
         from . import raw
 
@@ -293,8 +290,7 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                               progress_after=progress_after,
                               bind=bind)
 
-    records = _records.pipe(languoids, dump=True,
-                            convert_lines=(source == 'files'))
+    records = _records.pipe(languoids, dump=True, convert_lines=False)
 
     return files.write_files(records, root=root, replace=replace,
                              dry_run=dry_run,
