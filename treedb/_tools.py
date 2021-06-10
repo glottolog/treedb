@@ -2,6 +2,7 @@
 
 import builtins
 import bz2
+import configparser
 import functools
 import gzip
 import hashlib
@@ -41,7 +42,8 @@ __all__ = ['uniqued',
            'path_from_filename',
            'sha256sum',
            'run',
-           'Ordering']
+           'Ordering',
+           'ConfigParser']
 
 
 log = logging.getLogger(__name__)
@@ -489,3 +491,47 @@ class Ordering(dict):
     def sorted_enumerate(self, keys, start: int = 0):
         keyed = sorted((self[key], key) for key in keys)
         return ((i, key) for i, (_, key) in enumerate(keyed, start=start))
+
+
+class ConfigParser(configparser.ConfigParser):
+    """Conservative ConfigParser with optional encoding header."""
+
+    _basename = None
+
+    _init_defaults = {'delimiters': ('=',),
+                      'comment_prefixes': ('#',),
+                      'interpolation': None}
+
+    _newline = None
+
+    _header = None
+
+    @classmethod
+    def from_file(cls, filename, *, encoding=ENCODING, **kwargs):
+        path = path_from_filename(filename)
+        if cls._basename is not None and path.name != cls._basename:
+            raise RuntimeError(f'unexpected filename {path!r}'
+                               f' (must end with {cls._basename})')
+
+        inst = cls(**kwargs)
+        with path.open(encoding=encoding) as f:
+            inst.read_file(f)
+        return inst
+
+    def __init__(self, *, defaults=None, **kwargs):
+        for k, v in self._init_defaults.items():
+            kwargs.setdefault(k, v)
+        super().__init__(defaults=defaults, **kwargs)
+
+    def to_dict(self, *, sort_sections: bool = False,
+                _default_section: str = configparser.DEFAULTSECT):
+        items = sorted(self.items()) if sort_sections else self.items()
+        return {name: dict(section) for name, section in items
+                if name != _default_section}
+
+    def to_file(self, filename, *, encoding=ENCODING):
+        path = path_from_filename(filename)
+        with path.open('wt', encoding=encoding, newline=self._newline) as f:
+            if self._header is not None:
+                f.write(self._header.format(encoding=encoding))
+            self.write(f)

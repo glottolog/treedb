@@ -10,7 +10,11 @@ import sqlalchemy as sa
 
 from .. import _globals
 from .. import _tools
+
 from ..md import files as _files
+
+from .. import config as _config
+
 from .. import glottolog as _glottolog
 
 from .. import backend as _backend
@@ -210,7 +214,7 @@ def load(metadata, *, conn, root,
 
 def import_configs(conn, *, root):
     insert_config = functools.partial(conn.execute, sa.insert(_models.Config))
-    for filename, cfg in _files.iterconfigs(root):
+    for filename, cfg in _config.iterconfigs(root):
         get_line = _tools.next_count(start=1)
         params = [{'filename': filename, 'section': section, 'option': option,
                    'value': value.strip(), 'line': get_line()}
