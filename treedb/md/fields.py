@@ -1,11 +1,11 @@
-"""Define known ``md.ini`` (section, option) pairs and if they are lists of lines."""
+"""Define known ``md.ini`` (section, option) pairs and whether they are lists of lines."""
 
 import logging
 import typing
 import warnings
 
-from . import _globals
-from . import _tools
+from .. import _globals
+from .. import _tools
 
 __all__ = ['is_lines',
            'sorted_sections',

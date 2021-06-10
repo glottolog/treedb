@@ -34,6 +34,9 @@ from .backend.sqlite_master import (print_table_sql,
 
 from .backend.views import TABLES as views
 
+from .md.files import (set_root,
+                       iterfiles)
+
 from .checks import (check,
                      compare_languoids)
 
@@ -46,9 +49,6 @@ from .export import (print_languoid_stats,
                      write_json_lines as write_languoids,
                      pd_read_languoids,
                      write_files)
-
-from .files import (set_root,
-                    iterfiles)
 
 from .glottolog import checkout_or_clone
 

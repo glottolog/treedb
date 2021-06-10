@@ -69,9 +69,9 @@ def configure(config_path=_globals.CONFIG,
     log.info('configure from %r, title=%r', config_path, title)
     log.debug('default repo root: %r', default_repo_root)
 
-    from . import (logging_,
-                   files,
-                   backend)
+    from . import backend
+    from .md import files
+    from . import logging_
 
     config_path = _tools.path_from_filename(config_path)
     log.debug('load config file %r', config_path)

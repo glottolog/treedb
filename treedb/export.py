@@ -16,7 +16,7 @@ from .backend import export as _backend_export
 from .backend import pandas as _backend_pandas
 from .models import SPECIAL_FAMILIES, BOOKKEEPING
 from . import queries as _queries
-from . import records as _records
+from .md import records as _records
 
 __all__ = ['print_languoid_stats',
            'iterlanguoids',
@@ -75,7 +75,7 @@ def iterlanguoids(source: str = 'files',
             else:
                 del order_by
 
-            from . import files
+            from .md import files
 
             records = files.iterrecords(root=root,
                                         progress_after=progress_after)
@@ -281,7 +281,7 @@ def write_files(root=_globals.ROOT, *, replace: bool = False,
                                progress_after=progress_after,
                                bind=bind)
 
-    from . import files
+    from .md import files
 
     languoids = iterlanguoids(source,
                               limit=limit,

@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 from .. import _globals
 from .. import _tools
-from .. import files as _files
+from ..md import files as _files
 from .. import glottolog as _glottolog
 
 from .. import backend as _backend

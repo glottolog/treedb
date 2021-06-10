@@ -14,7 +14,7 @@ import treedb
                  id='section=unknown, option=unknown'),
 ])
 def test_is_known(section, option, expected):
-    assert treedb.fields.is_known(section, option) == expected
+    assert treedb.md.fields.is_known(section, option) == expected
 
 
 @pytest.mark.parametrize('section, option, kwargs, expected', [
@@ -32,7 +32,7 @@ def test_is_lines(recwarn, section, option, kwargs, expected):
         if len(expected) == 3:
             expected, warning, match = expected
 
-            assert treedb.fields.is_lines(section, option, **kwargs) == expected
+            assert treedb.md.fields.is_lines(section, option, **kwargs) == expected
 
             w = recwarn.pop(warning)
             assert re.search(match, str(w.message))
@@ -40,11 +40,11 @@ def test_is_lines(recwarn, section, option, kwargs, expected):
             exception, match = expected
 
             with pytest.raises(exception, match=match):
-                treedb.fields.is_lines(section, option, **kwargs)
+                treedb.md.fields.is_lines(section, option, **kwargs)
 
             recwarn.pop(UserWarning)
     else:
-        assert treedb.fields.is_lines(section, option, **kwargs) == expected
+        assert treedb.md.fields.is_lines(section, option, **kwargs) == expected
 
     assert not recwarn
 
@@ -56,4 +56,4 @@ def test_is_lines(recwarn, section, option, kwargs, expected):
                  id='section=core, options=eggs-iso639-3-name'),
 ])
 def test_sorted_options(section, options, expected):
-    assert treedb.fields.sorted_options(section, options) == expected
+    assert treedb.md.fields.sorted_options(section, options) == expected

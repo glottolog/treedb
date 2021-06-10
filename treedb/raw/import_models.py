@@ -7,8 +7,8 @@ import sqlalchemy as sa
 
 from .. import _globals
 from .. import _tools
-from .. import fields as _fields
-from .. import files as _files
+from ..md import fields as _fields
+from ..md import files as _files
 
 from .models import File, Option, Value
 

@@ -3,7 +3,7 @@
 import logging
 
 from . import _tools
-from . import files as _files
+from .md import files as _files
 
 __all__ = ['checkout_or_clone',
            'git_rev_parse', 'git_describe',

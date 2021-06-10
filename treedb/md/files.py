@@ -7,8 +7,8 @@ import os
 import typing
 import warnings
 
-from . import _globals
-from . import _tools
+from .. import _globals
+from .. import _tools
 from . import fields as _fields
 
 __all__ = ['set_root', 'get_repo_root',
