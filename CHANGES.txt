@@ -7,6 +7,9 @@ Version 2.3.1 (in development)
 
 Rename ``endangerment_source`` table to ``endangerment_source``.
 
+Change ``iterfiles`` to yield ``path_tuple, DirEntry, ConfigParser`` instead of
+``path_tuple, ConfigParser, DirEntry``.
+
 
 Version 2.3
 -----------

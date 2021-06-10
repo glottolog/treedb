@@ -121,20 +121,20 @@ class ConfigParser(BaseConfigParser):
 
 
 class FileInfo(typing.NamedTuple):
-    """Triple of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
+    """Triple of ((<path_part>, ...), <DirEntry object>, <ConfigParser object>)."""
 
     path: _globals.PathType
 
-    config: ConfigParser
-
     dentry: os.DirEntry
+
+    config: ConfigParser
 
     @classmethod
     def from_dentry(cls, dentry: os.DirEntry,
                     *, path_slice: slice = slice(None)):
         path = _tools.path_from_filename(dentry)
         config = ConfigParser.from_file(path)
-        return cls(path.parts[path_slice], config, dentry)
+        return cls(path.parts[path_slice], dentry, config)
 
 
 def iterfiles(root=_globals.ROOT,
@@ -145,8 +145,8 @@ def iterfiles(root=_globals.ROOT,
     log.info(f'start parsing {BASENAME} files from %r', root)
     msg = f'%s {BASENAME} files parsed'
 
-    make_fileinfo = functools.partial(FileInfo.from_dentry,
-                                      path_slice=slice(len(root.parts), -1))
+    kwargs = {'path_slice': slice(len(root.parts), -1)}
+    make_fileinfo = functools.partial(FileInfo.from_dentry, **kwargs)
 
     n = 0
     for n, dentry in enumerate(_tools.walk_scandir(root), start=1):
@@ -159,20 +159,17 @@ def iterfiles(root=_globals.ROOT,
 
 
 def roundtrip(root=_globals.ROOT,
-              *, progress_after: int = _tools.PROGRESS_AFTER,
-              basename: str = BASENAME) -> None:
+              *, progress_after: int = _tools.PROGRESS_AFTER) -> None:
     """Load/save all config files (drops leading/trailing whitespace)."""
     log.info(f'start roundtripping {BASENAME} files in %r', root)
-    for path_tuple, cfg, _ in iterfiles(root, progress_after=progress_after):
-        path = root.joinpath(*path_tuple + (basename,))
-        cfg.to_file(path)
+    for path_tuple, dentry, cfg in iterfiles(root, progress_after=progress_after):
+        cfg.to_file(dentry.path)
 
 
 def iterrecords(root=_globals.ROOT,
-                *, progress_after: int = _tools.PROGRESS_AFTER,
-                basename: str = BASENAME) -> typing.Iterable[_globals.RecordItem]:
-    fileinfos = iterfiles(root, progress_after=progress_after)
-    for path_tuple, cfg, _ in fileinfos:
+                *, progress_after: int = _tools.PROGRESS_AFTER
+                ) -> typing.Iterable[_globals.RecordItem]:
+    for path_tuple, _, cfg in iterfiles(root, progress_after=progress_after):
         yield path_tuple, cfg
 
 
