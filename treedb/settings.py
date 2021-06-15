@@ -8,8 +8,8 @@ import typing
 from . import _globals
 from . import _tools
 
-__all__ = ['get_default_root',
-           'configure']
+__all__ = ['configure',
+           'get_default_root']
 
 ROOT_OPTION = ('glottolog', 'repo_root')
 
@@ -19,20 +19,6 @@ NOT_SET = object()
 
 
 log = logging.getLogger(__name__)
-
-
-def get_default_root(*, env_var,
-                     config_path=_globals.CONFIG,
-                     fallback=_globals.DEFAULT_ROOT):
-    """Return default root from environment variable, config, or fallback."""
-    root = os.getenv(env_var)
-
-    if root is None:
-        log.debug('get %r from optional config file %r', ROOT_OPTION, config_path)
-        cfg = ConfigParser.from_file(config_path, default_repo_root=fallback)
-        root = cfg.get(*ROOT_OPTION)
-
-    return root
 
 
 class ConfigParser(configparser.ConfigParser):
@@ -100,3 +86,17 @@ def configure(config_path=_globals.CONFIG,
         root = config_path.parent / root
 
     md.set_root(root)
+
+
+def get_default_root(*, env_var,
+                     config_path=_globals.CONFIG,
+                     fallback=_globals.DEFAULT_ROOT):
+    """Return default root from environment variable, config, or fallback."""
+    root = os.getenv(env_var)
+
+    if root is None:
+        log.debug('get %r from optional config file %r', ROOT_OPTION, config_path)
+        cfg = ConfigParser.from_file(config_path, default_repo_root=fallback)
+        root = cfg.get(*ROOT_OPTION)
+
+    return root
