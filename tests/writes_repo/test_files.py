@@ -6,7 +6,7 @@ from treedb import glottolog
 pytestmark = pytest.mark.writes
 
 
-@pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized',
+@pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized master',
                                  raises=AssertionError)
 def test_roundtrip(treedb):
     if not glottolog.git_status_is_clean(treedb.root):

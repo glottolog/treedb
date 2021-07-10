@@ -212,7 +212,7 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
-xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized',
+xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized master',
                                                             raises=AssertionError)
 
 

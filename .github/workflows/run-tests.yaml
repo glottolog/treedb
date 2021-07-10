@@ -46,14 +46,31 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+      - name: Setup pip cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install .[test,pretty,pandas] codecov
-      - name: Config git (if windows-latest)
-        if: ${{ matrix.os == 'windows-latest' }}
+      - name: Config git (if windows)
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: git config --system core.longpaths true
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
       - name: Upload coverage
         uses: codecov/codecov-action@v1
+      - name: Upload artifacts ${{ matrix.os }}-${{ matrix.python-version }}${{ matrix.args }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-${{ matrix.python-version }}${{ matrix.args }}
+          path: |
+            treedb.log
+            treedb*.sqlite3
+            treedb*.jsonl
+            treedb*.csv
