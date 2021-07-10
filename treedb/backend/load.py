@@ -11,9 +11,8 @@ import sqlalchemy as sa
 from .. import _globals
 from .. import _tools
 
-from .. import md as _md
-
 from .. import config as _config
+from .. import languoids as _languoids
 
 from .. import glottolog as _glottolog
 
@@ -29,9 +28,9 @@ log = logging.getLogger(__name__)
 
 
 def get_root(repo_root, *, default,
-             treepath=_md.TREE_IN_ROOT):
+             treepath=_languoids.TREE_IN_ROOT):
     if repo_root is not None:
-        root = _md.set_root(repo_root, treepath=treepath)
+        root = _languoids.set_root(repo_root, treepath=treepath)
     else:
         root = default
 
@@ -76,7 +75,7 @@ def get_dataset(engine, *, exclude_raw: bool, strict: bool):
 
 
 def main(filename=_globals.ENGINE, repo_root=None,
-         *, treepath=_md.TREE_IN_ROOT,
+         *, treepath=_languoids.TREE_IN_ROOT,
          metadata=_globals.REGISTRY.metadata,
          require: bool = False,
          rebuild: bool = False,

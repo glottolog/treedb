@@ -1,4 +1,4 @@
-"""Load, parse, serialize, and write ``md.ini`` files."""
+"""Load, parse, serialize, and write ``languoids/tree/**/md.ini`` files."""
 
 import typing
 

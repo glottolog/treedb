@@ -1,3 +1,5 @@
+"""Set the root for the ``languoids/tree/**/md.ini`` file tree."""
+
 import logging
 
 from .. import _globals

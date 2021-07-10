@@ -56,7 +56,7 @@ def configure(config_path=_globals.CONFIG,
     log.debug('default repo root: %r', default_repo_root)
 
     from . import backend
-    from . import md
+    from . import languoids
     from . import logging_
 
     config_path = _tools.path_from_filename(config_path)
@@ -85,7 +85,7 @@ def configure(config_path=_globals.CONFIG,
     if not root.is_absolute():
         root = config_path.parent / root
 
-    md.set_root(root)
+    languoids.set_root(root)
 
 
 def get_default_root(*, env_var,

@@ -7,8 +7,8 @@ import sqlalchemy as sa
 
 from .. import _globals
 from .. import _tools
-from .. import md as _md
-from ..md import fields as _fields
+from .. import languoids as _languoids
+from ..languoids import fields as _fields
 
 from .models import File, Option, Value
 
@@ -77,7 +77,7 @@ def main(root, *, conn):
 
     insert_value = functools.partial(conn.execute, sa.insert(Value))
 
-    for path_tuple, dentry, cfg in _md.iterfiles(root):
+    for path_tuple, dentry, cfg in _languoids.iterfiles(root):
         sha256 = _tools.sha256sum(dentry.path, raw=True)
 
         file_params = {'glottocode': path_tuple[-1],

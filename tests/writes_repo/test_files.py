@@ -12,7 +12,7 @@ def test_roundtrip(treedb):
     if not glottolog.git_status_is_clean(treedb.root):
         raise RuntimeError(f'root must be clean for test: {treedb.root!r}')
 
-    result = treedb.md.files.roundtrip()
+    result = treedb.languoids.files.roundtrip()
 
     clean = glottolog.git_status_is_clean(treedb.root)
     if not clean:

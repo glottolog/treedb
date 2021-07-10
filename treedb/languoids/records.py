@@ -1,4 +1,4 @@
-"""Parse an ``md.ini`` record into a languoid and serialize it."""
+"""Parse a ``languoids/tree/**/md.ini`` record into a languoid and serialize it."""
 
 import datetime
 import logging
