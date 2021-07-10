@@ -1,0 +1,59 @@
+name: Run tests
+on:
+  - push
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - 3.9
+          - 3.8
+          - 3.7
+          - 3.6
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        args:
+          - "--run-writes"
+          - "--skip-slow --exclude-raw"
+        exclude:
+          - python-version: 3.9
+            args: "--skip-slow --exclude-raw"
+          - python-version: 3.8
+            args: "--run-writes"
+          - python-version: 3.7
+            args: "--run-writes"
+          - python-version: 3.6
+            args: "--run-writes"
+          - python-version: 3.8
+            os: windows-latest
+          - python-version: 3.7
+            os: windows-latest
+          - python-version: 3.6
+            os: windows-latest
+          - os: macos-latest  # slow
+        include:
+          - python-version: 3.9
+            os: ubuntu-latest
+            args: "--glottolog-tag=master --run-writes"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[test,pretty,pandas] codecov
+      - name: Config git (if windows-latest)
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: git config --system core.longpaths true
+      - name: Run tests with ${{ matrix.args }}
+        run: python run-tests.py ${{ matrix.args }}
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
