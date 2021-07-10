@@ -54,10 +54,10 @@ jobs:
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .[test,pretty,pandas] codecov
+        run: pip install .[test,pretty,pandas] codecov
       - name: Config git (if windows)
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: git config --system core.longpaths true
