@@ -212,6 +212,10 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
+xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized',
+                                                            raises=AssertionError)
+
+
 xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='float normalization',
                                                             # https://github.com/glottolog/glottolog/pull/495
                                                             raises=AssertionError)
@@ -222,11 +226,13 @@ xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='floa
                   {'source': 'raw'},
                   {'source': 'tables'}],
                  id='files, raw, tables',
-                 marks=xfail_float_normalization),
+                 marks=[xfail_master_unnormalized,
+                        xfail_float_normalization]),
     pytest.param([{'source': 'raw', 'order_by': 'id'},
                   {'source': 'tables', 'order_by': 'id'}],
                  id='raw(order_by=id), tables(order_by=id)',
-                 marks=xfail_float_normalization),
+                 marks=[xfail_master_unnormalized,
+                        xfail_float_normalization]),
     pytest.param([{'source': 'files', 'limit': 100,
                    'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
                   {'source': 'raw', 'order_by': 'file', 'limit': 100,
