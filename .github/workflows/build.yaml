@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}-${{ hashFiles('**/requirements.txt') }}
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install dependencies
