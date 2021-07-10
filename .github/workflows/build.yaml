@@ -8,30 +8,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu-3.9-full
+          - name: linux-3.9-full
             python-version: 3.9
-            os: ubuntu-latest
             args: "--run-writes"
-          - name: ubuntu-3.9-full-master
-            python-version: 3.9
             os: ubuntu-latest
+          - name: linux-3.9-full-master
+            python-version: 3.9
             args: "--glottolog-tag=master --run-writes"
+            os: ubuntu-latest
           - name: windows-3.9-full
             python-version: 3.9
-            os: windows-latest
             args: "--run-writes"
-          - name: ubuntu-3.8-quick
+            os: windows-latest
+          - name: linux-3.8-quick
             python-version: 3.8
-            os: ubuntu-latest
             args: "--skip-slow --exclude-raw"
-          - name: ubuntu-3.7-quick
+            os: ubuntu-latest
+          - name: linux-3.7-quick
             python-version: 3.7
-            os: ubuntu-latest
             args: "--skip-slow --exclude-raw"
-          - name: ubuntu-3.6-quick
+            os: ubuntu-latest
+          - name: linux-3.6-quick
             python-version: 3.6
-            os: ubuntu-latest
             args: "--skip-slow --exclude-raw"
+            os: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
