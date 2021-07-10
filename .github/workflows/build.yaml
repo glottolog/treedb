@@ -2,7 +2,7 @@ name: Run tests
 on:
   - push
 jobs:
-  test:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
