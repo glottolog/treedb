@@ -15,7 +15,7 @@ setup(
     project_urls={
         'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',
         'Issue Tracker': 'https://github.com/glottolog/treedb/issues',
-        'CI': 'https://travis-ci.org/glottolog/treedb',
+        'CI': 'https://github.com/glottolog/treedb/actions',
         'Coverage': 'https://codecov.io/gh/glottolog/treedb',
     },
     packages=find_packages(),
