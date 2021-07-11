@@ -5,7 +5,6 @@ import typing
 
 from . import _globals
 from . import _tools
-
 from . import languoids as _languoids
 
 __all__ = ['iterconfigs',

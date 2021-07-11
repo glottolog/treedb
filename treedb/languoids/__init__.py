@@ -6,10 +6,9 @@ from .. import _globals
 from .. import _tools
 
 from ._root import TREE_IN_ROOT, set_root, get_repo_root
-
 from .files import iterfiles
 
-__all__ = ['set_root', 'get_repo_root',
+__all__ = ['TREE_IN_ROOT', 'set_root', 'get_repo_root',
            'iterfiles',
            'iterrecords']
 

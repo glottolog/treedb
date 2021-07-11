@@ -64,6 +64,7 @@ def pytest_addoption(parser):
                      dest='sqlalchemy_warn_20',
                      help="don't set os.environ['SQLALCHEMY_WARN_20']")
 
+
 def pytest_configure(config):
     file_engine_tag = string.Template(config.option.file_engine_tag)
     file_engine_tag = file_engine_tag.substitute(config.option.__dict__)

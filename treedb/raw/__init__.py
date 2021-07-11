@@ -6,7 +6,6 @@ from .export import (print_stats,
                      write_files)
 
 from .models import File, Option, Value
-
 from .records import fetch_records
 
 __all__ = ['print_stats',

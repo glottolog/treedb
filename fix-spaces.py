@@ -17,8 +17,7 @@ treedb.check()
 
 update = (sa.update(treedb.raw.Value)
           .where(sa.select(1)
-                 .where(treedb.raw.Value.option_id
-                        == treedb.raw.Option.id)
+                 .where(treedb.raw.Value.option_id == treedb.raw.Option.id)
                  .where(treedb.raw.Option.section == 'classification')
                  .where(treedb.raw.Option.option == 'sub')
                  .exists())
@@ -33,4 +32,4 @@ with treedb.connect() as conn:
 
 print('', f'{result.rowcount:d} lines replaced', sep='\n')  # 41, 0
 
-#print('', f"{treedb.write_files(source='raw')} files written", sep='\n')  # 41
+#print('', f"{treedb.write_files(source='raw')} files written", sep='\n')  # 41, 0

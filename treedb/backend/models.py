@@ -26,8 +26,10 @@ class Dataset:
 
     title = sa.Column(sa.Text, sa.CheckConstraint("title != ''"), nullable=False)
 
-    git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'), nullable=False, unique=True)
-    git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"), nullable=False, unique=True)
+    git_commit = sa.Column(sa.String(40), sa.CheckConstraint('length(git_commit) = 40'),
+                           nullable=False, unique=True)
+    git_describe = sa.Column(sa.Text, sa.CheckConstraint("git_describe != ''"),
+                             nullable=False, unique=True)
     clean = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
     version = sa.Column(sa.Text, sa.CheckConstraint("version != ''"))

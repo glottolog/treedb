@@ -82,7 +82,7 @@ SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.
 FROM languoid 
 WHERE languoid.iso639_3 = :iso639_3_1
 abin1243: Abinomn (language) [bsa]
-'''
+'''  # noqa: E501,W291
 
 
 def test_write_csv(pytestconfig, treedb):

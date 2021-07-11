@@ -35,8 +35,8 @@ use custom markers and ``pytestconfig`` for test setup.
 Increase test coverage. Move shared helpers to ``tests/helpers.py``. Improve
 test ids and summary output. Include Glottolog tag/branch in output file names.
 
-Add checksum for Glottolog 4.4, drop Glottolog 4.2 test hashes in favour of
-4.2.1. Add xfail for master checksum equivalence. Promote skips to xfails.
+Add checksum for Glottolog 4.4. Drop Glottolog 4.2 test hashes (in favour of
+4.2.1). Add xfail for master checksum equivalence. Promote skips to xfails.
 
 Migrate CI from Travis to GitHub Actions.
 

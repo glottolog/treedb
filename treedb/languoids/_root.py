@@ -5,8 +5,6 @@ import logging
 from .. import _globals
 from .. import _tools
 
-from .files import iterfiles
-
 __all__ = ['set_root', 'get_repo_root']
 
 TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')

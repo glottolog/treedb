@@ -3,7 +3,6 @@
 import logging
 
 from . import _tools
-
 from . import languoids as _languoids
 
 __all__ = ['checkout_or_clone',

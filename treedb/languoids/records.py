@@ -220,7 +220,7 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
       'endangerment': {},
       'hh_ethnologue_comment': {},
       'iso_retirement': {}}}
-    """
+    """  # noqa: E501
     for path, l in languoids:
         record = make_record(l, convert_lines=convert_lines)
         yield path, record

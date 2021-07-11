@@ -11,7 +11,6 @@ import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
 from .._globals import ENGINE
-
 from .. import _compat
 from .. import _globals
 from .. import _proxies

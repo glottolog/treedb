@@ -8,7 +8,6 @@ import typing
 import warnings
 
 from . import _compat
-
 from . import _globals
 from . import _tools
 from . import backend as _backend
@@ -146,7 +145,7 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
     | jq -s "group_by(.languoid.level)[]| {level: .[0].languoid.level, n: length}"
 
     $ jq "del(recurse | select(. == null or arrays and empty))" treedb.languoids.jsonl > treedb.languoids-jq.jsonl
-    """
+    """  # noqa: E501
     if file is None:
         file = FALLBACK_ENGINE_PATH if source == 'files' else bind.file
         file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')

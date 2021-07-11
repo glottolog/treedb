@@ -9,7 +9,7 @@ def test_select_languoid_timespan(treedb):
     timespan = treedb.queries.select_languoid_timespan(as_json=False,
                                                        label='ts')
     select = (sa.select(treedb.Languoid, timespan)
-              .where(timespan != None).limit(1))
+              .where(timespan != sa.null()).limit(1))
     with treedb.connect() as conn:
         row = conn.execute(select).one()
 

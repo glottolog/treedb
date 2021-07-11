@@ -10,13 +10,10 @@ import sqlalchemy as sa
 
 from .. import _globals
 from .. import _tools
-
-from .. import config as _config
-from .. import languoids as _languoids
-
-from .. import glottolog as _glottolog
-
 from .. import backend as _backend
+from .. import languoids as _languoids
+from .. import config as _config
+from .. import glottolog as _glottolog
 
 from . import models as _models
 from . import views as _views

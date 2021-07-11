@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from helpers import (MB, pairwise,
+from helpers import (pairwise,
                      get_assert_head,
                      assert_nonempty_string,
                      assert_nonempty_dict,
