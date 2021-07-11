@@ -55,7 +55,7 @@ jobs:
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: git config --system core.longpaths true
       - name: Run tests with ${{ matrix.args }}
-        run: python run-tests.py ${{ matrix.args }}
+        run: python run-tests.py ${{ matrix.args }} --installed --cov=treedb
       - name: Upload coverage
         uses: codecov/codecov-action@v1
       - name: Upload artifacts ${{ matrix.name }}
