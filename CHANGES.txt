@@ -5,10 +5,40 @@ Changelog
 Version 2.4 (in development)
 ----------------------------
 
-Rename ``endangerment_source`` table to ``endangerment_source``.
+Rename table ``endangerment_source`` to ``endangerment_source``.
 
-Change ``iterfiles`` to yield ``path_tuple, DirEntry, ConfigParser`` instead of
-``path_tuple, ConfigParser, DirEntry``.
+Change ``iterfiles()`` to yield ``path_tuple, DirEntry, ConfigParser`` instead
+of ``path_tuple, ConfigParser, DirEntry``.
+
+Include ``version`` from ``config/publication.ini`` in table ``__dataset__``.
+
+Enforce unique ``pseudofaimily`` with ``bookkeeping`` by using ``NULL`` instead
+of ``FALSE`` for non-bookkeeping rows.
+
+Add ``write_files(source='raw_lines')`` as shortcut for ``raw.write_files()``.
+
+Fix ``write_files(source='raw')``.
+
+Implement ``records.pipe(dump=True, convert_lines=True)``.
+
+Reorganize ``queries.py`` for better code re-use, refactor example query
+using more explicit ``JOIN`` syntax and more uniform aliases.
+
+Improve internal package structure with ``languoids`` submodule. Move
+``ConfigParser`` to ``_tools.py``. Centralize repo git commands in
+`glottolog.py``.
+
+Add ``run-tests.py`` command-line flags: ``--run-writes``, ``--skip-pandas``,
+``--skip-sqlparse``, ``--file-engine-tag``, ``--no-sqlalchemy-warn-20`` and
+use custom markers and ``pytestconfig`` for test setup.
+
+Increase test coverage. Move shared helpers to ``tests/helpers.py``. Improve
+test ids and summary output. Include Glottolog tag/branch in output file names.
+
+Add checksum for Glottolog 4.4, drop Glottolog 4.2 test hashes in favour of
+4.2.1. Add xfail for master checksum equivalence. Promote skips to xfails.
+
+Migrate CI from Travis to GitHub Actions.
 
 
 Version 2.3
