@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.4 (in development)
-----------------------------
+Version 2.4
+-----------
 
 Rename table ``endangerment_source`` to ``endangerment_source``.
 
