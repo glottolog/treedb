@@ -206,7 +206,7 @@ This tool is distributed under the `MIT license`_.
     :target: https://pypi.org/project/treedb/
     :alt: Format
 
-.. |Build| image:: https://github.com/glottolog/treedb/actions/workflows/build.yaml/badge.svg
+.. |Build| image:: https://github.com/glottolog/treedb/actions/workflows/build.yaml/badge.svg?branch=master
     :target: https://github.com/glottolog/treedb/actions/workflows/build.yaml?query=branch%3Amaster
     :alt: Build
 .. |Codecov| image:: https://codecov.io/gh/glottolog/treedb/branch/master/graph/badge.svg
