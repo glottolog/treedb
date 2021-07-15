@@ -62,7 +62,7 @@ class Option:
                       CheckConstraint('defined = 1 OR defined_any_options = 0'),
                       CheckConstraint('(defined = 0) = (ord_section IS NULL)'),
                       CheckConstraint('ord_section IS NOT NULL'
-                                      ' OR ord_section IS NOT NULL'))
+                                      ' OR ord_option IS NULL'))
 
 
 @registry.mapped
