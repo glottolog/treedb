@@ -59,15 +59,12 @@ class OptionMap(dict):
 def itervalues(cfg, file_id, *, option_map):
     get_line = _tools.next_count(start=1)
     for section, sec in cfg.items():
-        for option, value in sec.items():
+        for option, text in sec.items():
             option_id, is_lines = option_map[section, option]
-            if is_lines:
-                for v in value.strip().splitlines():
-                    yield {'file_id': file_id, 'option_id': option_id,
-                           'line': get_line(), 'value': v}
-            else:
+            values = text.strip().splitlines() if is_lines else [text]
+            for v in values:
                 yield {'file_id': file_id, 'option_id': option_id,
-                       'line': get_line(), 'value': value}
+                       'line': get_line(), 'value': v}
 
 
 def main(root, *, conn):
