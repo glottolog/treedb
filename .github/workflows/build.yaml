@@ -44,6 +44,11 @@ jobs:
             extra: ",pandas"
             args: "--skip-slow --exclude-raw"
             os: ubuntu-latest
+          - name: linux-pypy3-quick
+            python-version: pypy3
+            extra: ""
+            args: "--skip-pandas --skip-slow --exclude-raw"
+            os: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
