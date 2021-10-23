@@ -38,7 +38,7 @@ Links
 - GitHub: https://github.com/glottolog/treedb
 - PyPI: https://pypi.org/project/treedb/
 - Example: https://nbviewer.jupyter.org/github/glottolog/treedb/blob/master/Stats.ipynb
-- Changelog: https://github.com/glottolog/treedb/blob/master/CHANGES.txt
+- Changelog: https://github.com/glottolog/treedb/blob/master/CHANGES.rst
 - Issue Tracker: https://github.com/glottolog/treedb/issues
 - Download: https://pypi.org/project/treedb/#files
 

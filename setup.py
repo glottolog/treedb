@@ -13,7 +13,7 @@ setup(
     license='MIT',
     url='https://github.com/glottolog/treedb',
     project_urls={
-        'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.txt',
+        'Changelog': 'https://github.com/glottolog/treedb/blob/master/CHANGES.rst',
         'Issue Tracker': 'https://github.com/glottolog/treedb/issues',
         'CI': 'https://github.com/glottolog/treedb/actions',
         'Coverage': 'https://codecov.io/gh/glottolog/treedb',
