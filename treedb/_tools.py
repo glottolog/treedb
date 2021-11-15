@@ -163,7 +163,7 @@ def walk_scandir(top, *,
     if not top.is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
 
-    if platform.platform().startswith('Windows-'):
+    if platform.system() == 'Windows':
         top = pathlib.Path(fr'\\?\{top}')
 
     log.debug('recursive depth-first scandir on %r', top)
