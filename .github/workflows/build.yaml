@@ -50,7 +50,7 @@ jobs:
         run: (Get-ItemProperty HKLM:System\CurrentControlSet\Control\FileSystem).LongPathsEnabled
       - name: Configure git core.longpaths (if windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
-        run: git config --global core.longpaths true
+        run: git config --system core.longpaths true
       - name: Checkout repo
         uses: actions/checkout@v2
       - name: Setup Python ${{ matrix.python-version }}
