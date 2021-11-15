@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Run the tests with https://pytest.org."""
+
 import platform
 import sys
 
@@ -43,7 +45,7 @@ if '--installed' in sys.argv[1:]:
     print(f'removed {path_item!r} from sys.path')
     ARGS += ['--import-mode', 'append']
 
-args = sys.argv[1:] + ARGS
+args = ARGS + sys.argv[1:]
 
 print(f'pytest.main({args!r})')
 sys.exit(pytest.main(args))
