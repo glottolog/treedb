@@ -19,8 +19,8 @@ jobs:
             args: "--glottolog-tag=master --run-writes"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: windows-3.9-full
-            python-version: "3.9"
+          - name: windows-3.10-full
+            python-version: "3.10"
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
