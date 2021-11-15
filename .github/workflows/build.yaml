@@ -45,6 +45,12 @@ jobs:
             args: "--skip-slow --exclude-raw"
             os: ubuntu-latest
     steps:
+      - name: Check LongPathsEnabled (if windows)
+        if: ${{ startsWith(matrix.os, 'windows-') }}
+        run: (Get-ItemProperty HKLM:System\CurrentControlSet\Control\FileSystem).LongPathsEnabled
+      - name: Configure git core.longpaths (if windows)
+        if: ${{ startsWith(matrix.os, 'windows-') }}
+        run: git config --global core.longpaths true
       - name: Checkout repo
         uses: actions/checkout@v2
       - name: Setup Python ${{ matrix.python-version }}
@@ -55,9 +61,6 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel
       - name: Pip install dependencies
         run: pip install .[test,pretty${{ matrix.extra }}] codecov
-      - name: Config git (if windows-)
-        if: ${{ startsWith(matrix.os, 'windows-') }}
-        run: git config --system core.longpaths true
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
       - name: Upload test coverage
