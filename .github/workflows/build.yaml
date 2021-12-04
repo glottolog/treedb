@@ -85,6 +85,9 @@ jobs:
       - name: Run lint-code.py (if -lint)
         if: ${{ contains(matrix.name, '-lint') }}
         run: |
+          echo ::group::Run lint-code.py --version
+          echo "$(python lint-code.py --version)"
+          echo ::endgroup::
           echo ::group::Run lint-code.py; FAILED=0; python lint-code.py || FAILED=$?; echo ::endgroup::
           [ $FAILED -eq 0 ] || echo ::warning::lint-code.py failed with exit code $FAILED
         shell: bash
