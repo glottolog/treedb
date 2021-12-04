@@ -26,7 +26,7 @@ setup(
     ],
     extras_require={
         'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],
-        'test': ['pytest>=6', 'pytest-cov'],
+        'test': ['pytest>=6', 'pytest-cov', 'coverage'],
         'pretty': ['sqlparse>=0.3'],
         'pandas': ['pandas>=1'],
     },
