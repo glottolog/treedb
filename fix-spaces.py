@@ -5,6 +5,7 @@
 import sqlalchemy as sa
 import treedb
 
+
 treedb.configure_logging(level='INFO')
 
 treedb.set_root('../glottolog')
