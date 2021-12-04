@@ -62,8 +62,8 @@ jobs:
           echo ::group::Run python -m pip install --upgrade pip setuptools wheel
           python -m pip install --upgrade pip setuptools wheel
           echo ::endgroup::
-          echo ::group::Run pip install .[test,pretty${{ matrix.extra }}]
-          pip install .[test,pretty${{ matrix.extra }}]
+          echo ::group::Run pip install .[test,pretty${{ matrix.extra }}] codecov
+          pip install .[test,pretty${{ matrix.extra }}] codecod
           echo ::endgroup::
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
