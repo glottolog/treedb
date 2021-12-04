@@ -1,8 +1,7 @@
 """Clone/checkout the Glottolog master repo."""
 
-
+import argparse
 import logging
-import types
 
 from . import _globals
 from . import _tools
@@ -19,11 +18,11 @@ REPO_URL = 'https://github.com/glottolog/glottolog.git'
 log = logging.getLogger(__name__)
 
 
-def glottolog_version(root=_globals.ROOT) -> types.SimpleNamespace:
+def glottolog_version(root=_globals.ROOT) -> argparse.Namespace:
     return GlottologVersion.from_root(root)
 
 
-class GlottologVersion(types.SimpleNamespace):
+class GlottologVersion(argparse.Namespace):
 
     @classmethod
     def from_root(cls, root) -> 'GlottologVersion':
