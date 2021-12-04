@@ -382,7 +382,7 @@ class Languoid:
                   .where(tree.c.child_id == cls.id)
                   .correlate(cls)
                   .where(tree.c.steps > 0)
-                  .where(tree.c.terminal == True)
+                  .where(tree.c.terminal == sa.true())
                   .label(family_label))
 
         Ancestor = aliased(Languoid, name='ancestor')
@@ -878,7 +878,7 @@ class Identifier:
                 f' identifier={self.identifier!r}>')
 
     languoid = relationship('Languoid', innerjoin=True,
-                             back_populates='identifiers')
+                            back_populates='identifiers')
 
     site = relationship('IdentifierSite', innerjoin=True,
                         back_populates='identifiers')
