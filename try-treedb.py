@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-"""Usage examples."""
+"""Some ``treedb``usage examples."""
 
 import pprint
 
 import sqlalchemy as sa
 import treedb
+
 
 treedb.configure(log_sql=False)
 

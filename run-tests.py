@@ -2,10 +2,13 @@
 
 """Run the tests with https://pytest.org."""
 
+import pathlib
 import platform
 import sys
 
 import pytest
+
+SELF = pathlib.Path(__file__)
 
 ARGS = [#'--run-writes',
         #'--skip-slow',
@@ -18,9 +21,9 @@ ARGS = [#'--run-writes',
         #'--showlocals',  # a.k.a. '-l'
         #'--pdb',
         #'--exitfirst',  # a.k.a. '-x'
+        #'-W', 'error',
         #'--loglevel-debug',
         #'--log-sql',
-        #'-W', 'error',
         #'--no-sqlalchemy-warn-20',
         #'--file-engine',
         #'--glottolog-tag', 'master',
@@ -31,13 +34,16 @@ ARGS = [#'--run-writes',
         #'--glottolog-repo-root', './glottolog/',
         #'--rebuild', '--force-rebuild',
         #'--exclude-raw',
-        ]
+       ]
 
 if 'idlelib' in sys.modules:
     ARGS += ['--capture', 'sys', '--color', 'no']
 
 if platform.system() == 'Windows':
     ARGS.append('--pdb')
+
+
+print('run', [SELF.name] + sys.argv[1:])
 
 if '--installed' in sys.argv[1:]:
     sys.argv[1:] = [a for a in sys.argv[1:] if a != '--installed']
