@@ -24,7 +24,7 @@ jobs:
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
-          - name: linux-3.9-quick
+          - name: linux-3.9-quick-lint
             python-version: "3.9"
             args: "--skip-slow --exclude-raw"
             extra: ",pandas"
@@ -65,11 +65,13 @@ jobs:
           echo "::group::Run python -m pip install --upgrade pip setuptools wheel"
           python -m pip install --upgrade pip setuptools wheel
           echo ::endgroup::
-          echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] codecov"
-          pip install .[test,pretty${{ matrix.extra }}] codecov
+          echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] codecov flake8"
+          pip install .[test,pretty${{ matrix.extra }}] codecov flake8
           echo ::endgroup::
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v1
       - name: Run try-treedb.py (if -full)
         if: ${{ contains(matrix.os, '-full') }}
         run: |
@@ -78,8 +80,12 @@ jobs:
           echo ::endgroup::
           [ $FAILED -eq 0 ] || echo "::warning::try-treedb.py failed with exit code $FAILED"
         shell: bash
-      - name: Upload test coverage
-        uses: codecov/codecov-action@v1
+      - name: Run lint-code.py (if -lint)
+        if: ${{ contains(matrix.name, '-lint') }}
+        run: |
+          echo ::group::Run lint-code.py; FAILED=0; python lint-code.py || FAILED=$?; echo ::endgroup::
+          [ $FAILED -eq 0 ] || echo ::warning::lint-code.py failed with exit code $FAILED
+        shell: bash
       - name: Upload ${{ matrix.name }} artifacts
         uses: actions/upload-artifact@v2
         with:

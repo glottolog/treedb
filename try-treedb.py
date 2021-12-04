@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+# flake8: noqa
 
-"""Some ``treedb``usage examples."""
+"""Some ``treedb`` usage examples."""
 
 import pprint
 
