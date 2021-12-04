@@ -67,6 +67,13 @@ jobs:
           echo ::endgroup::
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
+      - name: Run try-treedb.py
+        run: |
+          echo ::group::Run try-treedb.py; FAILED=0;
+          python try-treedb.py || FAILED=$?
+          echo ::endgroup::
+          [ $FAILED -eq 0 ] || echo ::warning::try-treedb.py failed with exit code $FAILED
+        shell: bash
       - name: Upload test coverage
         uses: codecov/codecov-action@v1
       - name: Upload ${{ matrix.name }} artifacts
