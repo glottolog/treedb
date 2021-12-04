@@ -78,7 +78,7 @@ class Check(object):
 
         if self.invalid_count:
             if self.detail:
-                self.invalid = session.execute(self.query).all()
+                self.invalid = session.execute(self.query).scalars().all()
                 self.show_detail(self.invalid, self.invalid_count)
             return False
         else:
