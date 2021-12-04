@@ -70,7 +70,8 @@ jobs:
           echo ::endgroup::
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
-      - name: Run try-treedb.py
+      - name: Run try-treedb.py (if -full)
+        if: ${{ contains(matrix.os, '-full') }}
         run: |
           echo "::group::Run try-treedb.py"; FAILED=0;
           python try-treedb.py || FAILED=$?
