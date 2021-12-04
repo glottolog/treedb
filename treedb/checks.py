@@ -9,7 +9,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 
 from . import _globals
-from ._globals import SESSION as Session
+from ._globals import SESSION as Session  # noqa: N811
 from .backend.models import Dataset
 from .models import (FAMILY, LANGUAGE, DIALECT,
                      Languoid, PseudoFamily, Altname, AltnameProvider)
@@ -219,7 +219,7 @@ def family_children():
 @check
 def family_languages():
     """Family has at least two languages (except 'Unclassified ...')."""
-    Family, Child = (sa.orm.aliased(Languoid, name=n)
+    Family, Child = (sa.orm.aliased(Languoid, name=n)  # noqa: N806
                      for n in ('family', 'child'))
 
     tree = Languoid.tree(include_self=False, with_terminal=True)

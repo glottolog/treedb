@@ -11,7 +11,7 @@ from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
 from sqlalchemy.orm import relationship, aliased
 
 from . import _globals
-from ._globals import REGISTRY as registry
+from ._globals import REGISTRY as registry  # noqa: N811
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -186,8 +186,8 @@ class Languoid:
         if child_root and parent_root:  # pragma: no cover
             raise ValueError('child_root and parent_root are mutually exclusive')
 
-        Child = aliased(cls, name='root' if child_root else 'child')
-        Parent = aliased(cls, name='root' if parent_root else 'parent')
+        Child = aliased(cls, name='root' if child_root else 'child')  # noqa: N806
+        Parent = aliased(cls, name='root' if parent_root else 'parent')  # noqa: N806
         return Child, Parent
 
     @classmethod
@@ -199,16 +199,16 @@ class Languoid:
         if innerjoin not in (False, True, 'reflexive'):  # pragma: no cover
             raise ValueError(f'invalid innerjoin: {innerjoin!r}')
 
-        Child, Parent = cls._aliased_child_parent(child_root=child_root,
+        Child, Parent = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
                                                   parent_root=parent_root)
 
         if from_parent:
-            Node, Relative = Parent, Child
+            Node, Relative = Parent, Child  # noqa: N806
             node_label, relative_label = 'parent_id', 'child_id'
             join_source, join_target = Node.id, Relative.parent_id
             recurse_relative = Relative.id
         else:
-            Node, Relative = Child, Parent
+            Node, Relative = Child, Parent  # noqa: N806
             node_label, relative_label = 'child_id', 'parent_id'
             join_source, join_target = Node.parent_id, Relative.id
             recurse_relative = Relative.parent_id
@@ -264,7 +264,7 @@ class Languoid:
             tree_2 = tree_2.add_columns((tree_1.c.steps + 1).label('steps'))
 
         if with_terminal:
-            GrandRelative = aliased(cls, name='grand' + ('child'
+            GrandRelative = aliased(cls, name='grand' + ('child'  # noqa: N806
                                                          if from_parent else
                                                          'parent'))
             if from_parent:  # pragma: no cover
@@ -329,14 +329,14 @@ class Languoid:
                          node_level=node_level,
                          with_steps=with_steps, with_terminal=with_terminal)
 
-        Child, Parent = cls._aliased_child_parent(child_root=child_root,
+        Child, Parent = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
                                                   parent_root=parent_root)
 
         if from_parent:
-            Node, Relative = Parent, Child
+            Node, Relative = Parent, Child  # noqa: N806
             node_label, relative_label = 'parent_id', 'child_id'
         else:
-            Node, Relative = Child, Parent
+            Node, Relative = Child, Parent  # noqa: N806
             node_label, relative_label = 'child_id', 'parent_id'
 
         del Child, Parent
@@ -353,7 +353,7 @@ class Languoid:
     @classmethod
     def child_ancestor(cls, *, innerjoin=False,
                        child_level=None):
-        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,
+        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,  # noqa: N806
                                                            innerjoin=innerjoin,
                                                            node_level=child_level)
         return Child, Parent, _, child_parent
@@ -361,7 +361,7 @@ class Languoid:
     @classmethod
     def parent_descendant(cls, *, innerjoin=False,
                           parent_root=None, parent_level=None):
-        Parent, Child, _, parent_child = cls.node_relative(from_parent=True,
+        Parent, Child, _, parent_child = cls.node_relative(from_parent=True,  # noqa: N806
                                                            innerjoin=innerjoin,
                                                            parent_root=parent_root,
                                                            node_level=parent_level)
@@ -385,7 +385,7 @@ class Languoid:
                   .where(tree.c.terminal == sa.true())
                   .label(family_label))
 
-        Ancestor = aliased(Languoid, name='ancestor')
+        Ancestor = aliased(Languoid, name='ancestor')  # noqa: N806
 
         language = (sa.select(tree.c.parent_id)
                     .where(tree.c.child_id == cls.id)

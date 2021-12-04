@@ -26,7 +26,7 @@ def _import_pandas():
 
     if PANDAS is None:
         try:
-            import pandas as PANDAS
+            import pandas as PANDAS  # noqa: N812
         except ImportError as e:  # pragma: no cover
             warnings.warn(f'failed to import pandas: {e}')
         else:

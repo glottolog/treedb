@@ -24,7 +24,7 @@ def set_root(repo_root, *, resolve=False,
     if resolve:
         repo_path = repo_path.resolve(strict=False)
 
-    ROOT = _globals.ROOT
+    ROOT = _globals.ROOT  # noqa: N806
     ROOT.path = repo_path / _tools.path_from_filename(treepath)
     return ROOT
 

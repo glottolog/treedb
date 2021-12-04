@@ -5,7 +5,7 @@ import warnings
 
 import sqlalchemy as sa
 
-from .._globals import REGISTRY as registry
+from .._globals import REGISTRY as registry  # noqa: N811
 
 from .. import _tools
 from .. import backend as _backend

@@ -1,6 +1,6 @@
 """Load Glottolog lanuoid tree ``md.ini`` files into SQLite3 database."""
 
-from ._globals import SESSION as Session
+from ._globals import SESSION as Session  # noqa: N811
 from ._tools import sha256sum
 from .backend import (print_versions,
                       set_engine,
@@ -20,7 +20,7 @@ from .backend.load import main as load
 from .backend.models import Dataset, Producer, Config
 from .backend.pandas import pd_read_sql, pd_read_json_lines
 from .backend.sqlite_master import print_table_sql, select_tables_nrows
-from .backend.views import TABLES as views
+from .backend.views import TABLES as views  # noqa: N811
 from .languoids import set_root, iterfiles
 from .checks import check, compare_languoids
 from .export import (print_languoid_stats,

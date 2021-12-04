@@ -56,7 +56,7 @@ def get_stats_query():
 
         return select_nrows
 
-    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',
+    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',  # noqa: N806
                                                          parent_root=True)
 
     language_count = functools.partial(languoid_count,
@@ -723,7 +723,7 @@ def iterdescendants(parent_level: typing.Optional[str] = None,
     else:  # pragma: no cover
         raise ValueError(f'invalid parent_level: {parent_level!r}')
 
-    Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,
+    Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,  # noqa: N806
                                                              parent_level=parent_level)
 
     select_pairs = (select(Parent.id.label('parent_id'),
