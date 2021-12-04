@@ -29,7 +29,7 @@ from .export import (print_languoid_stats,
                      write_json_lines as write_languoids,
                      pd_read_languoids,
                      write_files)
-from .glottolog import checkout_or_clone
+from .glottolog import glottolog_version, checkout_or_clone
 from .logging_ import configure_logging
 from .models import LEVEL, Languoid
 from .queries import (get_example_query,
@@ -58,7 +58,7 @@ __all__ = ['Session',
            'write_languoids',
            'pd_read_languoids',
            'write_files',
-           'checkout_or_clone',
+           'glottolog_version', 'checkout_or_clone',
            'configure_logging',
            'LEVEL', 'Languoid',
            'get_example_query',

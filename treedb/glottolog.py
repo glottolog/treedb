@@ -1,11 +1,15 @@
 """Clone/checkout the Glottolog master repo."""
 
-import logging
 
+import logging
+import types
+
+from . import _globals
 from . import _tools
 from . import languoids as _languoids
 
-__all__ = ['checkout_or_clone',
+__all__ = ['glottolog_version',
+           'checkout_or_clone',
            'git_rev_parse', 'git_describe',
            'git_status', 'git_status_is_clean']
 
@@ -13,6 +17,26 @@ REPO_URL = 'https://github.com/glottolog/glottolog.git'
 
 
 log = logging.getLogger(__name__)
+
+
+def glottolog_version(root=_globals.ROOT) -> types.SimpleNamespace:
+    return GlottologVersion.from_root(root)
+
+
+class GlottologVersion(types.SimpleNamespace):
+
+    @classmethod
+    def from_root(cls, root) -> 'GlottologVersion':
+        return cls.from_commit_describe(git_rev_parse(root),
+                                        git_describe(root))
+
+    @classmethod
+    def from_commit_describe(cls, commit: str, describe: str
+                             ) -> 'GlottologVersion':
+        return cls(commit=commit, describe=describe)
+
+    def __str__(self):
+        return f'Glottolog {self.describe} ({self.commit})'
 
 
 def checkout_or_clone(tag_or_branch: str, *, target=None):
