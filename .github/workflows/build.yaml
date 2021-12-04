@@ -45,12 +45,15 @@ jobs:
             args: "--skip-slow --exclude-raw"
             os: ubuntu-latest
     steps:
-      - name: Check LongPathsEnabled (if windows)
+      - name: Check/configure long paths (if windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
-        run: (Get-ItemProperty HKLM:System\CurrentControlSet\Control\FileSystem).LongPathsEnabled
-      - name: Configure git core.longpaths (if windows)
-        if: ${{ startsWith(matrix.os, 'windows-') }}
-        run: git config --system core.longpaths true
+        run: |
+          echo "::group::Check HKLM:System\CurrentControlSet\Control\FileSystem.LongPathsEnabled"
+          (Get-ItemProperty HKLM:System\CurrentControlSet\Control\FileSystem).LongPathsEnabled
+          echo ::endgroup::
+          echo "::group::Run git config --system core.longpaths true"
+          git config --system core.longpaths true
+          echo ::endgroup::
       - name: Checkout repo
         uses: actions/checkout@v2
       - name: Setup Python ${{ matrix.python-version }}
@@ -59,20 +62,20 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Pip install dependencies
         run: |
-          echo ::group::Run python -m pip install --upgrade pip setuptools wheel
+          echo "::group::Run python -m pip install --upgrade pip setuptools wheel"
           python -m pip install --upgrade pip setuptools wheel
           echo ::endgroup::
-          echo ::group::Run pip install .[test,pretty${{ matrix.extra }}] codecov
+          echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] codecov"
           pip install .[test,pretty${{ matrix.extra }}] codecov
           echo ::endgroup::
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
       - name: Run try-treedb.py
         run: |
-          echo ::group::Run try-treedb.py; FAILED=0;
+          echo "::group::Run try-treedb.py"; FAILED=0;
           python try-treedb.py || FAILED=$?
           echo ::endgroup::
-          [ $FAILED -eq 0 ] || echo ::warning::try-treedb.py failed with exit code $FAILED
+          [ $FAILED -eq 0 ] || echo "::warning::try-treedb.py failed with exit code $FAILED"
         shell: bash
       - name: Upload test coverage
         uses: codecov/codecov-action@v1
