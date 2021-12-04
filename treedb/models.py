@@ -233,15 +233,16 @@ class Languoid:
             if from_parent:  # pragma: no cover
                 raise NotImplementedError
             tree_1_terminal = Node if innerjoin == 'reflexive' else Relative
-            terminal = sa.type_coerce(tree_1_terminal.parent_id == None, sa.Boolean)
+            terminal = sa.type_coerce(tree_1_terminal.parent_id == sa.null(),
+                                      sa.Boolean)
             tree_1 = tree_1.add_columns(terminal.label('terminal'))
 
         if child_root is not None:
-            tree_1 = tree_1.where(Child.parent_id == None if child_root else
-                                  Child.parent_id != None)
+            tree_1 = tree_1.where(Child.parent_id == sa.null() if child_root else
+                                  Child.parent_id != sa.null())
         if parent_root is not None:
-            tree_1 = tree_1.where(Parent.parent_id == None if parent_root else
-                                  Parent.parent_id != None)
+            tree_1 = tree_1.where(Parent.parent_id == sa.null() if parent_root else
+                                  Parent.parent_id != sa.null())
 
         if node_level is not None:
             if node_level not in LEVEL:  # pragma: no cover
@@ -255,7 +256,7 @@ class Languoid:
 
         tree_2_onclause = (tree_1.c[relative_label] == join_target)
         if not from_parent:
-            tree_2_onclause = sa.and_(tree_2_onclause, recurse_relative != None)
+            tree_2_onclause = sa.and_(tree_2_onclause, recurse_relative != sa.null())
 
         tree_2_fromclause = tree_1.join(Relative, tree_2_onclause)
 
@@ -268,7 +269,7 @@ class Languoid:
                                                          'parent'))
             if from_parent:  # pragma: no cover
                 raise NotImplementedError
-            tree_2 = tree_2.add_columns((GrandRelative.parent_id == None).label('terminal'))
+            tree_2 = tree_2.add_columns((GrandRelative.parent_id == sa.null()).label('terminal'))
             tree_2_fromclause = tree_2_fromclause.outerjoin(GrandRelative,
                                                             Relative.parent_id
                                                             == GrandRelative.id)
@@ -568,7 +569,7 @@ class Link:
 
     @classmethod
     def printf(cls, *, label: str = 'printf'):
-        return sa.case((cls.title != None,
+        return sa.case((cls.title != sa.null(),
                         sa.func.printf('[%s](%s)', cls.title, cls.url)),
                        else_=cls.url).label(label)
 
@@ -677,15 +678,15 @@ class Source:
     @classmethod
     def printf(cls, bibfile, bibitem,
                *, label: str = 'printf'):
-        return sa.case((sa.and_(cls.pages != None, cls.trigger != None),
+        return sa.case((sa.and_(cls.pages != sa.null(), cls.trigger != sa.null()),
                         sa.func.printf('**%s:%s**:%s<trigger "%s">',
                                        bibfile.name, bibitem.bibkey,
                                        cls.pages, cls.trigger)),
-                       (cls.pages != None,
+                       (cls.pages != sa.null(),
                         sa.func.printf('**%s:%s**:%s',
                                        bibfile.name, bibitem.bibkey,
                                        cls.pages)),
-                       (cls.trigger != None,
+                       (cls.trigger != sa.null(),
                         sa.func.printf('**%s:%s**<trigger "%s">',
                                        bibfile.name, bibitem.bibkey,
                                        cls.trigger)),
@@ -954,7 +955,7 @@ class ClassificationRef:
     @classmethod
     def printf(cls, bibfile, bibitem,
                *, label: str = 'printf'):
-        return sa.func.printf(sa.case((cls.pages != None, '**%s:%s**:%s'),
+        return sa.func.printf(sa.case((cls.pages != sa.null(), '**%s:%s**:%s'),
                                       else_='**%s:%s**'),
                               bibfile.name, bibitem.bibkey, cls.pages).label(label)
 
@@ -1078,7 +1079,7 @@ class EndangermentSource:
     @classmethod
     def printf(cls, bibfile, bibitem,
                *, label: str = 'printf'):
-        return sa.case((cls.bibitem_id == None, cls.name),
+        return sa.case((cls.bibitem_id == sa.null(), cls.name),
                        else_=sa.func.printf('**%s:%s**:%s',
                                             bibfile.name, bibitem.bibkey,
                                             cls.pages)).label(label)
@@ -1119,7 +1120,7 @@ class EthnologueComment:
                               comment=cls.comment,
                               sort_keys_=sort_keys)
         if optional:
-            return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
+            return sa.case((cls.languoid_id == sa.null(), None), else_=mapping).label(label)
         return mapping.label(label)
 
 
@@ -1181,7 +1182,7 @@ class IsoRetirement:
                               comment=cls.comment,
                               sort_keys_=sort_keys)
         if optional:
-            return sa.case((cls.languoid_id == None, None), else_=mapping).label(label)
+            return sa.case((cls.languoid_id == sa.null(), None), else_=mapping).label(label)
         return mapping.label(label)
 
 
