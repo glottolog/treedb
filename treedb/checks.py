@@ -242,9 +242,13 @@ def family_languages():
                    .scalar_subquery() < 2))
 
 
-@check
 def bookkeeping_no_children():
-    """Bookkeeping languoids lack children (book1242 is flat)."""
+    """Bookkeeping languoids lack children (book1242 is flat).
+
+    changed in Glottolog 4.4.1.dev0
+    https://github.com/glottolog/glottolog/pull/78
+    see e.g. book1242/pend1244 in 3c83d9f685f230f5cb1880e278536793c71cc69e
+    """
     parent = sa.orm.aliased(Languoid)
     return (sa.select(Languoid)
             .select_from(Languoid)
