@@ -15,12 +15,32 @@ PREFIX = 'path_languoid:path:sha256:'
 PREFIX_ID = 'path_languoid:id:sha256:'
 
 CHECKSUM = {'master': None,
+            'v4.5': '308e0e142683b5365d36dacb57cc22926d60c9d4b061eba6d58829b75b8843cb',
             'v4.4': '289247f73d5bf57f0a7dc8e0e2473b5625ace605dbad57b3c06fe93063d47599',
             'v4.3-treedb-fixes': '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
             'v4.2.1': '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
             'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
+         'v4.5': '''\
+26,101 languoids
+   245 families
+   182 isolates
+   427 roots
+ 8,549 languages
+ 4,348 subfamilies
+12,959 dialects
+ 7,616 Spoken L1 Languages
+   210 Sign Language
+   121 Unclassifiable
+    83 Pidgin
+    68 Unattested
+    31 Artificial Language
+    11 Mixed Language
+    15 Speech Register
+ 8,155 All
+   394 Bookkeeping
+''',
          'v4.4': '''\
 25,900 languoids
    245 families
@@ -118,10 +138,12 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-@pytest.mark.parametrize('source', ['files',
-                                    pytest.param('raw', marks=pytest.mark.raw),
-                                    'tables'],
-                         ids=lambda x: f'source={x}')
+@pytest.mark.parametrize(
+    'source',
+    ['files',
+     pytest.param('raw', marks=pytest.mark.raw),
+     'tables'],
+    ids=lambda x: f'source={x}')
 def test_checksum(pytestconfig, treedb, source):
     expected = CHECKSUM.get(pytestconfig.option.glottolog_tag)
 
@@ -194,11 +216,12 @@ def test_write_json_lines(pytestconfig, capsys, treedb, suffix, n=100):
 
 
 @pytest.mark.pandas
-@pytest.mark.parametrize('source',
-                         ['files',
-                          pytest.param('raw', marks=pytest.mark.raw),
-                          'tables'],
-                         ids=lambda x: f'source={x}')
+@pytest.mark.parametrize(
+    'source',
+    ['files',
+     pytest.param('raw', marks=pytest.mark.raw),
+     'tables'],
+    ids=lambda x: f'source={x}')
 def test_pd_read_languoids(treedb, source, limit=1_000):
     df = treedb.pd_read_languoids(source=source)
 
@@ -226,25 +249,26 @@ xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='floa
                                                             raises=AssertionError)
 
 
-@pytest.mark.parametrize('kwargs', [
-    pytest.param([{'source': 'files'},
-                  {'source': 'raw'},
-                  {'source': 'tables'}],
-                 id='files, raw, tables',
-                 marks=[xfail_master_unnormalized,
-                        xfail_float_normalization]),
-    pytest.param([{'source': 'raw', 'order_by': 'id'},
-                  {'source': 'tables', 'order_by': 'id'}],
-                 id='raw(order_by=id), tables(order_by=id)',
-                 marks=[xfail_master_unnormalized,
-                        xfail_float_normalization]),
-    pytest.param([{'source': 'files', 'limit': 100,
-                   'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
-                  {'source': 'raw', 'order_by': 'file', 'limit': 100,
-                   'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
-                 id='files(limit=100), raw(order_by=file, limit=100)',
-                 marks=[xfail_empty_altnames_elcat]),
-])
+@pytest.mark.parametrize(
+    'kwargs',
+    [pytest.param([{'source': 'files'},
+                   {'source': 'raw'},
+                   {'source': 'tables'}],
+                  id='files, raw, tables',
+                  marks=[xfail_master_unnormalized,
+                         xfail_empty_altnames_elcat,
+                         xfail_float_normalization]),
+     pytest.param([{'source': 'raw', 'order_by': 'id'},
+                   {'source': 'tables', 'order_by': 'id'}],
+                  id='raw(order_by=id), tables(order_by=id)',
+                  marks=[xfail_master_unnormalized,
+                         xfail_float_normalization]),
+     pytest.param([{'source': 'files', 'limit': 100,
+                    'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
+                   {'source': 'raw', 'order_by': 'file', 'limit': 100,
+                    'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
+                  id='files(limit=100), raw(order_by=file, limit=100)',
+                  marks=[xfail_empty_altnames_elcat])])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 
