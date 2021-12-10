@@ -243,8 +243,7 @@ xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='floa
                   {'source': 'raw', 'order_by': 'file', 'limit': 100,
                    'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
                  id='files(limit=100), raw(order_by=file, limit=100)',
-                 marks=[xfail_master_unnormalized,
-                        xfail_empty_altnames_elcat]),
+                 marks=[xfail_empty_altnames_elcat]),
 ])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
