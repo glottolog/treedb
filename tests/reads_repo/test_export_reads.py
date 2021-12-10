@@ -216,6 +216,11 @@ xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag('master', reason='po
                                                             raises=AssertionError)
 
 
+xfail_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag('v4.5', reason='empty altnames',
+                                                             # https://github.com/glottolog/glottolog/pull/79
+                                                             raises=AssertionError)
+
+
 xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='float normalization',
                                                             # https://github.com/glottolog/glottolog/pull/495
                                                             raises=AssertionError)
@@ -237,7 +242,9 @@ xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='floa
                    'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
                   {'source': 'raw', 'order_by': 'file', 'limit': 100,
                    'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
-                 id='files(limit=100), raw(order_by=file, limit=100)'),
+                 id='files(limit=100), raw(order_by=file, limit=100)',
+                 marks=[xfail_master_unnormalized,
+                        xfail_empty_altnames_elcat]),
 ])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
