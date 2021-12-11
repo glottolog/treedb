@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.4.1 (in development)
-------------------------------
+Version 2.4.1
+-------------
 
 Disable ``treedb.checks.bookkeeping_no_children()``
 for upstream change in Glottolog ``v4.5``.
@@ -11,6 +11,8 @@ for upstream change in Glottolog ``v4.5``.
 Add test checksums for Glottolog ``v4.5``.
 
 Add ``lint-code.py``.
+
+Tag Python 3.10 support.
 
 
 Version 2.4
