@@ -197,7 +197,7 @@ This tool is distributed under the `MIT license`_.
     :target: https://pypi.org/project/treedb/
     :alt: Latest PyPI Version
 .. |License| image:: https://img.shields.io/pypi/l/treedb.svg
-    :target: https://github.com/xflr6/treedb/blob/master/LICENSE.txt
+    :target: https://github.com/glottolog/treedb/blob/master/LICENSE.txt
     :alt: License
 .. |Supported Python| image:: https://img.shields.io/pypi/pyversions/treedb.svg
     :target: https://pypi.org/project/treedb/
