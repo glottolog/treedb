@@ -98,6 +98,21 @@ def main(languoids, /, *, conn):
         def params_to_key(params):
             return tuple(sorted(params.items()))
 
+        def to_tree_reference(self):
+            inst = self.__class__(conn=self.conn)
+
+            def iteritems(items):
+                for key, pk in items:
+                    params = dict(key)
+                    new_key = (('bibfile', None),
+                               ('bibkey', None),
+                               ('name', params['name']),
+                               ('pages', None))
+                    yield new_key, pk
+
+            inst.update(iteritems(self.items()))
+            return inst
+
     insert_languoid_levels(conn)
 
     insert_macroareas(conn)
@@ -105,6 +120,8 @@ def main(languoids, /, *, conn):
     insert_endangermentstatus(conn, bibitem_ids=bibitem_ids)
 
     es_ids = EndangermentSourceMap(conn=conn)
+    insert_endangerment_sources(conn, es_ids=es_ids)
+    es_ids = es_ids.to_tree_reference()
 
     insert_languoids(conn,
                      languoids=languoids,
@@ -197,6 +214,28 @@ def insert_endangermentstatus(conn, /, *, bibitem_ids,
                                          .partition(':')[::2]]}
               for section, s in status.items()]
     conn.execute(sa.insert(EndangermentStatus), params)
+
+
+def insert_endangerment_sources(conn, /, *, es_ids,
+                                config_file='aes_sources.ini'):
+    log.info('insert endangerment sources from: %r', config_file)
+    endangerment_sources = Config.load(filename=config_file, bind=conn)
+
+    log.debug('insert %d endangerment sources', len(endangerment_sources))
+    for section, es in endangerment_sources.items():
+        params = {'name': section,
+                  'full_name': es['name'].strip() or None,
+                  'url': es.get('url', '').strip() or None}
+
+        reference_id = es.get('reference_id', '').strip()
+        if reference_id:
+            bibfile, _, bibkey = parts = es['reference_id'].partition(':')
+            assert all(parts)
+            params.update(bibfile=bibfile, bibkey=bibkey)
+
+        key = es_ids.params_to_key(params)
+        pk = es_ids[key]
+        assert pk > 0
 
 
 def insert_languoids(conn, /, *, languoids, bibitem_ids, es_ids):
