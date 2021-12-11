@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.5 (in development)
-----------------------------
+Version 2.4.1 (in development)
+------------------------------
 
 Disable ``treedb.checks.bookkeeping_no_children()``
 for upstream change in Glottolog ``v4.5``.
