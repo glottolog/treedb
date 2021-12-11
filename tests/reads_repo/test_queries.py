@@ -16,15 +16,16 @@ def test_select_languoid_timespan(treedb):
     assert row.ts
 
 
-@pytest.mark.parametrize('kwargs, expected_head', [
-    pytest.param({'parent_level': 'top', 'child_level': 'language'},
-                 [('abin1243', []),
-                  ('abis1238', []),
-                  ('abkh1242', ['abaz1241', 'abkh1244',
-                                            'adyg1241', 'kaba1278',
-                                            'ubyk1235']),
-                  ('adai1235', [])],
-                 id='parent_level=top, child_level=language')])
+@pytest.mark.parametrize(
+    'kwargs, expected_head',
+    [pytest.param({'parent_level': 'top', 'child_level': 'language'},
+                  [('abin1243', []),
+                   ('abis1238', []),
+                   ('abkh1242', ['abaz1241', 'abkh1244',
+                                             'adyg1241', 'kaba1278',
+                                             'ubyk1235']),
+                   ('adai1235', [])],
+                  id='parent_level=top, child_level=language')])
 def test_iterdescendants(treedb, kwargs, expected_head):
     pairs = treedb.iterdescendants(**kwargs)
     head = list(itertools.islice(pairs, len(expected_head)))

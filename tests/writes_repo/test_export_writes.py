@@ -22,12 +22,13 @@ pytestmark = pytest.mark.writes
 @pytest.mark.xfail(platform.system() == 'Windows',
                    reason='FIXME: broken under Windows',
                    raises=FileNotFoundError)
-@pytest.mark.parametrize('source',
-                         ['files',
-                          pytest.param('raw_lines', marks=pytest.mark.raw),
-                          pytest.param('raw', marks=pytest.mark.raw),
-                          'tables'],
-                         ids=lambda x: f'source={x}')
+@pytest.mark.parametrize(
+    'source',
+    ['files',
+     pytest.param('raw_lines', marks=pytest.mark.raw),
+     pytest.param('raw', marks=pytest.mark.raw),
+     'tables'],
+    ids=lambda x: f'source={x}')
 def test_write_files(pytestconfig, treedb, source):
     expected = FILES_WRITTEN[source].get(pytestconfig.option.glottolog_tag)
 
