@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 def print_dataset(*, ignore_dirty: bool = False,
                   file=None,
                   bind=_globals.ENGINE):
-    with _backend.connect(bind=bind) as conn:
+    with _backend.connect(bind=bind) as conn, conn.begin():
         dataset = (conn.execute(sa.select(Dataset))
                    .mappings()
                    .one())
