@@ -1,7 +1,7 @@
 Glottolog ``treedb``
 ====================
 
-|PyPI version| |License| |Supported Python| |Format|
+|PyPI version| |License| |Supported Python| |Wheel|
 
 |Build| |Codecov|
 
@@ -197,14 +197,14 @@ This tool is distributed under the `MIT license`_.
     :target: https://pypi.org/project/treedb/
     :alt: Latest PyPI Version
 .. |License| image:: https://img.shields.io/pypi/l/treedb.svg
-    :target: https://pypi.org/project/treedb/
+    :target: https://github.com/xflr6/treedb/blob/master/LICENSE.txt
     :alt: License
 .. |Supported Python| image:: https://img.shields.io/pypi/pyversions/treedb.svg
     :target: https://pypi.org/project/treedb/
     :alt: Supported Python Versions
-.. |Format| image:: https://img.shields.io/pypi/format/treedb.svg
-    :target: https://pypi.org/project/treedb/
-    :alt: Format
+.. |Wheel| image:: https://img.shields.io/pypi/wheel/treedb.svg
+    :target: https://pypi.org/project/treedb/#files
+    :alt: Wheel format
 
 .. |Build| image:: https://github.com/glottolog/treedb/actions/workflows/build.yaml/badge.svg?branch=master
     :target: https://github.com/glottolog/treedb/actions/workflows/build.yaml?query=branch%3Amaster
