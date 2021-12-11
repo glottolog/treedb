@@ -6,7 +6,9 @@ Version 2.5 (in development)
 ----------------------------
 
 Disable ``treedb.checks.bookkeeping_no_children()``
-for upstream change in Glottolog v4.5.
+for upstream change in Glottolog ``v4.5``.
+
+Add test checksums for Glottolog ``v4.5``.
 
 
 Version 2.4
@@ -42,8 +44,10 @@ use custom markers and ``pytestconfig`` for test setup.
 Increase test coverage. Move shared helpers to ``tests/helpers.py``. Improve
 test ids and summary output. Include Glottolog tag/branch in output file names.
 
-Add checksum for Glottolog 4.4. Drop Glottolog 4.2 test hashes (in favour of
-4.2.1). Add xfail for master checksum equivalence. Promote skips to xfails.
+Add test checksum for Glottolog ``v4.4``.
+Drop Glottolog ``v4.2`` test hashes (in favour of ``v4.2.1``).
+Add xfail for Glottolog ``master`` branch checksum equivalence.
+Promote skips to xfails.
 
 Migrate CI from Travis to GitHub Actions.
 
@@ -56,7 +60,7 @@ Add ``Config`` model  and ``_config?`` table with ``glottolog/config/*.ini`` con
 Load languoid levels, macroareas, and endangerment status from ``Config``,
 compare pseudofamily ``Config`` with treedb constants.
 
-Add checksums for Glottolog v4.4.
+Add test checksums for Glottolog ``v4.4``.
 
 Improve test coverage.
 
@@ -168,7 +172,7 @@ Add explicit ``.alias()`` or ``.as_scalar()`` to implicit subqueries.
 
 Decrease progress logging verbosity.
 
-Add test checksums for Glottolog v4.3-treedb-fixes.
+Add test checksums for Glottolog ``v4.3-treedb-fixes``.
 
 Improve test reporting, update test environment.
 
@@ -474,7 +478,7 @@ Update endangerment sources.
 Version 0.1.3
 -------------
 
-Update for new altname providers and endangerment sources in Glottolog 4.1.
+Update for new altname providers and endangerment sources in Glottolog ``v4.1``.
 
 
 Version 0.1.2
