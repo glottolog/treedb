@@ -10,6 +10,8 @@ for upstream change in Glottolog ``v4.5``.
 
 Add test checksums for Glottolog ``v4.5``.
 
+Add ``lint-code.py``.
+
 
 Version 2.4
 -----------
