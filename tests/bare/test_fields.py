@@ -27,7 +27,7 @@ def test_is_known(section, option, expected):
                   id='section=core, option=unknown'),
      pytest.param('core', 'RAISES_KEYERROR', {'unknown_as_scalar': False},
                   (KeyError, r'.+'),
-                  id='section=core, option=unknown, strict')]) 
+                  id='section=core, option=unknown, strict')])
 def test_is_lines(recwarn, section, option, kwargs, expected):
     if isinstance(expected, tuple):
         if len(expected) == 3:
