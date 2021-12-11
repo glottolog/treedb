@@ -1042,18 +1042,25 @@ class EndangermentSource:
     id = Column(Integer, primary_key=True)
     name = Column(Text, CheckConstraint("name != ''"), nullable=False, unique=True)
 
+    full_name = Column(Text, CheckConstraint("full_name != ''"), unique=True)
+
     bibitem_id = Column(ForeignKey('bibitem.id'))
-    pages = Column(Text, CheckConstraint("pages != ''"))
+    pages = Column(Text, CheckConstraint("pages != ''"))  # only direct references
+
+    url = Column(Text, CheckConstraint("url != ''"))
 
     __table_args__ = (UniqueConstraint(bibitem_id, pages),
-                      CheckConstraint('(bibitem_id IS NULL) = (pages IS NULL)'))
+                      CheckConstraint('(full_name IS NULL) OR (pages IS NULL)'),
+                      CheckConstraint('(bibitem_id IS NOT NULL) OR (pages IS NULL)'))
 
     def __repr__(self):
         return (f'<{self.__class__.__name__}'
                 f' id={self.id!r}'
                 f' name={self.name!r}'
+                f' full_name={self.full_name!r}'
                 f' bibitem_id={self.bibitem_id!r}'
-                f' pages={self.pages!r}>')
+                f' pages={self.pages!r}'
+                f' url={self.url!r}>')
 
     bibitem = relationship('Bibitem',
                            back_populates='endangermentsources')

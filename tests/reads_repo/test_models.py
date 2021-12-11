@@ -130,7 +130,8 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
                   r" source_id=\d+ date=datetime\.datetime\([^)]+\)>",
                   id='model=Endangerment'),
      pytest.param(_models.EndangermentSource, _models.EndangermentSource.name == 'E22',
-                  r"<EndangermentSource id=\d+ name='E22' bibitem_id=None pages=None>",
+                  r"<EndangermentSource id=\d+ name='E22' full_name='Ethnologue 22'"
+                  r" bibitem_id=\d+ pages=None url='https://www.ethnologue.com/'>",
                   id='model=EndangermentSource(name=E22)'),
      pytest.param(_models.EthnologueComment, None,
                   r"<EthnologueComment languoid_id='\w+' isohid='[^']+' comment_type='[^']+'"
