@@ -75,7 +75,7 @@ __copyright__ = 'Copyright (c) 2017-2021 Sebastian Bank'
 
 
 # default engine: in-memory database
-engine = set_engine(None, title=__title__)
+engine = set_engine(None)
 
 
 # default root: GLOTTOLOG_REPO_ROOT, or treedb.ini glottolog:repo_root, or ./glottolog

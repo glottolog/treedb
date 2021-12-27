@@ -3,17 +3,23 @@
 
 """Some ``treedb`` usage examples."""
 
+import pathlib
 import pprint
 
 import sqlalchemy as sa
 import treedb
 
+DBFILE = None  # pathlib.Path('treedb.sqlite3')
 
+
+#treedb.configure_logging(level='INFO')
 treedb.configure(log_sql=False)
 
 pprint.pprint(dict(treedb.iterlanguoids(limit=1)))
 
-engine = treedb.load()
+engine = treedb.load(DBFILE)
+
+assert treedb.engine is engine
 
 treedb.check()  # run sanity checks
 

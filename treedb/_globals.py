@@ -8,7 +8,7 @@ from sqlalchemy.orm import (registry as _registry,
 
 from . import _proxies
 
-__all__ = ['CONFIG', 'MEMORY_TAG', 'DEFAULT_ROOT',
+__all__ = ['DEFAULT_FILESTEM', 'CONFIG', 'MEMORY_TAG', 'DEFAULT_ROOT',
            'PATH_LABEL', 'LANGUOID_LABEL', 'LANGUOID_ORDER',
            'DEFAULT_HASH', 'FILE_PATH_SEP',
            'ENGINE', 'ROOT',
@@ -16,6 +16,8 @@ __all__ = ['CONFIG', 'MEMORY_TAG', 'DEFAULT_ROOT',
            'SESSION',
            'RecordItem',
            'LanguoidItem']
+
+DEFAULT_FILESTEM = 'treedb'
 
 CONFIG = 'treedb.ini'
 

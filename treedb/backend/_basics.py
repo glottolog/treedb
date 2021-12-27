@@ -10,7 +10,7 @@ import csv23
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
-from .._globals import ENGINE
+from .._globals import DEFAULT_FILESTEM, ENGINE
 from .. import _compat
 from .. import _globals
 from .. import _proxies
@@ -76,8 +76,8 @@ def set_engine(filename, *,
         return ENGINE
 
     if filename is None:
-        if title is None:  # pragma: no cover
-            raise TypeError(f'filename=None requires title, given: {title!r}')
+        if title is None:
+            title = DEFAULT_FILESTEM
         ENGINE.memory_write_path = _tools.path_from_filename(f'{title}{title_memory_tag}',
                                                              expanduser=False)
     else:
