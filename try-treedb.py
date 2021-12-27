@@ -15,10 +15,10 @@ DBFILE = None  # pathlib.Path('treedb.sqlite3')
 #treedb.configure_logging(level='INFO')
 treedb.configure(log_sql=False)
 
+treedb.set_root('../glottolog')
 pprint.pprint(dict(treedb.iterlanguoids(limit=1)))
 
 engine = treedb.load(DBFILE)
-
 assert treedb.engine is engine
 
 treedb.check()  # run sanity checks
@@ -36,6 +36,7 @@ if lf is not None:
     lf.info(memory_usage='deep')
 
 #treedb.write_csv()
+
 #treedb.write_languoids()
 
 #treedb.write_files()
