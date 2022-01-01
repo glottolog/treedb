@@ -1,5 +1,7 @@
 """Clone/checkout the Glottolog master repo."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 
@@ -25,16 +27,16 @@ def glottolog_version(root=_globals.ROOT) -> argparse.Namespace:
 class GlottologVersion(argparse.Namespace):
 
     @classmethod
-    def from_root(cls, root) -> 'GlottologVersion':
+    def from_root(cls, root) -> GlottologVersion:
         return cls.from_commit_describe(git_rev_parse(root),
                                         git_describe(root))
 
     @classmethod
     def from_commit_describe(cls, commit: str, describe: str
-                             ) -> 'GlottologVersion':
+                             ) -> GlottologVersion:
         return cls(commit=commit, describe=describe)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Glottolog {self.describe} ({self.commit})'
 
 
