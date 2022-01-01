@@ -11,7 +11,6 @@ import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
 from .._globals import DEFAULT_FILESTEM, ENGINE
-from .. import _compat
 from .. import _globals
 from .. import _proxies
 from .. import _tools
@@ -124,7 +123,7 @@ def connect(*, bind=ENGINE,
         assert page_size is None
 
         log.debug('nested connect (no-op): %r', bind)
-        return _compat.nullcontext(bind)
+        return contextlib.nullcontext(bind)
 
     log.debug('engine connect: %r', bind)
     conn = bind.connect()

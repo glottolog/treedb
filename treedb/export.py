@@ -1,5 +1,6 @@
 """Yield languoids, write information to stdout, .csv, .jsonl, etc."""
 
+import datetime
 import itertools
 import hashlib
 import logging
@@ -7,7 +8,6 @@ import operator
 import typing
 import warnings
 
-from . import _compat
 from . import _globals
 from . import _tools
 from . import backend as _backend
@@ -239,7 +239,7 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
                                     load_json=True)
     del limit, offset
 
-    json_datetime = _compat.datetime_fromisoformat
+    json_datetime = datetime.datetime.fromisoformat
 
     rows = _backend.iterrows(query, bind=bind)
 

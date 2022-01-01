@@ -3,6 +3,7 @@
 import builtins
 import bz2
 import configparser
+import contextlib
 import functools
 import gzip
 import hashlib
@@ -20,8 +21,6 @@ import sys
 import types  # noqa: F401 (used in doctest)
 import typing
 import warnings
-
-from . import _compat
 
 ENCODING = 'utf-8'
 
@@ -367,7 +366,7 @@ def get_open_result(file, *, write: bool = False,
         log.info('write lines into: %r', fobj)
 
         def open_func():
-            return _compat.nullcontext(fobj)
+            return contextlib.nullcontext(fobj)
     else:
         log.info('write lines: %r', path)
         open_module = get_open_module(path, autocompress=autocompress)

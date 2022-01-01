@@ -71,7 +71,7 @@ __title__ = 'treedb'
 __version__ = '2.4.2.dev0'
 __author__ = 'Sebastian Bank <sebastian.bank@uni-leipzig.de>'
 __license__ = 'MIT, see LICENSE.txt'
-__copyright__ = 'Copyright (c) 2017-2021 Sebastian Bank'
+__copyright__ = 'Copyright (c) 2017-2022 Sebastian Bank'
 
 
 # default engine: in-memory database

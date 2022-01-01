@@ -5,7 +5,7 @@ Changelog
 Version 2.4.2 (in development)
 ------------------------------
 
-
+Drop Python 3.6 support.
 
 
 Version 2.4.1
