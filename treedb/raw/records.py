@@ -103,13 +103,8 @@ def window_slices(key_column, *, size: int = WINDOWSIZE,
 
     adapted from https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
     """
-    if bind.dialect.dbapi.sqlite_version_info < (3, 25):  # pragma: no cover
-        iterkeys_func = iterkeys_compat
-    else:
-        iterkeys_func = iterkeys
-
     log.info('fetch %r slices for window of %d', str(key_column.expression), size)
-    keys = iterkeys_func(key_column, size=size, bind=bind)
+    keys = iterkeys(key_column, size=size, bind=bind)
 
     try:
         end = next(keys)
@@ -143,19 +138,3 @@ def iterkeys(key_column, *, size: int = WINDOWSIZE,
     with _backend.connect(bind=bind) as conn,\
          contextlib.closing(conn.execute(select_keys)) as result:
         yield from result.scalars()
-
-
-# Python 3.6 compat
-def iterkeys_compat(key_column, *, size: int = WINDOWSIZE,
-                    bind=_globals.ENGINE):  # pragma: no cover
-    select_keys = (sa.select(key_column.label('key'))
-                   .order_by(key_column))
-
-    log.debug('SELECT every %r and yield every %d-th one using cursor iteration',
-              str(key_column.expression), size)
-
-    with _backend.connect(bind=bind) as conn,\
-         contextlib.closing(conn.execute(select_keys)) as cursor:
-        for keys in iter(functools.partial(cursor.fetchmany, size), []):
-            last, = keys[-1]
-            yield last
