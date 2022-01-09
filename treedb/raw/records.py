@@ -1,7 +1,6 @@
 """Fetch records from raw tables."""
 
 import contextlib
-import functools
 import itertools
 import logging
 import typing
