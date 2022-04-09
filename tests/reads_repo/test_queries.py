@@ -5,6 +5,8 @@ import sqlalchemy as sa
 import pytest
 
 
+@pytest.mark.xfail_glottolog_tag('v4.1', reason='no timespan in Glottolog v4.1',
+                                 raises=sa.exc.NoResultFound)
 def test_select_languoid_timespan(treedb):
     timespan = treedb.queries.select_languoid_timespan(as_json=False,
                                                        label='ts')
