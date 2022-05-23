@@ -1140,13 +1140,15 @@ class IsoRetirement:
     reason = Column(Enum(*sorted(ISORETIREMENT_REASON), create_constraint=True),
                     nullable=False)
 
-    remedy = Column(Text, CheckConstraint("remedy != ''"))
-    comment = Column(Text, CheckConstraint("comment != ''"))
+    remedy = Column(Text, #CheckConstraint("remedy != ''")
+    )
+    comment = Column(Text, #CheckConstraint("comment != ''")
+    )
 
     __table_args__ = (
         # TODO: fix disagreement
         Index('change_request_key', sa.func.coalesce(change_request, effective)),
-        CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
+        #CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
         {'info': {'without_rowid': True}},
     )
 
