@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 2.4.3 (in development)
-------------------------------
+Version 2.4.3
+-------------
 
-
+Add test checksums for Glottolog ``v4.6``.
 
 
 Version 2.4.2
