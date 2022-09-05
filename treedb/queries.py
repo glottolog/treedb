@@ -388,7 +388,7 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
             .order_by(Link.ord)
             .alias(alias))
 
-    links = group_array(link.c.jsonf) if as_json else group_concat(link.c.printf)
+    links = group_array(sa.func.json(link.c.jsonf)) if as_json else group_concat(link.c.printf)
 
     return select(links.label(label)).label(label)
 
@@ -559,7 +559,7 @@ def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
 
     if as_json:
         triggers = sa.func.nullif(group_object(triggers.c.key,
-                                               triggers.c.value),
+                                               sa.func.json(triggers.c.value)),
                                   '{}')
     else:  # pragma no cover
         raise NotImplementedError
