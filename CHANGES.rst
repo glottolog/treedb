@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 2.4.4 (in development)
-------------------------------
+Version 2.4.4
+-------------
 
-
+Fix ``queries.get_json_query()`` SQLite 3.39 compatibility.
 
 
 Version 2.4.3
