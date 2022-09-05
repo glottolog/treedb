@@ -512,7 +512,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
 
     if as_json:
         altnames = sa.func.nullif(group_object(altnames.c.key,
-                                           sa.func.json(altnames.c.value)),
+                                               sa.func.json(altnames.c.value)),
                                   '{}')
     else:  # pragma: no cover
         raise NotImplementedError
