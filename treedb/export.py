@@ -72,6 +72,7 @@ def iterlanguoids(source: str = 'files',
             if order_by not in ('path', 'file', True, None, False):  # pragma: no cover
                 raise ValueError(f'order_by={order_by!r} not implemented')
             else:
+                log.debug('rely on %r as %s order', order_by, source)
                 del order_by
 
             from . import languoids
@@ -136,6 +137,8 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
                      offset: typing.Optional[int] = 0,
                      order_by: str = _globals.LANGUOID_ORDER,
                      sort_keys: bool = True,
+                     pretty: bool = False,
+                     ensure_ascii: bool = False,
                      path_label: str = _globals.PATH_LABEL,
                      languoid_label: str = _globals.LANGUOID_LABEL,
                      bind=_globals.ENGINE):
@@ -150,34 +153,45 @@ def write_json_lines(file=None, *, suffix: str = '.jsonl',
         file = FALLBACK_ENGINE_PATH if source == 'files' else bind.file
         file = file.with_name(f'{file.stem}-{source}.languoids{suffix}')
 
-    log.info('write json lines: %r', file)
+    log.info('write json lines from %s to %r', source, file)
+    pipe_kwargs = {'sort_keys': sort_keys,
+                   'compact': True,
+                   'indent': None,
+                   'ensure_ascii': ensure_ascii,
+                   'delete_present': delete_present,
+                   'autocompress': autocompress,
+                   'newline': '\n'}
+    if pretty:
+        pipe_kwargs.update(compact=False, indent=2)
     if source in ('files', 'raw'):
         items = iterlanguoids(source,
                               limit=limit, offset=offset,
                               order_by=order_by, bind=bind)
         items = ({path_label: path, languoid_label: languoid}
                  for path, languoid in items)
-        return _tools.pipe_json_lines(file, items,
-                                      sort_keys=sort_keys,
-                                      delete_present=delete_present,
-                                      autocompress=autocompress)
+        return _tools.pipe_json_lines(file, items, **pipe_kwargs)
     elif source == 'tables':
+        sqlite_format = not pretty and not ensure_ascii
         query = _queries.get_json_query(limit=limit,
                                         offset=offset,
                                         as_rows=False,
-                                        load_json=False,
+                                        load_json=not sqlite_format,
                                         order_by=order_by,
                                         sort_keys=sort_keys,
                                         path_label=path_label,
                                         languoid_label=languoid_label)
-        del sort_keys
+        if sqlite_format:  # fast path
+            log.debug('use raw SQLite JSON format string')
+            pipe_func = _tools.pipe_lines
+            for kw in ('sort_keys', 'compact', 'indent', 'ensure_ascii'):
+                pipe_kwargs.pop(kw)
+        else:
+            log.info('roundtrip SQLite JSON for reformatting')
+            pipe_func = _tools.pipe_json_lines
 
         with _backend.connect(bind=bind) as conn:
             lines = conn.execute(query).scalars()
-            result = _tools.pipe_json_lines(file, lines,
-                                            raw=True,
-                                            delete_present=delete_present,
-                                            autocompress=autocompress)
+            result = pipe_func(file, lines, **pipe_kwargs)
         return result
     else:  # pragma: no cover
         raise ValueError(f'unknown source: {source!r}')

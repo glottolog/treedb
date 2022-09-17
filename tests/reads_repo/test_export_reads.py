@@ -235,6 +235,21 @@ def test_write_json_lines(pytestconfig, capsys, treedb, suffix, n=100):
         assert treedb.sha256sum(filepath) == expected_checksum
 
 
+def test_write_json_lines_indent(tmp_path, treedb, limit=2):
+    target = tmp_path / 'languoids.json.txt'
+    with pytest.warns(UserWarning,
+                      match=r'non-canonical JSON Lines format from indent 2'):
+        path, n_written = treedb.write_languoids(target, pretty=True,
+                                                 limit=limit)
+
+    assert path == target
+    assert n_written
+
+    text = path.read_text(encoding='utf-8')
+    assert text.startswith('{\n  "__path__": [')
+    assert text.endswith('\n    }\n  }\n}\n')
+
+
 @pytest.mark.pandas
 @pytest.mark.parametrize(
     'source',

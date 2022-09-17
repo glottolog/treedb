@@ -188,9 +188,13 @@ def walk_scandir(top, *,
         stack.extend(reversed(dirs))
 
 
-def pipe_json_lines(file, documents=None, *, raw: bool = False,
+def pipe_json_lines(file, documents=None, *,
                     delete_present: bool = True, autocompress: bool = True,
-                    sort_keys: bool = True):
+                    newline: typing.Optional[str] = '\n',
+                    sort_keys: bool = True,
+                    compact: bool = True,
+                    indent: typing.Optional[int] = None,
+                    ensure_ascii: bool = False):
     r"""Load/dump json lines as endpoint pipe.
 
     >>> with io.StringIO() as f:
@@ -212,19 +216,18 @@ def pipe_json_lines(file, documents=None, *, raw: bool = False,
     """
     lines_kwargs = {'delete_present': delete_present,
                     'autocompress': autocompress,
-                    'newline': '\n'}
+                    'newline': newline}
     json_kwargs = {'sort_keys': sort_keys,
-                   'ensure_ascii': False,
-                   'compact': True,
-                   'indent': None}
+                   'ensure_ascii': ensure_ascii,
+                   'compact': compact,
+                   'indent': indent}
 
     if documents is not None:
-        lines = (pipe_json(documents, dump=True, **json_kwargs) if not raw
-                 else documents)
+        lines = pipe_json(documents, dump=True, **json_kwargs)
         return pipe_lines(file, lines, **lines_kwargs)
 
     lines = pipe_lines(file, **lines_kwargs)
-    return pipe_json(lines, dump=False, **json_kwargs) if not raw else lines
+    return pipe_json(lines, dump=False, **json_kwargs)
 
 
 def pipe_json(documents, *, dump: bool,
@@ -247,6 +250,9 @@ def pipe_json(documents, *, dump: bool,
                               f' by compact={compact}')
             dump_kwargs.update(indent=None,
                                separators=(',', ':'))
+        elif indent:
+            warnings.warn('non-canonical JSON Lines format from indent %r' % indent)
+
         codec = functools.partial(codec, **dump_kwargs)
 
     def itercodec(docs):

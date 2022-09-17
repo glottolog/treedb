@@ -16,6 +16,7 @@ ARGS = [#'--run-writes',
         #'--skip-pandas',
         #'--skip-sqlparse',
         #'-k', 'not reads',
+        #'-k', 'indent',
         #'--collect-only',
         #'--capture', 'no',  # a.k.a '-s'
         #'--verbose',
