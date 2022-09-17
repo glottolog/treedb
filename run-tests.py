@@ -40,9 +40,8 @@ ARGS = [#'--run-writes',
 
 if 'idlelib' in sys.modules:
     ARGS += ['--capture', 'sys', '--color', 'no']
-
-if platform.system() == 'Windows':
-    ARGS.append('--pdb')
+    if platform.system() == 'Windows':
+        ARGS.append('--pdb')
 
 
 print('run', [SELF.name] + sys.argv[1:])
