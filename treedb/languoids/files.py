@@ -15,7 +15,7 @@ __all__ = ['iterfiles',
            'roundtrip',
            'write_files']
 
-BASENAME = 'md.ini'
+BASENAME = _globals.LANGUOID_FILE_BASENAME
 
 
 log = logging.getLogger(__name__)

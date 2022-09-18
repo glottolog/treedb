@@ -1,7 +1,5 @@
 """Main ``sqlalchemy`` schema for SQLite3 database."""
 
-import typing
-
 import sqlalchemy as sa
 
 from sqlalchemy import (Table, Column, ForeignKey, CheckConstraint,
@@ -12,6 +10,7 @@ from sqlalchemy.orm import relationship, aliased
 
 from . import _globals
 from ._globals import REGISTRY as registry  # noqa: N811
+from .backend import json_object, json_datetime
 
 __all__ = ['LEVEL', 'Languoid']
 
@@ -51,19 +50,6 @@ CLASSIFICATION_KIND = {c for _, c in CLASSIFICATION.values()}
 EL_COMMENT_TYPE = {'Missing', 'Spurious'}
 
 ISORETIREMENT_REASON = {'split', 'merge', 'duplicate', 'non-existent', 'change'}
-
-
-# Windows, Python < 3.9: https://www.sqlite.org/download.html
-def json_object(*, sort_keys_: bool,
-                label_: typing.Optional[str] = None, **kwargs):
-    items = sorted(kwargs.items()) if sort_keys_ else kwargs.items()
-    obj = sa.func.json_object(*[x for kv in items for x in kv])
-    return obj.label(label_) if label_ is not None else obj
-
-
-def json_datetime(date):
-    date = sa.func.replace(date, ' ', 'T')
-    return sa.func.replace(date, '.000000', '')
 
 
 @registry.mapped

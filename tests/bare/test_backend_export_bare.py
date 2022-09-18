@@ -1,3 +1,4 @@
+import io
 import re
 
 import pytest
@@ -55,3 +56,27 @@ def test_print_query_sql(capsys, bare_treedb, query, pretty, expected):
         assert norm_out == norm_exp
     else:
         assert out == expected
+
+
+def test_print_rows_pretty(bare_treedb, encoding='utf-8'):
+    value = dict.fromkeys(f'key_{i}' for i in range(10))
+    value = _treedb.backend.json_object(sort_keys_=False,
+                                        load_json_=True,
+                                        label_='record',
+                                        **value)
+    query = sa.select(value)
+    with io.StringIO() as f:
+        bare_treedb.print_rows(query, pretty=True, file=f)
+        result = f.getvalue()
+    assert result == '''\
+{'record': {'key_0': None,
+            'key_1': None,
+            'key_2': None,
+            'key_3': None,
+            'key_4': None,
+            'key_5': None,
+            'key_6': None,
+            'key_7': None,
+            'key_8': None,
+            'key_9': None}}
+'''

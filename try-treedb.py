@@ -47,3 +47,5 @@ pprint.pprint(dict([next(treedb.raw.fetch_records())]))
 #treedb.raw.write_files()
 
 #treedb.languoids.files.roundtrip()
+
+treedb.print_rows(treedb.get_languoids_query(limit=1), pretty=True)

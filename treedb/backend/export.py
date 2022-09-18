@@ -6,6 +6,8 @@ import functools
 import gzip
 import hashlib
 import logging
+import pprint
+import sys
 import typing
 import warnings
 import zipfile
@@ -204,8 +206,11 @@ def csv_zipfile(filename=None, *, exclude_raw: bool = False,
     return _tools.path_from_filename(filename)
 
 
-def print_rows(query=None, *, format_: typing.Optional[str] = None,
-               verbose: bool = False, file=None,
+def print_rows(query=None, *, file=None,
+               pretty: bool = False,
+               format_: typing.Optional[str] = None,
+               verbose: bool = False,
+               mappings: bool = True,
                bind=_globals.ENGINE):
     if query is None:
         from .. import queries as _queries
@@ -219,13 +224,35 @@ def print_rows(query=None, *, format_: typing.Optional[str] = None,
         if verbose:
             print(query, file=file)
 
-        rows = _backend.iterrows(query, mappings=True, bind=bind)
+        rows = _backend.iterrows(query,
+                                 mappings=(format_ is not None) or mappings,
+                                 bind=bind)
 
+    print_func = functools.partial(print, file=file)
     if format_ is not None:
         rows = map(format_.format_map, rows)
+    elif pretty:
+        rows = map(dict if mappings else tuple, rows)
+        print_func = PrettyPrinter(file).pprint
 
     for r in rows:
-        print(r, file=file)
+        print_func(r)
+
+
+class PrettyPrinter(pprint.PrettyPrinter):
+
+    def __init__(self, stream, *,
+                 sort_dicts: bool = False,
+                 **kwargs) -> None:
+        if sys.version_info < (3, 8):
+            if not sort_dicts:
+                warnings.warn(f'sort_dicts={sort_dicts!r} not available')
+            del sort_dicts
+        else:
+            kwargs['sort_dicts'] = sort_dicts
+        if sys.version_info >= (3, 10):
+            kwargs.setdefault('underscore_numbers', True)
+        super().__init__(stream=stream, **kwargs)
 
 
 def write_csv(query=None, filename=None,

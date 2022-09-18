@@ -21,6 +21,8 @@ DEFAULT_FILESTEM = 'treedb'
 
 CONFIG = 'treedb.ini'
 
+LANGUOID_FILE_BASENAME = 'md.ini'
+
 MEMORY_TAG = '-memory'
 
 DEFAULT_ROOT = './glottolog/'

@@ -8,10 +8,13 @@ except ImportError:  # pragma: no cover
 from ._basics import (print_versions,
                       set_engine, connect,
                       scalar, iterrows,
-                      expression_compile)
+                      expression_compile,
+                      json_object, json_datetime)
 
 __all__ = ['sqlparse',
            'print_versions',
            'set_engine', 'connect',
            'scalar', 'iterrows',
-           'expression_compile']
+           'expression_compile',
+           'json_object',
+           'json_datetime']

@@ -12,7 +12,6 @@ from . import _globals
 from . import _tools
 from . import backend as _backend
 from .backend import views as _views
-from . import models
 from .models import (LEVEL, FAMILY, LANGUAGE, DIALECT,
                      SPECIAL_FAMILIES, BOOKKEEPING,
                      ALTNAME_PROVIDER, IDENTIFIER_SITE,
@@ -288,16 +287,15 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                 'hh_ethnologue_comment': select_languoid_hh_ethnologue_comment(sort_keys=sort_keys),
                 'iso_retirement': select_languoid_iso_retirement(sort_keys=sort_keys)}
 
-    json_object = functools.partial(models.json_object, sort_keys_=sort_keys)
-    del sort_keys
-
-    value = json_object(**languoid)
+    json_object = functools.partial(_backend.json_object,
+                                    sort_keys_=sort_keys,
+                                    load_json_=load_json)
+    del sort_keys, load_json
 
     if as_rows:
         path = column_for_path_order = Languoid.path()
-        if load_json:
-            value = sa.type_coerce(value, sa.JSON)
-        columns = [path.label(path_label), value.label(languoid_label)]
+        columns = [path.label(path_label),
+                   json_object(label_=languoid_label, **languoid)]
     else:
         subquery = Languoid._path_part(include_self=True, bottomup=False)
 
@@ -310,11 +308,9 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                      .label('path_string'))
         file_path = select(file_path).label('file_path')
 
-        value = json_object(**{path_label: path_array,
-                               languoid_label: value})
-        if load_json:
-            value = sa.type_coerce(value, sa.JSON)
-        columns = [value]
+        columns = [json_object(label_=_globals.LANGUOID_FILE_BASENAME,
+                               **{path_label: path_array,
+                                  languoid_label: json_object(**languoid)})]
         column_for_path_order = file_path
 
     select_json = select(*columns).select_from(Languoid)

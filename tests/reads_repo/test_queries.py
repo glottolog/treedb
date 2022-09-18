@@ -1,4 +1,6 @@
+import io
 import itertools
+import sys
 
 import sqlalchemy as sa
 
@@ -33,3 +35,34 @@ def test_iterdescendants(treedb, kwargs, expected_head):
     head = list(itertools.islice(pairs, len(expected_head)))
 
     assert head == expected_head
+
+
+@pytest.mark.parametrize(
+    'as_rows, sort_keys',
+    [(True, False),
+     (True, True),
+     (False, False),
+     (False, True)])
+def test_languoid_query_print_rows_pretty(treedb, as_rows, sort_keys):
+    query = (treedb.get_languoids_query(as_rows=as_rows, sort_keys=sort_keys)
+             .where(treedb.Languoid.id == 'abin1243'))
+    with io.StringIO() as f:
+        treedb.print_rows(query, pretty=True, file=f)
+        result = f.getvalue()
+    assert result
+    if as_rows:
+        if sort_keys or sys.version_info < (3, 8):
+            assert result.startswith("{'__path__': 'abin1243',\n"
+                                     " 'languoid': {'altnames': {")
+        else:
+            assert result.startswith("{'__path__': 'abin1243',\n"
+                                     " 'languoid': {'id': 'abin1243',\n"
+                                     "              'parent_id': None,\n")
+    else:
+        if sort_keys or sys.version_info < (3, 8):
+            assert result.startswith("{'md.ini': {'__path__': ['abin1243'],\n"
+                                     "            'languoid': {'altnames': {")
+        else:
+            assert result.startswith("{'md.ini': {'__path__': ['abin1243'],\n"
+                                     "            'languoid': {'id': 'abin1243',\n"
+                                     "                         'parent_id': None,\n")
