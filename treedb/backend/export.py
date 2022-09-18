@@ -202,7 +202,7 @@ def csv_zipfile(filename=None, *, exclude_raw: bool = False,
                 csv23.write_csv(f, rows, header=header,
                                 dialect=dialect, encoding=encoding)
 
-    log.info('database exported')
+    log.info('database export complete.')
     return _tools.path_from_filename(filename)
 
 

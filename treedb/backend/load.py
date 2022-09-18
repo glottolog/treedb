@@ -119,7 +119,7 @@ def main(filename=_globals.ENGINE, repo_root=None,
         log.debug('load timer stopped')
         print(walltime)
 
-        log.info('database loaded')
+        log.info('database load complete.')
     else:
         log.info('use present %r', engine)
 
