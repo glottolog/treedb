@@ -303,15 +303,14 @@ def get_json_query(*, limit: typing.Optional[int] = None,
                      .label('path_array'))
         path_array = select(path_array).label('path')
 
-        file_path = (sa.func.group_concat(subquery.c.path_part,
-                                          _globals.FILE_PATH_SEP)
-                     .label('path_string'))
-        file_path = select(file_path).label('file_path')
-
         columns = [json_object(label_=_globals.LANGUOID_FILE_BASENAME,
                                **{path_label: path_array,
                                   languoid_label: json_object(**languoid)})]
-        column_for_path_order = file_path
+
+        column_for_path_order = (sa.func.group_concat(subquery.c.path_part,
+                                                      _globals.FILE_PATH_SEP)
+                                 .label('path_string'))
+        column_for_path_order = select(column_for_path_order).label('file_path')
 
     select_json = select(*columns).select_from(Languoid)
     select_json = add_order_by(select_json,
