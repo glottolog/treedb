@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 2.4.5 (in development)
-------------------------------
+Version 2.5 (in development)
+----------------------------
 
+Add ``pretty=True`` to ``write_languoids()``.
 
+Add ``mappings=False`` and ``pretty=True`` to ``print_rows()``.
 
 
 Version 2.4.4
