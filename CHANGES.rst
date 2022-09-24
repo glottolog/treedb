@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.5 (in development)
-----------------------------
+Version 2.5
+-----------
 
 Add ``pretty=True`` to ``write_languoids()``.
 
