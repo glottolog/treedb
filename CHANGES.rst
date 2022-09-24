@@ -42,7 +42,7 @@ Tag Python 3.10 support.
 Version 2.4
 -----------
 
-Rename table ``endangerment_source`` to ``endangerment_source``.
+Rename table ``endangermentsource`` to ``endangerment_source``.
 
 Change ``iterfiles()`` to yield ``path_tuple, DirEntry, ConfigParser`` instead
 of ``path_tuple, ConfigParser, DirEntry``.
@@ -140,7 +140,7 @@ to use ``'files'``, ``'raw'``, or ``'tables'`` as data source.
 
 Changed checksums from ``path_json:id:...`` to ``path_languoid:path:...`` over json lines.
 
-Rename ``treedb.write_json_lines()`` to `` treedb.write_languoids()`` making it equal to checksum.
+Rename ``treedb.write_json_lines()`` to ``treedb.write_languoids()`` making it equal to checksum.
 
 Rename ``compare_with_files()`` to ``compare_languoids()``.
 
@@ -154,11 +154,11 @@ Version 1.5
 
 Rename ``treedb.export()`` to ``treedb.csv_zipfile()``.
 
-Update SQLAlchemy to 1.4 with FUTURE=True:
+Update SQLAlchemy to 1.4 with ``FUTURE=True``:
 - remove bound select (use sqlalchemy select with scalar,
   iterrows, print_rows, write_csv, etc., or with  connect)
 - raw now records information about flag definitions
-- improved raw.print_stats() order
+- improved ``raw.print_stats()`` order
 
 Add ``print_versions()`` and ``print_dataset()``.
 
@@ -168,7 +168,7 @@ Improve package structure.
 
 Improve block-style code-formatting.
 
-Improve test environment: add --skip-slow and --log-sql
+Improve test environment: add ``--skip-slow`` and ``--log-sql``
 
 
 Version 1.4.1
@@ -180,7 +180,7 @@ Add workaround for https://bugs.python.org/issue18199.
 Version 1.4
 -----------
 
-Add support for new minimal countries format in glottolog md.ini files
+Add support for new minimal countries format in glottolog ``md.ini`` files
 (see https://github.com/glottolog/glottolog/pull/636). The previous full format
 continues to be supported for reading older versions of the repository.
 
@@ -198,7 +198,7 @@ Pin sqlalchemy dependency to version ``1.3.*``.
 
 Add explicit ``.alias()`` or ``.as_scalar()`` to implicit subqueries.
 
-Decrease progress logging verbosity.
+Decrease progress ``logging`` verbosity.
 
 Add test checksums for Glottolog ``v4.3-treedb-fixes``.
 
@@ -208,7 +208,7 @@ Improve test reporting, update test environment.
 Version 1.3.3
 -------------
 
-Restrict foreign key pragma and regexp operator to sqlite3 connections.
+Restrict foreign key pragma and regexp operator to ``sqlite3`` connections.
 
 
 Version 1.3.2
@@ -249,7 +249,7 @@ Normalize providers and sites into lookup tables.
 
 Fix exception when config file is not found.
 
-Improve logging: log sqlite3.Connection to identify in-memory databases,
+Improve logging: log ``sqlite3.Connection`` to identify in-memory databases,
 debug log package location.
 
 Improve tests.
@@ -261,7 +261,7 @@ Version 1.1
 Fix some aggregation orders in ``get_json_query()`` that depended on the
 insertion order.
 
-Fix ```get_query()`` link markup. Use the same aggregation order as
+Fix ``get_query()`` link markup. Use the same aggregation order as
 ``get_json_query``.
 
 Fixed ``treedb.iterdescendants()`` to include roots with no descencants.
@@ -274,7 +274,7 @@ primary keys.
 
 Stabilize ``treedb.print_query_sql()`` notebook output with ``flush=True``.
 
-Change __dataset__ and __producer__ primary key from BOOLEAN to INTEGER.
+Change ``__dataset__`` and ``__producer__`` primary key from ``BOOLEAN`` to ``INTEGER``.
 
 Use ``sqlite.sqlite_version`` instead of querying the engine.
 
@@ -294,7 +294,7 @@ Version 0.11
 
 Add support for the new optional core `timespan` field.
 
-Add new test flags: --glottolog-repo-root and --force-rebuild.
+Add new test flags: ``--glottolog-repo-root`` and ``--force-rebuild``.
 
 Extend tests and integrate with Travis and Codevov.
 
@@ -339,8 +339,8 @@ Version 0.8.2
 
 Add ``example`` view with ``treedb.get_query()``.
 
-Reorganized `treedb.load()` to better support repeated changes to
-`exclude_views`.
+Reorganized ``treedb.load()`` to better support repeated changes to
+``exclude_views``.
 
 
 Version 0.8.1
@@ -362,7 +362,7 @@ Version 0.8
 
 Add ``stats`` and ``path_json`` SQL views.
 
-Extend formatting of ``treedb.print_languoid_stats()```and warn in case of
+Extend formatting of ``treedb.print_languoid_stats()`` and warn in case of
 inconsistencies.
 
 Fix ``Languoid.tree(include_self=False)``.
