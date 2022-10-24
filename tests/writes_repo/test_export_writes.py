@@ -1,6 +1,5 @@
 import collections
 import functools
-import platform
 
 import pytest
 
@@ -19,9 +18,6 @@ FILES_WRITTEN = {'files': ZeroDict(),
 pytestmark = pytest.mark.writes
 
 
-@pytest.mark.xfail(platform.system() == 'Windows',
-                   reason='FIXME: broken under Windows',
-                   raises=FileNotFoundError)
 @pytest.mark.parametrize(
     'source',
     ['files',
