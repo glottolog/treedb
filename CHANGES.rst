@@ -5,7 +5,7 @@ Changelog
 Version 2.5.1 (in development)
 ------------------------------
 
-
+Tag Python 3.11 support.
 
 
 Version 2.5
