@@ -10,17 +10,17 @@ jobs:
       matrix:
         include:
           - name: linux-3.11-full
-            python-version: "3.11.0-rc.2 - 3.11"
+            python-version: "3.11"
             args: "--run-writes"
             extra: ",pandas"
             os: ubuntu-latest
           - name: linux-3.11-full-master
-            python-version: "3.11.0-rc.2 - 3.11"
+            python-version: "3.11"
             args: "--glottolog-tag=master --run-writes"
             extra: ",pandas"
             os: ubuntu-latest
           - name: windows-3.11-full
-            python-version: "3.11.0-rc.2 - 3.11"
+            python-version: "3.11"
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
