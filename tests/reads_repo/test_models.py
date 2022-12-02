@@ -7,20 +7,27 @@ import treedb.models as _models
 
 BOOK = 'book1242'
 
-RAMO = 'ramo1244'
+WALI = 'wali1263'
 
 TREE = {BOOK: [(BOOK, BOOK, 0, True)],
-        RAMO: [(RAMO, RAMO, 0, False),
-               (RAMO, 'kand1307', 1, False),
-               (RAMO, 'stge1234', 2, False),
-               (RAMO, 'newi1242', 3, False),
-               (RAMO, 'meso1253', 4, False),
-               (RAMO, 'west2818', 5, False),
-               (RAMO, 'ocea1241', 6, False),
-               (RAMO, 'east2712', 7, False),
-               (RAMO, 'cent2237', 8, False),
-               (RAMO, 'mala1545', 9, False),
-               (RAMO, 'aust1307', 10, True)]}
+        WALI: [(WALI, WALI, 0, False),
+               (WALI, 'sout3209', 1, False),
+               (WALI, 'cent2291', 2, False),
+               (WALI, 'daga1276', 3, False),
+               (WALI, 'safa1246', 4, False),
+               (WALI, 'nort3234', 5, False),
+               (WALI, 'nucl1748', 6, False),
+               (WALI, 'west2461', 7, False),
+               (WALI, 'gurm1247', 8, False),
+               (WALI, 'nucl1743', 9, False),
+               (WALI, 'otiv1239', 10, False),
+               (WALI, 'bwam1248', 11, False),
+               (WALI, 'nort2777', 12, False),
+               (WALI, 'cent2243', 13, False),
+               (WALI, 'gura1261', 14, False),
+               (WALI, 'nort3149', 15, False),
+               (WALI, 'volt1241', 16, False),
+               (WALI, 'atla1278', 17, True)]}
 
 FULL = {'include_self': True, 'with_steps': True, 'with_terminal': True}
 
@@ -35,12 +42,12 @@ EXCLUSIVE = {'with_steps': True, 'with_terminal': True}
                   id=f'child_id={BOOK}'),
      pytest.param(BOOK, None, {}, [],
                   id=f'child_id={BOOK}'),
-     pytest.param(RAMO, None, FULL, TREE[RAMO],
-                  id=f'child_id={RAMO}, include_self'),
-     pytest.param(RAMO, None, EXCLUSIVE, TREE[RAMO][1:],
-                  id=f'child_id={RAMO}'),
-     pytest.param(RAMO, None, {}, [(c, p) for c, p, _, _ in TREE[RAMO][1:]],
-                  id=f'child_id={RAMO}')])
+     pytest.param(WALI, None, FULL, TREE[WALI],
+                  id=f'child_id={WALI}, include_self'),
+     pytest.param(WALI, None, EXCLUSIVE, TREE[WALI][1:],
+                  id=f'child_id={WALI}'),
+     pytest.param(WALI, None, {}, [(c, p) for c, p, _, _ in TREE[WALI][1:]],
+                  id=f'child_id={WALI}')])
 def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
     tree = treedb.Languoid.tree(**kwargs)
 
