@@ -5,6 +5,8 @@ Changelog
 Version 2.5.1 (in development)
 ------------------------------
 
+Add test checksums for Glottolog ``v4.7``.
+
 Tag Python 3.11 support.
 
 
