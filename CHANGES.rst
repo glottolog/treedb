@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 2.6 (in development)
-----------------------------
+Version 2.6
+-----------
 
-Add support for SQLAlchemy 2.0: ``sqlalchemy~=1.4`` -> ``sqlalchemy>=1.4``.
+Enable SQLAlchemy 2.0 support: ``sqlalchemy~=1.4`` -> ``sqlalchemy>=1.4``.
 
 
 Version 2.5.1
