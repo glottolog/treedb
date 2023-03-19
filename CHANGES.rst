@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.5.1 (in development)
-------------------------------
+Version 2.5.1
+-------------
 
 Add test checksums for Glottolog ``v4.7``.
 
