@@ -28,7 +28,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
                   bind=_globals.ENGINE) -> typing.Iterator[_globals.RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
-        dbapi_conn = bind.connection.connection
+        dbapi_conn = bind.connection.driver_connection
     except AttributeError:
         dbapi_conn = None
     log.info('start generating raw records from %r', dbapi_conn or bind)

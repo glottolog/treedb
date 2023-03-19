@@ -39,7 +39,7 @@ jobs:
             args: "--skip-slow --exclude-raw"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: linux-3.7-quick
+          - name: linux-3.7-quick-sa1
             python-version: "3.7"
             extra: ",pandas"
             args: "--skip-slow --exclude-raw"
@@ -67,6 +67,12 @@ jobs:
           echo "::endgroup::"
           echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] flake8"
           pip install .[test,pretty${{ matrix.extra }}] flake8
+          echo "::endgroup::"
+      - name: Pip downgrade sqlalchemy to 1.0 version (if -sa1)
+        if: ${{ contains(matrix.name, '-sa1') }}
+        run: |
+          echo "::group::Run python -m pip install \"sqlalchemy<2\""
+          python -m pip install "sqlalchemy<2"
           echo "::endgroup::"
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}

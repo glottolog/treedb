@@ -132,7 +132,7 @@ def connect(*, bind=ENGINE,
     conn = bind.connect()
     log.debug('conn: %r', conn)
 
-    dbapi_conn = conn.connection.connection
+    dbapi_conn = conn.connection.driver_connection
     log.debug('dbapi_conn: %r', dbapi_conn)
 
     if page_size is not None:

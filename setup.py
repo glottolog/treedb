@@ -22,7 +22,7 @@ setup(
     install_requires=[
         'csv23~=0.3',
         'pycountry==22.3.5',  # date-based versioning scheme
-        'sqlalchemy>=1.4',
+        'sqlalchemy>=1.4.24',
     ],
     extras_require={
         'dev': ['tox>=3', 'flake8', 'pep8-naming', 'wheel', 'twine'],

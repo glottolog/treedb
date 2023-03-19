@@ -115,12 +115,12 @@ def backup(filename=None, *, as_new_engine: bool = False,
 
     with contextlib.closing(engine.raw_connection()) as source_fairy,\
          contextlib.closing(result.raw_connection()) as dest_fairy:
-        log.debug('sqlite3.backup(%r)', dest_fairy.connection)
+        log.debug('sqlite3.backup(%r)', dest_fairy.driver_connection)
 
         dest_fairy.execute('PRAGMA synchronous = OFF')
         dest_fairy.execute('PRAGMA journal_mode = MEMORY')
 
-        with dest_fairy.connection as dbapi_conn:
+        with dest_fairy.driver_connection as dbapi_conn:
             source_fairy.backup(dbapi_conn, pages=pages, progress=progress)
 
     log.info('database backup complete')
