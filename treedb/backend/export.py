@@ -56,7 +56,7 @@ def print_schema(metadata=_globals.REGISTRY.metadata,
                  *, file=None,
                  engine=_globals.ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
-    def print_sql(sql):
+    def print_sql(sql, *_, **__):
         print(sql.compile(dialect=engine.dialect),
               file=file)
 

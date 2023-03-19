@@ -1,3 +1,5 @@
+import sys
+
 import sqlalchemy as sa
 
 import pytest
@@ -14,6 +16,9 @@ pytestmark = pytest.mark.pandas
 @pytest.mark.filterwarnings('ignore'
                             ':the imp module is deprecated'
                             ':DeprecationWarning')
+@pytest.mark.xfail(sys.version_info < (3, 8),
+                   reason='https://github.com/pandas-dev/pandas/issues/51062',
+                   raises=TypeError)
 def test_pd_read_sql(treedb):
     query = sa.select(treedb.Languoid)
 
