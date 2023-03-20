@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 2.6.1 (in development)
-------------------------------
+Version 2.6.1
+-------------
 
-Bump minimal sqlalchemy to 1.4.24.
+Bump minimal ``sqlalchemy`` dependency to 1.4.24.
 
 
 Version 2.6
