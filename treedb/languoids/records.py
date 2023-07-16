@@ -41,14 +41,14 @@ ISO_8601_INTERVAL = re.compile(r'''
 log = logging.getLogger(__name__)
 
 
-def pipe(items, *, dump: bool,
+def pipe(items, /, *, dump: bool,
          convert_lines: bool):
     codec = _dump if dump else _parse
     return codec(items, convert_lines=convert_lines)
 
 
 def _parse(records: typing.Iterable[_globals.RecordItem],
-           *, convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
+           /, *, convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
     r"""Yield languoid items from given record ítems (from raw).
 
     >>> dict(pipe({('abin1243',):
@@ -135,7 +135,7 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
 
 
 def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
-          *, convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
+          /, *, convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
     r"""
 
     >>> dict(pipe({('abin1243',): {
@@ -227,7 +227,7 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
 
 
 def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
-                  *, convert_lines: bool) -> _globals.LanguoidType:
+                  /, *, convert_lines: bool) -> _globals.LanguoidType:
     _make_lines = _fields.parse_lines if convert_lines else make_lines_raw
 
     core = cfg[CORE]
@@ -318,7 +318,7 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
 
 
 def make_record(languoid: _globals.LanguoidType,
-                *, convert_lines: bool,
+                /, *, convert_lines: bool,
                 is_lines=_fields.is_lines) -> _globals.RecordType:
     core = {'name': languoid['name'],
             'hid': languoid['hid'],
@@ -389,7 +389,7 @@ def make_record(languoid: _globals.LanguoidType,
     return record
 
 
-def make_lines_raw(value):
+def make_lines_raw(value, /):
     """No-op.
 
     >>> make_lines_raw(None)
@@ -403,7 +403,7 @@ def make_lines_raw(value):
     return value
 
 
-def skip_empty(mapping):
+def skip_empty(mapping, /):
     """
 
     >>> skip_empty({'spam': None, 'eggs': [], 'bacon': 'ham'})
@@ -412,7 +412,7 @@ def skip_empty(mapping):
     return {k: v for k, v in mapping.items() if v}
 
 
-def get_float(mapping, key, format_=FLOAT_FORMAT):
+def get_float(mapping, key, /, *, format_=FLOAT_FORMAT):
     """
 
     >>> get_float({'spam': '1.42'}, 'spam')
@@ -427,7 +427,7 @@ def get_float(mapping, key, format_=FLOAT_FORMAT):
     return result
 
 
-def format_float(value, format_=FLOAT_FORMAT):
+def format_float(value, /, *, format_=FLOAT_FORMAT):
     """
 
     >>> format_float(1.42)
@@ -440,7 +440,7 @@ def format_float(value, format_=FLOAT_FORMAT):
     return str(float(format_ % value))
 
 
-def make_date(value, *, format_=DATE_FORMAT):
+def make_date(value, /, *, format_=DATE_FORMAT):
     """
 
     >>> make_date('2001-12-31')
@@ -449,7 +449,7 @@ def make_date(value, *, format_=DATE_FORMAT):
     return datetime.datetime.strptime(value, format_).date()
 
 
-def format_date(value, *, format_=DATE_FORMAT):
+def format_date(value, /, *, format_=DATE_FORMAT):
     """
 
     >>> format_date(datetime.date(2001, 12, 31))
@@ -458,7 +458,7 @@ def format_date(value, *, format_=DATE_FORMAT):
     return value.strftime(format_)
 
 
-def make_datetime(value, *, format_=DATETIME_FORMAT):
+def make_datetime(value, /, *, format_=DATETIME_FORMAT):
     """
 
     >>> make_datetime('2001-12-31T23:59:59')
@@ -467,7 +467,7 @@ def make_datetime(value, *, format_=DATETIME_FORMAT):
     return datetime.datetime.strptime(value, format_)
 
 
-def format_datetime(value, *, format_=DATETIME_FORMAT):
+def format_datetime(value, /, *, format_=DATETIME_FORMAT):
     """
 
     >>> format_datetime(datetime.datetime(2001, 12, 31, 23, 59, 59))
@@ -476,7 +476,7 @@ def format_datetime(value, *, format_=DATETIME_FORMAT):
     return value.strftime(format_)
 
 
-def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
+def make_interval(value, /, *, date_format=DATE_FORMAT, fix_year=True,
                   _match=ISO_8601_INTERVAL.fullmatch, strict=False):
     """
 
@@ -488,8 +488,7 @@ def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
     if value is None:
         return None
     value = value.strip()
-    ma = _match(value)
-    if ma is None:
+    if (ma := _match(value)) is None:
         warnings.warn(f'unmatched interval: {value!r}')
 
         if strict:  # pragma: no cover
@@ -523,7 +522,7 @@ def make_interval(value, date_format=DATE_FORMAT, fix_year=True,
             'end_day': end.day}
 
 
-def format_interval(value, year_tmpl='{: 05d}'):
+def format_interval(value, /, *, year_tmpl='{: 05d}'):
     """
 
     >>> format_interval({'start_year': -9999,
@@ -565,7 +564,7 @@ _COUNTRY_PATTERN = re.compile(r'''
 '''.strip(), flags=re.VERBOSE)
 
 
-def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
+def splitcountry(name, /, *, _match=_COUNTRY_PATTERN.fullmatch):
     """
 
     >>> splitcountry('The Union of the Comoros (KM)')
@@ -579,7 +578,7 @@ def splitcountry(name, *, _match=_COUNTRY_PATTERN.fullmatch):
     return groups
 
 
-def formatcountry(value, minimal=True):
+def formatcountry(value, /, *, minimal=True):
     """
 
     >>> formatcountry({'name': 'The Kingdom of Norway', 'id': 'NO'})
@@ -602,7 +601,7 @@ _LINK_PATTERN = re.compile(r'''
 '''.strip(), flags=re.VERBOSE)
 
 
-def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
+def splitlink(markdown, /, *, _match=_LINK_PATTERN.fullmatch):
     """
 
     >>> splitlink('https://www.example.com')
@@ -617,8 +616,7 @@ def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
     >>> splitlink('www.example.com')
     {'url': 'www.example.com', 'title': None, 'scheme': None}
     """
-    ma = _match(markdown)
-    if ma is not None:
+    if (ma := _match(markdown))is not None:
         title, url = ma.groups()
     else:
         title = None
@@ -634,7 +632,7 @@ def splitlink(markdown, *, _match=_LINK_PATTERN.fullmatch):
     return {'url': url, 'title': title, 'scheme': scheme}
 
 
-def formatlink(value):
+def formatlink(value, /):
     """
 
     >>> formatlink({'url': 'https://example.com'})
@@ -669,7 +667,7 @@ _SOURCE_PATTERN = re.compile(r'''
 '''.strip(), flags=re.VERBOSE)
 
 
-def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
+def splitsource(s, /, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
                 endangerment=False):
     """
 
@@ -695,7 +693,7 @@ def splitsource(s, *, _match=_SOURCE_PATTERN.match,  # pre v4.1 compat
     return result
 
 
-def formatsource(value, endangerment=False):
+def formatsource(value, /, *, endangerment=False):
     """
 
     >>> formatsource({'bibfile': 'hh', 'bibkey': '23'})
@@ -733,7 +731,7 @@ _ALTNAME_PATTERN = re.compile(r'''
 '''.strip(), flags=re.VERBOSE)
 
 
-def splitaltname(s, *, _match=_ALTNAME_PATTERN.fullmatch):
+def splitaltname(s, /, *, _match=_ALTNAME_PATTERN.fullmatch):
     """
 
     >>> splitaltname('Spam')
@@ -748,7 +746,7 @@ def splitaltname(s, *, _match=_ALTNAME_PATTERN.fullmatch):
     return _match(s).groupdict()
 
 
-def formataltname(value):
+def formataltname(value, /):
     """
 
     >>> formataltname({'name': 'Spam'})

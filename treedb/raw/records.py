@@ -50,7 +50,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
             key_column = File.glottocode
         value_key = key_column
     else:  # pragma: no cover
-        raise ValueError(f'order_by={order_by!r} not implememted')
+        raise ValueError(f'{order_by=!r} not implememted')
 
     log.info('order_by: %r', order_by)
     select_files = (sa.select(File.path)

@@ -119,8 +119,8 @@ def checksum(source: str = 'tables',
                                             sort_keys=True, bind=bind)
     log.info('%s json lines written', f'{total_lines:_d}')
 
-    offset = f'offset={offset!r}' if offset else ''
-    limit = f'limit={limit!r}' if limit is not None else ''
+    offset = f'{offset=!r}' if offset else ''
+    limit = f'{limit=!r}' if limit is not None else ''
     sliced = ','.join(s for s in (offset, limit) if s)
     sliced = f'[{sliced}]' if sliced else ''
     result = (f'{CHECKSUM_NAME}:{order_by}{sliced}'

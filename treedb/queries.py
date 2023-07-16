@@ -168,7 +168,7 @@ def add_order_by(select_languoid: sa.sql.Select,
         return select_languoid.order_by(column_for_path_order)
     elif order_by is False:  # pragma: no cover
         return select_languoid
-    raise ValueError(f'order_by={order_by!r} not implemented')  # pragma: no cover
+    raise ValueError(f'{order_by=!r} not implemented')  # pragma: no cover
 
 
 def add_model_columns(select_languoid: sa.sql.Select, model,

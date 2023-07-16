@@ -246,8 +246,7 @@ def pipe_json(documents, *, dump: bool,
                        'default': operator.methodcaller('isoformat')}
         if compact:
             if indent:  # pragma: no cover
-                warnings.warn(f'indent={indent!r} overridden'
-                              f' by compact={compact}')
+                warnings.warn(f'{indent=!r} overridden by {compact=}')
             dump_kwargs.update(indent=None,
                                separators=(',', ':'))
         elif indent:

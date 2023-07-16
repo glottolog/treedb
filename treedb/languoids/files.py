@@ -204,11 +204,9 @@ def write_files(records: typing.Iterable[_globals.RecordItem],
                 log.info(f'%s {basename} files written', f'{files_written:_d}')
 
         if require_nwritten is not None and files_written > require_nwritten:
-            raise ValueError(f'files_written={files_written}'
-                             f' over require_nwritten={require_nwritten}')
+            raise ValueError(f'{files_written=} over {require_nwritten=}')
 
     log.info(f'%s {basename} files written total', f'{files_written:_d}')
     if require_nwritten is not None and files_written < require_nwritten:
-        raise ValueError(f'files_written={files_written}'
-                         f' under require_nwritten={require_nwritten}')
+        raise ValueError(f'{files_written=} under {require_nwritten=}')
     return files_written
