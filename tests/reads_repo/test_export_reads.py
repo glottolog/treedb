@@ -15,6 +15,7 @@ PREFIX = 'path_languoid:path:sha256:'
 PREFIX_ID = 'path_languoid:id:sha256:'
 
 CHECKSUM = {'master': None,
+            'v4.8': '66b901e25048a86758798657f4a940b29208b971f4384314c07f8c574788bee8',
             'v4.7': 'bd2be4c0a0463c85a01e287cf12f1d73041cc775f26d6a5d69a419ed0f7aad09',
             'v4.6': '3e07ebd1d58f84604dab5f717dfcd2745b8dd37adbecab61a6bfdcb4b9e85d1c',
             'v4.5': '308e0e142683b5365d36dacb57cc22926d60c9d4b061eba6d58829b75b8843cb',
@@ -24,6 +25,25 @@ CHECKSUM = {'master': None,
             'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
+         'v4.8': '''\
+26,669 languoids
+   245 families
+   184 isolates
+   429 roots
+ 8,595 languages
+ 4,467 subfamilies
+13,362 dialects
+ 7,654 Spoken L1 Languages
+   223 Sign Language
+   121 Unclassifiable
+    84 Pidgin
+    68 Unattested
+    31 Artificial Language
+     9 Mixed Language
+    15 Speech Register
+ 8,205 All
+   390 Bookkeeping
+''',
          'v4.7': '''\
 26,416 languoids
    245 families
@@ -290,18 +310,27 @@ def test_pd_read_languoids(treedb, source, limit=1_000):
         df.info(memory_usage='deep')
 
 
-xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized master',
-                                                            raises=AssertionError)
+xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag(
+    'master', reason='possibly unnormalized master',
+    raises=AssertionError)
 
 
-xfail_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag('v4.5', reason='empty altnames',
-                                                             # https://github.com/glottolog/glottolog/pull/79
-                                                             raises=AssertionError)
+xfail_4_8_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag(
+    'v4.8', reason='empty v4.8 altnames',
+    # https://github.com/glottolog/glottolog/pull/980
+    raises=AssertionError)
 
 
-xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='float normalization',
-                                                            # https://github.com/glottolog/glottolog/pull/495
-                                                            raises=AssertionError)
+xfail_4_5_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag(
+    'v4.5', reason='empty v4.4 altnames',
+    # https://github.com/glottolog/glottolog/pull/795
+    raises=AssertionError)
+
+
+xfail_4_1_float_normalization = pytest.mark.xfail_glottolog_tag(
+    'v4.1', reason='missing v4.1 float normalization',
+    # https://github.com/glottolog/glottolog/pull/495
+    raises=AssertionError)
 
 
 @pytest.mark.parametrize(
@@ -311,19 +340,21 @@ xfail_float_normalization = pytest.mark.xfail_glottolog_tag('v4.1', reason='floa
                    {'source': 'tables'}],
                   id='files, raw, tables',
                   marks=[xfail_master_unnormalized,
-                         xfail_empty_altnames_elcat,
-                         xfail_float_normalization]),
+                         xfail_4_8_empty_altnames_elcat,
+                         xfail_4_5_empty_altnames_elcat,
+                         xfail_4_1_float_normalization]),
      pytest.param([{'source': 'raw', 'order_by': 'id'},
                    {'source': 'tables', 'order_by': 'id'}],
                   id='raw(order_by=id), tables(order_by=id)',
                   marks=[xfail_master_unnormalized,
-                         xfail_float_normalization]),
+                         xfail_4_8_empty_altnames_elcat,
+                         xfail_4_1_float_normalization]),
      pytest.param([{'source': 'files', 'limit': 100,
                     'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
                    {'source': 'raw', 'order_by': 'file', 'limit': 100,
                     'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
                   id='files(limit=100), raw(order_by=file, limit=100)',
-                  marks=[xfail_empty_altnames_elcat])])
+                  marks=[xfail_4_5_empty_altnames_elcat])])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 

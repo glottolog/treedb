@@ -5,7 +5,9 @@ Changelog
 Version 2.6.2 (in development)
 ------------------------------
 
-Relax `models.IsoRetirement.remedy` constraint: nullable except for `reason='split'`.
+Relax ``models.IsoRetirement.remedy`` constraint: nullable except for ```reason='split'``.
+
+Add test checksums for Glottolog ``v4.8``.
 
 Drop Python 3.7 support. Use PEP 570 positional-only parameters.
 

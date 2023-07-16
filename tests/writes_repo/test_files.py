@@ -8,6 +8,9 @@ pytestmark = pytest.mark.writes
 
 @pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized master',
                                  raises=AssertionError)
+@pytest.mark.xfail_glottolog_tag('v4.8', reason='extra v4.8 endangerment whitespace',
+                                 # https://github.com/glottolog/glottolog/pull/981
+                                 raises=AssertionError)
 def test_roundtrip(treedb):
     if not glottolog.git_status_is_clean(treedb.root):
         raise RuntimeError(f'root must be clean for test: {treedb.root!r}')
