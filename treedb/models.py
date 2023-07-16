@@ -1132,7 +1132,7 @@ class IsoRetirement:
     __table_args__ = (
         # TODO: fix disagreement
         Index('change_request_key', sa.func.coalesce(change_request, effective)),
-        CheckConstraint("remedy IS NOT NULL OR reason = 'non-existent'"),
+        CheckConstraint("reason != 'split' or remedy IS NOT NULL"),
         {'info': {'without_rowid': True}},
     )
 
