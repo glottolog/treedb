@@ -18,7 +18,7 @@ setup(
     },
     packages=find_packages(),
     platforms='any',
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=[
         'csv23~=0.3',
         'pycountry==22.3.5',  # date-based versioning scheme
@@ -38,7 +38,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

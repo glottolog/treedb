@@ -25,7 +25,6 @@ def test_print_dataset(capsys, treedb):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.version_info < (3, 7), reason='requires Python 3.7+')
 def test_backup(treedb):
     path = treedb.engine.file_with_suffix('.backup.sqlite3')
 

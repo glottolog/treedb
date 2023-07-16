@@ -7,6 +7,8 @@ Version 2.6.2 (in development)
 
 Relax `models.IsoRetirement.remedy` constraint: nullable except for `reason='split'`.
 
+Drop Python 3.7 support.
+
 
 Version 2.6.1
 -------------
