@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='treedb',
-    version='2.6.2.dev0',
+    version='2.6.2',
     author='Sebastian Bank',
     author_email='sebastian.bank@uni-leipzig.de',
     description='Glottolog languoid tree as SQLite database',
@@ -31,6 +31,7 @@ setup(
         'pandas': ['pandas>=1'],
     },
     long_description=pathlib.Path('README.rst').read_text(encoding='utf-8'),
+    long_description_content_type='text/x-rst',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

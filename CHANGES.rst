@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.6.2 (in development)
-------------------------------
+Version 2.6.2
+-------------
 
 Relax ``models.IsoRetirement.remedy`` constraint: nullable except for ```reason='split'``.
 
