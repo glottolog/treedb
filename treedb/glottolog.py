@@ -20,19 +20,19 @@ REPO_URL = 'https://github.com/glottolog/glottolog.git'
 log = logging.getLogger(__name__)
 
 
-def glottolog_version(root=_globals.ROOT) -> argparse.Namespace:
+def glottolog_version(*, root=_globals.ROOT) -> argparse.Namespace:
     return GlottologVersion.from_root(root)
 
 
 class GlottologVersion(argparse.Namespace):
 
     @classmethod
-    def from_root(cls, root) -> GlottologVersion:
+    def from_root(cls, root, /) -> GlottologVersion:
         return cls.from_commit_describe(git_rev_parse(root),
                                         git_describe(root))
 
     @classmethod
-    def from_commit_describe(cls, commit: str, describe: str
+    def from_commit_describe(cls, commit: str, describe: str, /,
                              ) -> GlottologVersion:
         return cls(commit=commit, describe=describe)
 
@@ -40,7 +40,7 @@ class GlottologVersion(argparse.Namespace):
         return f'Glottolog {self.describe} ({self.commit})'
 
 
-def checkout_or_clone(tag_or_branch: str, *, target=None):
+def checkout_or_clone(tag_or_branch: str, /, *, target=None):
     if target is None:
         target = _languoids.get_repo_root()
 
@@ -55,7 +55,7 @@ def checkout_or_clone(tag_or_branch: str, *, target=None):
     return clone, checkout
 
 
-def git_clone(tag_or_branch: str, *, target,
+def git_clone(tag_or_branch: str, /, *, target,
               depth: int = 1):
     log.info('clone Glottolog master repo at %r into %r', tag_or_branch, target)
     cmd = ['git', 'clone',
@@ -67,7 +67,7 @@ def git_clone(tag_or_branch: str, *, target,
     return _tools.run(cmd, check=True)
 
 
-def git_checkout(tag_or_branch: str, *, target,
+def git_checkout(tag_or_branch: str, /, *, target,
                  set_branch: str = __package__):
     log.info('checkout %r and (re)set branch %r', tag_or_branch, set_branch)
     cmd = ['git', 'checkout']
@@ -77,8 +77,8 @@ def git_checkout(tag_or_branch: str, *, target,
     return _tools.run(cmd, cwd=target, check=True)
 
 
-def git_rev_parse(repo_root, revision: str = 'HEAD',
-                  *, verify: bool = True) -> str:
+def git_rev_parse(repo_root, /, *, revision: str = 'HEAD',
+                  verify: bool = True) -> str:
     log.info('get %r git_commit from %r', revision, repo_root)
     cmd = ['git', 'rev-parse']
     if verify:
@@ -90,7 +90,7 @@ def git_rev_parse(repo_root, revision: str = 'HEAD',
     return commit
 
 
-def git_describe(repo_root) -> str:
+def git_describe(repo_root, /) -> str:
     log.info('get git_describe from %r', repo_root)
     cmd = ['git', 'describe', '--tags', '--always']
     describe = _tools.run(cmd, cwd=repo_root, check=True,
@@ -99,14 +99,14 @@ def git_describe(repo_root) -> str:
     return describe
 
 
-def git_status(repo_root) -> str:
+def git_status(repo_root, /) -> str:
     log.debug('get status from %r', repo_root)
     cmd = ['git', 'status', '--porcelain']
     return _tools.run(cmd, cwd=repo_root, check=True,
                       capture_output=True, unpack=True)
 
 
-def git_status_is_clean(repo_root) -> bool:
+def git_status_is_clean(repo_root, /) -> bool:
     """Return if there are neither changes in the index nor untracked files."""
     log.info('get clean from %r', repo_root)
     status = git_status(repo_root)

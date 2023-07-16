@@ -37,7 +37,7 @@ class Dataset:
     exclude_raw = sa.Column(sa.Boolean(create_constraint=True), nullable=False)
 
     @classmethod
-    def get_dataset(cls, *, bind, strict, fallback=None):
+    def get_dataset(cls, /, *, bind, strict, fallback=None):
         table = cls.__tablename__
         log.debug('read %r from %r', table, bind)
 
@@ -64,7 +64,7 @@ class Dataset:
             return result
 
     @classmethod
-    def log_dataset(cls, params, *,
+    def log_dataset(cls, params, /, *,
                     ignore_dirty: bool = False,
                     also_print: bool = False, print_file=None):
         name = cls.__tablename__
@@ -108,12 +108,13 @@ class Producer:
                         nullable=False)
 
     @classmethod
-    def get_producer(cls, *, bind):
+    def get_producer(cls, /, *, bind):
         result, = _backend.iterrows(sa.select(cls), mappings=True, bind=bind)
         return result
 
     @classmethod
-    def log_producer(cls, params, *, also_print=False, print_file=None):
+    def log_producer(cls, params, /, *,
+                     also_print: bool = False, print_file=None):
         name = cls.__tablename__
         log.info('%s.name: %s', name, params['name'])
         log.info('%s.version: %s', name, params['version'])
@@ -145,7 +146,7 @@ class Config:
                       {'info': {'without_rowid': True}})
 
     @classmethod
-    def load(cls, filename: str, *, bind,
+    def load(cls, filename: str, /, *, bind,
              _groupby_section=_tools.groupby_itemgetter(0)):
         select_values = (sa.select(Config.section, Config.option, Config.value)
                         .filter_by(filename=filename)

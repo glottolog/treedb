@@ -61,7 +61,7 @@ def print_versions(*, engine=ENGINE, file=None) -> None:
                  engine=engine)
 
 
-def set_engine(filename, *,
+def set_engine(filename, /, *,
                resolve: bool = False,
                require: bool = False,
                title: typing.Optional[str] = None,
@@ -145,12 +145,12 @@ def connect(*, bind=ENGINE,
     return conn
 
 
-def scalar(statement, *args, bind=ENGINE, **kwargs):
+def scalar(statement, /, *args, bind=ENGINE, **kwargs):
     with connect(bind=bind) as conn:
         return conn.scalar(statement, *args, **kwargs)
 
 
-def iterrows(query, *, mappings=False, bind=ENGINE):
+def iterrows(query, /, *, mappings=False, bind=ENGINE):
     with connect(bind=bind) as conn:
         result = conn.execute(query)
 
@@ -160,7 +160,7 @@ def iterrows(query, *, mappings=False, bind=ENGINE):
         yield from result
 
 
-def expression_compile(expression, *, literal_binds=True):
+def expression_compile(expression, /, *, literal_binds=True):
     """Return literal compiled expression."""
     return expression.compile(compile_kwargs={'literal_binds': literal_binds})
 
@@ -176,6 +176,6 @@ def json_object(*, sort_keys_: bool,
     return sa.type_coerce(obj, sa.JSON) if load_json_ else obj
 
 
-def json_datetime(date):
+def json_datetime(date, /):
     date = sa.func.replace(date, ' ', 'T')
     return sa.func.replace(date, '.000000', '')

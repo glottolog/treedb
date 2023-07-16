@@ -30,8 +30,8 @@ class ConfigParser(_tools.ConfigParser):
 
     _header = '# -*- coding: {encoding} -*-\n'
 
-    def update_config(self, raw_record: _fields.RawRecordType,
-                      *, replace: bool = False,
+    def update_config(self, raw_record: _fields.RawRecordType, /, *,
+                      replace: bool = False,
                       quiet: bool = False,
                       is_lines=_fields.is_lines,
                       core_sections=_fields.CORE_SECTIONS,
@@ -128,15 +128,15 @@ class FileInfo(typing.NamedTuple):
     config: ConfigParser
 
     @classmethod
-    def from_dentry(cls, dentry: os.DirEntry,
-                    *, path_slice: slice = slice(None)):
+    def from_dentry(cls, dentry: os.DirEntry, /, *,
+                    path_slice: slice = slice(None)):
         path = _tools.path_from_filename(dentry)
         config = ConfigParser.from_file(path)
         return cls(path.parts[path_slice], dentry, config)
 
 
-def iterfiles(root=_globals.ROOT,
-              *, progress_after: int = _tools.PROGRESS_AFTER
+def iterfiles(root=_globals.ROOT, /, *,
+              progress_after: int = _tools.PROGRESS_AFTER
               ) -> typing.Iterator[FileInfo]:
     """Yield triples of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
     root = _tools.path_from_filename(root).resolve()
@@ -156,15 +156,15 @@ def iterfiles(root=_globals.ROOT,
     log.info(f'%s {BASENAME} files total', f'{n:_d}')
 
 
-def roundtrip(root=_globals.ROOT,
-              *, progress_after: int = _tools.PROGRESS_AFTER) -> None:
+def roundtrip(root=_globals.ROOT, /, *,
+              progress_after: int = _tools.PROGRESS_AFTER) -> None:
     """Load/save all config files (drops leading/trailing whitespace)."""
     log.info(f'start roundtripping {BASENAME} files in %r', root)
     for path_tuple, dentry, cfg in iterfiles(root, progress_after=progress_after):
         cfg.to_file(dentry.path)
 
 
-def write_files(records: typing.Iterable[_globals.RecordItem],
+def write_files(records: typing.Iterable[_globals.RecordItem], /,
                 root=_globals.ROOT, *, replace: bool = False,
                 dry_run: bool = False, quiet: typing.Optional[bool] = None,
                 require_nwritten: typing.Optional[int] = None,

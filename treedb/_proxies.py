@@ -37,7 +37,7 @@ class PathProxy(Proxy):
     .
     """
 
-    def __init__(self, path=None):
+    def __init__(self, path=None, /):
         self.path = path
 
     def __fspath__(self):
@@ -78,15 +78,15 @@ class EngineProxy(Proxy, sa.engine.Engine):
     >>> EngineProxy(future=True)
     <treedb._proxies.EngineProxy>
     """
-    def __init__(self, engine=None, *, future):
+    def __init__(self, engine=None, /, *, future):
         self.engine = engine
         self.future = future
 
-    def _create_engine(self, url):
+    def _create_engine(self, url, /):
         log.debug('sqlalchemy.create_engine(%r)', url)
         self.engine = sa.create_engine(url, future=self.future)
 
-    def connect(self, close_with_result=False, **kwargs):
+    def connect(self, *, close_with_result: bool = False, **kwargs):
         return self.engine.connect(**kwargs)
 
     def dispose(self):
@@ -157,7 +157,7 @@ class SQLiteEngineProxy(EngineProxy):
                 f' filename={name!r}{parent}'
                 f' size={self.file_size()!r}>')
 
-    def file_with_suffix(self, suffix):
+    def file_with_suffix(self, suffix, /):
         if self.file is None:
             name = f'{self.memory_write_path.name}{suffix}'
             return self.memory_write_path.with_name(name)
@@ -170,7 +170,7 @@ class SQLiteEngineProxy(EngineProxy):
         return (datetime.datetime.fromtimestamp(self.file.stat().st_mtime)
                 if self.file_exists() else None)
 
-    def file_size(self, as_megabytes=False):
+    def file_size(self, *, as_megabytes: bool = False):
         if self.file_exists():
             result = self.file.stat().st_size
             if as_megabytes:

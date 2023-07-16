@@ -60,8 +60,8 @@ RecordValueType = typing.Union[str, typing.List[str]]
 RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
 
 
-def filepath_tuple(file_path: str,
-                   *, sep=FILE_PATH_SEP) -> typing.Tuple[str]:
+def filepath_tuple(file_path: str, /, *,
+                   sep=FILE_PATH_SEP) -> typing.Tuple[str]:
     path_parts = file_path.split(sep)
     return tuple(path_parts)
 
@@ -78,7 +78,7 @@ class RecordItem(typing.NamedTuple):
     record: RecordType
 
     @classmethod
-    def from_filepath_record(cls, file_path: str, languoid):
+    def from_filepath_record(cls, file_path: str, languoid, /):
         return cls(filepath_tuple(file_path), languoid)
 
 
@@ -121,5 +121,5 @@ class LanguoidItem(typing.NamedTuple):
     languoid: LanguoidType
 
     @classmethod
-    def from_filepath_languoid(cls, file_path: str, languoid):
+    def from_filepath_languoid(cls, file_path: str, languoid, /):
         return cls(filepath_tuple(file_path), languoid)

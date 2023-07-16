@@ -57,8 +57,8 @@ def print_languoid_stats(*, file=None,
             warnings.warn(f'{term} = {parts_sum:,d}')
 
 
-def iterlanguoids(source: str = 'files',
-                  *, limit: typing.Optional[int] = None,
+def iterlanguoids(source: str = 'files', /, *,
+                  limit: typing.Optional[int] = None,
                   offset: typing.Optional[int] = 0,
                   order_by: str = _globals.LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
@@ -100,8 +100,8 @@ def iterlanguoids(source: str = 'files',
         raise ValueError(f'unknown source: {source!r}')
 
 
-def checksum(source: str = 'tables',
-             *, limit: typing.Optional[int] = None,
+def checksum(source: str = 'tables', *,
+             limit: typing.Optional[int] = None,
              offset: typing.Optional[int] = 0,
              order_by: str = _globals.LANGUOID_ORDER,
              hash_name: str = _globals.DEFAULT_HASH,
@@ -129,7 +129,7 @@ def checksum(source: str = 'tables',
     return result
 
 
-def write_json_lines(file=None, *, suffix: str = '.jsonl',
+def write_json_lines(file=None, /, *, suffix: str = '.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
                      source: str = 'tables',
@@ -273,7 +273,7 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
     log.info('%s languoids total', f'{n:_d}')
 
 
-def write_files(root=_globals.ROOT, *, replace: bool = False,
+def write_files(root=_globals.ROOT, /, *, replace: bool = False,
                 dry_run: bool = False,
                 require_nwritten: typing.Optional[int] = None,
                 source: str = 'tables',

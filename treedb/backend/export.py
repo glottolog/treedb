@@ -52,8 +52,8 @@ def print_dataset(*, ignore_dirty: bool = False,
                           also_print=True, print_file=file)
 
 
-def print_schema(metadata=_globals.REGISTRY.metadata,
-                 *, file=None,
+def print_schema(metadata=_globals.REGISTRY.metadata, /, *,
+                 file=None,
                  engine=_globals.ENGINE):
     """Print the SQL from metadata.create_all() without executing."""
     def print_sql(sql, *_, **__):
@@ -65,7 +65,7 @@ def print_schema(metadata=_globals.REGISTRY.metadata,
     metadata.create_all(mock_engine, checkfirst=False)
 
 
-def print_query_sql(query=None, *, literal_binds: bool = True,
+def print_query_sql(query=None, /, *, literal_binds: bool = True,
                     pretty: bool = True,
                     file=None, flush: bool = True):
     """Print the literal SQL for the given query."""
@@ -73,7 +73,7 @@ def print_query_sql(query=None, *, literal_binds: bool = True,
     print(sql, file=file, flush=flush)
 
 
-def get_query_sql(query=None, *, literal_binds: bool = True,
+def get_query_sql(query=None, /, *, literal_binds: bool = True,
                   pretty: bool = False):
     """Return the literal SQL for the given query."""
     if query is None:
@@ -89,7 +89,7 @@ def get_query_sql(query=None, *, literal_binds: bool = True,
     return result
 
 
-def backup(filename=None, *, as_new_engine: bool = False,
+def backup(filename=None, /, *, as_new_engine: bool = False,
            pages: int = 0,
            engine=_globals.ENGINE):
     """Write the database into another .sqlite3 file and return its engine."""
@@ -129,8 +129,8 @@ def backup(filename=None, *, as_new_engine: bool = False,
     return result
 
 
-def dump_sql(filename=None,
-             *, progress_after: int = 100_000,
+def dump_sql(filename=None, /, *,
+             progress_after: int = 100_000,
              encoding: str = _tools.ENCODING,
              engine=_globals.ENGINE):
     """Dump the engine database into a plain-text SQL file."""
@@ -160,7 +160,7 @@ def dump_sql(filename=None,
     return path
 
 
-def csv_zipfile(filename=None, *, exclude_raw: bool = False,
+def csv_zipfile(filename=None, /, *, exclude_raw: bool = False,
                 metadata=_globals.REGISTRY.metadata,
                 dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
                 engine=_globals.ENGINE):
@@ -206,7 +206,7 @@ def csv_zipfile(filename=None, *, exclude_raw: bool = False,
     return _tools.path_from_filename(filename)
 
 
-def print_rows(query=None, *, file=None,
+def print_rows(query=None, /, *, file=None,
                pretty: bool = False,
                format_: typing.Optional[str] = None,
                verbose: bool = False,
@@ -241,7 +241,7 @@ def print_rows(query=None, *, file=None,
 
 class PrettyPrinter(pprint.PrettyPrinter):
 
-    def __init__(self, stream, *,
+    def __init__(self, stream, /, *,
                  sort_dicts: bool = False,
                  **kwargs) -> None:
         if sys.version_info < (3, 8):
@@ -255,8 +255,8 @@ class PrettyPrinter(pprint.PrettyPrinter):
         super().__init__(stream=stream, **kwargs)
 
 
-def write_csv(query=None, filename=None,
-              *, verbose: bool = False,
+def write_csv(query=None, /, filename=None, *,
+              verbose: bool = False,
               dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
               bind=_globals.ENGINE):
     """Write get__example_query() query (or given query) to CSV, return filename."""
@@ -288,7 +288,7 @@ def write_csv(query=None, filename=None,
                                autocompress=True)
 
 
-def hash_csv(query=None, *, hash_name: str = _globals.DEFAULT_HASH,
+def hash_csv(query=None, /, *, hash_name: str = _globals.DEFAULT_HASH,
              dialect=csv23.DIALECT, encoding: str = csv23.ENCODING,
              raw: bool = False,
              bind=_globals.ENGINE):
@@ -305,7 +305,7 @@ def hash_csv(query=None, *, hash_name: str = _globals.DEFAULT_HASH,
                          dialect=dialect, encoding=encoding)
 
 
-def hash_rows(rows, *, hash_name: str = _globals.DEFAULT_HASH,
+def hash_rows(rows, /, *, hash_name: str = _globals.DEFAULT_HASH,
               header=None,
               dialect=csv23.DIALECT, encoding=csv23.ENCODING,
               raw: bool = False):

@@ -16,11 +16,11 @@ FORMAT = '[%(levelname)s@%(name)s] %(message)s'
 log = logging.getLogger(__name__)
 
 
-def configure_logging_from_file(path, *,
+def configure_logging_from_file(path, /, *,
                                 level=None,
                                 log_sql=None,
-                                capture_warnings=True,
-                                reset=True):
+                                capture_warnings: bool = True,
+                                reset: bool = True):
     if reset:
         reset_logging()
 
@@ -59,7 +59,7 @@ def reset_logging():
         h.close()
 
 
-def log_version(*, also_print=False, print_file=None):
+def log_version(*, also_print: bool = False, print_file=None):
     import treedb
 
     log.info('%s version: %s', __package__, treedb.__version__)
@@ -69,7 +69,7 @@ def log_version(*, also_print=False, print_file=None):
               file=print_file)
 
 
-def set_capture_warnings(value=True):
+def set_capture_warnings(value: bool = True, /):
     log.debug('set logging.captureWarnings(%r)', value)
     logging.captureWarnings(value)
 

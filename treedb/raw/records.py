@@ -96,7 +96,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
     log.info('%s raw records total', f'{n:_d}')
 
 
-def window_slices(key_column, *, size: int = WINDOWSIZE,
+def window_slices(key_column, /, *, size: int = WINDOWSIZE,
                   bind=_globals.ENGINE):
     """Yield where clause making function for key_column windows of size.
 
@@ -122,7 +122,7 @@ def window_slices(key_column, *, size: int = WINDOWSIZE,
     yield lambda c, end=end: (c > end)
 
 
-def iterkeys(key_column, *, size: int = WINDOWSIZE,
+def iterkeys(key_column, /, *, size: int = WINDOWSIZE,
              bind=_globals.ENGINE):
     row_num = sa.func.row_number().over(order_by=key_column).label('row_num')
     select_all_keys = (sa.select(key_column.label('key'), row_num)

@@ -24,7 +24,7 @@ __all__ = ['main']
 log = logging.getLogger(__name__)
 
 
-def get_root(repo_root, *, default,
+def get_root(repo_root, /, *, default,
              treepath=_languoids.TREE_IN_ROOT):
     if repo_root is not None:
         root = _languoids.set_root(repo_root, treepath=treepath)
@@ -38,7 +38,7 @@ def get_root(repo_root, *, default,
     return root
 
 
-def get_from_raw(from_raw, *, exclude_raw: bool):
+def get_from_raw(from_raw, /, *, exclude_raw: bool):
     if exclude_raw and from_raw:  # pragma: no cover
         log.error('incompatible exclude_raw=%r and from_raw=%r', exclude_raw, from_raw)
         raise ValueError('exclude_raw and from_raw cannot both be True')
@@ -47,13 +47,13 @@ def get_from_raw(from_raw, *, exclude_raw: bool):
     return from_raw
 
 
-def get_engine(filename_or_engine, *, require: bool):
+def get_engine(filename_or_engine, /, *, require: bool):
     if hasattr(filename_or_engine, 'execute'):
         return filename_or_engine
     return _backend.set_engine(filename_or_engine, require=require)
 
 
-def get_dataset(engine, *, exclude_raw: bool, strict: bool):
+def get_dataset(engine, /, *, exclude_raw: bool, strict: bool):
     dataset = None
 
     if engine.file is None:
@@ -71,8 +71,8 @@ def get_dataset(engine, *, exclude_raw: bool, strict: bool):
     return dataset
 
 
-def main(filename=_globals.ENGINE, repo_root=None,
-         *, treepath=_languoids.TREE_IN_ROOT,
+def main(filename=_globals.ENGINE, repo_root=None, /, *,
+         treepath=_languoids.TREE_IN_ROOT,
          metadata=_globals.REGISTRY.metadata,
          require: bool = False,
          rebuild: bool = False,
@@ -130,7 +130,7 @@ def main(filename=_globals.ENGINE, repo_root=None,
     return engine
 
 
-def create_tables(metadata, *, conn,
+def create_tables(metadata, /, *, conn,
                   exclude_raw: bool, exclude_views: bool):
     # import here to register models for create_all()
     log.debug('import module %s.models', __package__)
@@ -164,7 +164,7 @@ def create_tables(metadata, *, conn,
     metadata.create_all(bind=conn)
 
 
-def load(metadata, *, conn, root,
+def load(metadata, /, *, conn, root,
          from_raw: bool, exclude_raw: bool):
     log.info('record git commit in %r', root)
     # pre-create dataset to added as final item marking completeness
@@ -208,7 +208,7 @@ def load(metadata, *, conn, root,
     return dataset
 
 
-def import_configs(conn, *, root):
+def import_configs(conn, /, *, root):
     insert_config = functools.partial(conn.execute, sa.insert(_models.Config))
     for filename, cfg in _config.iterconfigs(root):
         get_line = _tools.next_count(start=1)
@@ -227,7 +227,7 @@ def import_configs(conn, *, root):
     return conn.execute(select_version).scalar_one_or_none()
 
 
-def make_dataset(root, *, exclude_raw: bool):
+def make_dataset(root, /, *, exclude_raw: bool):
     try:
         dataset = {'title': 'Glottolog treedb',
                    'git_commit': _glottolog.git_rev_parse(root),
@@ -243,12 +243,12 @@ def make_dataset(root, *, exclude_raw: bool):
         return dataset
 
 
-def write_dataset(conn, *, dataset):
+def write_dataset(conn, /, *, dataset):
     log.debug('dataset: %r', dataset)
     conn.execute(sa.insert(_models.Dataset), dataset)
 
 
-def write_producer(conn, *, name: str):
+def write_producer(conn, /, *, name: str):
     from .. import __version__
 
     params = {'name': name, 'version': __version__}
@@ -256,7 +256,7 @@ def write_producer(conn, *, name: str):
     conn.execute(sa.insert(_models.Producer), params)
 
 
-def import_raw(conn, *, root):
+def import_raw(conn, /, *, root):
     log.debug('import target module %s.raw.import_models', __package__)
 
     from ..raw import import_models
@@ -266,7 +266,7 @@ def import_raw(conn, *, root):
     import_models.main(root, conn=conn)
 
 
-def import_languoids(conn, *, root, source: str):
+def import_languoids(conn, /, *, root, source: str):
     log.debug('import source module %s.languoids', __package__)
 
     from .. import export

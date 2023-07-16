@@ -160,8 +160,8 @@ def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
     return select_languoid
 
 
-def add_order_by(select_languoid: sa.sql.Select,
-                 *, order_by: str, column_for_path_order) -> sa.sql.Select:
+def add_order_by(select_languoid: sa.sql.Select, /, *,
+                 order_by: str, column_for_path_order) -> sa.sql.Select:
     if order_by in (True, None, 'id'):
         return select_languoid.order_by(Languoid.id)
     elif order_by == 'path':
@@ -171,8 +171,8 @@ def add_order_by(select_languoid: sa.sql.Select,
     raise ValueError(f'{order_by=!r} not implemented')  # pragma: no cover
 
 
-def add_model_columns(select_languoid: sa.sql.Select, model,
-                      *, add_outerjoin=None, label: str = '{name}',
+def add_model_columns(select_languoid: sa.sql.Select, model, /, *,
+                      add_outerjoin=None, label: str = '{name}',
                       ignore: str = 'id') -> sa.sql.Select:
     columns = model.__table__.columns
     if ignore:
@@ -187,12 +187,12 @@ def add_model_columns(select_languoid: sa.sql.Select, model,
     return select_languoid
 
 
-def group_concat(x, *, separator: str = ', '):
+def group_concat(x, /, *, separator: str = ', '):
     return sa.func.group_concat(x, separator)
 
 
-def add_identifier(select_languoid: sa.sql.Select, site_name: str,
-                   *, label: str) -> sa.sql.Select:
+def add_identifier(select_languoid: sa.sql.Select, site_name: str, /, *,
+                   label: str) -> sa.sql.Select:
     identifier = aliased(Identifier, name=f'ident_{site_name}')
     site = aliased(IdentifierSite, name=f'ident_{site_name}_site')
     label = label.format(site_name=site_name)
@@ -203,8 +203,8 @@ def add_identifier(select_languoid: sa.sql.Select, site_name: str,
                                identifier.languoid_id == Languoid.id)))
 
 
-def add_classification_comment(select_languoid: sa.sql.Select, kind: str,
-                               *, label: str,
+def add_classification_comment(select_languoid: sa.sql.Select, kind: str, /, *,
+                               label: str,
                                bib_suffix: str = '_cr') -> sa.sql.Select:
     comment = aliased(ClassificationComment, name=f'cc_{kind}')
     label = label.format(kind=kind)
@@ -214,8 +214,8 @@ def add_classification_comment(select_languoid: sa.sql.Select, kind: str,
                                         comment.languoid_id == Languoid.id)))
 
 
-def add_classification_refs(select_languoid: sa.sql.Select, kind: str,
-                            *, label: str,
+def add_classification_refs(select_languoid: sa.sql.Select, kind: str, /, *,
+                            label: str,
                             bib_suffix: str = '_cr') -> sa.sql.Select:
     ref = aliased(ClassificationRef, name=f'cr_{kind}')
     bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}_{kind}')
@@ -236,8 +236,8 @@ def add_classification_refs(select_languoid: sa.sql.Select, kind: str,
     return select_languoid.add_columns(refs)
 
 
-def add_endangermentsource(select_languoid: sa.sql.Select,
-                           *, label: str,
+def add_endangermentsource(select_languoid: sa.sql.Select, /, *,
+                           label: str,
                            bib_suffix: str = '_e') -> sa.sql.Select:
     bibfile = aliased(Bibfile, name=f'bibfile{bib_suffix}')
     bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
@@ -324,7 +324,7 @@ def get_json_query(*, limit: typing.Optional[int] = None,
     return select_json
 
 
-def select_languoid_macroareas(languoid=Languoid, *, as_json: bool,
+def select_languoid_macroareas(languoid=Languoid, /, *, as_json: bool,
                                label: str = 'macroareas',
                                alias: str = 'lang_ma') -> sa.sql.Select:
     name = languoid_macroarea.c.macroarea_name
@@ -343,7 +343,7 @@ def select_languoid_macroareas(languoid=Languoid, *, as_json: bool,
     return select(macroareas.label(label)).label(label)
 
 
-def select_languoid_countries(languoid=Languoid, *, as_json: bool,
+def select_languoid_countries(languoid=Languoid, /, *, as_json: bool,
                               label: str = 'countries',
                               sort_keys: bool = False,
                               alias: str = 'lang_country') -> sa.sql.Select:
@@ -388,7 +388,7 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
     return select(links.label(label)).label(label)
 
 
-def select_languoid_timespan(languoid=Languoid, *, as_json: bool,
+def select_languoid_timespan(languoid=Languoid, /, *, as_json: bool,
                              label: str = 'timespan',
                              sort_keys: bool = False) -> sa.sql.Select:
     return (select(Timespan.jsonf(sort_keys=sort_keys) if as_json else
@@ -399,7 +399,7 @@ def select_languoid_timespan(languoid=Languoid, *, as_json: bool,
             .label(label))
 
 
-def select_languoid_sources(languoid=Languoid, *, as_json: bool,
+def select_languoid_sources(languoid=Languoid, /, *, as_json: bool,
                             provider_name: typing.Optional[str] = None,
                             label: str = 'sources',
                             sort_keys: bool = False,
@@ -461,7 +461,7 @@ def select_languoid_sources(languoid=Languoid, *, as_json: bool,
     return select(sources.label(label)).label(label)
 
 
-def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
+def select_languoid_altnames(languoid=Languoid, /, *, as_json: bool,
                              provider_name: typing.Optional[str] = None,
                              label: str = 'altnames',
                              sort_keys: bool = False,
@@ -515,7 +515,7 @@ def select_languoid_altnames(languoid=Languoid, *, as_json: bool,
     return select(altnames.label(label)).label(label)
 
 
-def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
+def select_languoid_triggers(languoid=Languoid, /, *, as_json: bool,
                              field_name: typing.Optional[str] = None,
                              label: str = 'triggers',
                              alias: str = 'lang_trigger') -> sa.sql.Select:
@@ -562,8 +562,8 @@ def select_languoid_triggers(languoid=Languoid, *, as_json: bool,
     return select(triggers.label(label)).label(label)
 
 
-def select_languoid_identifier(languoid=Languoid,
-                               *, label: str = 'identifiers') -> sa.sql.Select:
+def select_languoid_identifier(languoid=Languoid, /, *,
+                               label: str = 'identifiers') -> sa.sql.Select:
     identifier = (select(IdentifierSite.name.label('site'),
                          Identifier.identifier.label('identifier'))
                   .select_from(Identifier)
@@ -585,8 +585,8 @@ def select_languoid_identifier(languoid=Languoid,
     return select(identifier.label(label)).label(label)
 
 
-def select_languoid_classification(languoid=Languoid,
-                                   *, label: str = 'classification',
+def select_languoid_classification(languoid=Languoid, /, *,
+                                   label: str = 'classification',
                                    sort_keys: bool = False,
                                    bib_suffix: str = '_cr') -> sa.sql.Select:
     classification_comment = (select(ClassificationComment.kind.label('key'),
@@ -636,8 +636,8 @@ def select_languoid_classification(languoid=Languoid,
             .label(label))
 
 
-def select_languoid_endangerment(languoid=Languoid,
-                                 *, label: str = 'endangerment',
+def select_languoid_endangerment(languoid=Languoid, /, *,
+                                 label: str = 'endangerment',
                                  sort_keys: bool = False,
                                  bib_suffix: str = '_e') -> sa.sql.Select:
     bibitem = aliased(Bibitem, name=f'bibitem{bib_suffix}')
@@ -655,8 +655,8 @@ def select_languoid_endangerment(languoid=Languoid,
             .label(label))
 
 
-def select_languoid_hh_ethnologue_comment(languoid=Languoid,
-                                          *, label: str = 'hh_ethnologue_comment',
+def select_languoid_hh_ethnologue_comment(languoid=Languoid, /, *,
+                                          label: str = 'hh_ethnologue_comment',
                                           sort_keys: bool = False) -> sa.sql.Select:
     return (select(EthnologueComment
                    .jsonf(sort_keys=sort_keys, label=label))
@@ -666,8 +666,8 @@ def select_languoid_hh_ethnologue_comment(languoid=Languoid,
             .label(label))
 
 
-def select_languoid_iso_retirement(languoid=Languoid,
-                                   *, label: str = 'iso_retirement',
+def select_languoid_iso_retirement(languoid=Languoid, /, *,
+                                   label: str = 'iso_retirement',
                                    sort_keys: bool = False,
                                    alias: str = 'lang_irct',
                                    alias_label: str = 'change_to') -> sa.sql.Select:
@@ -684,7 +684,7 @@ def select_languoid_iso_retirement(languoid=Languoid,
             .label(label))
 
 
-def select_iso_retirement_change_to(iso_retirement=IsoRetirement, *,
+def select_iso_retirement_change_to(iso_retirement=IsoRetirement, /, *,
                                     as_json: bool, label: str,
                                     alias: str = 'lang_irct') -> sa.sql.Select:
     code = (select(IsoRetirementChangeTo.code)
@@ -702,8 +702,8 @@ def select_iso_retirement_change_to(iso_retirement=IsoRetirement, *,
 
 
 def iterdescendants(parent_level: typing.Optional[str] = None,
-                    child_level: typing.Optional[str] = None,
-                    *, bind=_globals.ENGINE) -> typing.Iterator[typing.Tuple[str, typing.List[str]]]:
+                    child_level: typing.Optional[str] = None, *,
+                    bind=_globals.ENGINE) -> typing.Iterator[typing.Tuple[str, typing.List[str]]]:
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165

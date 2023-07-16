@@ -100,17 +100,17 @@ KEEP_EMPTY_OPTIONS = frozenset({(CORE, 'countries'),
 log = logging.getLogger(__name__)
 
 
-def is_known(section, option):
+def is_known(section, option, /):
     """Retun True if the section option is known or in an ALL_OPTIONS section."""
     return (section, ALL_OPTIONS) in FIELDS or (section, option) in FIELDS
 
 
-def is_all_options(section, option):
+def is_all_options(section, option, /):
     """Retun True if the section option is in an ALL_OPTIONS section."""
     return (section, ALL_OPTIONS) in FIELDS
 
 
-def is_lines(section, option, *, unknown_as_scalar=True):
+def is_lines(section, option, /, *, unknown_as_scalar: bool = True):
     """Return True if the section option is treated as list of lines."""
     result = FIELDS.get((section, ALL_OPTIONS))
 
@@ -133,13 +133,13 @@ def is_lines(section, option, *, unknown_as_scalar=True):
 sorted_sections = SECTION_ORDER.sorted
 
 
-def sorted_options(section, options):
+def sorted_options(section, options, /):
     """Return the given section options as sorted list in canonical order."""
     fields = FIELD_ORDER.sorted((section, o) for o in options)
     return [o for _, o in fields]
 
 
-def parse_lines(value):
+def parse_lines(value, /):
     r"""
 
     >>> parse_lines(None)
@@ -153,7 +153,7 @@ def parse_lines(value):
     return value.strip().splitlines()
 
 
-def format_lines(value):
+def format_lines(value, /):
     r"""
 
     >>> format_lines(['spam', 'eggs'])
@@ -172,7 +172,7 @@ RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
 RawRecordItem = typing.Tuple[typing.Optional[_globals.PathType], RawRecordType]
 
 
-def join_lines_inplace(record_item: _globals.RecordItem) -> RawRecordItem:
+def join_lines_inplace(record_item: _globals.RecordItem, /) -> RawRecordItem:
     path, record = record_item
     for name, section in record.items():
         for option in section:

@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 class ConfigParser(configparser.ConfigParser):
 
     @classmethod
-    def from_file(cls, path, *, required=False, default_repo_root):
+    def from_file(cls, path, /, *, required=False, default_repo_root):
         path = _tools.path_from_filename(path).resolve()
 
         defaults = {'here': path.parent.as_posix()}
@@ -45,8 +45,8 @@ class ConfigParser(configparser.ConfigParser):
         self.set(*ROOT_OPTION, repo_root)
 
 
-def configure(config_path=_globals.CONFIG,
-              *, engine=NOT_SET, root=NOT_SET,
+def configure(config_path=_globals.CONFIG, /, *,
+              engine=NOT_SET, root=NOT_SET,
               loglevel=None, log_sql: bool = None,
               default_repo_root=_globals.DEFAULT_ROOT,
               title: typing.Optional[str] = None,

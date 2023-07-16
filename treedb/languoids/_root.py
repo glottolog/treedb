@@ -13,7 +13,7 @@ TREE_IN_ROOT = _tools.path_from_filename('languoids', 'tree')
 log = logging.getLogger(__name__)
 
 
-def set_root(repo_root, *, resolve=False,
+def set_root(repo_root, /, *, resolve: bool = False,
              treepath=TREE_IN_ROOT):
     """Set and return default root for glottolog lanugoid directory tree."""
     log.info('set_root: %r', repo_root)
@@ -29,8 +29,8 @@ def set_root(repo_root, *, resolve=False,
     return ROOT
 
 
-def get_repo_root(root=_globals.ROOT,
-                  *, treepath=TREE_IN_ROOT):
+def get_repo_root(root=_globals.ROOT, /, *,
+                  treepath=TREE_IN_ROOT):
     assert root.parts[-len(treepath.parts):] == treepath.parts
     repo_root = _tools.path_from_filename(root)
     for _ in treepath.parts:

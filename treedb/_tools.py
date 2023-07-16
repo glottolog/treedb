@@ -48,7 +48,7 @@ __all__ = ['uniqued',
 log = logging.getLogger(__name__)
 
 
-def uniqued(iterable):
+def uniqued(iterable, /):
     """Return list of unique hashable elements preserving order.
 
     >>> uniqued('spamham')
@@ -58,10 +58,10 @@ def uniqued(iterable):
     return [i for i in iterable if i not in seen and not seen.add(i)]
 
 
-def next_count(start: int = 0, step: int = 1):
+def next_count(*, start: int = 0, step: int = 1):
     """Return a callable returning descending ints.
 
-    >>> nxt = next_count(1)
+    >>> nxt = next_count(start=1)
 
     >>> nxt()
     1
@@ -115,8 +115,8 @@ def groupby_attrgetter(*attrnames):
     return functools.partial(itertools.groupby, key=key)
 
 
-def islice_limit(iterable,
-                 *, limit: typing.Optional[int] = None,
+def islice_limit(iterable, /, *,
+                 limit: typing.Optional[int] = None,
                  offset: typing.Optional[int] = 0):
     """Return a slice from iterable applying limit and offset.
 
@@ -142,7 +142,7 @@ def islice_limit(iterable,
     return iterable
 
 
-def iterslices(iterable, *, size: int):
+def iterslices(iterable, /, *, size: int):
     """Yield iterable in chunks of maximal size.
 
     >>> [tuple(chunk) for chunk in iterslices('bacon', size=2)]
@@ -153,7 +153,7 @@ def iterslices(iterable, *, size: int):
     return iter(lambda: list(next_slice()), [])
 
 
-def walk_scandir(top, *,
+def walk_scandir(top, /, *,
                  verbose: bool = False,
                  sortkey=operator.attrgetter('name')) -> typing.Iterator[os.DirEntry]:
     """Yield os.DirEntry objects for all files under top."""
@@ -188,8 +188,9 @@ def walk_scandir(top, *,
         stack.extend(reversed(dirs))
 
 
-def pipe_json_lines(file, documents=None, *,
-                    delete_present: bool = True, autocompress: bool = True,
+def pipe_json_lines(file, documents=None, /, *,
+                    delete_present: bool = True,
+                    autocompress: bool = True,
                     newline: typing.Optional[str] = '\n',
                     sort_keys: bool = True,
                     compact: bool = True,
@@ -230,7 +231,7 @@ def pipe_json_lines(file, documents=None, *,
     return pipe_json(lines, dump=False, **json_kwargs)
 
 
-def pipe_json(documents, *, dump: bool,
+def pipe_json(documents, /, *, dump: bool,
               sort_keys: bool = True,
               compact: bool = False,
               indent: typing.Optional[int] = None,
@@ -265,7 +266,7 @@ def pipe_json(documents, *, dump: bool,
     return itercodec(documents)
 
 
-def pipe_lines(file, lines=None, *, newline: typing.Optional[str] = None,
+def pipe_lines(file, lines=None, /, *, newline: typing.Optional[str] = None,
                delete_present: bool = False, autocompress: bool = True):
     open_func, result, hashobj = get_open_result(file,
                                                  write=lines is not None,
@@ -291,7 +292,7 @@ def pipe_lines(file, lines=None, *, newline: typing.Optional[str] = None,
     return iterlines()
 
 
-def write_wrapped(hashsum, f, lines, *, buflines: int = 1_000):
+def write_wrapped(hashsum, f, lines, /, *, buflines: int = 1_000):
     write_line = functools.partial(print, file=f)
     buf = f.buffer
     total = 0
@@ -306,7 +307,7 @@ def write_wrapped(hashsum, f, lines, *, buflines: int = 1_000):
     return total
 
 
-def write_lines(file, lines):
+def write_lines(file, lines, /):
     r"""
 
     >>> with io.StringIO() as f:
@@ -324,7 +325,7 @@ def write_lines(file, lines):
     return total
 
 
-def path_from_filename(filename, *args, expanduser: bool = True):
+def path_from_filename(filename, /, *args, expanduser: bool = True):
     if hasattr(filename, 'open'):
         assert not args
         result = filename
@@ -336,7 +337,7 @@ def path_from_filename(filename, *args, expanduser: bool = True):
     return result
 
 
-def get_open_result(file, *, write: bool = False,
+def get_open_result(file, /, *, write: bool = False,
                     delete_present: bool = False, autocompress: bool = False,
                     newline: typing.Optional[str] = None,
                     _encoding: str = 'utf-8'):
@@ -389,7 +390,7 @@ def get_open_result(file, *, write: bool = False,
     return open_func, result, hashobj
 
 
-def get_open_module(filepath, autocompress: bool = False):
+def get_open_module(filepath, /, *, autocompress: bool = False):
     file = path_from_filename(filepath)
 
     suffix = file.suffix.lower()
@@ -403,7 +404,7 @@ def get_open_module(filepath, autocompress: bool = False):
     return result
 
 
-def sha256sum(file, *, raw: bool = False, autocompress: bool = True,
+def sha256sum(file, /, *, raw: bool = False, autocompress: bool = True,
               hash_file_string: bool = False,
               file_string_encoding: str = ENCODING):
     """
@@ -426,12 +427,12 @@ def sha256sum(file, *, raw: bool = False, autocompress: bool = True,
     return hashobj if raw else hashobj.hexdigest()
 
 
-def update_hashobj(hashobj, file, *, chunksize: int = 2**16):  # 64 KiB
+def update_hashobj(hashobj, file, /, *, chunksize: int = 2**16):  # 64 KiB
     for chunk in iter(functools.partial(file.read, chunksize), b''):
         hashobj.update(chunk)
 
 
-def run(cmd, *, capture_output: bool = False,
+def run(cmd, /, *, capture_output: bool = False,
         unpack: bool = False, cwd=None, check: bool = False,
         encoding: str = ENCODING):
     log.info('subprocess.run(%r)', cmd)
@@ -480,19 +481,19 @@ class Ordering(dict):
     _missing = float('inf')
 
     @classmethod
-    def fromlist(cls, keys, *, start_index: int = 0):
+    def fromlist(cls, keys, /, *, start_index: int = 0):
         return cls((k, i) for i, k in enumerate(uniqued(keys), start=start_index))
 
-    def __missing__(self, key):
+    def __missing__(self, key, /):
         return self._missing
 
-    def _sortkey(self, key):
+    def _sortkey(self, key, /):
         return self[key], key
 
-    def sorted(self, keys):
+    def sorted(self, keys, /):
         return sorted(keys, key=self._sortkey)
 
-    def sorted_enumerate(self, keys, start: int = 0):
+    def sorted_enumerate(self, keys, /, *, start: int = 0):
         keyed = sorted((self[key], key) for key in keys)
         return ((i, key) for i, (_, key) in enumerate(keyed, start=start))
 
@@ -511,7 +512,7 @@ class ConfigParser(configparser.ConfigParser):
     _header = None
 
     @classmethod
-    def from_file(cls, filename, *, encoding=ENCODING, **kwargs):
+    def from_file(cls, filename, /, *, encoding=ENCODING, **kwargs):
         path = path_from_filename(filename)
         if cls._basename is not None and path.name != cls._basename:
             raise RuntimeError(f'unexpected filename {path!r}'
@@ -522,18 +523,18 @@ class ConfigParser(configparser.ConfigParser):
             inst.read_file(f)
         return inst
 
-    def __init__(self, *, defaults=None, **kwargs):
+    def __init__(self, /, *, defaults=None, **kwargs):
         for k, v in self._init_defaults.items():
             kwargs.setdefault(k, v)
         super().__init__(defaults=defaults, **kwargs)
 
-    def to_dict(self, *, sort_sections: bool = False,
+    def to_dict(self, /, *, sort_sections: bool = False,
                 _default_section: str = configparser.DEFAULTSECT):
         items = sorted(self.items()) if sort_sections else self.items()
         return {name: dict(section) for name, section in items
                 if name != _default_section}
 
-    def to_file(self, filename, *, encoding=ENCODING):
+    def to_file(self, filename, /, *, encoding=ENCODING):
         path = path_from_filename(filename)
         with path.open('wt', encoding=encoding, newline=self._newline) as f:
             if self._header is not None:

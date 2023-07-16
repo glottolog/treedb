@@ -33,7 +33,7 @@ def _import_pandas():
             log.info('pandas version: %s', PANDAS.__version__)
 
 
-def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
+def pd_read_sql(sql=None, /, *args, con=_globals.ENGINE, **kwargs):
     _import_pandas()
 
     if PANDAS is None:
@@ -48,8 +48,8 @@ def pd_read_sql(sql=None, *args, con=_globals.ENGINE, **kwargs):
         return PANDAS.read_sql_query(sql, *args, con=conn, **kwargs)
 
 
-def pd_read_json_lines(query,
-                       *, buflines: int = JSON_BUFLINES,
+def pd_read_json_lines(query, /, *,
+                       buflines: int = JSON_BUFLINES,
                        bind=_globals.ENGINE,
                        **kwargs):
     _import_pandas()
@@ -63,8 +63,8 @@ def pd_read_json_lines(query,
         return _pd_read_json_lines(json_lines, **kwargs)
 
 
-def _pd_read_json_lines(json_lines: typing.Iterable[str],
-                        *, buflines: int = JSON_BUFLINES,
+def _pd_read_json_lines(json_lines: typing.Iterable[str], /, *,
+                        buflines: int = JSON_BUFLINES,
                         concat_ignore_index: bool = False,
                         **kwargs):
     _import_pandas()

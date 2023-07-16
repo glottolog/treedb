@@ -29,7 +29,7 @@ sqlite_temp_master = sa.table('sqlite_temp_master',
                               sa.column('sql', sa.Text))
 
 
-def print_table_sql(model_or_table, *, include_nrows: bool = True,
+def print_table_sql(model_or_table, /, *, include_nrows: bool = True,
                     file=None, flush: bool = True,
                     bind=_globals.ENGINE):
     """Print CREATE TABLE for the given table and its number of rows."""
@@ -48,7 +48,7 @@ def print_table_sql(model_or_table, *, include_nrows: bool = True,
         print(nrows, file=file, flush=flush)
 
 
-def _get_table_name(model_or_table):
+def _get_table_name(model_or_table, /):
     if hasattr(model_or_table, '__tablename__'):
         return model_or_table.__tablename__
     elif hasattr(model_or_table, 'name'):
@@ -56,7 +56,7 @@ def _get_table_name(model_or_table):
     return model_or_table
 
 
-def select_table_sql(model_or_table):
+def select_table_sql(model_or_table, /):
     """Select CREATE_TABLE of the given table from sqlite_master."""
     select = (sa.select(sqlite_master.c.sql)
               .select_from(sqlite_master)
@@ -69,7 +69,7 @@ def select_table_sql(model_or_table):
     return select
 
 
-def select_table_nrows(model_or_table, *, label: str = 'n_rows'):
+def select_table_nrows(model_or_table, /, *, label: str = 'n_rows'):
     """Select the number of rows for the given table."""
     table_name = _get_table_name(model_or_table)
     return (sa.select(sa.func.count().label(label))

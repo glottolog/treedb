@@ -47,8 +47,8 @@ def pipe(items, /, *, dump: bool,
     return codec(items, convert_lines=convert_lines)
 
 
-def _parse(records: typing.Iterable[_globals.RecordItem],
-           /, *, convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
+def _parse(records: typing.Iterable[_globals.RecordItem], /, *,
+           convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
     r"""Yield languoid items from given record ítems (from raw).
 
     >>> dict(pipe({('abin1243',):
@@ -134,8 +134,8 @@ def _parse(records: typing.Iterable[_globals.RecordItem],
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
-          /, *, convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
+def _dump(languoids: typing.Iterable[_globals.LanguoidItem], /, *,
+          convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
     r"""
 
     >>> dict(pipe({('abin1243',): {
@@ -226,8 +226,8 @@ def _dump(languoids: typing.Iterable[_globals.LanguoidItem],
         yield path, record
 
 
-def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
-                  /, *, convert_lines: bool) -> _globals.LanguoidType:
+def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType, /, *,
+                  convert_lines: bool) -> _globals.LanguoidType:
     _make_lines = _fields.parse_lines if convert_lines else make_lines_raw
 
     core = cfg[CORE]
@@ -317,8 +317,8 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType,
     return languoid
 
 
-def make_record(languoid: _globals.LanguoidType,
-                /, *, convert_lines: bool,
+def make_record(languoid: _globals.LanguoidType, /, *,
+                convert_lines: bool,
                 is_lines=_fields.is_lines) -> _globals.RecordType:
     core = {'name': languoid['name'],
             'hid': languoid['hid'],

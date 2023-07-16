@@ -35,14 +35,14 @@ def register_view(name, **kwargs):
     return decorator
 
 
-def create_all_views(*, clear=False):
+def create_all_views(*, clear: bool = False):
     log.debug('run create_view() for %d views in REGISTERED', len(REGISTERED))
     for name, func in REGISTERED.items():
         table = view(name, selectable=func(), clear=clear)
         setattr(TABLES, name, table)
 
 
-def view(name, selectable, *, clear=False):
+def view(name, selectable, *, clear: bool = False):
     """Register a CREATE and DROP VIEW DDL for the given selectable."""
     log.debug('view(%r, clear=%r)', name, clear)
 
@@ -56,7 +56,7 @@ def view(name, selectable, *, clear=False):
     return make_table(selectable, name=name)
 
 
-def make_table(selectable, *, name='view_table'):
+def make_table(selectable, /, *, name: str = 'view_table'):
     table = sa.table(name)
     for c in selectable.alias().c:
         _, col = c._make_proxy(table)

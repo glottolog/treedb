@@ -7,7 +7,7 @@ Version 2.6.2 (in development)
 
 Relax `models.IsoRetirement.remedy` constraint: nullable except for `reason='split'`.
 
-Drop Python 3.7 support.
+Drop Python 3.7 support. Use PEP 570 positional-only parameters.
 
 
 Version 2.6.1

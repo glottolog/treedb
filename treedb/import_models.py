@@ -37,8 +37,8 @@ class ModelMap(dict):
     def key_to_params(key):
         return {'name': key}
 
-    def __init__(self, items=(),
-                 *, conn,
+    def __init__(self, items=(), /, *,
+                 conn,
                  model=None, key_to_params=None,
                  log_insert=True):
         super().__init__(items)
@@ -51,7 +51,7 @@ class ModelMap(dict):
         self.conn = conn
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
-    def __missing__(self, key):
+    def __missing__(self, key, /):
         if self.log_insert:
             log.debug('insert new %s: %r', self.model.__tablename__, key)
         params = self.key_to_params(key)
@@ -62,7 +62,7 @@ class ModelMap(dict):
         return pk
 
 
-def main(languoids, *, conn):
+def main(languoids, /, *, conn):
 
     bibfile_ids = ModelMap(conn=conn, model=Bibfile)
 
@@ -113,7 +113,7 @@ def main(languoids, *, conn):
     insert_pseudofamilies(conn)
 
 
-def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
+def insert_languoid_levels(conn, /, *, config_file='languoid_levels.ini'):
     log.info('insert languoid levels from: %r', config_file)
     levels = Config.load(config_file, bind=conn)
     levels = dict(sorted(levels.items(), key=lambda x: int(x[1]['ordinal'])))
@@ -132,7 +132,7 @@ def insert_languoid_levels(conn, *, config_file='languoid_levels.ini'):
     conn.execute(sa.insert(LanguoidLevel), params)
 
 
-def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
+def insert_pseudofamilies(conn, /, *, config_file='language_types.ini'):
     log.info('insert pseudofamilies from: %r', config_file)
     languagetypes = Config.load(config_file, bind=conn)
     pseudofamilies = {section: l for section, l in languagetypes.items()
@@ -168,7 +168,7 @@ def insert_pseudofamilies(conn, *, config_file='language_types.ini'):
                       f' expected bookkeeping: {BOOKKEEPING!r}')
 
 
-def insert_macroareas(conn, *, config_file='macroareas.ini'):
+def insert_macroareas(conn, /, *, config_file='macroareas.ini'):
     log.info('insert macroareas from: %r', config_file)
     macroareas = Config.load(config_file, bind=conn)
 
@@ -180,7 +180,7 @@ def insert_macroareas(conn, *, config_file='macroareas.ini'):
     conn.execute(sa.insert(Macroarea), params)
 
 
-def insert_endangermentstatus(conn, *, bibitem_ids,
+def insert_endangermentstatus(conn, /, *, bibitem_ids,
                               config_file='aes_status.ini'):
     log.info('insert endangermentstatus from %r:', config_file)
     status = Config.load(config_file, bind=conn)
@@ -199,7 +199,7 @@ def insert_endangermentstatus(conn, *, bibitem_ids,
     conn.execute(sa.insert(EndangermentStatus), params)
 
 
-def insert_languoids(conn, *, languoids, bibitem_ids, es_ids):
+def insert_languoids(conn, /, *, languoids, bibitem_ids, es_ids):
     log.info('insert languoids')
 
     def unseen_countries(countries, _seen={}):
@@ -224,7 +224,7 @@ def insert_languoids(conn, *, languoids, bibitem_ids, es_ids):
         insert_languoid(l, **kwargs)
 
 
-def insert_languoid(languoid, *, conn,
+def insert_languoid(languoid, /, *, conn,
                     insert_lang,
                     unseen_countries,
                     sourceprovider_ids,

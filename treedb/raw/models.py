@@ -34,7 +34,7 @@ class File:
                                       ' = glottocode'),)
 
     @classmethod
-    def path_depth(cls, label='path_depth'):
+    def path_depth(cls, /, *, label='path_depth'):
         return sa.func.floor((sa.func.length(cls.path) + 1) / 9).label(label)
 
 

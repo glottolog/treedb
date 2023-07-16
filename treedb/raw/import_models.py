@@ -23,11 +23,11 @@ class OptionMap(dict):
 
     model = Option
 
-    def __init__(self, items=(), *, conn):
+    def __init__(self, items=(), /, *, conn):
         super().__init__(items)
         self.insert = functools.partial(conn.execute, sa.insert(self.model))
 
-    def __missing__(self, key):
+    def __missing__(self, key, /):
         log.debug('insert option: %r', key)
         section, option = key
         is_lines = _fields.is_lines(section, option)
@@ -56,7 +56,7 @@ class OptionMap(dict):
         return result
 
 
-def itervalues(cfg, file_id, *, option_map):
+def itervalues(cfg, file_id, /, *, option_map):
     get_line = _tools.next_count(start=1)
     for section, sec in cfg.items():
         for option, text in sec.items():
@@ -67,7 +67,7 @@ def itervalues(cfg, file_id, *, option_map):
                        'line': get_line(), 'value': v}
 
 
-def main(root, *, conn):
+def main(root, /, *, conn):
     insert_file = functools.partial(conn.execute, sa.insert(File))
 
     option_id_is_lines = OptionMap(conn=conn)

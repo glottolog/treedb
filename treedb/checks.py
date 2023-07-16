@@ -21,7 +21,7 @@ __all__ = ['check',
 log = logging.getLogger(__name__)
 
 
-def check(func=None, *, bind=_globals.ENGINE):
+def check(func=None, /, *, bind=_globals.ENGINE):
     """Run consistency/sanity checks on database."""
     if func is not None:
         try:
@@ -58,11 +58,11 @@ class Check(object):
 
     detail = True
 
-    def __init__(self, session, **kwargs):
+    def __init__(self, session, /, **kwargs):
         self.session = session
         self.query = self.invalid_query(**kwargs)
 
-    def invalid_query(self, **kwargs):  # pragma: no cover
+    def invalid_query(self, /, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
     def validate(self):
@@ -94,7 +94,7 @@ class Check(object):
         return f'{self.__class__.__name__}: {msg}'
 
     @staticmethod
-    def show_detail(invalid, invalid_count, number=25):  # pragma: no cover
+    def show_detail(invalid, invalid_count, /, *, number=25):  # pragma: no cover
         ids = (i.id for i in itertools.islice(invalid, number))
         cont = ', ...' if number < invalid_count else ''
         print(f"    {', '.join(ids)}{cont}")
@@ -273,7 +273,7 @@ def no_empty_files(*, exclude_raw: bool):
             .where(~sa.exists().where(Value.file_id == File.id)))
 
 
-def compare_languoids(left_source: str = 'files', right_source: str = 'raw',
+def compare_languoids(left_source: str = 'files', right_source: str = 'raw', /,
                       *, order_by: str = _globals.LANGUOID_ORDER):  # pragma: no cover
     from . import export
 
