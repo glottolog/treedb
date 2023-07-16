@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 import sqlalchemy as sa
 

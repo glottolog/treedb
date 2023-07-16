@@ -616,7 +616,7 @@ def splitlink(markdown, /, *, _match=_LINK_PATTERN.fullmatch):
     >>> splitlink('www.example.com')
     {'url': 'www.example.com', 'title': None, 'scheme': None}
     """
-    if (ma := _match(markdown))is not None:
+    if (ma := _match(markdown)) is not None:
         title, url = ma.groups()
     else:
         title = None
