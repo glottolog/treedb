@@ -7,6 +7,10 @@ Version 2.6.3 (in development)
 
 Tag Python 3.12 support.
 
+Update GitHub actions.
+
+Drop Codecov CI integration.
+
 
 Version 2.6.2
 -------------
