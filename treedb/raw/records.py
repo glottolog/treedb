@@ -135,5 +135,5 @@ def iterkeys(key_column, /, *, size: int = WINDOWSIZE,
               size, str(key_column.expression))
 
     with _backend.connect(bind=bind) as conn,\
-         contextlib.closing(conn.execute(select_keys)) as result:
+         contextlib.closing(conn.execute(select_keys)) as result:  # noqa: E231
         yield from result.scalars()
