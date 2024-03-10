@@ -3,7 +3,7 @@ Glottolog ``treedb``
 
 |PyPI version| |License| |Supported Python| |Wheel|
 
-|Build| |Codecov|
+|Build|
 
 This tool loads the content of the `languoids/tree`_ directory from the
 Glottolog_ `master repo`_ into a normalized SQLite_ database.

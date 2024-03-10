@@ -76,8 +76,6 @@ jobs:
           echo "::endgroup::"
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
-      - name: Upload test coverage
-        uses: codecov/codecov-action@v3
       - name: Check Glottolog version
         run: echo "::notice::$(python -c 'import treedb; print(treedb.glottolog_version())')"
       - name: Run try-treedb.py (if -full)
