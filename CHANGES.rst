@@ -5,6 +5,8 @@ Changelog
 Version 2.6.3 (in development)
 ------------------------------
 
+Add test checksums for Glottolog ``v5.0``.
+
 Tag Python 3.12 support.
 
 Update GitHub actions.
