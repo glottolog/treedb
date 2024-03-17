@@ -2,18 +2,18 @@ Changelog
 =========
 
 
-Version 2.6.3 (in development)
-------------------------------
+Version 2.6.3
+-------------
 
 Add test checksums for Glottolog ``v5.0``.
 
 Update test checksums for Glottolog ``v4.8``, ``v4.7``, ``v4.6``, ``v4.5``, and ``v4.4``
 for 'Türkiye' as new official name for TR (Turkey) updated in ``pycountry``
-after bumping the pinned version `23.12.11` (for earlier versions
-`treedb` uses the country names that were included in Glottolog before
+after bumping the pinned version ``23.12.11`` (for earlier versions
+``treedb`` uses the country names that were included in Glottolog before
 https://github.com/glottolog/glottolog/pull/636).
 
-Log the version of `pycountry`.
+Log the (pinned) version of ``pycountry``.
 
 Tag Python 3.12 support.
 
