@@ -16,11 +16,11 @@ PREFIX_ID = 'path_languoid:id:sha256:'
 
 CHECKSUM = {'master': None,
             'v5.0': '41ad0e4b1ef0569c9699f1591f1a3fa9de64bee17cfc8b968330d96eff4d3d84',
-            'v4.8': '66b901e25048a86758798657f4a940b29208b971f4384314c07f8c574788bee8',
-            'v4.7': 'bd2be4c0a0463c85a01e287cf12f1d73041cc775f26d6a5d69a419ed0f7aad09',
-            'v4.6': '3e07ebd1d58f84604dab5f717dfcd2745b8dd37adbecab61a6bfdcb4b9e85d1c',
-            'v4.5': '308e0e142683b5365d36dacb57cc22926d60c9d4b061eba6d58829b75b8843cb',
-            'v4.4': '289247f73d5bf57f0a7dc8e0e2473b5625ace605dbad57b3c06fe93063d47599',
+            'v4.8': '2a5e60d586fb4c9d6e88efbcc31f5db72af699c584f7053dda9bf28dd3599cab',
+            'v4.7': '69f3058e79d443336ad0f33b71ff184100283502a9b52805a1815852df704315',
+            'v4.6': '9f63edacc4af792106bcc5a49b6339f0c90e096829c8409b361a6ca2e99107c1',
+            'v4.5': '24c79cb12d016ebde9896f3c946b42bebd500318581a41ac17f222a0b292dc9d',
+            'v4.4': '4ad1d84119582f24ca9403e4f9a501f1aeb947e1b8d7ea57fad3ef5e4bccdb4c',
             'v4.3-treedb-fixes': '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
             'v4.2.1': '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
             'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
