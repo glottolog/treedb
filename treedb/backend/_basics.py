@@ -7,6 +7,7 @@ import typing
 
 import csv23
 
+import pycountry
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler
 
@@ -100,10 +101,13 @@ def set_engine(filename, /, *,
 
 def log_versions(*, also_print=False, print_file=None,
                  engine=ENGINE):
+    log.info('pycountry version: %s', pycountry.__version__)
     log.info('sqlalchemy version: %s', sa.__version__)
     log.info('sqlite version: %s', engine.dialect.dbapi.sqlite_version)
     log.info('csv23 version: %s', csv23.__version__)
     if also_print or print_file is not None:
+        print(f'pycountry version: {pycountry.__version__}',
+              file=print_file)
         print(f'sqlalchemy version: {sa.__version__}',
               file=print_file)
         print(f'sqlite_version: {engine.dialect.dbapi.sqlite_version}',
