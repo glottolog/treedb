@@ -21,7 +21,7 @@ setup(
     python_requires='>=3.8',
     install_requires=[
         'csv23~=0.3',
-        'pycountry==22.3.5',  # date-based versioning scheme
+        'pycountry==23.12.11',  # date-based versioning scheme
         'sqlalchemy>=1.4.24',
     ],
     extras_require={
