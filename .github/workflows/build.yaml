@@ -9,22 +9,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux-3.12-full
-            python-version: "3.12"
+          - name: linux-3.13-full
+            python-version: "3.13"
             args: "--run-writes"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: linux-3.12-full-master
-            python-version: "3.12"
+          - name: linux-3.13-full-master
+            python-version: "3.13"
             args: "--glottolog-tag=master --run-writes"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: windows-3.12-full
-            python-version: "3.12"
+          - name: windows-3.13-full
+            python-version: "3.13"
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
-          - name: linux-3.11-quick-lint
+          - name: linux-3.12-quick-lint
+            python-version: "3.12"
+            args: "--skip-slow --exclude-raw"
+            extra: ",pandas"
+            os: ubuntu-latest
+          - name: linux-3.11-quick
             python-version: "3.11"
             args: "--skip-slow --exclude-raw"
             extra: ",pandas"
