@@ -5,6 +5,8 @@ Changelog
 Version 2.6.4 (in development)
 ------------------------------
 
+Update ``pycountry`` to 24.6.1.
+
 Tag Python 3.13 support.
 
 Drop Python 3.8 support.
