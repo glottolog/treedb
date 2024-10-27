@@ -39,11 +39,6 @@ jobs:
             args: "--skip-slow --exclude-raw"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: linux-3.8-quick
-            python-version: "3.8"
-            args: "--skip-slow --exclude-raw"
-            extra: ",pandas"
-            os: ubuntu-latest
     steps:
       - name: Check/configure long paths (if windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
