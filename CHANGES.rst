@@ -5,7 +5,9 @@ Changelog
 Version 2.6.4 (in development)
 ------------------------------
 
+Tag Python 3.13 support.
 
+Drop Python 3.8 support.
 
 
 Version 2.6.3
