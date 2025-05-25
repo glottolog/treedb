@@ -59,7 +59,9 @@ def view(name, selectable, *, clear: bool = False):
 def make_table(selectable, /, *, name: str = 'view_table'):
     table = sa.table(name)
     for c in selectable.alias().c:
-        _, col = c._make_proxy(table)
+        _, col = c._make_proxy(table,
+                               primary_key=table.primary_key,
+                               foreign_keys=table.foreign_keys)
         table.append_column(col)
     return table
 
