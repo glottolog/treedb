@@ -5,6 +5,8 @@ Changelog
 Version 2.6.4 (in development)
 ------------------------------
 
+Add test checksums for Glottolog ``v5.1``.
+
 Update ``pycountry`` to 24.6.1.
 
 Tag Python 3.13 support.
