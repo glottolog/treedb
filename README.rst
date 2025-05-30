@@ -202,7 +202,7 @@ This tool is distributed under the `MIT license`_.
 .. |Supported Python| image:: https://img.shields.io/pypi/pyversions/treedb.svg
     :target: https://pypi.org/project/treedb/
     :alt: Supported Python Versions
-.. |Downloads| image::  https://img.shields.io/pypi/dm/treedb.svg
+.. |Downloads| image:: https://img.shields.io/pypi/dm/treedb.svg
     :target: https://pypistats.org/packages/treedb
     :alt: Monthly downloads
 
