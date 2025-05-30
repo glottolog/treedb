@@ -1,5 +1,6 @@
 import io
 import re
+import textwrap
 
 import pytest
 import sqlalchemy as sa
@@ -68,15 +69,18 @@ def test_print_rows_pretty(bare_treedb, encoding='utf-8'):
     with io.StringIO() as f:
         bare_treedb.print_rows(query, pretty=True, file=f)
         result = f.getvalue()
-    assert result == '''\
-{'record': {'key_0': None,
-            'key_1': None,
-            'key_2': None,
-            'key_3': None,
-            'key_4': None,
-            'key_5': None,
-            'key_6': None,
-            'key_7': None,
-            'key_8': None,
-            'key_9': None}}
-'''
+
+    expected = textwrap.dedent(
+        '''
+        {'record': {'key_0': None,
+                    'key_1': None,
+                    'key_2': None,
+                    'key_3': None,
+                    'key_4': None,
+                    'key_5': None,
+                    'key_6': None,
+                    'key_7': None,
+                    'key_8': None,
+                    'key_9': None}}
+        ''').lstrip()
+    assert result == expected

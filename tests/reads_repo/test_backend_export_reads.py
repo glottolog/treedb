@@ -1,3 +1,5 @@
+import textwrap
+
 import pytest
 import sqlalchemy as sa
 
@@ -81,12 +83,14 @@ def test_print_rows(capsys, treedb):
     out, err = capsys.readouterr()
     assert not err
 
-    assert out == '''\
-SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.hid, languoid.iso639_3, languoid.latitude, languoid.longitude 
-FROM languoid 
-WHERE languoid.iso639_3 = :iso639_3_1
-abin1243: Abinomn (language) [bsa]
-'''  # noqa: E501,W291
+    expected = textwrap.dedent(
+        '''
+        SELECT languoid.id, languoid.name, languoid.level, languoid.parent_id, languoid.hid, languoid.iso639_3, languoid.latitude, languoid.longitude 
+        FROM languoid 
+        WHERE languoid.iso639_3 = :iso639_3_1
+        abin1243: Abinomn (language) [bsa]
+        ''').lstrip()  # noqa: E501,W291
+    assert out == expected
 
 
 def test_write_csv(pytestconfig, treedb):
