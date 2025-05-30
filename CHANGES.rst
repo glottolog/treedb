@@ -2,10 +2,12 @@ Changelog
 =========
 
 
-Version 2.6.4 (in development)
-------------------------------
+Version 2.6.4
+-------------
 
-Add test checksums for Glottolog ``v5.1`` and ``v5.2``. 
+Add test checksums for Glottolog ``v5.1`` and ``v5.2``.
+
+Fix SQLAlchemy >=2.0.38 ``TypeError`` calling ``ColumnClause._make_proxy()`` in view creation.
 
 Update ``pycountry`` to 24.6.1.
 
