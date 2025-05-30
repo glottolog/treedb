@@ -4,6 +4,7 @@ import sqlalchemy as sa
 from helpers import assert_file_size_between
 
 QUERY_HASH = {'master': None,
+              'v5.2': 'ac5712e082e4bf4c4b341d232a4309c5a968b9f93d1c23b9cd4a1ae9faed5197',
               'v5.1': 'c235e4b709b009a31f5a8eace0edeff02b08546f9f81b90139d017723fb4fa65',
               'v5.0': 'f20f1bd9e397f614b24276c189f072fbe28be8c62b6d5f3011546735aecb5bc6',
               'v4.8': '705b1e4e30c35c659e536f0b41dc2c4197c72037b2c8eec7af20c3bf9ef4c992',

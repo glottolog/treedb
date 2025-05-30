@@ -2,7 +2,9 @@ import pytest
 
 from helpers import assert_file_size_between
 
-CHECKSUM = {('v5.1', False): 'strong:sha256:67e84364cca2eb6ce221777c3a3b965862b0231e841e20a3c8b65a50b3c68e31',
+CHECKSUM = {('v5.2', False): 'strong:sha256:8cd3a20630aaab34aa48bc7e86dec1c69c6b0d139afe1d64349048129447a7ec',
+            ('v5.2', True): 'weak:sha256:91f98cd56e5bd9f04e4f42cfbc2d2b6f673627bafb9098e5c2a15faea0ea40bb',
+            ('v5.1', False): 'strong:sha256:67e84364cca2eb6ce221777c3a3b965862b0231e841e20a3c8b65a50b3c68e31',
             ('v5.1', True): 'weak:sha256:8637e556a46c3a75fe726bb0d2ed4791770b5939f0ba1146a9457d4ad5b19b37',
             ('v5.0', False): 'strong:sha256:7481bfe65789151b36764f9109fefd7f2134052d49fd3d38135b994f772f8db0',
             ('v5.0', True): 'weak:sha256:e7ed35a867352e39fa4bad935b6732dc3aa4791e6cfd5e6f8fc9c20322e200b5',
@@ -25,6 +27,7 @@ CHECKSUM = {('v5.1', False): 'strong:sha256:67e84364cca2eb6ce221777c3a3b965862b0
             ('v4.1', 'unordered'): 'unordered:sha256:dc6ed1762d47dec12432b09e0d1a1159153f062893bd884e8f21ec6b9e42d6c8'}  # noqa: E501
 
 RAW_CSV_SHA256 = {'master': None,
+                  'v5.2': '8a226215fd5db1d6fad6b025280cdfd4b61ad87b08d02c8476ead352e3814de6',
                   'v5.1': '640acf6fccf0640fc67b22ab36e0b02f761ece8a90740b6c6c01db2e05b461f0',
                   'v5.0': 'a324b2367331ca7a89d3d6fb4b4fe63fa89ff5caaff4bacfefebc491ee8100e1',
                   'v4.8': '0f1b646c5bc9f3a454e8516d9a0288b086bb8acba673b94c1a4942d3a5d1bdaa',

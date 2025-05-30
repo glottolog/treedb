@@ -5,7 +5,7 @@ Changelog
 Version 2.6.4 (in development)
 ------------------------------
 
-Add test checksums for Glottolog ``v5.1``.
+Add test checksums for Glottolog ``v5.1`` and ``v5.2``. 
 
 Update ``pycountry`` to 24.6.1.
 

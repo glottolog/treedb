@@ -15,6 +15,7 @@ PREFIX = 'path_languoid:path:sha256:'
 PREFIX_ID = 'path_languoid:id:sha256:'
 
 CHECKSUM = {'master': None,
+            'v5.2': 'c80bc501cf1bef9f3f9449ffa8a6a60d0a4082cfa74f82768490e698dc3e3c70',
             'v5.1': 'e37d43e99deb5fb5055916b29c009c43fafffc2c60c4e9fc027b34d16336d856',
             'v5.0': '41ad0e4b1ef0569c9699f1591f1a3fa9de64bee17cfc8b968330d96eff4d3d84',
             'v4.8': '2a5e60d586fb4c9d6e88efbcc31f5db72af699c584f7053dda9bf28dd3599cab',
@@ -27,6 +28,25 @@ CHECKSUM = {'master': None,
             'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
 
 STATS = {'master': None,
+         'v5.2': '''\
+27,034 languoids
+   246 families
+   184 isolates
+   430 roots
+ 8,612 languages
+ 4,583 subfamilies
+13,593 dialects
+ 7,675 Spoken L1 Languages
+   227 Sign Language
+   120 Unclassifiable
+    87 Pidgin
+    68 Unattested
+    31 Artificial Language
+     8 Mixed Language
+    15 Speech Register
+ 8,231 All
+   381 Bookkeeping
+''',
          'v5.1': '''\
 26,953 languoids
    247 families
