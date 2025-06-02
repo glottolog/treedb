@@ -33,9 +33,9 @@ pretty = ["sqlparse>=0.3"]
 pandas = ["pandas>=1"]
 
 [project.urls]
-homepage = "https://github.com/glottolog/treedb"
-changelog = "https://github.com/glottolog/treedb/blob/master/CHANGES.rst"
-issues = "https://github.com/glottolog/treedb/issues"
+Homepage = "https://github.com/glottolog/treedb"
+Changelog = "https://github.com/glottolog/treedb/blob/master/CHANGES.rst"
+"Issue Tracker" = "https://github.com/glottolog/treedb/issues"
 CI = "https://github.com/glottolog/treedb/actions"
 Coverage = "https://codecov.io/gh/glottolog/treedb"
 
