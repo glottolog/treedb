@@ -1,0 +1,90 @@
+[project]
+name = "treedb"
+authors = [{name = "Sebastian Bank", email = "sebastian.bank@uni-leipzig.de"}]
+description = "Glottolog languoid tree as SQLite database"
+keywords = ["glottolog", "languoids", "sqlite3", "database"]
+readme = "README.rst"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+dynamic = ["version"]
+requires-python = ">=3.9"
+dependencies = [
+    "csv23~=0.3",
+    "pycountry==24.6.1",  # date-based versioning scheme
+    "sqlalchemy>=1.4.24",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+dev = ["build", "wheel", "twine", "flake8", "flake8-pyproject", "pep8-naming", "tox>=3"]
+test = ["pytest>=6", "pytest-cov", "coverage"]
+pretty = ["sqlparse>=0.3"]
+pandas = ["pandas>=1"]
+
+[project.urls]
+homepage = "https://github.com/glottolog/treedb"
+changelog = "https://github.com/glottolog/treedb/blob/master/CHANGES.rst"
+issues = "https://github.com/glottolog/treedb/issues"
+CI = "https://github.com/glottolog/treedb/actions"
+Coverage = "https://codecov.io/gh/glottolog/treedb"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "treedb.__version__"}
+
+[tool.flake8]
+exclude = ["build"]
+ignore = ["E126", "E128", "W503"]
+max-line-length = 110
+
+[tool.pytest.ini_options]
+minversion = "6"
+testpaths = ["treedb", "tests"]
+addopts = [
+    "--doctest-modules",
+    # pytest summary: all except (E)rror
+    # - (f)ailed
+    # - (s)kipped
+    # - (x/X)failed/passed
+    # - (p/P)assed (no output)
+    "-r fsxXpP",
+    "--durations=10",
+    "--cov", "--cov-report=term", "--cov-report=html",
+    "--strict-config", "--strict-markers",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:pycountry.*",
+    'ignore:.*pkg_resources.declare_namespace\(.*:DeprecationWarning',
+]
+log_cli_level = "WARNING"
+#log_file = "test-log.txt"
+#log_file_level = "DEBUG"
+
+[tools.coverage.run]
+source = ["treedb"]
+branch = false
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{313,312,311,310,39}
+skip_missing_interpreters = true
+
+[testenv]
+extras = test,pretty
+commands = python -X dev run-tests.py {posargs} --installed
+"""

@@ -27,7 +27,7 @@ jobs:
           - name: linux-3.12-quick-lint
             python-version: "3.12"
             args: "--skip-slow --exclude-raw"
-            extra: ",pandas"
+            extra: ",dev,pandas"
             os: ubuntu-latest
           - name: linux-3.11-quick
             python-version: "3.11"
