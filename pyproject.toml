@@ -63,7 +63,7 @@ addopts = [
     # - (p/P)assed (no output)
     "-r fsxXpP",
     "--durations=10",
-    "--cov", "--cov-report=term", "--cov-report=html",
+    "--cov-report=term", "--cov-report=html",
     "--strict-config", "--strict-markers",
 ]
 filterwarnings = [
@@ -86,5 +86,5 @@ skip_missing_interpreters = true
 
 [testenv]
 extras = test,pretty
-commands = python -X dev run-tests.py {posargs} --installed
+commands = python -X dev run-tests.py {posargs} --installed --cov={envsitepackagesdir}/treedb
 """
