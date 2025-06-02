@@ -75,7 +75,7 @@ jobs:
           python -m pip install "sqlalchemy<2"
           echo "::endgroup::"
       - name: Run tests with ${{ matrix.args }}
-        run: python run-tests.py ${{ matrix.args }}
+        run: python run-tests.py ${{ matrix.args }} --installed --cov=treedb
       - name: Check Glottolog version
         run: echo "::notice::$(python -c 'import treedb; print(treedb.glottolog_version())')"
       - name: Run try-treedb.py (if -full)
