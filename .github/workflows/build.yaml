@@ -69,7 +69,7 @@ jobs:
       - name: Notice package versions
         run: echo "::notice::$(python -c 'import treedb; treedb.print_versions()')"
       - name: Run tests with ${{ matrix.args }}
-        run: python run-tests.py ${{ matrix.args }}
+        run: python run-tests.py ${{ matrix.args }} --installed --cov=treedb
       - name: Notice Glottolog version
         run: echo "::notice::$(python -c 'import treedb; print(treedb.glottolog_version())')"
       - name: Run try-treedb.py (if -full)
