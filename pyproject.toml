@@ -78,7 +78,7 @@ addopts = [
   # - (p/P)assed (no output)
   "-r fsxXpP",
   "--durations=10",
-  "--cov", "--cov-report=term", "--cov-report=html",
+  "--cov-report=term", "--cov-report=html",
 ]
 strict_config = true
 strict_markers = true
@@ -102,4 +102,4 @@ skip_missing_interpreters = true
 [tool.tox.env_run_base]
 dependency_groups = ["test"]
 extras = ["pretty"]
-commands = [["python", "-X", "dev", "run-tests.py", { replace = "posargs", extend = true }]]
+commands = [["python", "-X", "dev", "run-tests.py", { replace = "posargs", extend = true }, "--installed", "--cov={envsitepackagesdir}/treedb"]]
