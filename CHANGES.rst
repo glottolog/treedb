@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.7 (in development)
-----------------------------
+Version 2.7
+-----------
 
 Port project metadata, configuration, and packaging from deprecated setup.py
 to pyproject.toml and https://build.pypa.io.
