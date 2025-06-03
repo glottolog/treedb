@@ -1,6 +1,6 @@
 [project]
 name = "treedb"
-authors = [{name = "Sebastian Bank", email = "sebastian.bank@uni-leipzig.de"}]
+authors = [{ name = "Sebastian Bank", email = "sebastian.bank@uni-leipzig.de" }]
 description = "Glottolog languoid tree as SQLite database"
 keywords = ["glottolog", "languoids", "sqlite3", "database"]
 readme = "README.rst"
@@ -42,6 +42,9 @@ pandas = ["pandas>=1"]
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+platforms = ["any"]
 
 [tool.setuptools.dynamic]
 version = {attr = "treedb.__version__"}
