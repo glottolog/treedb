@@ -26,18 +26,18 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
-[project.optional-dependencies]
-dev = ["build", "wheel", "twine", "flake8", "flake8-pyproject", "pep8-naming", "tox>=3"]
-test = ["pytest>=6", "pytest-cov", "coverage"]
-pretty = ["sqlparse>=0.3"]
-pandas = ["pandas>=1"]
-
 [project.urls]
 Homepage = "https://github.com/glottolog/treedb"
 Changelog = "https://github.com/glottolog/treedb/blob/master/CHANGES.rst"
 "Issue Tracker" = "https://github.com/glottolog/treedb/issues"
 CI = "https://github.com/glottolog/treedb/actions"
 Coverage = "https://codecov.io/gh/glottolog/treedb"
+
+[project.optional-dependencies]
+dev = ["build", "wheel", "twine", "flake8", "Flake8-pyproject", "pep8-naming", "tox>=3"]
+test = ["pytest>=6", "pytest-cov", "coverage"]
+pretty = ["sqlparse>=0.3"]
+pandas = ["pandas>=1"]
 
 [build-system]
 requires = ["setuptools"]
