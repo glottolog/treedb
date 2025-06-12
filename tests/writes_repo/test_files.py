@@ -8,6 +8,9 @@ pytestmark = pytest.mark.writes
 
 @pytest.mark.xfail_glottolog_tag('master', reason='possibly unnormalized master',
                                  raises=AssertionError)
+@pytest.mark.xfail_glottolog_tag('v5.2.1', reason='un-normalized v5.2.1 whitespace',
+                                 # https://github.com/glottolog/glottolog/pull/1221
+                                 raises=AssertionError)
 @pytest.mark.xfail_glottolog_tag('v4.8', reason='extra v4.8 endangerment whitespace',
                                  # https://github.com/glottolog/glottolog/pull/981
                                  raises=AssertionError)

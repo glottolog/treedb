@@ -5,7 +5,7 @@ Changelog
 Version 2.7.1 (in development)
 ------------------------------
 
-
+Add test checksums for Glottolog ``v5.2.1``.
 
 
 Version 2.7
