@@ -1,6 +1,5 @@
 import io
 import itertools
-import sys
 
 import sqlalchemy as sa
 
@@ -51,7 +50,7 @@ def test_languoid_query_print_rows_pretty(treedb, as_rows, sort_keys):
         result = f.getvalue()
     assert result
     if as_rows:
-        if sort_keys or sys.version_info < (3, 8):
+        if sort_keys:
             assert result.startswith("{'__path__': 'abin1243',\n"
                                      " 'languoid': {'altnames': {")
         else:
@@ -59,7 +58,7 @@ def test_languoid_query_print_rows_pretty(treedb, as_rows, sort_keys):
                                      " 'languoid': {'id': 'abin1243',\n"
                                      "              'parent_id': None,\n")
     else:
-        if sort_keys or sys.version_info < (3, 8):
+        if sort_keys:
             assert result.startswith("{'md.ini': {'__path__': ['abin1243'],\n"
                                      "            'languoid': {'altnames': {")
         else:

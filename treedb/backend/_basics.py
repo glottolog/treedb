@@ -169,7 +169,6 @@ def expression_compile(expression, /, *, literal_binds=True):
     return expression.compile(compile_kwargs={'literal_binds': literal_binds})
 
 
-# Windows, Python < 3.9: https://www.sqlite.org/download.html
 def json_object(*, sort_keys_: bool,
                 label_: typing.Optional[str] = None,
                 load_json_: bool = False, **kwargs):

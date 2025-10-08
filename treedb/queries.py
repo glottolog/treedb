@@ -250,7 +250,6 @@ def add_endangermentsource(select_languoid: sa.sql.Select, /, *,
             .outerjoin(sa.join(bibitem, bibfile)))
 
 
-# Windows, Python < 3.9: https://www.sqlite.org/download.html
 group_array = sa.func.json_group_array
 
 

@@ -7,7 +7,6 @@ import gzip
 import hashlib
 import logging
 import pprint
-import sys
 import typing
 import warnings
 import zipfile
@@ -241,17 +240,9 @@ def print_rows(query=None, /, *, file=None,
 
 class PrettyPrinter(pprint.PrettyPrinter):
 
-    def __init__(self, stream, /, *,
-                 sort_dicts: bool = False,
-                 **kwargs) -> None:
-        if sys.version_info < (3, 8):
-            if not sort_dicts:
-                warnings.warn(f'sort_dicts={sort_dicts!r} not available')
-            del sort_dicts
-        else:
-            kwargs['sort_dicts'] = sort_dicts
-        if sys.version_info >= (3, 10):
-            kwargs.setdefault('underscore_numbers', True)
+    def __init__(self, stream, /, **kwargs) -> None:
+        kwargs.setdefault('sort_dicts', False)
+        kwargs.setdefault('underscore_numbers', True)
         super().__init__(stream=stream, **kwargs)
 
 
