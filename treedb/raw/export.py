@@ -1,7 +1,6 @@
 """Write information to stdout, csv, files."""
 
 import logging
-import typing
 import warnings
 
 import csv23
@@ -102,9 +101,9 @@ def write_raw_csv(filename=None, /, *,
 
 def write_files(root=_globals.ROOT, /, *, replace: bool = False,
                 dry_run: bool = False,
-                require_nwritten: typing.Optional[int] = None,
-                limit: typing.Optional[int] = None,
-                offset: typing.Optional[int] = 0,
+                require_nwritten: int | None = None,
+                limit: int | None = None,
+                offset: int | None = 0,
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE):
     """Write (path, section, option, line, value) rows back into config files."""

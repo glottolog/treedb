@@ -1,5 +1,6 @@
 """Generic re-useable self-contained helpers."""
 
+from collections.abc import Iterator
 import builtins
 import bz2
 import configparser
@@ -19,7 +20,6 @@ import platform
 import subprocess
 import sys
 import types  # noqa: F401 (used in doctest)
-import typing
 import warnings
 
 ENCODING = 'utf-8'
@@ -116,8 +116,8 @@ def groupby_attrgetter(*attrnames):
 
 
 def islice_limit(iterable, /, *,
-                 limit: typing.Optional[int] = None,
-                 offset: typing.Optional[int] = 0):
+                 limit: int | None = None,
+                 offset: int | None = 0):
     """Return a slice from iterable applying limit and offset.
 
     >>> list(islice_limit('spam', limit=3))
@@ -155,7 +155,7 @@ def iterslices(iterable, /, *, size: int):
 
 def walk_scandir(top, /, *,
                  verbose: bool = False,
-                 sortkey=operator.attrgetter('name')) -> typing.Iterator[os.DirEntry]:
+                 sortkey=operator.attrgetter('name')) -> Iterator[os.DirEntry]:
     """Yield os.DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
     top = path_from_filename(top)
@@ -191,10 +191,10 @@ def walk_scandir(top, /, *,
 def pipe_json_lines(file, documents=None, /, *,
                     delete_present: bool = True,
                     autocompress: bool = True,
-                    newline: typing.Optional[str] = '\n',
+                    newline: str | None = '\n',
                     sort_keys: bool = True,
                     compact: bool = True,
-                    indent: typing.Optional[int] = None,
+                    indent: int | None = None,
                     ensure_ascii: bool = False):
     r"""Load/dump json lines as endpoint pipe.
 
@@ -234,7 +234,7 @@ def pipe_json_lines(file, documents=None, /, *,
 def pipe_json(documents, /, *, dump: bool,
               sort_keys: bool = True,
               compact: bool = False,
-              indent: typing.Optional[int] = None,
+              indent: int | None = None,
               ensure_ascii: bool = False):
     """Bidirectional codec between a generator and a consumer."""
     codec = json.dumps if dump else json.loads
@@ -266,7 +266,7 @@ def pipe_json(documents, /, *, dump: bool,
     return itercodec(documents)
 
 
-def pipe_lines(file, lines=None, /, *, newline: typing.Optional[str] = None,
+def pipe_lines(file, lines=None, /, *, newline: str | None = None,
                delete_present: bool = False, autocompress: bool = True):
     open_func, result, hashobj = get_open_result(file,
                                                  write=lines is not None,
@@ -292,7 +292,7 @@ def pipe_lines(file, lines=None, /, *, newline: typing.Optional[str] = None,
     return iterlines()
 
 
-def write_wrapped(hashsum, f, lines, /, *, buflines: int = 1_000):
+def write_wrapped(hashsum, f, lines, /, *, buflines: int = 1_000) -> int:
     write_line = functools.partial(print, file=f)
     buf = f.buffer
     total = 0
@@ -307,7 +307,7 @@ def write_wrapped(hashsum, f, lines, /, *, buflines: int = 1_000):
     return total
 
 
-def write_lines(file, lines, /):
+def write_lines(file, lines, /) -> int:
     r"""
 
     >>> with io.StringIO() as f:
@@ -338,8 +338,9 @@ def path_from_filename(filename, /, *args, expanduser: bool = True):
 
 
 def get_open_result(file, /, *, write: bool = False,
-                    delete_present: bool = False, autocompress: bool = False,
-                    newline: typing.Optional[str] = None,
+                    delete_present: bool = False,
+                    autocompress: bool = False,
+                    newline: str | None = None,
                     _encoding: str = 'utf-8'):
     open_kwargs = {'mode': 'wt' if write else 'rt',
                    'encoding': _encoding,
@@ -404,7 +405,8 @@ def get_open_module(filepath, /, *, autocompress: bool = False):
     return result
 
 
-def sha256sum(file, /, *, raw: bool = False, autocompress: bool = True,
+def sha256sum(file, /, *, raw: bool = False,
+              autocompress: bool = True,
               hash_file_string: bool = False,
               file_string_encoding: str = ENCODING):
     """
@@ -433,7 +435,9 @@ def update_hashobj(hashobj, file, /, *, chunksize: int = 2**16):  # 64 KiB
 
 
 def run(cmd, /, *, capture_output: bool = False,
-        unpack: bool = False, cwd=None, check: bool = False,
+        unpack: bool = False,
+        cwd=None,
+        check: bool = False,
         encoding: str = ENCODING):
     log.info('subprocess.run(%r)', cmd)
 

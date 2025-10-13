@@ -1,9 +1,9 @@
 """Fetch records from raw tables."""
 
+from collections.abc import Iterator
 import contextlib
 import itertools
 import logging
-import typing
 
 import sqlalchemy as sa
 
@@ -25,7 +25,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   windowsize: int = WINDOWSIZE,
                   skip_unknown: bool = True,
-                  bind=_globals.ENGINE) -> typing.Iterator[_globals.RecordItem]:
+                  bind=_globals.ENGINE) -> Iterator[_globals.RecordItem]:
     """Yield (<path_part>, ...), <dict of <dicts of strings/string_lists>>) pairs."""
     try:
         dbapi_conn = bind.connection.driver_connection

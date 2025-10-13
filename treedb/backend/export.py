@@ -7,7 +7,6 @@ import gzip
 import hashlib
 import logging
 import pprint
-import typing
 import warnings
 import zipfile
 
@@ -207,7 +206,7 @@ def csv_zipfile(filename=None, /, *, exclude_raw: bool = False,
 
 def print_rows(query=None, /, *, file=None,
                pretty: bool = False,
-               format_: typing.Optional[str] = None,
+               format_: str | None = None,
                verbose: bool = False,
                mappings: bool = True,
                bind=_globals.ENGINE):

@@ -1,7 +1,8 @@
 """Package-level globals."""
 
+from collections.abc import Mapping
 import datetime
-import typing
+from typing import NamedTuple, TypeAlias
 
 from sqlalchemy.orm import (registry as _registry,
                             sessionmaker as _sessionmaker)
@@ -51,22 +52,19 @@ SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
 assert PATH_LABEL < LANGUOID_LABEL
 
 
-PathType = typing.Tuple[str, ...]
+PathType: TypeAlias = tuple[str, ...]
+
+RecordValueType: TypeAlias = str | list[str]
+
+RecordType: TypeAlias = Mapping[str, Mapping[str, RecordValueType]]
 
 
-RecordValueType = typing.Union[str, typing.List[str]]
-
-
-RecordType = typing.Mapping[str, typing.Mapping[str, RecordValueType]]
-
-
-def filepath_tuple(file_path: str, /, *,
-                   sep=FILE_PATH_SEP) -> typing.Tuple[str]:
+def filepath_tuple(file_path: str, /, *, sep=FILE_PATH_SEP) -> tuple[str]:
     path_parts = file_path.split(sep)
     return tuple(path_parts)
 
 
-class RecordItem(typing.NamedTuple):
+class RecordItem(NamedTuple):
     """Pair of path and record.
 
     >>> RecordItem.from_filepath_record('spam/eggs', {'core': {'id': 'abin1243'}})
@@ -82,34 +80,23 @@ class RecordItem(typing.NamedTuple):
         return cls(filepath_tuple(file_path), languoid)
 
 
-ValueType = typing.Union[str,
-                         int, float,
-                         bool,
-                         None,
-                         datetime.datetime,
-                         typing.List[str]]
+ValueType: TypeAlias = (str | int | float | bool | None | datetime.datetime
+                        | list[str])
+
+MatchType: TypeAlias = Mapping[str, ValueType]
+
+MatchList: TypeAlias = list[MatchType]
+
+MatchListMapping: TypeAlias = Mapping[str, MatchList]
+
+LanguoidValueType: TypeAlias = (ValueType
+                                | MatchType | MatchList | MatchListMapping
+                                | Mapping[str, MatchListMapping])
+
+LanguoidType: TypeAlias = Mapping[str, LanguoidValueType]
 
 
-MatchType = typing.Mapping[str, ValueType]
-
-
-MatchList = typing.List[MatchType]
-
-
-MatchListMapping = typing.Mapping[str, MatchList]
-
-
-LanguoidValueType = typing.Union[ValueType,
-                                 MatchType,
-                                 MatchList,
-                                 MatchListMapping,
-                                 typing.Mapping[str, MatchListMapping]]
-
-
-LanguoidType = typing.Mapping[str, LanguoidValueType]
-
-
-class LanguoidItem(typing.NamedTuple):
+class LanguoidItem(NamedTuple):
     """Pair of path and languoid.
 
     >>> LanguoidItem.from_filepath_languoid('spam/eggs', {'id': 'abin1243'})

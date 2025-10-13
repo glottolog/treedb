@@ -1,9 +1,9 @@
 """Optional pandas dependency convenience short-cut functions."""
 
+from collections.abc import Iterable
 import functools
 import io
 import logging
-import typing
 import warnings
 
 from .. import _globals
@@ -63,7 +63,7 @@ def pd_read_json_lines(query, /, *,
         return _pd_read_json_lines(json_lines, **kwargs)
 
 
-def _pd_read_json_lines(json_lines: typing.Iterable[str], /, *,
+def _pd_read_json_lines(json_lines: Iterable[str], /, *,
                         buflines: int = JSON_BUFLINES,
                         concat_ignore_index: bool = False,
                         **kwargs):

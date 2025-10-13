@@ -1,9 +1,10 @@
 """Load and write ``glottolog/languoids/tree/**/md.ini``."""
 
+from collections.abc import Iterable, Iterator
 import functools
 import logging
 import os
-import typing
+from typing import NamedTuple
 import warnings
 
 from .. import _globals
@@ -118,7 +119,7 @@ class ConfigParser(_tools.ConfigParser):
         return changed
 
 
-class FileInfo(typing.NamedTuple):
+class FileInfo(NamedTuple):
     """Triple of ((<path_part>, ...), <DirEntry object>, <ConfigParser object>)."""
 
     path: _globals.PathType
@@ -137,7 +138,7 @@ class FileInfo(typing.NamedTuple):
 
 def iterfiles(root=_globals.ROOT, /, *,
               progress_after: int = _tools.PROGRESS_AFTER
-              ) -> typing.Iterator[FileInfo]:
+              ) -> Iterator[FileInfo]:
     """Yield triples of ((<path_part>, ...), <ConfigParser object>, <DirEntry object>)."""
     root = _tools.path_from_filename(root).resolve()
     log.info(f'start parsing {BASENAME} files from %r', root)
@@ -164,11 +165,11 @@ def roundtrip(root=_globals.ROOT, /, *,
         cfg.to_file(dentry.path)
 
 
-def write_files(records: typing.Iterable[_globals.RecordItem], /,
+def write_files(records: Iterable[_globals.RecordItem], /,
                 root=_globals.ROOT, *, replace: bool = False,
-                dry_run: bool = False, quiet: typing.Optional[bool] = None,
-                require_nwritten: typing.Optional[int] = None,
-                progress_after: typing.Optional[int] = _tools.PROGRESS_AFTER,
+                dry_run: bool = False, quiet: bool | None = None,
+                require_nwritten: int | None = None,
+                progress_after: int | None = _tools.PROGRESS_AFTER,
                 basename: str = BASENAME) -> int:
     """Write ((<path_part>, ...), <dict of dicts>) pairs to root."""
     if replace:  # pragma: no cover

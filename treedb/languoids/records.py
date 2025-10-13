@@ -1,11 +1,11 @@
 """Parse a ``languoids/tree/**/md.ini`` record into a languoid and serialize it."""
 
+from collections.abc import Iterable, Iterator
 import datetime
 import logging
 import operator
 import re
 import warnings
-import typing
 
 import pycountry
 
@@ -47,8 +47,8 @@ def pipe(items, /, *, dump: bool,
     return codec(items, convert_lines=convert_lines)
 
 
-def _parse(records: typing.Iterable[_globals.RecordItem], /, *,
-           convert_lines: bool) -> typing.Iterator[_globals.LanguoidItem]:
+def _parse(records: Iterable[_globals.RecordItem], /, *,
+           convert_lines: bool) -> Iterator[_globals.LanguoidItem]:
     r"""Yield languoid items from given record ítems (from raw).
 
     >>> dict(pipe({('abin1243',):
@@ -134,8 +134,8 @@ def _parse(records: typing.Iterable[_globals.RecordItem], /, *,
     log.info('%s languoids extracted from records', f'{n:_d}')
 
 
-def _dump(languoids: typing.Iterable[_globals.LanguoidItem], /, *,
-          convert_lines: bool) -> typing.Iterator[_globals.RecordItem]:
+def _dump(languoids: Iterable[_globals.LanguoidItem], /, *,
+          convert_lines: bool) -> Iterator[_globals.RecordItem]:
     r"""
 
     >>> dict(pipe({('abin1243',): {

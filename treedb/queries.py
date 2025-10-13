@@ -1,8 +1,8 @@
 """Batteries-included ``sqlalchemy`` queries for SQLite3 database."""
 
+from collections.abc import Iterator
 import functools
 import logging
-import typing
 
 import sqlalchemy as sa
 from sqlalchemy import select
@@ -257,8 +257,8 @@ group_object = sa.func.json_group_object
 
 
 @_views.register_view('path_languoid', as_rows=True, load_json=False)
-def get_json_query(*, limit: typing.Optional[int] = None,
-                   offset: typing.Optional[int] = 0,
+def get_json_query(*, limit: int | None = None,
+                   offset: int | None = 0,
                    order_by: str = _globals.LANGUOID_ORDER,
                    as_rows: bool = False,
                    load_json: bool = True,
@@ -399,7 +399,7 @@ def select_languoid_timespan(languoid=Languoid, /, *, as_json: bool,
 
 
 def select_languoid_sources(languoid=Languoid, /, *, as_json: bool,
-                            provider_name: typing.Optional[str] = None,
+                            provider_name: str | None = None,
                             label: str = 'sources',
                             sort_keys: bool = False,
                             alias: str = 'lang_source',
@@ -461,7 +461,7 @@ def select_languoid_sources(languoid=Languoid, /, *, as_json: bool,
 
 
 def select_languoid_altnames(languoid=Languoid, /, *, as_json: bool,
-                             provider_name: typing.Optional[str] = None,
+                             provider_name: str | None = None,
                              label: str = 'altnames',
                              sort_keys: bool = False,
                              alias: str = 'lang_altname') -> sa.sql.Select:
@@ -515,7 +515,7 @@ def select_languoid_altnames(languoid=Languoid, /, *, as_json: bool,
 
 
 def select_languoid_triggers(languoid=Languoid, /, *, as_json: bool,
-                             field_name: typing.Optional[str] = None,
+                             field_name: str | None = None,
                              label: str = 'triggers',
                              alias: str = 'lang_trigger') -> sa.sql.Select:
     if field_name is not None:
@@ -700,9 +700,9 @@ def select_iso_retirement_change_to(iso_retirement=IsoRetirement, /, *,
     return select(codes.label(label)).label(label)
 
 
-def iterdescendants(parent_level: typing.Optional[str] = None,
-                    child_level: typing.Optional[str] = None, *,
-                    bind=_globals.ENGINE) -> typing.Iterator[typing.Tuple[str, typing.List[str]]]:
+def iterdescendants(parent_level: str | None = None,
+                    child_level: str | None = None, *,
+                    bind=_globals.ENGINE) -> Iterator[tuple[str, list[str]]]:
     """Yield pairs of (parent id, sorted list of their descendant ids)."""
     # TODO: implement ancestors/descendants as sa.orm.relationship()
     # see https://bitbucket.org/zzzeek/sqlalchemy/issues/4165

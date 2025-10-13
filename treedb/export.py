@@ -1,11 +1,11 @@
 """Yield languoids, write information to stdout, .csv, .jsonl, etc."""
 
+from collections.abc import Iterable
 import datetime
 import itertools
 import hashlib
 import logging
 import operator
-import typing
 import warnings
 
 from . import _globals
@@ -58,12 +58,12 @@ def print_languoid_stats(*, file=None,
 
 
 def iterlanguoids(source: str = 'files', /, *,
-                  limit: typing.Optional[int] = None,
-                  offset: typing.Optional[int] = 0,
+                  limit: int | None = None,
+                  offset: int | None = 0,
                   order_by: str = _globals.LANGUOID_ORDER,
                   progress_after: int = _tools.PROGRESS_AFTER,
                   root=_globals.ROOT, bind=_globals.ENGINE,
-                  ) -> typing.Iterable[_globals.LanguoidItem]:
+                  ) -> Iterable[_globals.LanguoidItem]:
     """Yield (path, languoid) pairs from diffferent sources."""
     log.info('generate languoids from %r', source)
     if source in ('files', 'raw'):
@@ -101,8 +101,8 @@ def iterlanguoids(source: str = 'files', /, *,
 
 
 def checksum(source: str = 'tables', *,
-             limit: typing.Optional[int] = None,
-             offset: typing.Optional[int] = 0,
+             limit: int | None = None,
+             offset: int | None = 0,
              order_by: str = _globals.LANGUOID_ORDER,
              hash_name: str = _globals.DEFAULT_HASH,
              bind=_globals.ENGINE):
@@ -133,8 +133,8 @@ def write_json_lines(file=None, /, *, suffix: str = '.jsonl',
                      delete_present: bool = True,
                      autocompress: bool = True,
                      source: str = 'tables',
-                     limit: typing.Optional[int] = None,
-                     offset: typing.Optional[int] = 0,
+                     limit: int | None = None,
+                     offset: int | None = 0,
                      order_by: str = _globals.LANGUOID_ORDER,
                      sort_keys: bool = True,
                      pretty: bool = False,
@@ -198,8 +198,8 @@ def write_json_lines(file=None, /, *, suffix: str = '.jsonl',
 
 
 def pd_read_languoids(*, source: str = 'tables',
-                      limit: typing.Optional[int] = None,
-                      offset: typing.Optional[int] = 0,
+                      limit: int | None = None,
+                      offset: int | None = 0,
                       order_by: str = _globals.LANGUOID_ORDER,
                       sort_keys: bool = True,
                       path_label: str = _globals.PATH_LABEL,
@@ -240,8 +240,8 @@ def pd_read_languoids(*, source: str = 'tables',
     return df
 
 
-def fetch_languoids(*, limit: typing.Optional[int] = None,
-                    offset: typing.Optional[int] = 0,
+def fetch_languoids(*, limit: int | None = None,
+                    offset: int | None = 0,
                     order_by: str = _globals.LANGUOID_ORDER,
                     progress_after: int = _tools.PROGRESS_AFTER,
                     bind=_globals.ENGINE):
@@ -275,10 +275,10 @@ def fetch_languoids(*, limit: typing.Optional[int] = None,
 
 def write_files(root=_globals.ROOT, /, *, replace: bool = False,
                 dry_run: bool = False,
-                require_nwritten: typing.Optional[int] = None,
+                require_nwritten: int | None = None,
                 source: str = 'tables',
-                limit: typing.Optional[int] = None,
-                offset: typing.Optional[int] = 0,
+                limit: int | None = None,
+                offset: int | None = 0,
                 progress_after: int = _tools.PROGRESS_AFTER,
                 bind=_globals.ENGINE) -> int:
     log.info('write from %r to tree %r', source, root)

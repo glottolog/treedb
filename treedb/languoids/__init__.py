@@ -1,6 +1,6 @@
 """Load, parse, serialize, and write ``languoids/tree/**/md.ini`` files."""
 
-import typing
+from collections.abc import Iterable
 
 from .. import _globals
 from .. import _tools
@@ -15,6 +15,6 @@ __all__ = ['TREE_IN_ROOT', 'set_root', 'get_repo_root',
 
 def iterrecords(*, root=_globals.ROOT,
                 progress_after: int = _tools.PROGRESS_AFTER
-                ) -> typing.Iterable[_globals.RecordItem]:
+                ) -> Iterable[_globals.RecordItem]:
     for path_tuple, _, cfg in iterfiles(root, progress_after=progress_after):
         yield path_tuple, cfg

@@ -3,7 +3,6 @@
 import configparser
 import logging
 import os
-import typing
 
 from . import _globals
 from . import _tools
@@ -49,7 +48,7 @@ def configure(config_path=_globals.CONFIG, /, *,
               engine=NOT_SET, root=NOT_SET,
               loglevel=None, log_sql: bool = None,
               default_repo_root=_globals.DEFAULT_ROOT,
-              title: typing.Optional[str] = None,
+              title: str | None = None,
               title_memory_tag: str = _globals.MEMORY_TAG) -> None:
     """Set root, and engine and configure logging from the given .ini file."""
     log.info('configure from %r, title=%r', config_path, title)

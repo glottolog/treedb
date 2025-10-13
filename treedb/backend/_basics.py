@@ -3,7 +3,6 @@
 import contextlib
 import logging
 import sqlite3
-import typing
 
 import csv23
 
@@ -65,7 +64,7 @@ def print_versions(*, engine=ENGINE, file=None) -> None:
 def set_engine(filename, /, *,
                resolve: bool = False,
                require: bool = False,
-               title: typing.Optional[str] = None,
+               title: str | None = None,
                title_memory_tag: str = _globals.MEMORY_TAG):
     """Return new sqlite3 engine and set it as default engine for treedb."""
     log.info('set_engine: %r', filename)
@@ -123,7 +122,7 @@ def log_versions(*, also_print=False, print_file=None,
 
 def connect(*, bind=ENGINE,
             pragma_bulk_insert: bool = False,
-            page_size: typing.Optional[int] = None):
+            page_size: int | None = None):
     """Connect, log, apply SQLite insert optimization, return connection."""
     if isinstance(bind, sa.engine.base.Connection):
         assert not pragma_bulk_insert
@@ -170,7 +169,7 @@ def expression_compile(expression, /, *, literal_binds=True):
 
 
 def json_object(*, sort_keys_: bool,
-                label_: typing.Optional[str] = None,
+                label_: str | None = None,
                 load_json_: bool = False, **kwargs):
     items = sorted(kwargs.items()) if sort_keys_ else kwargs.items()
     obj = sa.func.json_object(*[x for kv in items for x in kv])

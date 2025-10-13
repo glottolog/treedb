@@ -1,7 +1,8 @@
 """Define known ``md.ini`` (section, option) pairs and whether they are lists of lines."""
 
+from collections.abc import Mapping
 import logging
-import typing
+from typing import TypeAlias
 import warnings
 
 from .. import _globals
@@ -166,10 +167,9 @@ def format_lines(value, /):
     return '\n'.join(lines)
 
 
-RawRecordType = typing.Mapping[str, typing.Mapping[str, str]]
+RawRecordType: TypeAlias = Mapping[str, Mapping[str, str]]
 
-
-RawRecordItem = typing.Tuple[typing.Optional[_globals.PathType], RawRecordType]
+RawRecordItem: TypeAlias = tuple[_globals.PathType | None, RawRecordType]
 
 
 def join_lines_inplace(record_item: _globals.RecordItem, /) -> RawRecordItem:
