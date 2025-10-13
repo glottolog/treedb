@@ -111,8 +111,8 @@ def backup(filename=None, /, *, as_new_engine: bool = False,
     def progress(status, remaining, total):
         log.info('%d of %d pages copied', total - remaining, total)
 
-    with contextlib.closing(engine.raw_connection()) as source_fairy,\
-         contextlib.closing(result.raw_connection()) as dest_fairy:  # noqa: E231
+    with (contextlib.closing(engine.raw_connection()) as source_fairy,
+          contextlib.closing(result.raw_connection()) as dest_fairy):
         log.debug('sqlite3.backup(%r)', dest_fairy.driver_connection)
 
         dest_fairy.execute('PRAGMA synchronous = OFF')
@@ -147,8 +147,8 @@ def dump_sql(filename=None, /, *,
         open_path = path.open
 
     n = 0
-    with contextlib.closing(engine.raw_connection()) as dbapi_fairy,\
-         open_path('wt', encoding=encoding) as f:  # noqa: E231
+    with (contextlib.closing(engine.raw_connection()) as dbapi_fairy,
+          open_path('wt', encoding=encoding) as f):
         for n, line in enumerate(dbapi_fairy.iterdump(), start=1):
             print(line, file=f)
             if not (n % progress_after):
@@ -181,8 +181,8 @@ def csv_zipfile(filename=None, /, *, exclude_raw: bool = False,
     skip = {'_file', '_option', '_value'} if exclude_raw else {}
 
     log.info('write %r', filename)
-    with _backend.connect(bind=engine) as conn,\
-         zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z:  # noqa: E231
+    with (_backend.connect(bind=engine) as conn,
+          zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as z):
         for table in sorted_tables:
             if table.name in skip:
                 log.debug('skip table %r', table.name)

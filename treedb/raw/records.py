@@ -134,6 +134,6 @@ def iterkeys(key_column, /, *, size: int = WINDOWSIZE,
     log.debug('SELECT every %d-th %r using row_number() window function',
               size, str(key_column.expression))
 
-    with _backend.connect(bind=bind) as conn,\
-         contextlib.closing(conn.execute(select_keys)) as result:  # noqa: E231
+    with (_backend.connect(bind=bind) as conn,
+          contextlib.closing(conn.execute(select_keys)) as result):
         yield from result.scalars()
