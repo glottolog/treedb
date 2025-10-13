@@ -34,7 +34,7 @@ CI = "https://github.com/glottolog/treedb/actions"
 Coverage = "https://codecov.io/gh/glottolog/treedb"
 
 [project.optional-dependencies]
-dev = ["build", "wheel", "twine", "flake8", "Flake8-pyproject", "pep8-naming", "tox>=3"]
+dev = ["build", "wheel", "twine", "mypy", "flake8", "Flake8-pyproject", "pep8-naming", "tox>=3"]
 test = ["pytest>=6", "pytest-cov", "coverage"]
 pretty = ["sqlparse>=0.3"]
 pandas = ["pandas>=1"]
@@ -48,6 +48,9 @@ platforms = ["any"]
 
 [tool.setuptools.dynamic]
 version = {attr = "treedb.__version__"}
+
+[tool.mypy]
+packages = ["treedb"]
 
 [tool.flake8]
 exclude = ["build"]

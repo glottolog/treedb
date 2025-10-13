@@ -24,8 +24,13 @@ jobs:
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
-          - name: linux-3.13-quick-lint
-            python-version: "3.12"
+          - name: linux-3.14-quick-typecheck-lint
+            python-version: "3.14"
+            args: "--skip-slow --exclude-raw"
+            extra: ",dev,pandas"
+            os: ubuntu-latest
+          - name: linux-3.13-quick
+            python-version: "3.13"
             args: "--skip-slow --exclude-raw"
             extra: ",dev,pandas"
             os: ubuntu-latest
@@ -65,8 +70,8 @@ jobs:
           echo "::group::Run python -m pip install --upgrade pip setuptools wheel"
           python -m pip install --upgrade pip setuptools wheel
           echo "::endgroup::"
-          echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] flake8"
-          pip install .[test,pretty${{ matrix.extra }}] flake8
+          echo "::group::Run pip install .[test,pretty${{ matrix.extra }}] mypy flake8"
+          pip install .[test,pretty${{ matrix.extra }}] mypy flake8
           echo "::endgroup::"
       - name: Pip downgrade sqlalchemy to 1.0 version (if -sa1)
         if: ${{ contains(matrix.name, '-sa1') }}
@@ -85,6 +90,15 @@ jobs:
           python try-treedb.py || FAILED=$?
           echo "::endgroup::"
           [ $FAILED -eq 0 ] || echo "::warning::try-treedb.py failed with exit code $FAILED"
+        shell: bash
+      - name: Run mypy (if -typecheck)
+        if: ${{ contains(matrix.name, '-typecheck') }}
+        run: |
+          echo "::group::Run mypy"
+          FAILED=0
+          python -m mypy || FAILED=$?
+          echo "::endgroup::"
+          [ $FAILED -eq 0 ] || echo "::warning::mypy failed with exit code $FAILED"
         shell: bash
       - name: Run lint-code.py (if -lint)
         if: ${{ contains(matrix.name, '-lint') }}
