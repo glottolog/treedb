@@ -34,8 +34,6 @@ CI = "https://github.com/glottolog/treedb/actions"
 Coverage = "https://codecov.io/gh/glottolog/treedb"
 
 [project.optional-dependencies]
-dev = ["build", "wheel", "twine", "mypy", "flake8", "Flake8-pyproject", "pep8-naming", "tox>=3"]
-test = ["pytest>=6", "pytest-cov", "coverage"]
 pretty = ["sqlparse>=0.3"]
 pandas = ["pandas>=1"]
 
@@ -48,6 +46,17 @@ platforms = ["any"]
 
 [tool.setuptools.dynamic]
 version = {attr = "treedb.__version__"}
+
+[dependency-groups]
+dev = [  # $ pip install -e .[pretty,pandas] --group dev
+  "build", "tox", "twine", "wheel",
+  { include-group = "lint" },
+  { include-group = "test" },
+  { include-group = "typing" },
+]
+lint = ["flake8", "Flake8-pyproject", "pep8-naming"]
+test = ["coverage", "pytest>=6", "pytest-cov"]
+typing = ["mypy"]
 
 [tool.mypy]
 packages = ["treedb"]
@@ -85,12 +94,11 @@ source = ["treedb"]
 branch = false
 
 [tool.tox]
-legacy_tox_ini = """
-  [tox]
-  envlist = py{314,313,312,311,310}
-  skip_missing_interpreters = true
+requires = ["tox>=4.22"]
+env_list = ["3.14", "3.13", "3.12", "3.11", "3.10"]
+skip_missing_interpreters = true
 
-  [testenv]
-  extras = test,pretty
-  commands = python -X dev run-tests.py {posargs} --installed
-"""
+[tool.tox.env_run_base]
+dependency_groups = ["test"]
+extras = ["pretty"]
+commands = [["python", "-X", "dev", "run-tests.py", { replace = "posargs", extend = true }]]
