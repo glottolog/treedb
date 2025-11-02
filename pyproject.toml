@@ -55,19 +55,19 @@ dev = [  # $ pip install -e .[pretty,pandas] --group dev
   { include-group = "typing" },
 ]
 lint = ["flake8", "Flake8-pyproject", "pep8-naming"]
-test = ["coverage", "pytest>=6", "pytest-cov"]
+test = ["coverage", "pytest>=8", "pytest-cov"]
 typing = ["mypy"]
 
 [tool.mypy]
 packages = ["treedb"]
 
 [tool.flake8]
-exclude = ["build"]
+exclude = [".tox", "build"]
 ignore = ["E126", "E128", "W503"]
 max-line-length = 110
 
 [tool.pytest.ini_options]
-minversion = "6"
+minversion = "8"
 testpaths = ["treedb", "tests"]
 addopts = [
   "--doctest-modules",
