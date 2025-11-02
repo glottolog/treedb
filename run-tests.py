@@ -18,11 +18,11 @@ ARGS = [#'--run-writes',
         #'-k', 'not reads',
         #'-k', 'indent',
         #'--collect-only',
-        #'--capture', 'no',  # a.k.a '-s'
+        #'--capture', 'no',  # a.k.a -s
         #'--verbose',
-        #'--showlocals',  # a.k.a. '-l'
+        #'--showlocals',  # a.k.a. -l
         #'--pdb',
-        #'--exitfirst',  # a.k.a. '-x'
+        #'--exitfirst',  # a.k.a. -x
         #'-W', 'error',
         #'--loglevel-debug',
         #'--log-sql',
@@ -47,10 +47,11 @@ ARGS = [#'--run-writes',
         #'--exclude-raw',
        ]
 
-if 'idlelib' in sys.modules:
-    ARGS += ['--capture', 'sys', '--color', 'no']
-    if platform.system() == 'Windows':
-        ARGS.append('--pdb')
+if platform.system() == 'Windows' and 'idlelib' in sys.modules:
+    ARGS += ['-p', 'no:faulthandler']
+
+if platform.system() == 'Windows':
+    ARGS.append('--pdb')
 
 
 print('run', [SELF.name] + sys.argv[1:])
