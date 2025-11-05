@@ -9,8 +9,6 @@ import sys
 
 import pytest
 
-SELF = pathlib.Path(__file__)
-
 ARGS = [#'--run-writes',
         #'--skip-slow',
         #'--skip-pandas',
@@ -54,7 +52,7 @@ if platform.system() == 'Windows':
     ARGS.append('--pdb')
 
 
-print('run', [SELF.name] + sys.argv[1:])
+print('run', [pathlib.Path(__file__).name] + sys.argv[1:])
 
 if '--installed' in sys.argv[1:]:
     sys.argv[1:] = [a for a in sys.argv[1:] if a != '--installed']
@@ -64,5 +62,9 @@ if '--installed' in sys.argv[1:]:
 
 args = ARGS + sys.argv[1:]
 
+# https://docs.pytest.org/en/stable/reference/reference.html#pytest-main
 print(f'pytest.main({args!r})')
-sys.exit(pytest.main(args))
+if (returncode := pytest.main(args)):
+    print('FAILED:', returncode)
+    sys.exit(returncode)
+print('PASSED.')
