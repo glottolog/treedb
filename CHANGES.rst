@@ -5,6 +5,8 @@ Changelog
 Version 2.7.2 (in development)
 ------------------------------
 
+Update ``pycountry`` to 26.2.16.
+
 Drop Python 3.9 support.
 
 Tag Python 3.14 support.

@@ -10,7 +10,7 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 dependencies = [
   "csv23~=0.3",
-  "pycountry==24.6.1",  # date-based versioning scheme
+  "pycountry==26.2.16",  # date-based versioning scheme
   "sqlalchemy>=1.4.24",
 ]
 classifiers = [
