@@ -77,7 +77,7 @@ jobs:
       - name: Check Glottolog version
         run: echo "::notice::$(python -c 'import treedb; print(treedb.glottolog_version())')"
       - name: Run try-treedb.py (if -full)
-        if: ${{ contains(matrix.os, '-full') }}
+        if: ${{ contains(matrix.name, '-full') }}
         run: |
           echo "::group::Run try-treedb.py"; FAILED=0;
           python try-treedb.py || FAILED=$?
