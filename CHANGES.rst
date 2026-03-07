@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.7.2 (in development)
-------------------------------
+Version 2.7.2
+-------------
 
 Update ``pycountry`` to 26.2.16.
 
