@@ -11,6 +11,8 @@ Drop Python 3.9 support.
 
 Tag Python 3.14 support.
 
+Add test checksums for Glottolog ``v5.3``.
+
 
 Version 2.7.1
 -------------

@@ -5,7 +5,7 @@ import string
 
 import pytest
 
-DEFAULT_GLOTTOLOG_TAG = 'v5.2.1'
+DEFAULT_GLOTTOLOG_TAG = 'v5.3'
 
 RUN_WRITES = '--run-writes'
 
