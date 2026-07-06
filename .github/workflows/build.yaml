@@ -53,7 +53,7 @@ jobs:
           git config --system core.longpaths true
           echo "::endgroup::"
       - name: Checkout souce repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -85,7 +85,7 @@ jobs:
           [ $FAILED -eq 0 ] || echo "::warning::try-treedb.py failed with exit code $FAILED"
         shell: bash
       - name: Upload ${{ matrix.name }} artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
           path: |
@@ -101,7 +101,7 @@ jobs:
           - python-version: "3.14"
     steps:
       - name: Checkout source repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -122,7 +122,7 @@ jobs:
           - python-version: "3.14"
     steps:
       - name: Checkout source repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
