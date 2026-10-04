@@ -536,7 +536,7 @@ def select_languoid_triggers(languoid=Languoid, /, *, as_json: bool,
                .order_by(*order_by))
 
     if field_name is not None:
-        trigger = trigger.filter(trigger.c.field == field_name)
+        trigger = trigger.filter_by(field=field_name)
 
     trigger = trigger.alias(alias)
 
