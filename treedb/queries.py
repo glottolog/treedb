@@ -531,7 +531,7 @@ def select_languoid_triggers(languoid=Languoid, /, *, as_json: bool,
 
     trigger = (select(*columns)
                .select_from(trigger)
-               .filter_(trigger.languoid_id == languoid.id)
+               .filter(trigger.languoid_id == languoid.id)
                .correlate(languoid)
                .order_by(*order_by))
 
