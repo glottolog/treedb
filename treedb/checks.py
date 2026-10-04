@@ -238,7 +238,7 @@ def family_languages():
                    .select_from(Child)
                    .filter_by(level=LANGUAGE)
                    .join(tree, Child.id == tree.c.child_id)
-                   .filter_by(parent_id=Languoid.id)
+                   .filter(tree.c.parent_id == Languoid.id)
                    .scalar_subquery() < 2))
 
 

@@ -224,9 +224,9 @@ def add_classification_refs(select_languoid: sa.sql.Select, kind: str, /, *,
 
     ref = (select(ref.printf(bibfile, bibitem))
            .select_from(ref)
-           .filter_by(languoid_id=Languoid.id)
+           .filter(ref.kind == kind)
+           .filter(ref.languoid_id == Languoid.id)
            .correlate(Languoid)
-           .filter_by(kind=kind)
            .join(ref.bibitem.of_type(bibitem))
            .join(bibitem.bibfile.of_type(bibfile))
            .order_by(ref.ord)
@@ -377,7 +377,7 @@ def select_languoid_links(languoid=Languoid, *, as_json: bool,
     link = (select(Link.jsonf(sort_keys=sort_keys) if as_json else
                    Link.printf())
             .select_from(Link)
-            .filter_by(languoid_id=languoid.id)
+            .filter(Link.languoid_id == languoid.id)
             .correlate(languoid)
             .order_by(Link.ord)
             .alias(alias))
@@ -393,7 +393,7 @@ def select_languoid_timespan(languoid=Languoid, /, *, as_json: bool,
     return (select(Timespan.jsonf(sort_keys=sort_keys) if as_json else
                    Timespan.printf())
             .select_from(Timespan)
-            .filter_by(languoid_id=languoid.id)
+            .filter(Timespan.languoid_id == languoid.id)
             .correlate(languoid)
             .label(label))
 
@@ -424,7 +424,7 @@ def select_languoid_sources(languoid=Languoid, /, *, as_json: bool,
 
     source = (select(*columns)
               .select_from(source)
-              .filter_by(languoid_id=languoid.id)
+              .filter(source.languoid_id == languoid.id)
               .correlate(languoid)
               .join(Source.provider.of_type(provider))
               .join(Source.bibitem.of_type(bibitem))
@@ -483,7 +483,7 @@ def select_languoid_altnames(languoid=Languoid, /, *, as_json: bool,
 
     altname = (select(*columns)
                .select_from(altname)
-               .filter_by(languoid_id=languoid.id)
+               .filter(altname.languoid_id == languoid.id)
                .correlate(languoid)
                .join(altname.provider.of_type(provider))
                .order_by(*order_by))
@@ -566,7 +566,7 @@ def select_languoid_identifier(languoid=Languoid, /, *,
     identifier = (select(IdentifierSite.name.label('site'),
                          Identifier.identifier.label('identifier'))
                   .select_from(Identifier)
-                  .filter_by(languoid_id=languoid.id)
+                  .filter(Identifier.languoid_id == languoid.id)
                   .correlate(languoid)
                   .join(Identifier.site.of_type(IdentifierSite))
                   .alias('lang_identifiers'))
@@ -591,7 +591,7 @@ def select_languoid_classification(languoid=Languoid, /, *,
     classification_comment = (select(ClassificationComment.kind.label('key'),
                                      sa.func.json_quote(ClassificationComment.comment).label('value'))
                               .select_from(ClassificationComment)
-                              .filter_by(languoid_id=languoid.id)
+                              .filter(ClassificationComment.languoid_id == languoid.id)
                               .correlate(languoid)
                               .scalar_subquery())
 
@@ -604,7 +604,7 @@ def select_languoid_classification(languoid=Languoid, /, *,
                                  ClassificationRef.jsonf(bibfile, bibitem,
                                                          sort_keys=sort_keys))
                           .select_from(ClassificationRef)
-                          .filter_by(languoid_id=languoid.id)
+                          .filter(ClassificationRef.languoid_id == languoid.id)
                           .correlate(languoid)
                           .join(ClassificationRef.bibitem.of_type(bibitem))
                           .join(bibitem.bibfile.of_type(bibfile))
@@ -647,7 +647,7 @@ def select_languoid_endangerment(languoid=Languoid, /, *,
                                       sort_keys=sort_keys,
                                       label=label))
             .select_from(Endangerment)
-            .filter_by(languoid_id=languoid.id)
+            .filter(Endangerment.languoid_id == languoid.id)
             .correlate(languoid)
             .join(Endangerment.source)
             .outerjoin(sa.join(bibitem, bibfile))
@@ -660,7 +660,7 @@ def select_languoid_hh_ethnologue_comment(languoid=Languoid, /, *,
     return (select(EthnologueComment
                    .jsonf(sort_keys=sort_keys, label=label))
             .select_from(EthnologueComment)
-            .filter_by(languoid_id=languoid.id)
+            .filter(EthnologueComment.languoid_id == languoid.id)
             .correlate(languoid)
             .label(label))
 
@@ -678,7 +678,7 @@ def select_languoid_iso_retirement(languoid=Languoid, /, *,
                                        optional=True,
                                        label=label))
             .select_from(IsoRetirement)
-            .filter_by(languoid_id=languoid.id)
+            .filter(IsoRetirement.languoid_id == languoid.id)
             .correlate(languoid)
             .label(label))
 
@@ -688,7 +688,7 @@ def select_iso_retirement_change_to(iso_retirement=IsoRetirement, /, *,
                                     alias: str = 'lang_irct') -> sa.sql.Select:
     code = (select(IsoRetirementChangeTo.code)
             .select_from(IsoRetirementChangeTo)
-            .filter_by(languoid_id=iso_retirement.languoid_id)
+            .filter(IsoRetirementChangeTo.languoid_id == iso_retirement.languoid_id)
             .correlate(IsoRetirement)
             .order_by(IsoRetirementChangeTo.ord)
             .alias(alias))
