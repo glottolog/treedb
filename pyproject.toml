@@ -7,7 +7,7 @@ readme = "README.rst"
 license = "MIT"
 license-files = ["LICENSE.txt"]
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "csv23~=0.3",
   "pycountry==26.2.16",  # date-based versioning scheme
@@ -19,7 +19,6 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -96,7 +95,7 @@ branch = false
 
 [tool.tox]
 requires = ["tox>=4.22"]
-env_list = ["3.14", "3.13", "3.12", "3.11", "3.10"]
+env_list = ["3.14", "3.13", "3.12", "3.11"]
 skip_missing_interpreters = true
 
 [tool.tox.env_run_base]

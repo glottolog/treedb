@@ -5,7 +5,7 @@ Changelog
 Version 2.7.3 (in development)
 ------------------------------
 
-
+Drop Python 3.10 support.
 
 
 Version 2.7.2
