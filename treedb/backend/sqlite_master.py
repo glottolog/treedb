@@ -60,9 +60,7 @@ def select_table_sql(model_or_table, /):
     """Select CREATE_TABLE of the given table from sqlite_master."""
     select = (sa.select(sqlite_master.c.sql)
               .select_from(sqlite_master)
-              .filter_by(type='table')
-              .filter_by(name=sa.bindparam('table_name')))
-
+              .filter_by(type='table', name=sa.bindparam('table_name')))
     if model_or_table is not None:
         table_name = _get_table_name(model_or_table)
         select = select.params(table_name=table_name)

@@ -330,7 +330,7 @@ def select_languoid_macroareas(languoid=Languoid, /, *, as_json: bool,
 
     macroarea = (select(name)
                  .select_from(languoid_macroarea)
-                 .filter_by(languoid_id=languoid.id)
+                 .filter(languoid_macroarea.c.languoid_id == languoid.id)
                  .correlate(languoid)
                  .order_by(name)
                  .alias(alias))
@@ -351,7 +351,7 @@ def select_languoid_countries(languoid=Languoid, /, *, as_json: bool,
 
     country = (select(value)
                .select_from(languoid_country)
-               .filter_by(languoid_id=languoid.id)
+               .filter(languoid_country.c.languoid_id == languoid.id)
                .correlate(languoid))
 
     if as_json:
@@ -531,12 +531,12 @@ def select_languoid_triggers(languoid=Languoid, /, *, as_json: bool,
 
     trigger = (select(*columns)
                .select_from(trigger)
-               .filter_by(languoid_id=languoid.id)
+               .filter_(trigger.languoid_id == languoid.id)
                .correlate(languoid)
                .order_by(*order_by))
 
     if field_name is not None:
-        trigger = trigger.filter_by(field=field_name)
+        trigger = trigger.filter(trigger.field == field_name)
 
     trigger = trigger.alias(alias)
 
