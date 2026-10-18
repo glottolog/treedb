@@ -73,7 +73,7 @@ def main(languoids, /, *, conn):
 
         @staticmethod
         def key_to_params(key):
-            bibfile_name, bibkey = key
+            (bibfile_name, bibkey) = key
             return {'bibfile_id': bibfile_ids[bibfile_name], 'bibkey': bibkey}
 
         def pop_params(self, params):
@@ -201,7 +201,7 @@ def insert_languoids(conn, /, *, languoids, bibitem_ids, es_ids):
 
     def unseen_countries(countries, _seen={}):
         for c in countries:
-            id_, name = (c[k] for k in ('id', 'name'))
+            (id_, name) = (c[k] for k in ('id', 'name'))
             try:
                 assert _seen[id_] == name
             except KeyError:
@@ -283,7 +283,7 @@ def insert_languoid(languoid, /, *, conn,
     if altnames is not None:
         for provider, names in altnames.items():
             provider_id = altnameprovider_ids[provider]
-            half, full = groups = ([], [])
+            (half, full) = groups = ([], [])
             for n in names:
                 r = dict(languoid_id=lid, provider_id=provider_id, **n)
                 if 'lang' not in r:
@@ -313,7 +313,7 @@ def insert_languoid(languoid, /, *, conn,
 
     if classification is not None:
         for c, value in classification.items():
-            isref, kind = CLASSIFICATION[c]
+            (isref, kind) = CLASSIFICATION[c]
             if isref:
                 conn.execute(sa.insert(ClassificationRef),
                              [dict(languoid_id=lid, kind=kind,

@@ -376,7 +376,7 @@ def make_record(languoid: _globals.LanguoidType, /, *,
                    ISO_RETIREMENT: iso_retirement})
 
     if convert_lines:
-        _, record = _fields.join_lines_inplace((None, record))
+        (_, record) = _fields.join_lines_inplace((None, record))
 
     return record
 
@@ -492,15 +492,15 @@ def make_interval(value, /, *, date_format=DATE_FORMAT, fix_year=True,
     dates = ma.group('start_date', 'end_date')
     if fix_year:
         def fix_date(d, year_tmpl='{:04d}'):
-            year, sep, rest = d.partition('-')
+            (year, sep, rest) = d.partition('-')
             assert year and sep and rest
             year = year_tmpl.format(int(year))
             return f'{year}{sep}{rest}'
 
         dates = list(map(fix_date, dates))
 
-    start, end = (datetime.datetime.strptime(d, date_format).date()
-                  for d in dates)
+    (start, end) = (datetime.datetime.strptime(d, date_format).date()
+                    for d in dates)
 
     start_sign = -1 if ma['start_sign'] == '-' else 1
     end_sign = -1 if ma['end_sign'] == '-' else 1
@@ -534,7 +534,7 @@ def format_interval(value, /, *, year_tmpl='{: 05d}'):
     for year in year_values:
         assert -9999 <= year <= 9999
 
-    start_year, end_year = (year_tmpl.format(y).strip() for y in year_values)
+    (start_year, end_year) = (year_tmpl.format(y).strip() for y in year_values)
     context = dict(value, start_year=start_year, end_year=end_year)
 
     return ('{start_year}-{start_month:02d}-{start_day:02d}'

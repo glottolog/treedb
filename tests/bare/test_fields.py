@@ -31,14 +31,14 @@ def test_is_known(section, option, expected):
 def test_is_lines(recwarn, section, option, kwargs, expected):
     if isinstance(expected, tuple):
         if len(expected) == 3:
-            expected, warning, match = expected
+            (expected, warning, match) = expected
 
             assert treedb.languoids.fields.is_lines(section, option, **kwargs) == expected
 
             w = recwarn.pop(warning)
             assert re.search(match, str(w.message))
         else:
-            exception, match = expected
+            (exception, match) = expected
 
             with pytest.raises(exception, match=match):
                 treedb.languoids.fields.is_lines(section, option, **kwargs)

@@ -14,7 +14,7 @@ from .backend import json_object, json_datetime
 
 __all__ = ['LEVEL', 'Languoid']
 
-FAMILY, LANGUAGE, DIALECT = LEVEL = ('family', 'language', 'dialect')
+(FAMILY, LANGUAGE, DIALECT) = LEVEL = ('family', 'language', 'dialect')
 
 SPECIAL_FAMILIES = ('Sign Language',
                     'Unclassifiable',
@@ -40,7 +40,7 @@ TRIGGER_FIELD = {'lgcode', 'inlg'}
 IDENTIFIER_SITE = {'multitree', 'endangeredlanguages',
                    'wals', 'languagelandscape'}
 
-_SUB, _FAMILY = 'sub', 'family'
+(_SUB, _FAMILY) = 'sub', 'family'
 
 CLASSIFICATION = {'sub': (False, _SUB), 'subrefs': (True, _SUB),
                   'family': (False, _FAMILY), 'familyrefs': (True, _FAMILY)}
@@ -185,18 +185,18 @@ class Languoid:
         if innerjoin not in (False, True, 'reflexive'):  # pragma: no cover
             raise ValueError(f'invalid innerjoin: {innerjoin!r}')
 
-        Child, Parent = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
-                                                  parent_root=parent_root)
+        (Child, Parent) = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
+                                                    parent_root=parent_root)
 
         if from_parent:
-            Node, Relative = Parent, Child  # noqa: N806
-            node_label, relative_label = 'parent_id', 'child_id'
-            join_source, join_target = Node.id, Relative.parent_id
+            (Node, Relative) = Parent, Child  # noqa: N806
+            (node_label, relative_label) = 'parent_id', 'child_id'
+            (join_source, join_target) = Node.id, Relative.parent_id
             recurse_relative = Relative.id
         else:
-            Node, Relative = Child, Parent  # noqa: N806
-            node_label, relative_label = 'child_id', 'parent_id'
-            join_source, join_target = Node.parent_id, Relative.id
+            (Node, Relative) = Child, Parent  # noqa: N806
+            (node_label, relative_label) = 'child_id', 'parent_id'
+            (join_source, join_target) = Node.parent_id, Relative.id
             recurse_relative = Relative.parent_id
 
         tree_1 = sa.select(Node.id.label(node_label))
@@ -313,15 +313,15 @@ class Languoid:
                          node_level=node_level,
                          with_steps=with_steps, with_terminal=with_terminal)
 
-        Child, Parent = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
-                                                  parent_root=parent_root)
+        (Child, Parent) = cls._aliased_child_parent(child_root=child_root,  # noqa: N806
+                                                    parent_root=parent_root)
 
         if from_parent:
-            Node, Relative = Parent, Child  # noqa: N806
-            node_label, relative_label = 'parent_id', 'child_id'
+            (Node, Relative) = Parent, Child  # noqa: N806
+            (node_label, relative_label) = 'parent_id', 'child_id'
         else:
-            Node, Relative = Child, Parent  # noqa: N806
-            node_label, relative_label = 'child_id', 'parent_id'
+            (Node, Relative) = Child, Parent  # noqa: N806
+            (node_label, relative_label) = 'child_id', 'parent_id'
 
         del Child, Parent
 
@@ -337,18 +337,18 @@ class Languoid:
     @classmethod
     def child_ancestor(cls, /, *, innerjoin=False,
                        child_level=None):
-        Child, Parent, _, child_parent = cls.node_relative(from_parent=False,  # noqa: N806
-                                                           innerjoin=innerjoin,
-                                                           node_level=child_level)
+        (Child, Parent, _, child_parent) = cls.node_relative(from_parent=False,  # noqa: N806
+                                                             innerjoin=innerjoin,
+                                                             node_level=child_level)
         return Child, Parent, _, child_parent
 
     @classmethod
     def parent_descendant(cls, /, *, innerjoin=False,
                           parent_root=None, parent_level=None):
-        Parent, Child, _, parent_child = cls.node_relative(from_parent=True,  # noqa: N806
-                                                           innerjoin=innerjoin,
-                                                           parent_root=parent_root,
-                                                           node_level=parent_level)
+        (Parent, Child, _, parent_child) = cls.node_relative(from_parent=True,  # noqa: N806
+                                                             innerjoin=innerjoin,
+                                                             parent_root=parent_root,
+                                                             node_level=parent_level)
         return Parent, Child, parent_child
 
     @classmethod

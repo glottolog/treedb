@@ -64,7 +64,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
 
     groupby = (('file_id',), ('section',), ('option', 'is_lines'))
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
-    groupby_file, groupby_section, groupby_option = groupby
+    (groupby_file, groupby_section, groupby_option) = groupby
 
     make_item = _globals.RecordItem.from_filepath_record
     n = 0

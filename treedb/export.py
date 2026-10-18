@@ -37,7 +37,7 @@ def print_languoid_stats(*, file=None,
                          bind=_globals.ENGINE):
     select_stats = _queries.get_stats_query()
     rows = _backend.iterrows(select_stats, mappings=True, bind=bind)
-    rows, counts = itertools.tee(rows)
+    (rows, counts) = itertools.tee(rows)
 
     _backend_export.print_rows(rows, format_='{n:6,d} {kind}',
                                file=file, bind=None)
@@ -111,12 +111,12 @@ def checksum(source: str = 'tables', *,
              source, order_by, hash_name)
     hashobj = hashlib.new(hash_name)
     assert hasattr(hashobj, 'hexdigest')
-    hashobj, total_lines = write_json_lines(hashobj,
-                                            source=source,
-                                            limit=limit,
-                                            offset=offset,
-                                            order_by=order_by,
-                                            sort_keys=True, bind=bind)
+    (hashobj, total_lines) = write_json_lines(hashobj,
+                                              source=source,
+                                              limit=limit,
+                                              offset=offset,
+                                              order_by=order_by,
+                                              sort_keys=True, bind=bind)
     log.info('%s json lines written', f'{total_lines:_d}')
 
     offset = f'{offset=!r}' if offset else ''

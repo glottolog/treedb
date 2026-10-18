@@ -27,7 +27,7 @@ pytestmark = pytest.mark.raw
 def test_print_stats(capsys, treedb_raw):
     assert treedb_raw.raw.print_stats() is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     assert out.strip()
@@ -42,7 +42,7 @@ def test_checksum(pytestconfig, treedb_raw, weak):
     result = treedb_raw.raw.checksum(weak=weak)
 
     if expected is None:
-        prefix, hash_name, hexdigest = result.split(':')
+        (prefix, hash_name, hexdigest) = result.split(':')
         assert prefix in ('strong', 'weak', 'unordered')
         assert hash_name == 'sha256'
         assert len(hexdigest) == 64

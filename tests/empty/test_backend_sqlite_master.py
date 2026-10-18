@@ -13,7 +13,7 @@ import pytest
 def test_print_table_sql(capsys, empty_treedb, table, expected):
     assert empty_treedb.print_table_sql(table) is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     assert expected.fullmatch(out.strip())

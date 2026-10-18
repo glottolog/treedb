@@ -11,7 +11,7 @@ import treedb as _treedb
 def test_print_schema(capsys, bare_treedb):
     assert bare_treedb.print_schema() is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     assert out.strip().startswith('CREATE TABLE __dataset__ (')
@@ -46,14 +46,14 @@ def test_print_schema(capsys, bare_treedb):
 def test_print_query_sql(capsys, bare_treedb, query, pretty, expected):
     assert bare_treedb.print_query_sql(query, pretty=pretty) is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     if expected is None:
         assert out.strip()
     elif pretty and _treedb.backend.sqlparse is None:
-        norm_out, norm_exp = (re.sub(r'\s{1,}', r' ', s).strip()
-                              for s in (out, expected))
+        (norm_out, norm_exp) = (re.sub(r'\s{1,}', r' ', s).strip()
+                                for s in (out, expected))
         assert norm_out == norm_exp
     else:
         assert out == expected

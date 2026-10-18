@@ -29,7 +29,7 @@ class OptionMap(dict):
 
     def __missing__(self, key, /):
         log.debug('insert option: %r', key)
-        section, option = key
+        (section, option) = key
         is_lines = _fields.is_lines(section, option)
 
         params = {'section': section, 'option': option,
@@ -60,7 +60,7 @@ def itervalues(cfg, file_id, /, *, option_map):
     get_line = _tools.next_count(start=1)
     for section, sec in cfg.items():
         for option, text in sec.items():
-            option_id, is_lines = option_map[section, option]
+            (option_id, is_lines) = option_map[section, option]
             values = text.strip().splitlines() if is_lines else [text]
             for v in values:
                 yield {'file_id': file_id, 'option_id': option_id,

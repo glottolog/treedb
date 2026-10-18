@@ -16,7 +16,7 @@ QUERY_HASH = {'master': None,
 def test_print_dataset(capsys, treedb):
     assert treedb.print_dataset() is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     assert out.startswith("git describe '")
@@ -74,7 +74,7 @@ def test_print_rows(capsys, treedb):
 
     assert treedb.print_rows(query, format_=format_, verbose=True) is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     expected = textwrap.dedent(

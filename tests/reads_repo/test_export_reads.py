@@ -126,7 +126,7 @@ def test_print_languoid_stats(pytestconfig, capsys, treedb):
 
     assert treedb.print_languoid_stats() is None
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not err
 
     if expected is None:
@@ -199,7 +199,7 @@ def test_write_json_lines(pytestconfig, capsys, treedb, suffix, n=100):
     args = ([f'treedb{name_suffix}.languoids{suffix}'] if suffix != 'jsonl.gz'
             else [])
 
-    filepath, _ = treedb.write_languoids(*args)
+    (filepath, _) = treedb.write_languoids(*args)
 
     assert filepath.name == f'treedb{name_suffix}.languoids{suffix}'
     assert_file_size_between(filepath, 1, 200)
@@ -225,7 +225,7 @@ def test_write_json_lines(pytestconfig, capsys, treedb, suffix, n=100):
                 assert languoid['parent_id'] or languoid['parent_id'] is None
                 assert languoid['level'] in ('family', 'language', 'dialect')
 
-    out, err = capsys.readouterr()
+    (out, err) = capsys.readouterr()
     assert not out
     assert not err
 
@@ -238,8 +238,8 @@ def test_write_json_lines_indent(tmp_path, treedb, limit=2):
     target = tmp_path / 'languoids.json.txt'
     with pytest.warns(UserWarning,
                       match=r'non-canonical JSON Lines format from indent 2'):
-        path, n_written = treedb.write_languoids(target, pretty=True,
-                                                 limit=limit)
+        (path, n_written) = treedb.write_languoids(target, pretty=True,
+                                                   limit=limit)
 
     assert path == target
     assert n_written
@@ -343,7 +343,7 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
             if pytestconfig.option.exclude_raw and kw.get('source') == 'raw':
                 continue
             checksum = treedb.checksum(**kw)
-            prefix, colon, hexdigest = checksum.rpartition(':')
+            (prefix, colon, hexdigest) = checksum.rpartition(':')
             prefix += colon
             yield kw, expected_prefix, prefix, hexdigest
 
@@ -356,5 +356,5 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
         assert prefix == expected_prefix
 
     for (c, _, _, cur), (n, _, _, nxt) in itertools.pairwise(results):
-        cur, nxt = (s.rpartition(':')[2] for s in (cur, nxt))
+        (cur, nxt) = (s.rpartition(':')[2] for s in (cur, nxt))
         assert cur == nxt, f'checksum(**{c!r}) == checksum(**{n!r})'

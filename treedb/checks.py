@@ -219,8 +219,8 @@ def family_children():
 @check
 def family_languages():
     """Family has at least two languages (except 'Unclassified ...')."""
-    Family, Child = (sa.orm.aliased(Languoid, name=n)  # noqa: N806
-                     for n in ('family', 'child'))
+    (Family, Child) = (sa.orm.aliased(Languoid, name=n)  # noqa: N806
+                       for n in ('family', 'child'))
 
     tree = Languoid.tree(include_self=False, with_terminal=True)
 
@@ -286,7 +286,7 @@ def compare_languoids(left_source: str = 'files', right_source: str = 'raw', /,
 
         return same
 
-    left, right = (export.iterlanguoids(source, order_by=order_by)
-                   for source in (left_source, right_source))
+    (left, right) = (export.iterlanguoids(source, order_by=order_by)
+                     for source in (left_source, right_source))
 
     return compare(left, right)

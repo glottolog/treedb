@@ -55,8 +55,8 @@ def get_stats_query():
 
         return select_nrows
 
-    Root, Child, root_child = Languoid.parent_descendant(innerjoin='reflexive',  # noqa: N806
-                                                         parent_root=True)
+    (Root, Child, root_child) = Languoid.parent_descendant(innerjoin='reflexive',  # noqa: N806
+                                                           parent_root=True)
 
     language_count = functools.partial(languoid_count,
                                        cls=Child, fromclause=root_child,
@@ -93,7 +93,7 @@ def get_stats_query():
 @_views.register_view('example')
 def get_example_query(*, order_by: str = 'id') -> sa.sql.Select:
     """Return example sqlalchemy core query (one denormalized row per languoid)."""
-    path, family, language = Languoid.path_family_language()
+    (path, family, language) = Languoid.path_family_language()
 
     select_languoid = (select(Languoid.id,
                               Languoid.name,
@@ -717,8 +717,8 @@ def iterdescendants(parent_level: str | None = None,
     else:  # pragma: no cover
         raise ValueError(f'invalid parent_level: {parent_level!r}')
 
-    Parent, Child, parent_child = Languoid.parent_descendant(parent_root=parent_root,  # noqa: N806
-                                                             parent_level=parent_level)
+    (Parent, Child, parent_child) = Languoid.parent_descendant(parent_root=parent_root,  # noqa: N806
+                                                               parent_level=parent_level)
 
     select_pairs = (select(Parent.id.label('parent_id'),
                            Child.id.label('child_id'))
@@ -733,7 +733,7 @@ def iterdescendants(parent_level: str | None = None,
 
     rows = _backend.iterrows(select_pairs, bind=bind)
     for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
-        _, c = next(grp)
+        (_, c) = next(grp)
         if c is None:
             descendants = []
         else:

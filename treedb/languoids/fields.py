@@ -173,7 +173,7 @@ RawRecordItem: TypeAlias = tuple[_globals.PathType | None, RawRecordType]
 
 
 def join_lines_inplace(record_item: _globals.RecordItem, /) -> RawRecordItem:
-    path, record = record_item
+    (path, record) = record_item
     for name, section in record.items():
         for option in section:
             if is_lines(name, option):

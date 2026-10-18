@@ -197,7 +197,7 @@ def pipe_json_lines(file, documents=None, /, *,
     r"""Load/dump json lines as endpoint pipe.
 
     >>> with io.StringIO() as f:
-    ...     buf, nwritten = pipe_json_lines(f, [None, {'spam': None}])
+    ...     (buf, nwritten) = pipe_json_lines(f, [None, {'spam': None}])
     ...     json_lines = f.getvalue()
 
     >>> assert buf is f
@@ -266,11 +266,11 @@ def pipe_json(documents, /, *, dump: bool,
 
 def pipe_lines(file, lines=None, /, *, newline: str | None = None,
                delete_present: bool = False, autocompress: bool = True):
-    open_func, result, hashobj = get_open_result(file,
-                                                 write=lines is not None,
-                                                 delete_present=delete_present,
-                                                 autocompress=autocompress,
-                                                 newline=newline)
+    (open_func, result, hashobj) = get_open_result(file,
+                                                   write=lines is not None,
+                                                   delete_present=delete_present,
+                                                   autocompress=autocompress,
+                                                   newline=newline)
 
     if lines is not None:
         with open_func() as f:
@@ -441,7 +441,7 @@ def run(cmd, /, *, capture_output: bool = False,
 
     if capture_output:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, **kwargs)
-        out, err = proc.communicate()
+        (out, err) = proc.communicate()
         if check and proc.returncode:
             raise subprocess.CalledProcessError(proc.returncode, cmd,
                                                 output=out, stderr=err)
