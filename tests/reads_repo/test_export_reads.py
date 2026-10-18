@@ -307,7 +307,7 @@ def test_iterlanguoids(bare_treedb, n=100):
 def test_checksum(pytestconfig, treedb, source):
     expected = CHECKSUM.get(pytestconfig.option.glottolog_tag)
 
-    result = treedb.checksum()
+    result = treedb.checksum(source)
 
     if expected is None:
         assert result.startswith(PREFIX)
