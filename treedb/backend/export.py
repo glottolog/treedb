@@ -106,7 +106,7 @@ def backup(filename=None, /, *, as_new_engine: bool = False,
         url += f'/{path}'
 
     log.info('destination: %r', url)
-    result = sa.create_engine(url, future=engine.future)
+    result = sa.create_engine(url)
 
     def progress(status, remaining, total):
         log.info('%d of %d pages copied', total - remaining, total)

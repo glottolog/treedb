@@ -5,7 +5,7 @@ Changelog
 Version 2.8 (in development)
 ----------------------------
 
-
+Drop SQLAlchemy 1 support: ``sqlalchemy>=2``.
 
 
 Version 2.7.4

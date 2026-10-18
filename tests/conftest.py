@@ -60,10 +60,6 @@ def pytest_addoption(parser):
     parser.addoption('--log-sql', action='store_true',
                      help='pass log_sql=True to treedb.configure()')
 
-    parser.addoption('--no-sqlalchemy-warn-20', action='store_false',
-                     dest='sqlalchemy_warn_20',
-                     help="don't set os.environ['SQLALCHEMY_WARN_20']")
-
 
 def pytest_configure(config):
     file_engine_tag = string.Template(config.option.file_engine_tag)
@@ -79,9 +75,6 @@ def pytest_configure(config):
     config.addinivalue_line('markers', f'xfail_glottolog_tag: xfail for given {GLOTTOLOG_TAG}')
 
     config.addinivalue_line('markers', f'raw: skip if {EXCLUDE_RAW} flag is given')
-
-    if config.option.sqlalchemy_warn_20:
-        os.environ['SQLALCHEMY_WARN_20'] = 'true'
 
 
 def pytest_collection_modifyitems(config, items):

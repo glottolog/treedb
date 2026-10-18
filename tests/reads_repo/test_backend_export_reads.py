@@ -40,7 +40,7 @@ def test_backup(treedb):
     assert_file_size_between(path, 10, 200)
 
     # SQLiteEngineProxy
-    engine = treedb.engine.__class__(engine, future=treedb.engine.future)
+    engine = treedb.engine.__class__(engine,)
 
     assert engine.file_exists()
 

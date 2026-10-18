@@ -66,12 +66,6 @@ jobs:
           echo "::group::Run pip install .[pretty${{ matrix.extra }}] --group test"
           pip install .[pretty${{ matrix.extra }}] --group test
           echo "::endgroup::"
-      - name: Pip downgrade sqlalchemy to 1.0 version (if -sa1)
-        if: ${{ contains(matrix.name, '-sa1') }}
-        run: |
-          echo "::group::Run python -m pip install \"sqlalchemy<2\""
-          python -m pip install "sqlalchemy<2"
-          echo "::endgroup::"
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
       - name: Check Glottolog version

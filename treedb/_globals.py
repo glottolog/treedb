@@ -38,15 +38,13 @@ DEFAULT_HASH = 'sha256'
 
 FILE_PATH_SEP = '/'
 
-_SQLALCHEMY_FUTURE = True
-
-ENGINE = _proxies.SQLiteEngineProxy(future=_SQLALCHEMY_FUTURE)
+ENGINE = _proxies.SQLiteEngineProxy()
 
 ROOT = _proxies.PathProxy()
 
 REGISTRY = _registry()
 
-SESSION = _sessionmaker(bind=ENGINE, future=_SQLALCHEMY_FUTURE)
+SESSION = _sessionmaker(bind=ENGINE)
 
 
 assert PATH_LABEL < LANGUOID_LABEL

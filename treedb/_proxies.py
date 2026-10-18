@@ -75,16 +75,15 @@ class PathProxy(Proxy):
 class EngineProxy(Proxy, sa.engine.Engine):
     """
 
-    >>> EngineProxy(future=True)
+    >>> EngineProxy()
     <treedb._proxies.EngineProxy>
     """
-    def __init__(self, engine=None, /, *, future):
+    def __init__(self, engine=None, /):
         self.engine = engine
-        self.future = future
 
     def _create_engine(self, url, /):
         log.debug('sqlalchemy.create_engine(%r)', url)
-        self.engine = sa.create_engine(url, future=self.future)
+        self.engine = sa.create_engine(url)
 
     def connect(self, *, close_with_result: bool = False, **kwargs):
         return self.engine.connect(**kwargs)
