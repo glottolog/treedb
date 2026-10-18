@@ -1,6 +1,5 @@
 """``pytest`` command-line options and fixtures."""
 
-import os
 import string
 
 import pytest

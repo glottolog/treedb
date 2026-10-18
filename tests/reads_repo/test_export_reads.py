@@ -21,15 +21,7 @@ CHECKSUM = {'master': None,
             'v5.2.1': '0f0b5cb36fa2b9c1c8ed087f8bff0e46b7fc37f0c6ad14fc65139486db88c3dd',
             'v5.2': 'c80bc501cf1bef9f3f9449ffa8a6a60d0a4082cfa74f82768490e698dc3e3c70',
             'v5.1': 'e37d43e99deb5fb5055916b29c009c43fafffc2c60c4e9fc027b34d16336d856',
-            'v5.0': '41ad0e4b1ef0569c9699f1591f1a3fa9de64bee17cfc8b968330d96eff4d3d84',
-            'v4.8': '2a5e60d586fb4c9d6e88efbcc31f5db72af699c584f7053dda9bf28dd3599cab',
-            'v4.7': '69f3058e79d443336ad0f33b71ff184100283502a9b52805a1815852df704315',
-            'v4.6': '9f63edacc4af792106bcc5a49b6339f0c90e096829c8409b361a6ca2e99107c1',
-            'v4.5': '24c79cb12d016ebde9896f3c946b42bebd500318581a41ac17f222a0b292dc9d',
-            'v4.4': '4ad1d84119582f24ca9403e4f9a501f1aeb947e1b8d7ea57fad3ef5e4bccdb4c',
-            'v4.3-treedb-fixes': '54b468c7310fdd958b2b17fe439ee47c00d211498b405a5bd74b2920f68e3969',
-            'v4.2.1': '9e19d66c95a43f595a8ea0b72ba6e7e293e02faf66978b63dda8ddba7d37e3f6',
-            'v4.1': '9b795566bd7f5ccb10e0cb4f5e5be10b5ccce496d9816728b904f41b75cdd55a'}
+            'v5.0': '41ad0e4b1ef0569c9699f1591f1a3fa9de64bee17cfc8b968330d96eff4d3d84'}
 
 STATS = {'master': None,
          'v5.3': '''\
@@ -126,158 +118,6 @@ STATS = {'master': None,
     15 Speech Register
  8,219 All
    385 Bookkeeping
-''',
-         'v4.8': '''\
-26,669 languoids
-   245 families
-   184 isolates
-   429 roots
- 8,595 languages
- 4,467 subfamilies
-13,362 dialects
- 7,654 Spoken L1 Languages
-   223 Sign Language
-   121 Unclassifiable
-    84 Pidgin
-    68 Unattested
-    31 Artificial Language
-     9 Mixed Language
-    15 Speech Register
- 8,205 All
-   390 Bookkeeping
-''',
-         'v4.7': '''\
-26,416 languoids
-   245 families
-   184 isolates
-   429 roots
- 8,572 languages
- 4,425 subfamilies
-13,174 dialects
- 7,636 Spoken L1 Languages
-   215 Sign Language
-   121 Unclassifiable
-    84 Pidgin
-    68 Unattested
-    32 Artificial Language
-     9 Mixed Language
-    15 Speech Register
- 8,180 All
-   392 Bookkeeping
-''',
-         'v4.6': '''\
-26,285 languoids
-   245 families
-   182 isolates
-   427 roots
- 8,565 languages
- 4,388 subfamilies
-13,087 dialects
- 7,628 Spoken L1 Languages
-   215 Sign Language
-   121 Unclassifiable
-    84 Pidgin
-    68 Unattested
-    32 Artificial Language
-    10 Mixed Language
-    15 Speech Register
- 8,173 All
-   392 Bookkeeping
-''',
-         'v4.5': '''\
-26,101 languoids
-   245 families
-   182 isolates
-   427 roots
- 8,549 languages
- 4,348 subfamilies
-12,959 dialects
- 7,616 Spoken L1 Languages
-   210 Sign Language
-   121 Unclassifiable
-    83 Pidgin
-    68 Unattested
-    31 Artificial Language
-    11 Mixed Language
-    15 Speech Register
- 8,155 All
-   394 Bookkeeping
-''',
-         'v4.4': '''\
-25,900 languoids
-   245 families
-   182 isolates
-   427 roots
- 8,533 languages
- 4,326 subfamilies
-12,796 dialects
- 7,613 Spoken L1 Languages
-   202 Sign Language
-   122 Unclassifiable
-    83 Pidgin
-    68 Unattested
-    31 Artificial Language
-    11 Mixed Language
-    14 Speech Register
- 8,144 All
-   389 Bookkeeping
-''',
-         'v4.3-treedb-fixes': '''\
-25,439 languoids
-   244 families
-   181 isolates
-   425 roots
- 8,516 languages
- 4,265 subfamilies
-12,414 dialects
- 7,606 Spoken L1 Languages
-   196 Sign Language
-   123 Unclassifiable
-    81 Pidgin
-    67 Unattested
-    29 Artificial Language
-    12 Mixed Language
-    10 Speech Register
- 8,124 All
-   392 Bookkeeping
-''',
-         'v4.2.1': '''\
-25,228 languoids
-   242 families
-   187 isolates
-   429 roots
- 8,515 languages
- 4,234 subfamilies
-12,237 dialects
- 7,604 Spoken L1 Languages
-   196 Sign Language
-   123 Unclassifiable
-    81 Pidgin
-    66 Unattested
-    28 Artificial Language
-    14 Mixed Language
-    10 Speech Register
- 8,122 All
-   393 Bookkeeping
-''',
-        'v4.1': '''\
-24,701 languoids
-   241 families
-   188 isolates
-   429 roots
- 8,506 languages
- 4,170 subfamilies
-11,784 dialects
- 7,596 Spoken L1 Languages
-   194 Sign Language
-   122 Unclassifiable
-    80 Pidgin
-    67 Unattested
-    28 Artificial Language
-    14 Mixed Language
-    10 Speech Register
- 8,111 All
-   395 Bookkeeping
 '''}
 
 
@@ -434,46 +274,22 @@ xfail_master_unnormalized = pytest.mark.xfail_glottolog_tag(
     raises=AssertionError)
 
 
-xfail_4_8_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag(
-    'v4.8', reason='empty v4.8 altnames',
-    # https://github.com/glottolog/glottolog/pull/980
-    raises=AssertionError)
-
-
-xfail_4_5_empty_altnames_elcat = pytest.mark.xfail_glottolog_tag(
-    'v4.5', reason='empty v4.4 altnames',
-    # https://github.com/glottolog/glottolog/pull/795
-    raises=AssertionError)
-
-
-xfail_4_1_float_normalization = pytest.mark.xfail_glottolog_tag(
-    'v4.1', reason='missing v4.1 float normalization',
-    # https://github.com/glottolog/glottolog/pull/495
-    raises=AssertionError)
-
-
 @pytest.mark.parametrize(
     'kwargs',
     [pytest.param([{'source': 'files'},
                    {'source': 'raw'},
                    {'source': 'tables'}],
                   id='files, raw, tables',
-                  marks=[xfail_master_unnormalized,
-                         xfail_4_8_empty_altnames_elcat,
-                         xfail_4_5_empty_altnames_elcat,
-                         xfail_4_1_float_normalization]),
+                  marks=[xfail_master_unnormalized]),
      pytest.param([{'source': 'raw', 'order_by': 'id'},
                    {'source': 'tables', 'order_by': 'id'}],
                   id='raw(order_by=id), tables(order_by=id)',
-                  marks=[xfail_master_unnormalized,
-                         xfail_4_8_empty_altnames_elcat,
-                         xfail_4_1_float_normalization]),
+                  marks=[xfail_master_unnormalized]),
      pytest.param([{'source': 'files', 'limit': 100,
                     'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
                    {'source': 'raw', 'order_by': 'file', 'limit': 100,
                     'expected_prefix': 'path_languoid:file[limit=100]:sha256:'}],
-                  id='files(limit=100), raw(order_by=file, limit=100)',
-                  marks=[xfail_4_5_empty_altnames_elcat])])
+                  id='files(limit=100), raw(order_by=file, limit=100)')])
 def test_checksum_equivalence(pytestconfig, treedb, kwargs):
     """Test for equivalence of the serialization from different sources.
 

@@ -10,15 +10,7 @@ QUERY_HASH = {'master': None,
               'v5.2.1': 'ced50816870c5da047d4533187c30224786da02a2b7372140545a5a73cb98012',
               'v5.2': 'ac5712e082e4bf4c4b341d232a4309c5a968b9f93d1c23b9cd4a1ae9faed5197',
               'v5.1': 'c235e4b709b009a31f5a8eace0edeff02b08546f9f81b90139d017723fb4fa65',
-              'v5.0': 'f20f1bd9e397f614b24276c189f072fbe28be8c62b6d5f3011546735aecb5bc6',
-              'v4.8': '705b1e4e30c35c659e536f0b41dc2c4197c72037b2c8eec7af20c3bf9ef4c992',
-              'v4.7': 'e1054be01c4e17150e875d1cab40c754c0e1aeb3b5343a36c5771d3587115537',
-              'v4.6': '4479476b397fa7dfbfd560a4bef5be06513ddc54f7c103d1f565e3a26404a90f',
-              'v4.5': 'b36b5cdc7508b8c2843a3c93ff536ead9b4b63cdf80679f70993a5dd524a8926',
-              'v4.4': '224691678e1f2e18406d6dd1a278e062c683ac12ec2acf57d501931d3661142e',
-              'v4.3-treedb-fixes': 'bf8af9e4840642f4622cec41bf3156afac75317740ff0eef1ac75ec1998d4f78',
-              'v4.2.1': '25222b4feb2d89b4edaeecc546280a059ae6ba69da961d56ee4a387ba3b81fc0',
-              'v4.1': '55e9cab42b012048ae9f6c08353752fded7054bf531039979c6803ede54b95ac'}
+              'v5.0': 'f20f1bd9e397f614b24276c189f072fbe28be8c62b6d5f3011546735aecb5bc6'}
 
 
 def test_print_dataset(capsys, treedb):

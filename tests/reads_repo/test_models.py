@@ -89,9 +89,7 @@ def test_languoid_tree(treedb, child_id, parent_id, kwargs, expected):
      pytest.param(_models.Timespan, None,
                   r"<Timespan start_year=\d+ start_month=\d+ start_day=\d+"
                   r" end_year=\d+ end_month=\d+ end_day=\d+>",
-                  id='model=Timespan',
-                  marks=pytest.mark.xfail_glottolog_tag('v4.1', reason='no timespan in Glottolog v4.1',
-                                                        raises=AssertionError)),
+                  id='model=Timespan'),
      pytest.param(_models.Source, None,
                   r"<Source languoid_id='\w+' provider_id=\d+ bibitem_id=\d+>",
                   id='model=Source'),

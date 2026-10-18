@@ -8,11 +8,7 @@ ZeroDict = functools.partial(collections.defaultdict, int)
 FILES_WRITTEN = {'files': ZeroDict(),
                  'raw_lines': ZeroDict(),
                  'raw': ZeroDict(),
-                 'tables': ZeroDict({  # replace 'Country Name (ID)' with 'ID'
-                                     'v4.3-treedb-fixes': 8_528,
-                                     'v4.2.1': 8_528,
-                                     'v4.2': None,
-                                     'v4.1': 8_540})}
+                 'tables': ZeroDict()}
 
 
 pytestmark = pytest.mark.writes

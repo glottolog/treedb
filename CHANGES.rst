@@ -7,6 +7,9 @@ Version 2.8 (in development)
 
 Drop SQLAlchemy 1 support: ``sqlalchemy>=2``.
 
+Drop test checksums and coverage for historical versions of Glottolog versions
+before ``v5``.
+
 
 Version 2.7.4
 -------------

@@ -88,7 +88,7 @@ FIELD_ORDER = _tools.Ordering.fromlist(FIELDS, start_index=1)
 
 CORE_SECTIONS = frozenset({CORE})
 
-# avoid writing empty 'core', 'timespan' options to files (first added in Glottolog 4.2, treedb 0.11)
+# avoid writing empty 'core', 'timespan' options to files (first added in Glottolog v4.2, treedb v0.11)
 OMIT_EMPTY_CORE_OPTIONS = frozenset({'timespan'})
 
 KEEP_EMPTY_SECTIONS = CORE_SECTIONS | frozenset({SOURCES})
