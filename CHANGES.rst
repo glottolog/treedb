@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 2.7.5 (in development)
-------------------------------
+Version 2.8 (in development)
+----------------------------
 
 
 
