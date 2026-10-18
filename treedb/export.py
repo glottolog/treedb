@@ -171,7 +171,9 @@ def write_json_lines(file=None, /, *, suffix: str = '.jsonl',
                  for path, languoid in items)
         return _tools.pipe_json_lines(file, items, **pipe_kwargs)
     elif source == 'tables':
-        sqlite_format = not pretty and not ensure_ascii
+        sqlite_format = (not pretty and not ensure_ascii
+                         # https://www.sqlite.org/floatingpoint.html#*fpdigits
+                         and bind.dialect.dbapi.sqlite_version_info < (3, 52))
         query = _queries.get_json_query(limit=limit,
                                         offset=offset,
                                         as_rows=False,

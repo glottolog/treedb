@@ -38,9 +38,14 @@ def sqlite_engine_connect(dbapi_conn, connection_record):
         return
 
     log.debug('connect sqlalchemy.engine.Engine: enable foreign keys')
-
     with contextlib.closing(dbapi_conn.cursor()) as dbapi_cursor:
         dbapi_cursor.execute('PRAGMA foreign_keys = ON')
+
+    # TODO: set sqlite3.SQLITE_DBCONFIG_FP_DIGITS to 15 once it becomes available
+    # https://www.sqlite.org/c3ref/c_dbconfig_defensive.html#sqlitedbconfigfpdigits
+    # https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.setconfig
+    # if sqlite3.sqlite_version_info >= (3, 53) and sys.version_info >= (3, XX):
+    #     dbapi_conn.setconfig(1_023, 15)
 
 
 @sa.ext.compiler.compiles(sa.schema.CreateTable)
