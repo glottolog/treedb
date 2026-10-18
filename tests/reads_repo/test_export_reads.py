@@ -1,7 +1,9 @@
 import io
 import json
+import sqlite3
 
 import pytest
+import sqlalchemy as sa
 
 from helpers import (pairwise,
                      get_assert_head,
@@ -298,11 +300,32 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
+xfail_sqlite_3_53_fpdigits = pytest.mark.xfail( 
+    sqlite3.sqlite_version_info >= (3, 53),
+    # https://www.sqlite.org/releaselog/3_53_0.html
+    reason='https://www.sqlite.org/floatingpoint.html#*fpdigits',
+    raises=AssertionError)
+
+
+def test_sqlite_json_3_53_fpdigits(treedb):
+    # languoids/tree/pama1250/aran1266/thur1253/core1260/unun9967/ngad1257/md.ini
+    longitude = 139.08123163651
+    result = treedb.scalar(sa.func.json(longitude))
+    assert isinstance(result, str)
+    if sqlite3.sqlite_version_info < (3, 52):
+        assert result == '139.08123163651'
+        assert result == str(longitude)
+    else:
+        assert result == '139.08123163651001'
+        assert result.startswith(str(longitude))
+        assert result != str(longitude)
+
+
 @pytest.mark.parametrize(
     'source',
     ['files',
      pytest.param('raw', marks=pytest.mark.raw),
-     'tables'],
+     pytest.param('tables', marks=xfail_sqlite_3_53_fpdigits)],
     ids=lambda x: f'source={x}')
 def test_checksum(pytestconfig, treedb, source):
     expected = CHECKSUM.get(pytestconfig.option.glottolog_tag)
@@ -316,6 +339,7 @@ def test_checksum(pytestconfig, treedb, source):
         assert result == PREFIX + expected
 
 
+@xfail_sqlite_3_53_fpdigits
 def test_write_json_lines_checksum(pytestconfig, treedb):
     expected = CHECKSUM.get(pytestconfig.option.glottolog_tag)
 
@@ -331,6 +355,7 @@ def test_write_json_lines_checksum(pytestconfig, treedb):
         assert result == expected
 
 
+@xfail_sqlite_3_53_fpdigits
 @pytest.mark.parametrize('suffix',
                          ['.jsonl', '.jsonl.gz'],
                          ids=lambda x: f'suffix={x}')
@@ -442,13 +467,15 @@ xfail_4_1_float_normalization = pytest.mark.xfail_glottolog_tag(
                   marks=[xfail_master_unnormalized,
                          xfail_4_8_empty_altnames_elcat,
                          xfail_4_5_empty_altnames_elcat,
-                         xfail_4_1_float_normalization]),
+                         xfail_4_1_float_normalization,
+                         xfail_sqlite_3_53_fpdigits]),
      pytest.param([{'source': 'raw', 'order_by': 'id'},
                    {'source': 'tables', 'order_by': 'id'}],
                   id='raw(order_by=id), tables(order_by=id)',
                   marks=[xfail_master_unnormalized,
                          xfail_4_8_empty_altnames_elcat,
-                         xfail_4_1_float_normalization]),
+                         xfail_4_1_float_normalization,
+                         xfail_sqlite_3_53_fpdigits]),
      pytest.param([{'source': 'files', 'limit': 100,
                     'expected_prefix': 'path_languoid:path[limit=100]:sha256:'},
                    {'source': 'raw', 'order_by': 'file', 'limit': 100,
