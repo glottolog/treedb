@@ -44,7 +44,7 @@ def configure_logging_from_file(path, /, *,
         log.debug('set level of %r to %r', sql_logger, level)
         sql_logger.setLevel('INFO' if log_sql else 'WARNING')
 
-    log_version()
+    log_package_version()
 
     set_capture_warnings(capture_warnings)
 
@@ -59,13 +59,18 @@ def reset_logging():
         h.close()
 
 
-def log_version(*, also_print: bool = False, print_file=None):
+def log_package_version(*, also_print: bool = False, print_file=None,
+                        engine=None):
     import treedb
 
-    log.info('%s version: %s', __package__, treedb.__version__)
+    sqlite_version = (engine.dialect.dbapi.sqlite_version if engine is not None
+                      else None)
+    log.info('%s v%s (sqlite_version v%s)', __package__, treedb.__version__,
+             sqlite_version)
     log.debug('%r', treedb)
     if also_print or print_file is not None:
-        print(f'{__package__} version: {treedb.__version__}',
+        print(f'{__package__} v{treedb.__version__}'
+              f' (sqlite_version v{sqlite_version})',
               file=print_file)
 
 
@@ -100,7 +105,7 @@ def configure_logging(*,
     log.debug('logging.config.dictConfig(%r)', cfg)
     logging.config.dictConfig(cfg)
 
-    log_version()
+    log_package_version()
 
     set_capture_warnings(capture_warnings)
 

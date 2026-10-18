@@ -7,7 +7,7 @@ def test_print_versions(capsys, bare_treedb):
     (out, err) = capsys.readouterr()
     assert not err
 
-    assert out.startswith('treedb version: ')
+    assert out.startswith('treedb v')
 
 
 def test_scalar(bare_treedb):

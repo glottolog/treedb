@@ -61,9 +61,9 @@ def compile(element, compiler, **kwargs):
 
 
 def print_versions(*, engine=ENGINE, file=None) -> None:
-    logging_.log_version(also_print=True, print_file=file)
-    log_versions(also_print=True, print_file=file,
-                 engine=engine)
+    kwargs = {'engine': engine, 'also_print': True, 'print_file': file}
+    logging_.log_package_version(**kwargs)
+    log_dependency_versions(**kwargs)
 
 
 def set_engine(filename, /, *,
@@ -99,12 +99,11 @@ def set_engine(filename, /, *,
             raise RuntimeError(f'engine file does not exist: {filename!r}')
 
     ENGINE.file = filename
-    log_versions(engine=ENGINE)
+    log_dependency_versions(engine=ENGINE)
     return ENGINE
 
 
-def log_versions(*, also_print=False, print_file=None,
-                 engine=ENGINE):
+def log_dependency_versions(*, engine=ENGINE, also_print=False, print_file=None):
     log.info('pycountry version: %s', pycountry.__version__)
     log.info('sqlalchemy version: %s', sa.__version__)
     log.info('sqlite version: %s', engine.dialect.dbapi.sqlite_version)

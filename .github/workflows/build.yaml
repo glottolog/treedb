@@ -66,9 +66,11 @@ jobs:
           echo "::group::Run pip install .[pretty${{ matrix.extra }}] --group test"
           pip install .[pretty${{ matrix.extra }}] --group test
           echo "::endgroup::"
+      - name: Notice package versions
+        run: echo "::notice::$(python -c 'import treedb; treedb.print_versions()')"
       - name: Run tests with ${{ matrix.args }}
         run: python run-tests.py ${{ matrix.args }}
-      - name: Check Glottolog version
+      - name: Notice Glottolog version
         run: echo "::notice::$(python -c 'import treedb; print(treedb.glottolog_version())')"
       - name: Run try-treedb.py (if -full)
         if: ${{ contains(matrix.name, '-full') }}
