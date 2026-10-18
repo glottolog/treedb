@@ -2,10 +2,13 @@ Changelog
 =========
 
 
-Version 2.7.4 (in development)
-------------------------------
+Version 2.7.4
+-------------
 
-
+Add Python 3.15 support (checksums were broken on Python distributions with
+SQLite >= 3.52 due to an upstream change in the number of digits for floats in
+https://www.sqlite.org/floatingpoint.html#*fpdigits, which notably affected the
+official Python 3.15 builds for Android, Windows, and macOS using 3.53.4).
 
 
 Version 2.7.3
