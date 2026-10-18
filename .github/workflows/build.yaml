@@ -7,21 +7,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux-3.14-full
-            python-version: "3.14"
+          - name: linux-3.15-full
+            python-version: "3.15"
             args: "--run-writes"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: linux-3.14-full-master
-            python-version: "3.14"
+          - name: linux-3.15-full-master
+            python-version: "3.15"
             args: "--glottolog-tag=master --run-writes"
             extra: ",pandas"
             os: ubuntu-latest
-          - name: windows-3.14-full
-            python-version: "3.14"
+          - name: windows-3.15-full
+            python-version: "3.15"
             args: "--run-writes"
             extra: ",pandas"
             os: windows-latest
+          - name: linux-3.14-quick
+            python-version: "3.14"
+            args: "--skip-slow --exclude-raw"
+            extra: ",dev,pandas"
+            os: ubuntu-latest
           - name: linux-3.13-quick
             python-version: "3.13"
             args: "--skip-slow --exclude-raw"
@@ -93,7 +98,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.14"
+          - python-version: "3.15"
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v7
@@ -114,7 +119,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.14"
+          - python-version: "3.15"
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v7
