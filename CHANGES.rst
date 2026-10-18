@@ -2,8 +2,10 @@ Changelog
 =========
 
 
-Version 2.7.3 (in development)
-------------------------------
+Version 2.7.3
+-------------
+
+Fix ``sqlalchemy.exc.AmbiguousColumnError`` under SQLAlchemy 2.1.
 
 Drop Python 3.10 support.
 
