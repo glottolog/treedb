@@ -50,7 +50,7 @@ class OptionMap(dict):
         params.update(ord_section=ord_section,
                       ord_option=ord_option)
 
-        pk, = self.insert(params).inserted_primary_key
+        (pk,) = self.insert(params).inserted_primary_key
 
         self[key] = result = (pk, is_lines)
         return result
@@ -81,7 +81,7 @@ def main(root, /, *, conn):
                        'path': _globals.FILE_PATH_SEP.join(path_tuple),
                        'size': dentry.stat().st_size,
                        'sha256': sha256.hexdigest()}
-        file_id, = insert_file(file_params).inserted_primary_key
+        (file_id,) = insert_file(file_params).inserted_primary_key
 
         value_params = list(itervalues(cfg, file_id, option_map=option_id_is_lines))
 

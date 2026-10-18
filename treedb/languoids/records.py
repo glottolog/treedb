@@ -126,8 +126,8 @@ def _parse(records: Iterable[_globals.RecordItem], /, *,
       'hh_ethnologue_comment': None,
       'iso_retirement': None}}
     """
-    n = 0
     make_item = _globals.LanguoidItem
+    n = 0
     for n, (path, cfg) in enumerate(records, start=1):
         languoid = make_languoid(path, cfg, convert_lines=convert_lines)
         yield make_item(path, languoid)
@@ -258,8 +258,7 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType, /, *,
     if SOURCES in cfg:
         sources = {provider: [splitsource(p) for p in _make_lines(sources)]
                    for provider, sources in cfg['sources'].items()}
-        sources = skip_empty(sources)
-        if sources:
+        if (sources := skip_empty(sources)):
             languoid[SOURCES] = sources
 
     if ALTNAMES in cfg:
@@ -276,16 +275,14 @@ def make_languoid(path_tuple: _globals.PathType, cfg: _globals.RecordType, /, *,
 
     if IDENTIFIER in cfg:
         # FIXME: semicolon-separated (wals)?
-        identifier = dict(cfg[IDENTIFIER])
-        if identifier:
+        if (identifier := dict(cfg[IDENTIFIER])):
             languoid[IDENTIFIER] = identifier
 
     if CLASSIFICATION in cfg:
         classification = {c: (list(map(splitsource, _make_lines(classifications)))
                               if c.endswith('refs') else classifications)
                           for c, classifications in cfg[CLASSIFICATION].items()}
-        classification = skip_empty(classification)
-        if classification:
+        if (classification := skip_empty(classification)):
             languoid[CLASSIFICATION] = classification
 
     if ENGANGERMENT in cfg:
@@ -333,14 +330,12 @@ def make_record(languoid: _globals.LanguoidType, /, *,
 
     record = {CORE: core}
 
-    sources = languoid.get('sources')
-    if sources:
+    if (sources := languoid.get('sources')):
         sources = {p: list(map(formatsource, s)) for p, s in sources.items()}
     else:
         sources = {}
 
-    altnames = languoid.get('altnames')
-    if altnames:
+    if (altnames := languoid.get('altnames')):
         altnames = {p: list(map(formataltname, a)) for p, a in altnames.items()}
     else:
         altnames = {}
@@ -349,16 +344,14 @@ def make_record(languoid: _globals.LanguoidType, /, *,
 
     identifier = languoid.get('identifier') or {}
 
-    classification = languoid['classification']
-    if classification:
+    if (classification := languoid['classification']):
         classification.update({k: list(map(formatsource, classification[k]))
                                for k in ('subrefs', 'familyrefs')
                                if k in classification})
     else:
         classification = {}
 
-    endangerment = languoid.get('endangerment')
-    if endangerment:
+    if (endangerment := languoid.get('endangerment')):
         endangerment.update(source=formatsource(endangerment['source'],
                                                 endangerment=True),
                             date=format_datetime(endangerment['date']))
@@ -367,8 +360,7 @@ def make_record(languoid: _globals.LanguoidType, /, *,
 
     hh_ethnologue_comment = languoid.get('hh_ethnologue_comment') or {}
 
-    iso_retirement = languoid.get('iso_retirement')
-    if iso_retirement:
+    if (iso_retirement := languoid.get('iso_retirement')):
         if isinstance(iso_retirement['effective'], datetime.date):
             iso_retirement['effective'] = format_date(iso_retirement['effective'])
     else:
@@ -421,8 +413,7 @@ def get_float(mapping, key, /, *, format_=FLOAT_FORMAT):
     >>> assert get_float({}, 'spam') is None
     >>> assert get_float({'eggs': 42}, 'spam') is None
     """
-    result = mapping.get(key)
-    if result is not None:
+    if (result := mapping.get(key)) is not None:
         result = float(format_ % float(result))
     return result
 
@@ -511,8 +502,8 @@ def make_interval(value, /, *, date_format=DATE_FORMAT, fix_year=True,
     start, end = (datetime.datetime.strptime(d, date_format).date()
                   for d in dates)
 
-    start_sign = -1 if ma.group('start_sign') == '-' else 1
-    end_sign = -1 if ma.group('end_sign') == '-' else 1
+    start_sign = -1 if ma['start_sign'] == '-' else 1
+    end_sign = -1 if ma['end_sign'] == '-' else 1
 
     return {'start_year': start.year * start_sign,
             'start_month': start.month,
@@ -571,8 +562,7 @@ def splitcountry(name, /, *, _match=_COUNTRY_PATTERN.fullmatch):
     {'name': 'The Union of the Comoros', 'id': 'KM'}
     """
     groups = _match(name).groupdict()
-    id_only = groups.pop('id_only')
-    if id_only:
+    if (id_only := groups.pop('id_only')):
         country = pycountry.countries.get(alpha_2=id_only)
         return {'id': id_only, 'name': country.name}
     return groups
@@ -617,12 +607,12 @@ def splitlink(markdown, /, *, _match=_LINK_PATTERN.fullmatch):
     {'url': 'www.example.com', 'title': None, 'scheme': None}
     """
     if (ma := _match(markdown)) is not None:
-        title, url = ma.groups()
+        (title, url) = ma.groups()
     else:
         title = None
         url = markdown
 
-    scheme, sep, rest = url.partition('://')
+    (scheme, sep, rest) = url.partition('://')
     if sep:
         assert rest
         scheme = scheme.lower()

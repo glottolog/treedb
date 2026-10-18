@@ -81,11 +81,8 @@ def write_raw_csv(filename=None, /, *,
     """Write (path, section, option, line, value) rows to filename."""
     if filename is None:
         filename = _globals.ENGINE.file_with_suffix('.raw.csv.gz').name
-    else:
-        filename = _tools.path_from_filename(filename)
 
-    path = _tools.path_from_filename(filename)
-    if path.exists():
+    if (path := _tools.path_from_filename(filename)).exists():
         warnings.warn(f'deltete present file: {path!r}')
         path.unlink()
 

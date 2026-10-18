@@ -44,9 +44,7 @@ def checkout_or_clone(tag_or_branch: str, /, *, target=None):
     if target is None:
         target = _languoids.get_repo_root()
 
-    target = _tools.path_from_filename(target)
-
-    if not target.exists():
+    if not (target := _tools.path_from_filename(target)).exists():
         clone = git_clone(tag_or_branch, target=target)
     else:
         clone = None

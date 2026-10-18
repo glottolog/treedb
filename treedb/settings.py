@@ -30,8 +30,7 @@ class ConfigParser(configparser.ConfigParser):
         inst = cls(defaults=defaults)
         inst.set_default_repo_root(default_repo_root)
 
-        found = inst.read([path])
-        if found:
+        if (found := inst.read([path])):
             log.debug('%s().read() config file(s): %r', cls.__name__, found)
         elif required:
             raise ValueError(f'config file not found: {path!r}')

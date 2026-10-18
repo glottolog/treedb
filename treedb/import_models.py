@@ -56,7 +56,7 @@ class ModelMap(dict):
             log.debug('insert new %s: %r', self.model.__tablename__, key)
         params = self.key_to_params(key)
 
-        pk, = self.insert(params).inserted_primary_key
+        (pk,) = self.insert(params).inserted_primary_key
 
         self[key] = pk
         return pk
@@ -119,8 +119,7 @@ def insert_languoid_levels(conn, /, *, config_file='languoid_levels.ini'):
     levels = dict(sorted(levels.items(), key=lambda x: int(x[1]['ordinal'])))
 
     assert set(levels) >= set(LEVEL)
-    extra_levels = sorted(set(levels) - set(LEVEL))
-    if extra_levels:
+    if (extra_levels := sorted(set(levels) - set(LEVEL))):
         warnings.warn(f'{config_file!r} has extra languoid levels:'
                       f' {extra_levels!r}')
 
@@ -154,12 +153,10 @@ def insert_pseudofamilies(conn, /, *, config_file='language_types.ini'):
     assert conn.scalar(query), 'pseudo_family_id must be in-sync with category'
 
     inserted_special_families = {p['name'] for p in params if not p['bookkeeping']}
-    unseen_special_families = inserted_special_families - set(SPECIAL_FAMILIES)
-    missing_special_families = set(SPECIAL_FAMILIES) - inserted_special_families
-    if unseen_special_families:
+    if (unseen_special_families := inserted_special_families - set(SPECIAL_FAMILIES)):
         warnings.warn(f'{config_file!r} has extra pseudofamilies:'
                       f' {unseen_special_families!r}')
-    if missing_special_families:
+    if (missing_special_families := set(SPECIAL_FAMILIES) - inserted_special_families):
         warnings.warn(f'{config_file!r} misses special families:'
                       f' {missing_special_families!r}')
     inserted_bookkeeping = {p['name'] for p in params if p['bookkeeping']}
@@ -255,8 +252,7 @@ def insert_languoid(languoid, /, *, conn,
                       for ma in macroareas])
 
     if countries:
-        new_countries = list(unseen_countries(countries))
-        if new_countries:
+        if (new_countries := list(unseen_countries(countries))):
             ids = [n['id'] for n in new_countries]
             log.debug('insert new countries: %r', ids)
 

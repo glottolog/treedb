@@ -148,7 +148,7 @@ def dump_sql(filename=None, /, *,
 
     n = 0
     with (contextlib.closing(engine.raw_connection()) as dbapi_fairy,
-          open_path('wt', encoding=encoding) as f):
+          open_path(mode='wt', encoding=encoding) as f):
         for n, line in enumerate(dbapi_fairy.iterdump(), start=1):
             print(line, file=f)
             if not (n % progress_after):
@@ -169,8 +169,7 @@ def csv_zipfile(filename=None, /, *, exclude_raw: bool = False,
     if filename is None:
         filename = engine.file_with_suffix('.zip').name
 
-    path = _tools.path_from_filename(filename)
-    if path.exists():
+    if (path := _tools.path_from_filename(filename)).exists():
         warnings.warn(f'delete present file: {path!r}')
         path.unlink()
 
@@ -196,7 +195,7 @@ def csv_zipfile(filename=None, /, *, exclude_raw: bool = False,
             info = zipfile.ZipInfo(f'{table.name}.csv', date_time=date_time)
             info.compress_type = zipfile.ZIP_DEFLATED
 
-            with z.open(info, 'w') as f:
+            with z.open(info, mode='w') as f:
                 csv23.write_csv(f, rows, header=header,
                                 dialect=dialect, encoding=encoding)
 
@@ -260,8 +259,7 @@ def write_csv(query=None, /, filename=None, *,
     filename = _tools.path_from_filename(filename)
 
     log.info('write csv: %r', filename)
-    path = _tools.path_from_filename(filename)
-    if path.exists():
+    if (path := _tools.path_from_filename(filename)).exists():
         warnings.warn(f'delete present file: {path!r}')
         path.unlink()
 

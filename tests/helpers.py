@@ -3,12 +3,6 @@ import itertools
 MB = 2**20
 
 
-def pairwise(iterable, /):
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
-
 def get_assert_head(items, /, *, n):
     head = list(itertools.islice(items, n))
 

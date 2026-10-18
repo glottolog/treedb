@@ -732,7 +732,6 @@ def iterdescendants(parent_level: str | None = None,
                                                  Child.level == child_level))
 
     rows = _backend.iterrows(select_pairs, bind=bind)
-
     for parent_id, grp in _tools.groupby_attrgetter('parent_id')(rows):
         _, c = next(grp)
         if c is None:

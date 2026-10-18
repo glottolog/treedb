@@ -58,16 +58,14 @@ class ConfigParser(_tools.ConfigParser):
         new_sections = {sec for sec, s in raw_record.items() if s}
         leave = (old_empty - new_sections) & keep_empty_sections
 
-        drop = old_sections - core_sections - leave - new_sections
-        if drop:
+        if (drop := old_sections - core_sections - leave - new_sections):
             drop = sorted_sections(drop)
             log.debug('cfg.remove_section(s) for s in %r', drop)
             for s in drop:
                 self.remove_section(s)
             changed = True
 
-        add = new_sections - old_sections
-        if add:
+        if (add := new_sections - old_sections):
             add = sorted_sections(add)
             if not quiet:
                 log.debug('cfg.add_section(s) for s in %r', add)
@@ -89,9 +87,7 @@ class ConfigParser(_tools.ConfigParser):
                 old_options = {o for o in self.options(section)
                                if (section, o) not in keep_empty_options}
                 new_options = {k for k, v in s.items() if v}
-                drop_options = old_options - new_options
-
-                if drop_options:
+                if (drop_options := old_options - new_options):
                     drop_options = sorted_options(section, drop_options)
                     log.debug('cfg.remove_option(%r, o) for o in %r',
                               section, drop_options)
@@ -100,12 +96,10 @@ class ConfigParser(_tools.ConfigParser):
                     changed = True
 
             for option in sorted_options(section, s):
-                value = s[option]
-                if value is None or (not value and is_lines(section, option)):
+                if (value := s[option]) is None or (not value and is_lines(section, option)):
                     continue
 
-                old = self.get(section, option, fallback=None)
-                if old == value:
+                if (old := self.get(section, option, fallback=None)) == value:
                     continue
 
                 if not quiet:  # pragma: no cover
@@ -185,9 +179,7 @@ def write_files(records: Iterable[_globals.RecordItem], /,
     log.info(f'start writing {basename} files into %r', root)
 
     load_config = ConfigParser.from_file
-
     files_written = 0
-
     for path_tuple, raw_record in map(_fields.join_lines_inplace, records):
         path = root.joinpath(*path_tuple + (basename,))
         cfg = load_config(path)

@@ -51,7 +51,7 @@ def print_languoid_stats(*, file=None,
     for total, parts in sums:
         values = [counts[p] for p in parts]
         parts_sum = sum(values)
-        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values))
+        term = ' + '.join(f'{v:,d} {p}' for p, v in zip(parts, values, strict=True))
         log.debug('verify %s == %d %s', term, counts[total], total)
         if counts[total] != parts_sum:  # pragma: no cover
             warnings.warn(f'{term} = {parts_sum:,d}')
@@ -259,11 +259,10 @@ def fetch_languoids(*, limit: int | None = None,
 
     rows = _backend.iterrows(query, bind=bind)
 
-    n = 0
     make_item = _globals.LanguoidItem.from_filepath_languoid
+    n = 0
     for n, (path, item) in enumerate(rows, start=1):
-        endangerment = item['endangerment']
-        if endangerment is not None:
+        if (endangerment := item['endangerment']) is not None:
             endangerment['date'] = json_datetime(endangerment['date'])
         if not item.get('timespan'):
             item.pop('timespan', None)

@@ -279,10 +279,8 @@ class Languoid:
                    include_self: bool = True,
                    bottomup: bool = False,
                    _tree=None):
-        if _tree is None:
-            tree = cls.tree(include_self=include_self, with_steps=True)
-        else:
-            tree = _tree
+        tree = (_tree if _tree is not None else
+                cls.tree(include_self=include_self, with_steps=True))
 
         select_path_part = (sa.select(tree.c.parent_id.label(label))
                             .where(tree.c.child_id == cls.id)

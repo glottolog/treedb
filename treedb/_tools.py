@@ -158,8 +158,7 @@ def walk_scandir(top, /, *,
                  sortkey=operator.attrgetter('name')) -> Iterator[os.DirEntry]:
     """Yield os.DirEntry objects for all files under top."""
     # NOTE: os.walk() ignores errors and this can be more efficient
-    top = path_from_filename(top)
-    if not top.is_absolute():
+    if not (top := path_from_filename(top)).is_absolute():
         top = pathlib.Path.cwd().joinpath(top).resolve()
 
     if platform.system() == 'Windows':
@@ -169,7 +168,6 @@ def walk_scandir(top, /, *,
     log.debug('sortkey: %r', sortkey)
 
     stack = [str(top)]
-
     while stack:
         root = stack.pop()
         if verbose:  # pragma: no cover
@@ -414,24 +412,15 @@ def sha256sum(file, /, *, raw: bool = False,
     >>> sha256sum('', hash_file_string=True)
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
     """
-    hashobj = hashlib.sha256()
-
     if hash_file_string:
         encoded_bytes = file.encode(file_string_encoding)
-        hashobj.update(encoded_bytes)
+        hashobj = hashlib.sha256(encoded_bytes)
     else:
         file = path_from_filename(file)
         open_module = get_open_module(file, autocompress=autocompress)
-
-        with open_module.open(file, 'rb') as f:
-            update_hashobj(hashobj, f)
-
+        with open_module.open(file, mode='rb') as f:
+            hashobj = hashlib.file_digest(f, hashlib.sha256)
     return hashobj if raw else hashobj.hexdigest()
-
-
-def update_hashobj(hashobj, file, /, *, chunksize: int = 2**16):  # 64 KiB
-    for chunk in iter(functools.partial(file.read, chunksize), b''):
-        hashobj.update(chunk)
 
 
 def run(cmd, /, *, capture_output: bool = False,
@@ -540,7 +529,7 @@ class ConfigParser(configparser.ConfigParser):
 
     def to_file(self, filename, /, *, encoding=ENCODING):
         path = path_from_filename(filename)
-        with path.open('wt', encoding=encoding, newline=self._newline) as f:
+        with path.open(mode='wt', encoding=encoding, newline=self._newline) as f:
             if self._header is not None:
                 f.write(self._header.format(encoding=encoding))
             self.write(f)

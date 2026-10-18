@@ -1,3 +1,4 @@
+import itertools
 import io
 import json
 import sqlite3
@@ -5,8 +6,7 @@ import sqlite3
 import pytest
 import sqlalchemy as sa
 
-from helpers import (pairwise,
-                     get_assert_head,
+from helpers import (get_assert_head,
                      assert_nonempty_string,
                      assert_nonempty_dict,
                      assert_file_size_between,
@@ -355,6 +355,6 @@ def test_checksum_equivalence(pytestconfig, treedb, kwargs):
             expected_prefix = PREFIX_ID if kw.get('order_by') == 'id' else PREFIX
         assert prefix == expected_prefix
 
-    for (c, _, _, cur), (n, _, _, nxt) in pairwise(results):
+    for (c, _, _, cur), (n, _, _, nxt) in itertools.pairwise(results):
         cur, nxt = (s.rpartition(':')[2] for s in (cur, nxt))
         assert cur == nxt, f'checksum(**{c!r}) == checksum(**{n!r})'

@@ -26,11 +26,8 @@ log = logging.getLogger(__name__)
 
 def get_root(repo_root, /, *, default,
              treepath=_languoids.TREE_IN_ROOT):
-    if repo_root is not None:
-        root = _languoids.set_root(repo_root, treepath=treepath)
-    else:
-        root = default
-
+    root = (_languoids.set_root(repo_root, treepath=treepath)
+            if repo_root is not None else default)
     log.info('load database from %r', root)
     if not root.exists():
         log.error('root does not exist')

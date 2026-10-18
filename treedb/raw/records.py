@@ -66,8 +66,8 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
     groupby = itertools.starmap(_tools.groupby_attrgetter, groupby)
     groupby_file, groupby_section, groupby_option = groupby
 
-    n = 0
     make_item = _globals.RecordItem.from_filepath_record
+    n = 0
     with _backend.connect(bind=bind) as conn:
         for in_slice in window_slices(key_column, size=windowsize, bind=conn):
             if log.level <= logging.DEBUG:
@@ -78,7 +78,7 @@ def fetch_records(*, order_by: str = _globals.LANGUOID_ORDER,
             # single thread: no isolation level concerns
             values = conn.execute(select_values.where(in_slice(value_key))).all()
             # join in-memory by file_id total order index
-            path_values = zip(files, groupby_file(values))
+            path_values = zip(files, groupby_file(values), strict=True)
 
             count = 0
             for count, ((path,), (_, values)) in enumerate(path_values, start=1):
