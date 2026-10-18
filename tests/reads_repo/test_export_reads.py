@@ -300,7 +300,7 @@ def test_iterlanguoids(bare_treedb, n=100):
     assert_valid_languoids(items, n=n)
 
 
-xfail_sqlite_3_53_fpdigits = pytest.mark.xfail( 
+xfail_sqlite_3_53_fpdigits = pytest.mark.xfail(
     sqlite3.sqlite_version_info >= (3, 53),
     # https://www.sqlite.org/releaselog/3_53_0.html
     reason='https://www.sqlite.org/floatingpoint.html#*fpdigits',
