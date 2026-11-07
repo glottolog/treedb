@@ -9,7 +9,17 @@ import sys
 
 import pytest
 
-ARGS = [#'--run-writes',
+ARGS = [#'--glottolog-repo-root', './glottolog/',
+        #'--glottolog-tag', 'master',
+        #'--glottolog-tag', 'v5.3',
+        #'--glottolog-tag', 'v5.2.1',
+        #'--glottolog-tag', 'v5.2',
+        #'--glottolog-tag', 'v5.1',
+        #'--glottolog-tag', 'v5.0',
+        #'--file-engine',
+        #'--rebuild', '--force-rebuild',
+        #'--exclude-raw',
+        #'--run-writes',
         #'--skip-slow',
         #'--skip-pandas',
         #'--skip-sqlparse',
@@ -24,16 +34,6 @@ ARGS = [#'--run-writes',
         #'-W', 'error',
         #'--loglevel-debug',
         #'--log-sql',
-        #'--file-engine',
-        #'--glottolog-tag', 'master',
-        #'--glottolog-tag', 'v5.3',
-        #'--glottolog-tag', 'v5.2.1',
-        #'--glottolog-tag', 'v5.2',
-        #'--glottolog-tag', 'v5.1',
-        #'--glottolog-tag', 'v5.0',
-        #'--glottolog-repo-root', './glottolog/',
-        #'--rebuild', '--force-rebuild',
-        #'--exclude-raw',
        ]
 
 if platform.system() == 'Windows' and 'idlelib' in sys.modules:
