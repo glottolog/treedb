@@ -2,8 +2,8 @@ import pytest
 
 from helpers import assert_file_size_between
 
-CHECKSUM = {('release-5.4', False): 'strong:sha256:02a4e83a6ce37121b1cc9d940ec0ba4f9f29e53b7d79fcdf5684e7696e35b4b4',  # noqa: E501
-            ('release-5.4', True): 'weak:sha256:9c447a23dd44517d52c605d9652a9636a0ace410b75561c0296eb2d6791d9d48',  # noqa: E501
+CHECKSUM = {('release-5.4', False): 'strong:sha256:82a90dc5b94feabb62c2f37e5b93fa82c43ed5bd5488b0f3066d456820c0abc0',  # noqa: E501
+            ('release-5.4', True): 'weak:sha256:e9515f0d3ba12038d37fbcc903c064e37d0c05ced4e435beeabb6740839a3857',  # noqa: E501
             ('v5.3', False): 'strong:sha256:df14b30a4d046a69fbba594a155f6a35a97d2fa765e5071ad83b6efa89794175',  # noqa: E501
             ('v5.3', True): 'weak:sha256:eb255038e1d8e577727098fd3c8b5cb9f534af0d9fc5cb38dffcc21b017d0943',
             ('v5.2.1', False): 'strong:sha256:e0f1c60ee4ef83c92a4ebc430cf504ac7cc9cb75bb1b10b12b2e2dbc1e20e281',  # noqa: E501
@@ -16,7 +16,7 @@ CHECKSUM = {('release-5.4', False): 'strong:sha256:02a4e83a6ce37121b1cc9d940ec0b
             ('v5.0', True): 'weak:sha256:e7ed35a867352e39fa4bad935b6732dc3aa4791e6cfd5e6f8fc9c20322e200b5'}
 
 RAW_CSV_SHA256 = {'master': None,
-                  'release-5.4': '896b60b0c75ea4f11148987879d6e134d30c9b08667fe57f3a807bdb43a74183',
+                  'release-5.4': '9c438a82c2ca59f2ac2a6489c0175e9d9f468f45b1e1b06b2728ec89719e900e',
                   'v5.3': 'fbda8b27ee3cf3a8039961af7550224b2b183fba448f4ed4f53212cccfed15ed',
                   'v5.2.1': '00e6591715893684a5c1acdf284654308f1fb1de9c86b19528a41b1426eb2076',
                   'v5.2': '8a226215fd5db1d6fad6b025280cdfd4b61ad87b08d02c8476ead352e3814de6',
