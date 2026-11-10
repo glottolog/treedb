@@ -11,6 +11,7 @@ import pytest
 
 ARGS = [#'--glottolog-repo-root', './glottolog/',
         #'--glottolog-tag', 'master',
+        #'--glottolog-tag', 'v5.4',
         #'--glottolog-tag', 'v5.3',
         #'--glottolog-tag', 'v5.2.1',
         #'--glottolog-tag', 'v5.2',

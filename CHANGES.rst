@@ -7,6 +7,8 @@ Version 2.8 (in development)
 
 Drop SQLAlchemy 1 support: ``sqlalchemy>=2``.
 
+Add test checksums for Glottolog ``v5.4``.
+
 Drop test checksums and coverage for historical versions of Glottolog versions
 before ``v5``.
 
