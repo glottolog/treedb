@@ -2,15 +2,14 @@ Changelog
 =========
 
 
-Version 2.8 (in development)
-----------------------------
+Version 2.8
+-----------
 
 Drop SQLAlchemy 1 support: ``sqlalchemy>=2``.
 
 Add test checksums for Glottolog ``v5.4``.
 
-Drop test checksums and coverage for historical versions of Glottolog versions
-before ``v5``.
+Drop test checksums and coverage for historical Glottolog versions before ``v5``.
 
 
 Version 2.7.4
